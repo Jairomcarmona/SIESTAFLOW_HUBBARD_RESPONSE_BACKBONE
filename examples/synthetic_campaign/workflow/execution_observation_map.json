@@ -1,0 +1,9 @@
+{
+  "execution_id": "exec_1",
+  "task_id": "task_1",
+  "produces": [
+    "BARE_OBSERVATION",
+    "SCREENED_OBSERVATION"
+  ],
+  "backend": "synthetic_v0"
+}

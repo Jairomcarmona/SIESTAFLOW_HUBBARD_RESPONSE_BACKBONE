@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://siestaflow.invalid/schemas/v0.1.0/alpha_grid_lock.schema.json",
+  "type": "object",
+  "properties": {
+    "campaign_id": { "type": "string" },
+    "locked_by": { "type": "string" },
+    "locked_at": { "type": "string", "format": "date-time" },
+    "channels": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "alpha_values_ev": {
+            "type": "array",
+            "items": { "type": "number" }
+          },
+          "K_p": { "type": "integer" },
+          "units": { "const": "eV" },
+          "revision": { "type": "string" },
+          "origin": { "type": "string" },
+          "status": { "const": "LOCKED" },
+          "gate_eligibility": {
+            "type": "object",
+            "properties": {
+              "full_evaluation": { "type": "boolean" },
+              "non_evaluable_gates": {
+                "type": "array",
+                "items": { "type": "string" }
+              }
+            },
+            "required": ["full_evaluation", "non_evaluable_gates"]
+          },
+          "previous_revision_ref": { "type": ["string", "null"] }
+        },
+        "required": [
+          "alpha_values_ev",
+          "K_p",
+          "units",
+          "revision",
+          "origin",
+          "status",
+          "gate_eligibility",
+          "previous_revision_ref"
+        ]
+      }
+    },
+    "all_channels_locked": { "const": true }
+  },
+  "required": ["campaign_id", "locked_by", "locked_at", "channels", "all_channels_locked"]
+}

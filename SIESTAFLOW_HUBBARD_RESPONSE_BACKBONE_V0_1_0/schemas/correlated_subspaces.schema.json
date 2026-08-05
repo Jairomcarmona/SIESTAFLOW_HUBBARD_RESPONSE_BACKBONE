@@ -1,0 +1,154 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "correlated_subspaces.schema.json",
+  "title": "Correlated Subspaces",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "subspaces",
+    "observables",
+    "perturbation_targets",
+    "aggregation_matrix"
+  ],
+  "properties": {
+    "subspaces": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "subspace_id",
+          "atom_indices",
+          "species_label",
+          "shell",
+          "projector_id"
+        ],
+        "properties": {
+          "subspace_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+          },
+          "atom_indices": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          "species_label": {
+            "type": "string",
+            "minLength": 1
+          },
+          "shell": {
+            "type": "object",
+            "required": [
+              "n",
+              "l"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "n": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "l": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          },
+          "projector_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+          },
+          "equivalence_group": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "observables": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "observable_id",
+          "subspace_id",
+          "channel"
+        ],
+        "properties": {
+          "observable_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+          },
+          "subspace_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+          },
+          "channel": {
+            "enum": [
+              "up",
+              "down",
+              "total",
+              "orbital_resolved",
+              "custom"
+            ]
+          }
+        }
+      }
+    },
+    "perturbation_targets": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+      }
+    },
+    "aggregation_matrix": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "row_ids",
+        "column_ids",
+        "values"
+      ],
+      "properties": {
+        "row_ids": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+          }
+        },
+        "column_ids": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+          }
+        },
+        "values": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          }
+        }
+      }
+    }
+  }
+}

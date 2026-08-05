@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "geometry_identity.schema.json",
+  "title": "Geometry Identity",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "geometry_id",
+    "geometry_sha256",
+    "cell_sha256",
+    "coordinates_sha256",
+    "species_mapping_sha256",
+    "number_of_atoms",
+    "periodicity",
+    "geometry_policy"
+  ],
+  "properties": {
+    "geometry_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+    },
+    "geometry_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "cell_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "coordinates_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "species_mapping_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "number_of_atoms": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "periodicity": {
+      "type": "array",
+      "items": {
+        "type": "boolean"
+      },
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "geometry_policy": {
+      "const": "FIXED_DURING_LINEAR_RESPONSE"
+    },
+    "source_file": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

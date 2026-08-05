@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "campaign_id": {
+      "type": "string"
+    },
+    "values": {
+      "type": "array"
+    },
+    "matrix_family": {
+      "const": "HUBBARD"
+    },
+    "matrix_stage": {
+      "const": "U_MATRIX"
+    },
+    "response_mode": {
+      "const": "NOT_APPLICABLE"
+    },
+    "units": {
+      "const": "eV"
+    }
+  },
+  "required": [
+    "values",
+    "matrix_family",
+    "matrix_stage",
+    "response_mode",
+    "units"
+  ],
+  "not": {
+    "required": [
+      "sha256"
+    ]
+  }
+}

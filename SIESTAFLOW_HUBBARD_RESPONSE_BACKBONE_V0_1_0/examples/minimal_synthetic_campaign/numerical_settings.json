@@ -1,0 +1,20 @@
+{
+  "xc_functional": "SYNTHETIC",
+  "mesh_cutoff": {
+    "value": 1.0,
+    "unit": "arb"
+  },
+  "k_sampling": {
+    "kind": "synthetic"
+  },
+  "scf": {
+    "kind": "synthetic",
+    "tolerance": 1e-12
+  },
+  "spin": {
+    "mode": "collinear"
+  },
+  "smearing": {
+    "kind": "none"
+  }
+}

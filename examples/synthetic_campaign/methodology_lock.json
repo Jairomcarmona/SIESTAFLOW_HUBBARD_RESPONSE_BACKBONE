@@ -1,0 +1,5 @@
+{
+  "perturbation_operator_convention": "+alpha*n",
+  "response_derivative_convention": "dN/dalpha",
+  "u_formula_convention": "inv(chi0)-inv(chi)"
+}

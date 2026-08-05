@@ -1,0 +1,41 @@
+{
+  "subject_id": "candidate_proj_default",
+  "results": [
+    {
+      "gate_id": "matrix_condition",
+      "status": "PASS",
+      "observed": 1.4443522247471197,
+      "definition": {
+        "gate_id": "matrix_condition",
+        "metric": "condition_number",
+        "operator": "<=",
+        "threshold": 1000000.0,
+        "unit": null,
+        "severity": "error",
+        "missing_data_policy": "FAIL"
+      },
+      "evidence_refs": [
+        "matrix_bundle.json"
+      ],
+      "message": "Both matrices are well conditioned in the synthetic example."
+    },
+    {
+      "gate_id": "inversion_residual",
+      "status": "PASS",
+      "observed": 1.1404956175176477e-16,
+      "definition": {
+        "gate_id": "inversion_residual",
+        "metric": "residual_fro",
+        "operator": "<=",
+        "threshold": 1e-10,
+        "unit": null,
+        "severity": "error",
+        "missing_data_policy": "FAIL"
+      },
+      "evidence_refs": [
+        "matrix_bundle.json"
+      ],
+      "message": "Inversion residuals pass."
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "campaign_id": {
+      "type": "string"
+    },
+    "diagonal_U_ev": {
+      "type": "array"
+    },
+    "recommended_single_U_ev": {
+      "type": [
+        "null"
+      ]
+    }
+  },
+  "required": [
+    "recommended_single_U_ev"
+  ],
+  "not": {
+    "required": [
+      "sha256"
+    ]
+  }
+}

@@ -1,0 +1,213 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "matrix_bundle.schema.json",
+  "title": "Matrix Bundle",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "candidate_id",
+    "aggregation_matrix",
+    "chi0",
+    "chi",
+    "u_matrix",
+    "formula"
+  ],
+  "properties": {
+    "candidate_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+    },
+    "aggregation_matrix": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "row_ids",
+        "column_ids",
+        "values"
+      ],
+      "properties": {
+        "row_ids": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+          }
+        },
+        "column_ids": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+          }
+        },
+        "values": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "number"
+            }
+          }
+        }
+      }
+    },
+    "chi0": {
+      "$ref": "#/$defs/matrix_family"
+    },
+    "chi": {
+      "$ref": "#/$defs/matrix_family"
+    },
+    "u_matrix": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "row_ids",
+        "column_ids",
+        "values"
+      ],
+      "properties": {
+        "row_ids": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+          }
+        },
+        "column_ids": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+          }
+        },
+        "values": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "number"
+            }
+          }
+        }
+      }
+    },
+    "formula": {
+      "const": "inverse(chi0)-inverse(chi)"
+    },
+    "recommended_single_U_ev": {
+      "type": "null"
+    }
+  },
+  "$defs": {
+    "matrix": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "row_ids",
+        "column_ids",
+        "values"
+      ],
+      "properties": {
+        "row_ids": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+          }
+        },
+        "column_ids": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+          }
+        },
+        "values": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "number"
+            }
+          }
+        }
+      }
+    },
+    "matrix_family": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "raw",
+        "symmetrized",
+        "selected_kind",
+        "selected",
+        "inverse",
+        "condition_number",
+        "singular_values",
+        "rank",
+        "left_residual_fro",
+        "right_residual_fro"
+      ],
+      "properties": {
+        "raw": {
+          "$ref": "#/$defs/matrix"
+        },
+        "symmetrized": {
+          "$ref": "#/$defs/matrix"
+        },
+        "selected_kind": {
+          "enum": [
+            "raw",
+            "symmetrized"
+          ]
+        },
+        "selected": {
+          "$ref": "#/$defs/matrix"
+        },
+        "inverse": {
+          "$ref": "#/$defs/matrix"
+        },
+        "condition_number": {
+          "type": "number",
+          "minimum": 0
+        },
+        "singular_values": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "rank": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "left_residual_fro": {
+          "type": "number",
+          "minimum": 0
+        },
+        "right_residual_fro": {
+          "type": "number",
+          "minimum": 0
+        },
+        "antisymmetry_metric": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

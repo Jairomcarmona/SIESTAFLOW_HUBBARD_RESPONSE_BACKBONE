@@ -1,0 +1,10 @@
+{
+  "passed": true,
+  "checks": [
+    {
+      "check_id": "P_EQUALS_N",
+      "passed": true,
+      "message": "P equals N"
+    }
+  ]
+}

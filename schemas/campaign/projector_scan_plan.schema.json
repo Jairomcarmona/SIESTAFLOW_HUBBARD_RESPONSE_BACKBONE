@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://siestaflow.invalid/schemas/v0.1.0/projector_scan_plan.schema.json",
+  "type": "object",
+  "properties": {
+    "campaign_id": { "type": "string" },
+    "scan_parameters": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "parameter_name": { "type": "string" },
+          "parameter_type": { "type": "string" },
+          "values": { "type": "array" }
+        },
+        "required": ["parameter_name", "parameter_type", "values"]
+      }
+    },
+    "scan_strategy": { "enum": ["GRID", "RANDOM", "ADAPTIVE"] }
+  },
+  "required": ["campaign_id", "scan_parameters", "scan_strategy"]
+}

@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+
+# SIESTA simulation temporaries & outputs in examples
+examples/**/*.out
+examples/**/*.DM
+examples/**/*.fdf
+examples/**/*.psml
+examples/**/*.sh
+examples/**/*.bib
+examples/**/*.png
+examples/**/*.log
+examples/**/Cu3N_*
+examples/**/MnO_*
+examples/**/CoO_*
+examples/**/FeO_*
+examples/**/NiO_*
+examples/**/test_*
+
+# Preserved example scripts
+!examples/tmo_campaigns/run_cu3n_campaign.py
+!examples/tmo_campaigns/run_tmo_campaign.py
+!examples/tmo_campaigns/verify_backbone.py
+!examples/**/*.json
+
+# System & OS
+.DS_Store
+Thumbs.db

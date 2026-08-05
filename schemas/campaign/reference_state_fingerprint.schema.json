@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://siestaflow.invalid/schemas/v0.1.0/reference_state_fingerprint.schema.json",
+  "type": "object",
+  "properties": {
+    "campaign_id": { "type": "string" },
+    "occupation_by_observable": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "observable_id": { "type": "string" },
+          "value": { "type": "number" },
+          "units": { "const": "dimensionless" }
+        },
+        "required": ["observable_id", "value", "units"]
+      }
+    },
+    "total_charge": { "type": "number" },
+    "total_magnetic_moment": { "type": ["number", "null"] },
+    "local_moments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "subspace_id": { "type": "string" },
+          "moment": { "type": ["number", "null"] }
+        },
+        "required": ["subspace_id", "moment"]
+      }
+    },
+    "geometry_ref": { "type": "string" },
+    "reference_dm_ref": { "type": "string" },
+    "pseudopotential_map_ref": { "type": "string" },
+    "binary_identity_ref": { "type": "string" },
+    "banner_ref": { "type": "string" },
+    "mpi_runtime_ref": { "type": "string" },
+    "numeric_params_ref": { "type": "string" }
+  },
+  "required": [
+    "campaign_id",
+    "occupation_by_observable",
+    "total_charge",
+    "total_magnetic_moment",
+    "local_moments",
+    "geometry_ref",
+    "reference_dm_ref",
+    "pseudopotential_map_ref",
+    "binary_identity_ref",
+    "banner_ref",
+    "mpi_runtime_ref",
+    "numeric_params_ref"
+  ]
+}

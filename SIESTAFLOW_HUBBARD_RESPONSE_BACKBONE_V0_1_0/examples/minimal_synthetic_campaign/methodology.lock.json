@@ -1,0 +1,41 @@
+{
+  "schema_version": "0.1.0",
+  "methodology_version": "lr-fd-0.1.0",
+  "response_method": "finite_difference_linear_response",
+  "scope": {
+    "geometry_policy": "FIXED_DURING_LINEAR_RESPONSE",
+    "magnetism": "collinear",
+    "interaction_model": "dudarev_effective_U",
+    "soc": false
+  },
+  "bare_definition": "Synthetic backend: unrelaxed linear population response generated directly from chi0.",
+  "screened_definition": "Synthetic backend: converged linear population response generated directly from chi.",
+  "matrix_policy": {
+    "require_square": true,
+    "selected_for_inversion": "raw",
+    "allow_pseudoinverse": false,
+    "formula": "inverse(chi0)-inverse(chi)"
+  },
+  "gates": [
+    {
+      "gate_id": "matrix_condition",
+      "metric": "condition_number",
+      "operator": "<=",
+      "threshold": 1000000.0,
+      "unit": null,
+      "severity": "error",
+      "missing_data_policy": "FAIL"
+    },
+    {
+      "gate_id": "inversion_residual",
+      "metric": "residual_fro",
+      "operator": "<=",
+      "threshold": 1e-10,
+      "unit": null,
+      "severity": "error",
+      "missing_data_policy": "FAIL"
+    }
+  ],
+  "human_decision_required": true,
+  "recommended_single_U_ev_default": null
+}

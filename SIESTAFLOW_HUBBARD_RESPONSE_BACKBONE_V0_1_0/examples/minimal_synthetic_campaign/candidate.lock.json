@@ -1,0 +1,20 @@
+{
+  "candidate_id": "candidate_proj_default",
+  "campaign_id": "minimal_synthetic_two_site",
+  "projector": {
+    "projector_id": "proj_default",
+    "rc_bohr": 3.5,
+    "omega_bohr": 0.05
+  },
+  "alpha_grid": [
+    -0.2,
+    -0.1,
+    0.0,
+    0.1,
+    0.2
+  ],
+  "methodology_sha256": "5555555555555555555555555555555555555555555555555555555555555555",
+  "geometry_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "subspaces_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+  "frozen": true
+}

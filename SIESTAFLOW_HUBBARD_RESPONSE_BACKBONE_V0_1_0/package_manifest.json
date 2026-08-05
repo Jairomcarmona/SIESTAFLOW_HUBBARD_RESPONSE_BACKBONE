@@ -1,0 +1,564 @@
+{
+  "package_id": "siestaflow_hubbard_response_backbone",
+  "package_version": "0.1.0",
+  "files": [
+    {
+      "path": "AGENT_DIRECTIVE.md",
+      "sha256": "530974eacdf244557398885c81a2013bf29272a1da7242113925713ff7a33d29",
+      "size_bytes": 775,
+      "role": "backbone"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "sha256": "900c3276240c94aab7e16db80b28b1436914af735352babbafd8c6215bcf7295",
+      "size_bytes": 426,
+      "role": "backbone"
+    },
+    {
+      "path": "IMPLEMENTATION_PHASES.md",
+      "sha256": "83f13ff07e80c9fd0b702dbf542a8e8b6e0e91fa233faa5019f98087e803637c",
+      "size_bytes": 785,
+      "role": "backbone"
+    },
+    {
+      "path": "README.md",
+      "sha256": "0994979226424a37a6ccab7355a9775365bb1826224789314d5f9444995e3e5e",
+      "size_bytes": 2990,
+      "role": "backbone"
+    },
+    {
+      "path": "REFERENCES.md",
+      "sha256": "54857fcb92dddcb6752bebc31706b358213b310136575f5c003fc0f2e91ad0e2",
+      "size_bytes": 798,
+      "role": "backbone"
+    },
+    {
+      "path": "STATUS.md",
+      "sha256": "46af5a74196aaf586eec1ad86d309944c39290e0ae32c7a081a635f17e2c2082",
+      "size_bytes": 1013,
+      "role": "backbone"
+    },
+    {
+      "path": "VERIFICATION_REPORT.txt",
+      "sha256": "7309064914501e4e62d4841caa614ed143e6e7bb118679cdd1940a2f89c84199",
+      "size_bytes": 254,
+      "role": "backbone"
+    },
+    {
+      "path": "docs/00_governance/GOVERNANCE.md",
+      "sha256": "bf508f1706cddd270d949d0a8dc4cc5913ea83f36b428d8164065fb5618a293e",
+      "size_bytes": 1051,
+      "role": "backbone"
+    },
+    {
+      "path": "docs/00_governance/KNOWN_LIMITATIONS.md",
+      "sha256": "b2ca5d4ae3ca1e9933212b0cd48a96e405f49fe01d0accc2426ad679477c3c69",
+      "size_bytes": 842,
+      "role": "backbone"
+    },
+    {
+      "path": "docs/00_governance/NON_GOALS.md",
+      "sha256": "08ecd5dcf6f1e76c394be12ac04df4dc3746858fbe909accd192c5ded5aaa276",
+      "size_bytes": 984,
+      "role": "backbone"
+    },
+    {
+      "path": "docs/00_governance/OPEN_DECISIONS.md",
+      "sha256": "4cba77eb3a8ffb856063d09095108592575b0aeb6082331e2985e45247079f22",
+      "size_bytes": 945,
+      "role": "backbone"
+    },
+    {
+      "path": "docs/00_governance/TERMINOLOGY.md",
+      "sha256": "87d80c684ce5bae0f042c5401dc88d2ba1984b53d0d33b73a79e74ab6853e91f",
+      "size_bytes": 1533,
+      "role": "backbone"
+    },
+    {
+      "path": "docs/00_governance/VERSIONING_AND_CHANGE_CONTROL.md",
+      "sha256": "8f143880dd94eaf7fdfb6bb0a1037e8799eb7c011862be66e3a8e01b949da99e",
+      "size_bytes": 952,
+      "role": "backbone"
+    },
+    {
+      "path": "docs/00_governance/VISION_AND_SCOPE.md",
+      "sha256": "1132d80e5a34cd5b12e252db430c1171cc547154767bf2c862b11647eeb1b288",
+      "size_bytes": 1319,
+      "role": "backbone"
+    },
+    {
+      "path": "docs/01_science/BARE_SCREENED_CONTRACT.md",
+      "sha256": "e45dc8d16710c773ba4839ce7072f02f41d8f02d10898d6f9dfaa5c1d6648838",
+      "size_bytes": 1226,
+      "role": "backbone"
+    },
+    {
+      "path": "docs/01_science/CORRELATED_SUBSPACE_CONTRACT.md",
+      "sha256": "9b07c1bc7f0b7d35c8c3807435f973be3017bbf257edc82d7e49b8c34999c673",
+      "size_bytes": 1009,
+      "role": "backbone"
+    },
+    {
+      "path": "docs/01_science/GEOMETRY_CONTRACT.md",
+      "sha256": "d0385e9f11780fe1ea2a4372b143673b7ad47041734072585fbe2731bc7b5398",
+      "size_bytes": 914,
+      "role": "backbone"
+    },
+    {
+      "path": "docs/01_science/HUMAN_DECISION_CONTRACT.md",
+      "sha256": "8e0bda4930812a42222782ce8423a62296ec20bbf1ef1f8e5da1bf7943ffe7a5",
+      "size_bytes": 783,
+      "role": "backbone"
+    },
+    {
+      "path": "docs/01_science/MAGNETIC_STATE_CONTRACT.md",
+      "sha256": "2098e81e038e1949097e74bdc68efc5c49a85898c114c2ced028413ff9a91bf5",
+      "size_bytes": 775,
+      "role": "backbone"
+    },
+    {
+      "path": "docs/01_science/MATRIX_CONSTRUCTION_CONTRACT.md",
+      "sha256": "a679d3f0615b6130de4896dd078a788a5ffc9cccc8cc9c9c676427f56037fb8d",
+      "size_bytes": 976,
+      "role": "backbone"
+    },
+    {
+      "path": "docs/01_science/MATRIX_INVERSION_CONTRACT.md",
+      "sha256": "391da480eeee06f68537d0eb78681a09b6f4b2caed2901b37e524c479ae9cff6",
+      "size_bytes": 970,
+      "role": "backbone"
+    },
+    {
+      "path": "docs/01_science/PERTURBATION_CONTRACT.md",
+      "sha256": "69883cc73e85d5f21f76cd9e2c485daba2c5ec0b2e3aaefc5c42ab25008c70b7",
+      "size_bytes": 861,
+      "role": "backbone"
+    },
+    {
+      "path": "docs/01_science/PROJECTOR_CONTRACT.md",
+      "sha256": "9a7bac044838e6c9611edb960b745c3c79f83c3a08c1adf4326970dc76b89762",
+      "size_bytes": 865,
+      "role": "backbone"
+    },
+    {
+      "path": "docs/01_science/REGRESSION_CONTRACT.md",
+      "sha256": "0973dda706f6710b987b75b4dbe7fa2f2fea7127e60593ffb9150c9f0bcfe757",
+      "size_bytes": 941,
+      "role": "backbone"
+    },
+    {
+      "path": "docs/01_science/RESPONSE_DATA_CONTRACT.md",
+      "sha256": "2e4cbfa0e6742d14cce63963435a88d3c22d2dbf491062a81234b2266cac77d3",
+      "size_bytes": 958,
+      "role": "backbone"
+    },
+    {
+      "path": "docs/01_science/SCIENTIFIC_CONTRACT.md",
+      "sha256": "c9ef72433d8f0c45a07d5ae4aba906c4d7bc9ec3984a086cdfa63fb33a6cbea6",
+      "size_bytes": 1428,
+      "role": "backbone"
+    },
+    {
+      "path": "docs/01_science/SCIENTIFIC_METHOD.md",
+      "sha256": "4e47ca6d6f599f12b2c80c37c3669bcbd361356843024461afb307b35f449bcf",
+      "size_bytes": 1290,
+      "role": "backbone"
+    },
+    {
+      "path": "docs/01_science/SENSITIVITY_ANALYSIS.md",
+      "sha256": "fd552baf575f13582056fe0fa971ebd5a5b1f370dff49659ec8955c4c475e5ae",
+      "size_bytes": 883,
+      "role": "backbone"
+    },
+    {
+      "path": "docs/02_architecture/ARCHITECTURE.md",
+      "sha256": "cc32d4f2eafa1add7496f2b25942787a22ba6dccad8fe40d2f2932cd8f69044e",
+      "size_bytes": 1069,
+      "role": "backbone"
+    },
+    {
+      "path": "docs/02_architecture/ARTIFACT_AND_PROVENANCE_CONTRACT.md",
+      "sha256": "a68162055b7e5807a5b1057aa824c301d412c9fd3e3486abe41b3ca2b337a6d1",
+      "size_bytes": 839,
+      "role": "backbone"
+    },
+    {
+      "path": "docs/02_architecture/COMPONENT_BOUNDARIES.md",
+      "sha256": "8754910717de861d0624736bee1a1ca3832c8f4cd1f60fb7b83013a3e9c62b18",
+      "size_bytes": 955,
+      "role": "backbone"
+    },
+    {
+      "path": "docs/02_architecture/DAG_SPEC.md",
+      "sha256": "c87d0892d3633393509a6a25c947ef86e6cba37e200c4e3838f132006f82fc79",
+      "size_bytes": 1467,
+      "role": "backbone"
+    },
+    {
+      "path": "docs/02_architecture/DOMAIN_MODEL.md",
+      "sha256": "a8eb314f32c5994eae047421367eb54be3e3202cb2bc93eb7ffc9b80d4794c4f",
+      "size_bytes": 948,
+      "role": "backbone"
+    },
+    {
+      "path": "docs/02_architecture/FAILURE_TAXONOMY.md",
+      "sha256": "6faf555b0de553b8cd4e1651cb146d2b1d670c1c3396229664b52132900615d0",
+      "size_bytes": 877,
+      "role": "backbone"
+    },
+    {
+      "path": "docs/02_architecture/PACKAGE_SPEC.md",
+      "sha256": "cc39aebf911ca702a1e9f73c1b9d9199b991fc9ad3348ec9b5d0db08ddd3f81c",
+      "size_bytes": 838,
+      "role": "backbone"
+    },
+    {
+      "path": "docs/02_architecture/PLUGIN_AND_BACKEND_CONTRACT.md",
+      "sha256": "c6be0e1603acc6ad82a0f88b32f5c120f9bbceaba0219bc231eb6a4ddd65a26e",
+      "size_bytes": 877,
+      "role": "backbone"
+    },
+    {
+      "path": "docs/02_architecture/RESUME_AND_RECOVERY.md",
+      "sha256": "78dcfc5e6c77eeb3ef78c781f4e7b21c586171836ba06be81c363c907c4d7c2d",
+      "size_bytes": 791,
+      "role": "backbone"
+    },
+    {
+      "path": "docs/02_architecture/SCHEDULER_CONTRACT.md",
+      "sha256": "1145296c97e0c041f7bbb700a592f96643d170c102721826efb033e93014e047",
+      "size_bytes": 908,
+      "role": "backbone"
+    },
+    {
+      "path": "docs/02_architecture/SIESTA_5_4_BACKEND_SPEC.md",
+      "sha256": "1b70ddc8e232e3522248aca4409aabec7580ce8b1f60d4b301e0f0a1d5d70aee",
+      "size_bytes": 1340,
+      "role": "backbone"
+    },
+    {
+      "path": "docs/02_architecture/STATE_MACHINE.md",
+      "sha256": "f83e3569a4fdb593fae2af802cf901d955514c4e03fb0110d02c002570487a90",
+      "size_bytes": 1031,
+      "role": "backbone"
+    },
+    {
+      "path": "docs/02_architecture/TASK_IDENTITY_AND_CACHE.md",
+      "sha256": "25e35fcf2a3be57d8bd96ee4073b54c19a368c77d2ea5da64521a03f5741ed04",
+      "size_bytes": 898,
+      "role": "backbone"
+    },
+    {
+      "path": "docs/02_architecture/VERIFY_PACKAGE_SPEC.md",
+      "sha256": "ef7a1ed97e48a30c0cca0dc1f31416c1f58581d753e8e47200f452799379693d",
+      "size_bytes": 924,
+      "role": "backbone"
+    },
+    {
+      "path": "docs/03_policies/ALPHA_SELECTION_POLICY.md",
+      "sha256": "b402ce57b2828c884aafc1d1ad022adccd698637f48841b958a5d601ba080bb9",
+      "size_bytes": 758,
+      "role": "backbone"
+    },
+    {
+      "path": "docs/03_policies/NUMERICAL_GATES.md",
+      "sha256": "edfe9f7ce22a7c0f828d5951e1aeb7001d5b7062ef1886d75fb04d3a01911eeb",
+      "size_bytes": 827,
+      "role": "backbone"
+    },
+    {
+      "path": "docs/03_policies/PLATEAU_DETECTION_POLICY.md",
+      "sha256": "6a83239dc8af5ff5b67fb268ac3f617b70d425be0745c28cd4967e1aaf13431d",
+      "size_bytes": 759,
+      "role": "backbone"
+    },
+    {
+      "path": "docs/03_policies/PROJECTOR_SCAN_POLICY.md",
+      "sha256": "f40f0243f39863878510fb3ee061bbd07e1729a21e697e797a4a75ee2dc180e9",
+      "size_bytes": 763,
+      "role": "backbone"
+    },
+    {
+      "path": "docs/03_policies/RESOURCE_BUDGET_POLICY.md",
+      "sha256": "bbb12912e91b14c58fbeff3b362c9904a220b85e29911a7da19b4e9d869e21f8",
+      "size_bytes": 720,
+      "role": "backbone"
+    },
+    {
+      "path": "docs/03_policies/RETRY_POLICY.md",
+      "sha256": "8b3f5202729508c7f799c509d7794618996eab7468e9361af03ab7bc44c7cfd2",
+      "size_bytes": 747,
+      "role": "backbone"
+    },
+    {
+      "path": "docs/04_validation/ACCEPTANCE_CRITERIA.md",
+      "sha256": "f8b4aee9aed7a27174049d565a3c6c1848acf6fdafd9bbcb409a1d8a1c6fb1ad",
+      "size_bytes": 913,
+      "role": "backbone"
+    },
+    {
+      "path": "docs/04_validation/ADVERSARIAL_TEST_PLAN.md",
+      "sha256": "53f058dc2cfeed0d0c6535ff99860c23ed0ab19d08f780b9b3ddae3b2f131c1b",
+      "size_bytes": 917,
+      "role": "backbone"
+    },
+    {
+      "path": "docs/04_validation/REFERENCE_CASES.md",
+      "sha256": "172c89b1808f5a2159ab26b0042bd4fb716bc13ffcc1b4e9881a517a70fd76c1",
+      "size_bytes": 959,
+      "role": "backbone"
+    },
+    {
+      "path": "docs/04_validation/REQUIREMENTS_TRACEABILITY.md",
+      "sha256": "95cde3e2add5d7da9c188fe36f316fe476131d973d86200733a51393da727664",
+      "size_bytes": 1089,
+      "role": "backbone"
+    },
+    {
+      "path": "docs/04_validation/SCHEMA_CATALOG.md",
+      "sha256": "283c4c0e43f93f7bf4b9998251b3fd7878c8afb0797f898a8abd08e2e66b054f",
+      "size_bytes": 1097,
+      "role": "backbone"
+    },
+    {
+      "path": "docs/04_validation/VALIDATION_STRATEGY.md",
+      "sha256": "0939b905eb87186760a7fb2ff98ec08563b48a702fbcc4f32c58d714cc5bc533",
+      "size_bytes": 940,
+      "role": "backbone"
+    },
+    {
+      "path": "examples/CAMPAIGN_TEMPLATE.json",
+      "sha256": "63623ecf4fa7736d89df775afd7acddcb18793145433e95b8a480024d73a149c",
+      "size_bytes": 546,
+      "role": "backbone"
+    },
+    {
+      "path": "examples/minimal_synthetic_campaign/README.md",
+      "sha256": "1f52bfa186ac4e6ff2b35b7d59db91ae54655993693512994c6fe0ef49fb0443",
+      "size_bytes": 524,
+      "role": "backbone"
+    },
+    {
+      "path": "examples/minimal_synthetic_campaign/campaign.json",
+      "sha256": "a941b43b6674d2b1aaa88eeecc14440019a5abdf8fc81579a34b4446ea612c19",
+      "size_bytes": 683,
+      "role": "backbone"
+    },
+    {
+      "path": "examples/minimal_synthetic_campaign/candidate.lock.json",
+      "sha256": "44bb0ec49e240e09bba886afcda247afde7b732dc8087cf61280b3a21a28bc6d",
+      "size_bytes": 553,
+      "role": "backbone"
+    },
+    {
+      "path": "examples/minimal_synthetic_campaign/correlated_subspaces.json",
+      "sha256": "65e112f58e0ec4da76b0fbf67ac00f8dc13f54c51a322b9103a02a7da2101f18",
+      "size_bytes": 1344,
+      "role": "backbone"
+    },
+    {
+      "path": "examples/minimal_synthetic_campaign/gate_results.json",
+      "sha256": "fa0dd3210e0795fa9352c2c0652bc53abb4e4825919a883de9926a5ad6dff797",
+      "size_bytes": 1049,
+      "role": "backbone"
+    },
+    {
+      "path": "examples/minimal_synthetic_campaign/geometry_identity.json",
+      "sha256": "bab1a3f965075ac7bf66744d6728a72848ff18d84eae8fe5363480a7ebbd86dc",
+      "size_bytes": 577,
+      "role": "backbone"
+    },
+    {
+      "path": "examples/minimal_synthetic_campaign/materialized_dag.json",
+      "sha256": "d3f614eb5638e02bd381ca22b8720df3b555ee2a50f7844405e859500161f7f3",
+      "size_bytes": 2095,
+      "role": "backbone"
+    },
+    {
+      "path": "examples/minimal_synthetic_campaign/matrix_bundle.json",
+      "sha256": "97bf66bb05ed5abdd8161d59d8525ec244ae9d31c8220ea4f0c938dcc5215d1a",
+      "size_bytes": 3783,
+      "role": "backbone"
+    },
+    {
+      "path": "examples/minimal_synthetic_campaign/methodology.lock.json",
+      "sha256": "22e984afcb5e9ac90dd98324695361a1677fa816b8eb10963f8a66fcd1719f36",
+      "size_bytes": 1225,
+      "role": "backbone"
+    },
+    {
+      "path": "examples/minimal_synthetic_campaign/numerical_settings.json",
+      "sha256": "fe9e36413494c90d7300c1787fcd8d6290e5c5dd92986761d450587951721d78",
+      "size_bytes": 287,
+      "role": "backbone"
+    },
+    {
+      "path": "examples/minimal_synthetic_campaign/perturbation_policy.json",
+      "sha256": "27e081682dcfd4acd5bbfcf57ba0a423fb9e3633963e96176cf4f00f5d676ffa",
+      "size_bytes": 351,
+      "role": "backbone"
+    },
+    {
+      "path": "examples/minimal_synthetic_campaign/projector_policy.json",
+      "sha256": "1d3b2616a1613b570f13af43f7476bb5da8552bd78a3bb38ac723163a0dbde24",
+      "size_bytes": 344,
+      "role": "backbone"
+    },
+    {
+      "path": "examples/minimal_synthetic_campaign/regression_results.json",
+      "sha256": "772cc3046c4724321b44d7e88de8b416639e10255d646c8813fdd68a5eed608f",
+      "size_bytes": 7379,
+      "role": "backbone"
+    },
+    {
+      "path": "examples/minimal_synthetic_campaign/response_dataset.json",
+      "sha256": "2a0634e4080f347492ffa0f4223dea4cc569c6db93bc7fe5e4a2c144ed6695d6",
+      "size_bytes": 31407,
+      "role": "backbone"
+    },
+    {
+      "path": "examples/minimal_synthetic_campaign/runtime_identity.json",
+      "sha256": "730d5d4eb52fa00fc480785ee9f1ee99e66e0af4f81089bb1b5894fa53f894ad",
+      "size_bytes": 260,
+      "role": "backbone"
+    },
+    {
+      "path": "examples/minimal_synthetic_campaign/sensitivity_report.json",
+      "sha256": "3067bd6f8a130c38c5fbd1686eb0ca0d35e874a8d07d8ce765a149dd3c812c18",
+      "size_bytes": 426,
+      "role": "backbone"
+    },
+    {
+      "path": "schemas/campaign.schema.json",
+      "sha256": "79c8a01632fe716b02323190f145c3115710e33618829962bcc470f1168be7f3",
+      "size_bytes": 1605,
+      "role": "backbone"
+    },
+    {
+      "path": "schemas/candidate_lock.schema.json",
+      "sha256": "417717abdeeb19770804b1d20578ec010d53e0467273f83f5ba22b1432c4d205",
+      "size_bytes": 1386,
+      "role": "backbone"
+    },
+    {
+      "path": "schemas/correlated_subspaces.schema.json",
+      "sha256": "c1c9ee287d7851d2bdd2217ac7c2fa0481f2275d889dd74b8b0244d86364cf06",
+      "size_bytes": 3566,
+      "role": "backbone"
+    },
+    {
+      "path": "schemas/dag.schema.json",
+      "sha256": "30ec1a418772b9bbfefb82dd551ff1868990bd17d539520ad7e2b96e01691d14",
+      "size_bytes": 1163,
+      "role": "backbone"
+    },
+    {
+      "path": "schemas/failure.schema.json",
+      "sha256": "993f7ef438f8a92b17fd6c01f4fe9dabfc81e1ce7aae607eba71d2ac68638471",
+      "size_bytes": 1085,
+      "role": "backbone"
+    },
+    {
+      "path": "schemas/gate_results.schema.json",
+      "sha256": "59a38481a6835aef8200d60883029eb5159de2328f8f0f791467740c46fac0e3",
+      "size_bytes": 2303,
+      "role": "backbone"
+    },
+    {
+      "path": "schemas/geometry_identity.schema.json",
+      "sha256": "886d72f55db12845ba7337a62bffd609b74200c3e8ea612ac9eb8b25a33aa6c3",
+      "size_bytes": 1253,
+      "role": "backbone"
+    },
+    {
+      "path": "schemas/human_decision.schema.json",
+      "sha256": "8e56f9d2049c16abc4c43cb0440940f19d8c5bf0ef3d0f26a067c42cc8d6a700",
+      "size_bytes": 1612,
+      "role": "backbone"
+    },
+    {
+      "path": "schemas/matrix_bundle.schema.json",
+      "sha256": "af8ed4bc63f663723e69fe4b8f9e85cb45bdf45ccff9b49ae0ee0ee8706c4604",
+      "size_bytes": 4644,
+      "role": "backbone"
+    },
+    {
+      "path": "schemas/methodology.schema.json",
+      "sha256": "e98bc04a848a98c211dd369eb1d5b4178d8da33be8a63e8fd4e3988000dc8c99",
+      "size_bytes": 2105,
+      "role": "backbone"
+    },
+    {
+      "path": "schemas/numerical_settings.schema.json",
+      "sha256": "d08b9e70553ff5ca986c4e8e27f350e505f6afdba21299f6638f1a5e01b77c1d",
+      "size_bytes": 997,
+      "role": "backbone"
+    },
+    {
+      "path": "schemas/package_manifest.schema.json",
+      "sha256": "712c256b6d6c33f4c20033bf92668ed7a49eab9a69865a6c486c775d91a09c70",
+      "size_bytes": 1075,
+      "role": "backbone"
+    },
+    {
+      "path": "schemas/perturbation_policy.schema.json",
+      "sha256": "346f3214701e5ec9b088b5cedf04ae90c6743c262342c3549cab28b693816828",
+      "size_bytes": 1367,
+      "role": "backbone"
+    },
+    {
+      "path": "schemas/projector_policy.schema.json",
+      "sha256": "52a35b61a22c35706d13dc17be6a97c7777e8e885fc0695722d154bb9eeb9e23",
+      "size_bytes": 1302,
+      "role": "backbone"
+    },
+    {
+      "path": "schemas/regression_results.schema.json",
+      "sha256": "9dca5be6cbea737c82805332b150e53919a5a95770ef53180b7ae09df3d27910",
+      "size_bytes": 2329,
+      "role": "backbone"
+    },
+    {
+      "path": "schemas/response_dataset.schema.json",
+      "sha256": "4416cfd20578d65307922f2552b6fce26683b89002ccfb1053265b7b2eaa5da3",
+      "size_bytes": 2374,
+      "role": "backbone"
+    },
+    {
+      "path": "schemas/runtime_identity.schema.json",
+      "sha256": "4eaf31673acbeebe141d7fae4d13351c6b84244fe2bd5d1f480989f5807e7828",
+      "size_bytes": 810,
+      "role": "backbone"
+    },
+    {
+      "path": "schemas/sensitivity_report.schema.json",
+      "sha256": "96525166d34d83b619859cad073262f0532b4cc0a1dce0bb8efb21fce446fe43",
+      "size_bytes": 1466,
+      "role": "backbone"
+    },
+    {
+      "path": "schemas/task.schema.json",
+      "sha256": "b1b86cf1fd5704e525455a19fc8ec3a76fde659f5697bdcc4ac9d2d2b2b0ec94",
+      "size_bytes": 1612,
+      "role": "backbone"
+    },
+    {
+      "path": "schemas/task_status.schema.json",
+      "sha256": "ca82f4d412d09b57248c1020f2d674ca9e1c610e011966eefc973f0d1985b414",
+      "size_bytes": 1010,
+      "role": "backbone"
+    },
+    {
+      "path": "schemas/trace_event.schema.json",
+      "sha256": "d40a34c1f3efc8352257d5f750267a56248ddee84fe6dfd7876ce07623873e89",
+      "size_bytes": 592,
+      "role": "backbone"
+    },
+    {
+      "path": "tools/verify_backbone.py",
+      "sha256": "8c8753c1d82b2115a04abf48ceb327109c9a9322f168b5dca7edd6aaf0681381",
+      "size_bytes": 7619,
+      "role": "backbone"
+    }
+  ]
+}

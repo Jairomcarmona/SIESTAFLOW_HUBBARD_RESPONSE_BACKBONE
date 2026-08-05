@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "failure.schema.json",
+  "title": "Failure",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "failure_id",
+    "task_id",
+    "category",
+    "severity",
+    "recoverable",
+    "message",
+    "evidence_refs",
+    "timestamp"
+  ],
+  "properties": {
+    "failure_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+    },
+    "task_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+    },
+    "category": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+    },
+    "severity": {
+      "enum": [
+        "error",
+        "fatal"
+      ]
+    },
+    "recoverable": {
+      "type": "boolean"
+    },
+    "message": {
+      "type": "string",
+      "minLength": 1
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "suggested_action": {
+      "type": "string"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

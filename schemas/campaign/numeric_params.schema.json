@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "campaign_id": {
+      "type": "string"
+    },
+    "zero_alpha_tolerance": {
+      "type": "number"
+    },
+    "charge_tolerance": {
+      "type": "number"
+    },
+    "mag_tolerance": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "campaign_id",
+    "zero_alpha_tolerance"
+  ]
+}

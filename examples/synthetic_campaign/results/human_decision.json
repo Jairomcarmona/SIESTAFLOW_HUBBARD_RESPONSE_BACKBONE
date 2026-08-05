@@ -1,0 +1,10 @@
+{
+  "decision_type": "ACCEPT_DIAGONAL_VECTOR",
+  "u_accepted_diagonal_ev": [
+    0.25,
+    0.25
+  ],
+  "rationale": "Diagonal is sufficient for this system.",
+  "reduction_justification": "Off-diagonal elements are negligible.",
+  "precondition_refs": []
+}

@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "projector_policy.schema.json",
+  "title": "Projector Policy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "generation_method",
+    "candidates",
+    "coarse_scan",
+    "refinement"
+  ],
+  "properties": {
+    "generation_method": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "candidates": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "projector_id",
+          "rc_bohr",
+          "omega_bohr"
+        ],
+        "properties": {
+          "projector_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+          },
+          "rc_bohr": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "omega_bohr": {
+            "type": "number",
+            "minimum": 0
+          },
+          "metadata": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "coarse_scan": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "refinement": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "plateau_policy_id": {
+      "type": "string"
+    }
+  }
+}

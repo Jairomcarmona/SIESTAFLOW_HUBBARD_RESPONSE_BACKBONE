@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://siestaflow.invalid/schemas/v0.1.0/plateau_region.schema.json",
+  "type": "object",
+  "properties": {
+    "campaign_id": { "type": "string" },
+    "plateau_id": { "type": "string" },
+    "candidates": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "stability_metric": { "type": "number" },
+    "continuity_metric": { "type": "number" },
+    "sensitivity_metric": { "type": "number" },
+    "is_connected": { "type": "boolean" },
+    "status": { "enum": ["DETECTED", "CONFIRMED", "REJECTED"] }
+  },
+  "required": [
+    "campaign_id",
+    "plateau_id",
+    "candidates",
+    "stability_metric",
+    "continuity_metric",
+    "sensitivity_metric",
+    "is_connected",
+    "status"
+  ]
+}

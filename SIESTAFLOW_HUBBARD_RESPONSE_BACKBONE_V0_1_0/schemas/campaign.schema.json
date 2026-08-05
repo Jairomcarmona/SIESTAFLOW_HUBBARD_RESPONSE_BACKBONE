@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "campaign.schema.json",
+  "title": "Hubbard Response Campaign",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "campaign_id",
+    "methodology_lock",
+    "geometry",
+    "subspaces",
+    "projector_policy",
+    "perturbation_policy",
+    "numerical_settings",
+    "backend",
+    "scheduler_profile"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string"
+    },
+    "campaign_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+    },
+    "description": {
+      "type": "string"
+    },
+    "methodology_lock": {
+      "type": "string"
+    },
+    "geometry": {
+      "type": "string"
+    },
+    "subspaces": {
+      "type": "string"
+    },
+    "projector_policy": {
+      "type": "string"
+    },
+    "perturbation_policy": {
+      "type": "string"
+    },
+    "numerical_settings": {
+      "type": "string"
+    },
+    "backend": {
+      "type": "object",
+      "required": [
+        "name",
+        "version"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        }
+      }
+    },
+    "scheduler_profile": {
+      "type": "object",
+      "required": [
+        "backend",
+        "profile_id"
+      ],
+      "properties": {
+        "backend": {
+          "enum": [
+            "local",
+            "slurm"
+          ]
+        },
+        "profile_id": {
+          "type": "string"
+        }
+      }
+    },
+    "metadata": {
+      "type": "object"
+    }
+  }
+}

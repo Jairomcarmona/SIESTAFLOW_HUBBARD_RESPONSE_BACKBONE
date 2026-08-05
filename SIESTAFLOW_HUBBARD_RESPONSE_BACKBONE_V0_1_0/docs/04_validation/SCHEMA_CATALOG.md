@@ -1,0 +1,23 @@
+# Catálogo de esquemas
+
+- `methodology.schema.json`: decisiones metodológicas.
+- `campaign.schema.json`: campaña general.
+- `geometry_identity.schema.json`: identidad de geometría.
+- `correlated_subspaces.schema.json`: subespacios, observables y targets.
+- `projector_policy.schema.json`: candidatos de proyector.
+- `perturbation_policy.schema.json`: rejillas y adaptación de alpha.
+- `numerical_settings.schema.json`: parámetros electrónicos.
+- `runtime_identity.schema.json`: binario, banner y MPI.
+- `dag.schema.json`: DAG materializado.
+- `task.schema.json`: identidad y dependencias.
+- `task_status.schema.json`: estado y transiciones.
+- `response_dataset.schema.json`: observaciones.
+- `regression_results.schema.json`: ajustes.
+- `matrix_bundle.schema.json`: matrices, inversas y U.
+- `gate_results.schema.json`: gates.
+- `sensitivity_report.schema.json`: sensibilidad.
+- `failure.schema.json`: fallos.
+- `trace_event.schema.json`: eventos.
+- `candidate_lock.schema.json`: candidato congelado.
+- `human_decision.schema.json`: decisión.
+- `package_manifest.schema.json`: manifiesto.

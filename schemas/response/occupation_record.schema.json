@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "campaign_id": {
+      "type": "string"
+    },
+    "matrix_family": {
+      "type": "string"
+    },
+    "matrix_stage": {
+      "type": "string"
+    },
+    "response_mode": {
+      "type": "string"
+    }
+  },
+  "not": {
+    "required": [
+      "sha256"
+    ]
+  }
+}

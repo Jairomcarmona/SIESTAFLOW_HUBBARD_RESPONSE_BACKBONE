@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://siestaflow.invalid/schemas/v0.1.0/observable_registry.schema.json",
+  "type": "object",
+  "properties": {
+    "campaign_id": { "type": "string" },
+    "observables": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "observable_id": { "type": "string" },
+          "subspace_id": { "type": "string" },
+          "site_id": { "type": "string" },
+          "quantity": { "type": "string" },
+          "spin_channel": { "type": "string" },
+          "orbital_resolution": { "type": "string" },
+          "units": { "const": "dimensionless" },
+          "occupation_semantic": { "const": "electron_count" },
+          "backend_extraction_key": { "type": "string" }
+        },
+        "required": [
+          "observable_id",
+          "subspace_id",
+          "site_id",
+          "quantity",
+          "spin_channel",
+          "orbital_resolution",
+          "units",
+          "occupation_semantic",
+          "backend_extraction_key"
+        ]
+      }
+    }
+  },
+  "required": ["campaign_id", "observables"]
+}

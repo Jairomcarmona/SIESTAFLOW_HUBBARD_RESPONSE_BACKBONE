@@ -1,0 +1,8 @@
+{
+  "siesta_binary_sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+  "siesta_banner": "SYNTHETIC BACKEND 0.1.0",
+  "mpi_banner": "NO MPI",
+  "capture_source": "synthetic_runtime.log",
+  "module_snapshot": [],
+  "validated": true
+}

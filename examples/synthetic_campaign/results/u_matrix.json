@@ -1,0 +1,16 @@
+{
+  "matrix_family": "HUBBARD",
+  "matrix_stage": "U_MATRIX",
+  "response_mode": "NOT_APPLICABLE",
+  "units": "eV",
+  "values": [
+    [
+      0.25252525,
+      -0.02525253
+    ],
+    [
+      -0.02525253,
+      0.25252525
+    ]
+  ]
+}

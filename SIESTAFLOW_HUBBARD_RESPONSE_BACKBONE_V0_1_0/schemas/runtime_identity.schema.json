@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "runtime_identity.schema.json",
+  "title": "Runtime Identity",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "siesta_binary_sha256",
+    "siesta_banner",
+    "mpi_banner",
+    "capture_source",
+    "validated"
+  ],
+  "properties": {
+    "siesta_binary_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "siesta_banner": {
+      "type": "string",
+      "minLength": 1
+    },
+    "mpi_banner": {
+      "type": "string",
+      "minLength": 1
+    },
+    "capture_source": {
+      "type": "string",
+      "minLength": 1
+    },
+    "module_snapshot": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "validated": {
+      "type": "boolean"
+    }
+  }
+}

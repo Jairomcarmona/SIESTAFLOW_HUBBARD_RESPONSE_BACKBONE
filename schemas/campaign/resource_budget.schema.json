@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://siestaflow.invalid/schemas/v0.1.0/resource_budget.schema.json",
+  "type": "object",
+  "properties": {
+    "campaign_id": { "type": "string" },
+    "max_tasks": { "type": "integer" },
+    "max_cpu_hours": { "type": "number" },
+    "max_memory_gb": { "type": "number" },
+    "max_walltime_s": { "type": "integer" },
+    "cost_per_branch_estimate": { "type": ["number", "null"] },
+    "priority_weights": { "type": "object" },
+    "pruning_policy": { "type": "string" },
+    "reserve_for_full_matrix": { "type": "boolean" },
+    "tiebreaker": { "const": "deterministic" }
+  },
+  "required": [
+    "campaign_id",
+    "max_tasks",
+    "max_cpu_hours",
+    "max_memory_gb",
+    "max_walltime_s",
+    "cost_per_branch_estimate",
+    "priority_weights",
+    "pruning_policy",
+    "reserve_for_full_matrix",
+    "tiebreaker"
+  ]
+}

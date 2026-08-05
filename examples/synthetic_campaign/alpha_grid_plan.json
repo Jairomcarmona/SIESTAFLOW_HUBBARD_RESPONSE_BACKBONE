@@ -1,0 +1,29 @@
+{
+  "campaign_id": "SYNTH_CAMPAIGN_001",
+  "channels": [
+    {
+      "channel_id": "P0",
+      "points": [
+        -0.1,
+        -0.05,
+        0.0,
+        0.05,
+        0.1
+      ],
+      "units": "eV",
+      "status": "LOCKED"
+    },
+    {
+      "channel_id": "P1",
+      "points": [
+        -0.1,
+        -0.05,
+        0.0,
+        0.05,
+        0.1
+      ],
+      "units": "eV",
+      "status": "LOCKED"
+    }
+  ]
+}

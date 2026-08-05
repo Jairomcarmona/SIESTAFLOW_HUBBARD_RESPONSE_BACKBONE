@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://siestaflow.invalid/schemas/v0.1.0/alpha_grid_plan.schema.json",
+  "type": "object",
+  "properties": {
+    "campaign_id": { "type": "string" },
+    "channels": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "alpha_values_ev": {
+            "type": "array",
+            "items": { "type": "number" }
+          },
+          "K_p": { "type": "integer" },
+          "units": { "const": "eV" },
+          "revision": { "type": "string" },
+          "origin": { "type": "string" },
+          "status": { "enum": ["PROPOSED", "PILOTED", "REFINED", "LOCKED"] },
+          "gate_eligibility": {
+            "type": "object",
+            "properties": {
+              "full_evaluation": { "type": "boolean" },
+              "non_evaluable_gates": {
+                "type": "array",
+                "items": { "type": "string" }
+              }
+            },
+            "required": ["full_evaluation", "non_evaluable_gates"]
+          },
+          "previous_revision_ref": { "type": ["string", "null"] }
+        },
+        "required": [
+          "alpha_values_ev",
+          "K_p",
+          "units",
+          "revision",
+          "origin",
+          "status",
+          "gate_eligibility",
+          "previous_revision_ref"
+        ]
+      }
+    }
+  },
+  "required": ["campaign_id", "channels"]
+}

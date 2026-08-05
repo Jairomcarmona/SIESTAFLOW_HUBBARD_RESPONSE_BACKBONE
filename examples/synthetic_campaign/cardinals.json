@@ -1,0 +1,36 @@
+{
+  "P": 2,
+  "O": 4,
+  "N": 2,
+  "constraint_p_equals_n_v0_1_0": true,
+  "alpha_grids": {
+    "channel_0": {
+      "alpha_values_ev": [
+        -0.1,
+        -0.05,
+        0.0,
+        0.05,
+        0.1
+      ],
+      "K_p": 5,
+      "symmetric_pairs": true,
+      "k_negative": 2,
+      "k_zero": 1,
+      "k_positive": 2
+    },
+    "channel_1": {
+      "alpha_values_ev": [
+        -0.1,
+        -0.05,
+        0.0,
+        0.05,
+        0.1
+      ],
+      "K_p": 5,
+      "symmetric_pairs": true,
+      "k_negative": 2,
+      "k_zero": 1,
+      "k_positive": 2
+    }
+  }
+}

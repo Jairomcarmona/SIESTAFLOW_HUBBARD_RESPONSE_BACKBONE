@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "task_status.schema.json",
+  "title": "Task Status",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "task_id",
+    "attempt_id",
+    "state",
+    "updated_at"
+  ],
+  "properties": {
+    "task_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+    },
+    "attempt_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+    },
+    "state": {
+      "enum": [
+        "PLANNED",
+        "READY",
+        "RUNNING",
+        "SUCCEEDED_UNVALIDATED",
+        "VALIDATED",
+        "REJECTED",
+        "FAILED",
+        "BLOCKED",
+        "INVALIDATED"
+      ]
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "reason": {
+      "type": "string"
+    },
+    "exit_code": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "failure_ref": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  }
+}

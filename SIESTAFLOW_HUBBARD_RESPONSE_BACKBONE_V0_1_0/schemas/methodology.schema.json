@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "methodology.schema.json",
+  "title": "Methodology Lock",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "methodology_version",
+    "response_method",
+    "matrix_policy",
+    "gates",
+    "human_decision_required"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string"
+    },
+    "methodology_version": {
+      "type": "string"
+    },
+    "response_method": {
+      "const": "finite_difference_linear_response"
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "geometry_policy",
+        "magnetism",
+        "interaction_model"
+      ],
+      "properties": {
+        "geometry_policy": {
+          "const": "FIXED_DURING_LINEAR_RESPONSE"
+        },
+        "magnetism": {
+          "const": "collinear"
+        },
+        "interaction_model": {
+          "const": "dudarev_effective_U"
+        },
+        "soc": {
+          "const": false
+        }
+      }
+    },
+    "bare_definition": {
+      "type": "string",
+      "minLength": 1
+    },
+    "screened_definition": {
+      "type": "string",
+      "minLength": 1
+    },
+    "matrix_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "require_square",
+        "selected_for_inversion",
+        "allow_pseudoinverse",
+        "formula"
+      ],
+      "properties": {
+        "require_square": {
+          "const": true
+        },
+        "selected_for_inversion": {
+          "enum": [
+            "raw",
+            "symmetrized"
+          ]
+        },
+        "allow_pseudoinverse": {
+          "const": false
+        },
+        "formula": {
+          "const": "inverse(chi0)-inverse(chi)"
+        }
+      }
+    },
+    "gates": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "gate_results.schema.json#/$defs/gate_definition"
+      }
+    },
+    "human_decision_required": {
+      "const": true
+    },
+    "recommended_single_U_ev_default": {
+      "type": "null"
+    }
+  }
+}

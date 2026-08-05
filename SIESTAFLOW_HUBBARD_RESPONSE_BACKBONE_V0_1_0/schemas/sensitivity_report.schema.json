@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "sensitivity_report.schema.json",
+  "title": "Sensitivity Report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "candidate_id",
+    "analyses",
+    "status"
+  ],
+  "properties": {
+    "candidate_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+    },
+    "analyses": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "analysis_id",
+          "kind",
+          "summary",
+          "gate_status"
+        ],
+        "properties": {
+          "analysis_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+          },
+          "kind": {
+            "enum": [
+              "leave_one_out",
+              "exclude_extremes",
+              "alpha_subwindows",
+              "slope_uncertainty",
+              "projector_neighbors",
+              "scf_tolerance",
+              "replication",
+              "custom"
+            ]
+          },
+          "summary": {
+            "type": "object"
+          },
+          "gate_status": {
+            "enum": [
+              "PASS",
+              "FAIL",
+              "INDETERMINATE"
+            ]
+          }
+        }
+      }
+    },
+    "status": {
+      "enum": [
+        "PASS",
+        "FAIL",
+        "INDETERMINATE"
+      ]
+    }
+  }
+}

@@ -1,0 +1,129 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "campaign_id",
+    "decision_type"
+  ],
+  "properties": {
+    "campaign_id": {
+      "type": "string"
+    },
+    "decision_type": {
+      "enum": [
+        "DEFER",
+        "REJECT",
+        "ACCEPT_FULL_MATRIX",
+        "ACCEPT_DIAGONAL_VECTOR",
+        "ACCEPT_SINGLE_SCALAR"
+      ]
+    },
+    "rationale": {
+      "type": "string"
+    },
+    "reduction_justification": {
+      "type": "string"
+    },
+    "u_accepted_matrix_ev": {
+      "type": "array"
+    },
+    "u_accepted_diagonal_ev": {
+      "type": "array"
+    },
+    "u_accepted_scalar_ev": {
+      "type": "number"
+    },
+    "rejection_reasons": {
+      "type": "array"
+    },
+    "precondition_refs": {
+      "type": "array"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "decision_type": {
+            "const": "DEFER"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "rationale"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "decision_type": {
+            "const": "REJECT"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "rationale",
+          "rejection_reasons"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "decision_type": {
+            "const": "ACCEPT_FULL_MATRIX"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "u_accepted_matrix_ev",
+          "rationale",
+          "precondition_refs"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "decision_type": {
+            "const": "ACCEPT_DIAGONAL_VECTOR"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "u_accepted_diagonal_ev",
+          "rationale",
+          "reduction_justification",
+          "precondition_refs"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "decision_type": {
+            "const": "ACCEPT_SINGLE_SCALAR"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "u_accepted_scalar_ev",
+          "rationale",
+          "reduction_justification",
+          "precondition_refs"
+        ]
+      }
+    }
+  ],
+  "not": {
+    "required": [
+      "sha256"
+    ]
+  }
+}

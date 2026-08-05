@@ -1,0 +1,11 @@
+{
+  "campaign_id": "SYNTH_CAMPAIGN_001",
+  "observables": {
+    "S0_UP": 2.5,
+    "S0_DOWN": 2.5,
+    "S1_UP": 2.5,
+    "S1_DOWN": 2.5
+  },
+  "total_charge": 10.0,
+  "total_magnetic_moment": 0.0
+}

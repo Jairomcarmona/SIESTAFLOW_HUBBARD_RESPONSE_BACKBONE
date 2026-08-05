@@ -1,0 +1,36 @@
+{
+  "campaign_id": "test_campaign",
+  "matrix_family": "AGGREGATION",
+  "matrix_stage": "A_TRANSFORM",
+  "response_mode": "NOT_APPLICABLE",
+  "values": [
+    [
+      1,
+      1,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      1,
+      1
+    ]
+  ],
+  "shape": [
+    2,
+    4
+  ],
+  "units": "dimensionless",
+  "row_subspace_ids": [
+    "subspace_0",
+    "subspace_1"
+  ],
+  "column_observable_ids": [
+    "obs_0",
+    "obs_1",
+    "obs_2",
+    "obs_3"
+  ],
+  "version": "0.1.0"
+}

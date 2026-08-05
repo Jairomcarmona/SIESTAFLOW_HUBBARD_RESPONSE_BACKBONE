@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "campaign_id": {
+      "type": "string"
+    },
+    "subspaces": {
+      "type": "array"
+    }
+  },
+  "required": [
+    "campaign_id"
+  ]
+}

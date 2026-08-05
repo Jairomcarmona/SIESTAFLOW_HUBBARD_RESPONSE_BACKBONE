@@ -1,0 +1,20 @@
+{
+  "generation_method": 2,
+  "candidates": [
+    {
+      "projector_id": "proj_default",
+      "rc_bohr": 3.5,
+      "omega_bohr": 0.05,
+      "metadata": {
+        "synthetic": true
+      }
+    }
+  ],
+  "coarse_scan": {
+    "enabled": false
+  },
+  "refinement": {
+    "enabled": false
+  },
+  "plateau_policy_id": "none_for_minimal_example"
+}

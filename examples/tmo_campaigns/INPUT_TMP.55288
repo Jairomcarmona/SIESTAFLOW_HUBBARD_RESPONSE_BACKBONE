@@ -1,0 +1,25 @@
+SystemName          Cu Test
+SystemLabel         cu_test
+NumberOfAtoms       1
+NumberOfSpecies     1
+%block ChemicalSpeciesLabel
+ 1  29  Cu1
+%endblock ChemicalSpeciesLabel
+LatticeConstant     3.81 Ang
+%block LatticeVectors
+ 1.0  0.0  0.0
+ 0.0  1.0  0.0
+ 0.0  0.0  1.0
+%endblock LatticeVectors
+AtomicCoordinatesFormat Fractional
+%block AtomicCoordinatesAndAtomicSpecies
+ 0.0  0.0  0.0  1
+%endblock AtomicCoordinatesAndAtomicSpecies
+PAO.BasisSize       DZP
+MeshCutoff          300.0 Ry
+%block kgrid_Monkhorst_Pack
+ 1 0 0 0.0
+ 0 1 0 0.0
+ 0 0 1 0.0
+%endblock kgrid_Monkhorst_Pack
+MaxSCFIterations    1

@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "campaign_id",
+    "matrix_family",
+    "matrix_stage",
+    "values",
+    "row_subspace_ids",
+    "column_observable_ids",
+    "units",
+    "version"
+  ],
+  "properties": {
+    "campaign_id": {
+      "type": "string"
+    },
+    "matrix_family": {
+      "const": "AGGREGATION"
+    },
+    "matrix_stage": {
+      "const": "A_TRANSFORM"
+    },
+    "response_mode": {
+      "const": "NOT_APPLICABLE"
+    },
+    "values": {
+      "type": "array",
+      "description": "NxO matrix as nested array",
+      "items": {
+        "type": "array",
+        "items": {
+          "type": "number"
+        }
+      }
+    },
+    "shape": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      },
+      "minItems": 2,
+      "maxItems": 2,
+      "description": "Must be [N, O]"
+    },
+    "row_subspace_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "length N; one per aggregated subspace"
+    },
+    "column_observable_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "length O; one per observable"
+    },
+    "units": {
+      "const": "dimensionless"
+    },
+    "version": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    }
+  }
+}

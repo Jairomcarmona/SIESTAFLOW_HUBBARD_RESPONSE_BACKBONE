@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://siestaflow.invalid/schemas/v0.1.0/projector_candidate_evaluation.schema.json",
+  "type": "object",
+  "properties": {
+    "candidate_id": { "type": "string" },
+    "campaign_id": { "type": "string" },
+    "preliminary_U_ev": {
+      "type": ["array", "null"],
+      "items": {
+        "type": "array",
+        "items": { "type": "number" }
+      }
+    },
+    "condition_number": { "type": "number" },
+    "linearity_metric": { "type": "number" },
+    "magnetic_stability": { "type": "number" },
+    "electronic_state_continuity": { "type": "number" },
+    "blocking_gates": { "type": "array" },
+    "evaluation_status": { "enum": ["PASS", "FAIL", "PARTIAL"] }
+  },
+  "required": [
+    "candidate_id",
+    "campaign_id",
+    "preliminary_U_ev",
+    "condition_number",
+    "linearity_metric",
+    "magnetic_stability",
+    "electronic_state_continuity",
+    "blocking_gates",
+    "evaluation_status"
+  ]
+}

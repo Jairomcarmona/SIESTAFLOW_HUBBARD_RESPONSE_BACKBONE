@@ -1,0 +1,14 @@
+{
+  "campaign_id": "test_campaign",
+  "constraint_bijective": true,
+  "mapping": [
+    {
+      "perturbation_channel_id": "channel_0",
+      "subspace_id": "subspace_0"
+    },
+    {
+      "perturbation_channel_id": "channel_1",
+      "subspace_id": "subspace_1"
+    }
+  ]
+}

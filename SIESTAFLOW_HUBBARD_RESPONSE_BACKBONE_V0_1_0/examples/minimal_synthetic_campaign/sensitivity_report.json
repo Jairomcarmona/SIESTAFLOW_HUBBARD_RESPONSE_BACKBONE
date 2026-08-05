@@ -1,0 +1,22 @@
+{
+  "candidate_id": "candidate_proj_default",
+  "analyses": [
+    {
+      "analysis_id": "loo_exact",
+      "kind": "leave_one_out",
+      "summary": {
+        "max_abs_delta_U": 0.0
+      },
+      "gate_status": "PASS"
+    },
+    {
+      "analysis_id": "subwindow_exact",
+      "kind": "alpha_subwindows",
+      "summary": {
+        "max_abs_delta_U": 0.0
+      },
+      "gate_status": "PASS"
+    }
+  ],
+  "status": "PASS"
+}

@@ -1,0 +1,20 @@
+{
+  "schema_version": "0.1.0",
+  "campaign_id": "REPLACE_ME",
+  "description": "REPLACE_ME",
+  "methodology_lock": "methodology.lock.json",
+  "geometry": "geometry_identity.json",
+  "subspaces": "correlated_subspaces.json",
+  "projector_policy": "projector_policy.json",
+  "perturbation_policy": "perturbation_policy.json",
+  "numerical_settings": "numerical_settings.json",
+  "backend": {
+    "name": "siesta_5_4",
+    "version": "TBD"
+  },
+  "scheduler_profile": {
+    "backend": "slurm",
+    "profile_id": "REPLACE_ME"
+  },
+  "metadata": {}
+}

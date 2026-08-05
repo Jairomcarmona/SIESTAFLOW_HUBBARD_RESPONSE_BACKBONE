@@ -1,0 +1,22 @@
+{
+  "schema_version": "0.1.0",
+  "campaign_id": "minimal_synthetic_two_site",
+  "description": "Two-site synthetic campaign used to validate contracts, not SIESTA physics.",
+  "methodology_lock": "methodology.lock.json",
+  "geometry": "geometry_identity.json",
+  "subspaces": "correlated_subspaces.json",
+  "projector_policy": "projector_policy.json",
+  "perturbation_policy": "perturbation_policy.json",
+  "numerical_settings": "numerical_settings.json",
+  "backend": {
+    "name": "synthetic",
+    "version": "0.1.0"
+  },
+  "scheduler_profile": {
+    "backend": "local",
+    "profile_id": "single_process"
+  },
+  "metadata": {
+    "purpose": "schema_and_contract_validation"
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "campaign_id",
+    "mapping",
+    "constraint_bijective"
+  ],
+  "properties": {
+    "campaign_id": {
+      "type": "string"
+    },
+    "mapping": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "perturbation_channel_id",
+          "subspace_id"
+        ],
+        "properties": {
+          "perturbation_channel_id": {
+            "type": "string"
+          },
+          "subspace_id": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "constraint_bijective": {
+      "const": true,
+      "description": "v0.1.0: bijective. Each channel maps to exactly one subspace and vice versa."
+    }
+  }
+}

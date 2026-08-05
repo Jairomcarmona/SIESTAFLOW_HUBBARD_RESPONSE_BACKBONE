@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "campaign_id",
+    "P",
+    "O",
+    "N",
+    "alpha_grids",
+    "constraint_p_equals_n_v0_1_0"
+  ],
+  "properties": {
+    "campaign_id": {
+      "type": "string"
+    },
+    "P": {
+      "type": "integer"
+    },
+    "O": {
+      "type": "integer"
+    },
+    "N": {
+      "type": "integer"
+    },
+    "constraint_p_equals_n_v0_1_0": {
+      "const": true
+    },
+    "alpha_grids": {
+      "type": "object",
+      "description": "Mapping from perturbation_channel_id to its alpha grid",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "alpha_values_ev": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "K_p": {
+            "type": "integer"
+          },
+          "symmetric_pairs": {
+            "type": "boolean"
+          },
+          "k_negative": {
+            "type": "integer"
+          },
+          "k_zero": {
+            "type": "integer"
+          },
+          "k_positive": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "alpha_values_ev",
+          "K_p",
+          "symmetric_pairs",
+          "k_negative",
+          "k_zero",
+          "k_positive"
+        ]
+      }
+    }
+  }
+}

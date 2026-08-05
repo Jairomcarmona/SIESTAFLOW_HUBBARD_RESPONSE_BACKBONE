@@ -1,0 +1,16 @@
+{
+  "matrix_family": "SUSCEPTIBILITY",
+  "matrix_stage": "RAW",
+  "response_mode": "BARE",
+  "units": "1/eV",
+  "values": [
+    [
+      -1.0,
+      -0.1
+    ],
+    [
+      -0.1,
+      -1.0
+    ]
+  ]
+}

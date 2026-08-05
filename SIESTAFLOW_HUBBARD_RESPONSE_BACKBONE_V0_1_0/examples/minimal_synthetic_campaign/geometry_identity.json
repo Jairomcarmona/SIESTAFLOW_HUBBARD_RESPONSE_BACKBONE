@@ -1,0 +1,15 @@
+{
+  "geometry_id": "synthetic_two_site",
+  "geometry_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "cell_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+  "coordinates_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+  "species_mapping_sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+  "number_of_atoms": 2,
+  "periodicity": [
+    true,
+    true,
+    true
+  ],
+  "geometry_policy": "FIXED_DURING_LINEAR_RESPONSE",
+  "source_file": "synthetic_geometry.fdf"
+}

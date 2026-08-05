@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "numerical_settings.schema.json",
+  "title": "Numerical Settings",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "xc_functional",
+    "mesh_cutoff",
+    "k_sampling",
+    "scf",
+    "spin"
+  ],
+  "properties": {
+    "xc_functional": {
+      "type": "string",
+      "minLength": 1
+    },
+    "mesh_cutoff": {
+      "type": "object",
+      "required": [
+        "value",
+        "unit"
+      ],
+      "properties": {
+        "value": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "unit": {
+          "type": "string"
+        }
+      }
+    },
+    "k_sampling": {
+      "type": "object"
+    },
+    "scf": {
+      "type": "object"
+    },
+    "spin": {
+      "type": "object",
+      "required": [
+        "mode"
+      ],
+      "properties": {
+        "mode": {
+          "const": "collinear"
+        }
+      }
+    },
+    "smearing": {
+      "type": "object"
+    }
+  }
+}

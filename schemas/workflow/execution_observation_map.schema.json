@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "execution_id",
+    "task_id",
+    "produces"
+  ],
+  "properties": {
+    "execution_id": {
+      "type": "string"
+    },
+    "task_id": {
+      "type": "string"
+    },
+    "produces": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "BARE_OBSERVATION",
+          "SCREENED_OBSERVATION"
+        ]
+      },
+      "minItems": 1,
+      "maxItems": 2,
+      "uniqueItems": true
+    },
+    "backend": {
+      "type": "string",
+      "description": "'synthetic_v0' produces both; 'siesta_54' may produce only SCREENED while BARE is open"
+    }
+  },
+  "not": {
+    "required": [
+      "sha256"
+    ]
+  }
+}

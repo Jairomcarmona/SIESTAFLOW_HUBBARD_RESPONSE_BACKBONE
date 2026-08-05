@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "candidate_lock.schema.json",
+  "title": "Candidate Lock",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "candidate_id",
+    "campaign_id",
+    "projector",
+    "alpha_grid",
+    "methodology_sha256",
+    "geometry_sha256",
+    "subspaces_sha256",
+    "frozen"
+  ],
+  "properties": {
+    "candidate_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+    },
+    "campaign_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+    },
+    "projector": {
+      "type": "object",
+      "required": [
+        "projector_id",
+        "rc_bohr",
+        "omega_bohr"
+      ],
+      "properties": {
+        "projector_id": {
+          "type": "string"
+        },
+        "rc_bohr": {
+          "type": "number"
+        },
+        "omega_bohr": {
+          "type": "number"
+        }
+      }
+    },
+    "alpha_grid": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "number"
+      }
+    },
+    "methodology_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "geometry_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "subspaces_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "frozen": {
+      "const": true
+    }
+  }
+}

@@ -1,0 +1,6 @@
+SIESTAFLOW Hubbard Response Backbone 0.1.0
+Verification date: 2026-08-04
+Command: python tools/verify_backbone.py
+Exit code: 0
+Output:
+PASS: structure, JSON Schemas, full manifests, synthetic matrix algebra, non-hardcoding and human-decision constraints

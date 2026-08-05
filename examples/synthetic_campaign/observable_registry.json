@@ -1,0 +1,41 @@
+{
+  "campaign_id": "SYNTH_CAMPAIGN_001",
+  "observables": [
+    {
+      "observable_id": "S0_UP",
+      "subspace_id": "S0",
+      "site_id": "SITE_000",
+      "quantity": "HUBBARD_OCCUPATION",
+      "spin_channel": "UP",
+      "orbital_resolution": "TRACE_OVER_MANIFOLD",
+      "units": "dimensionless"
+    },
+    {
+      "observable_id": "S0_DOWN",
+      "subspace_id": "S0",
+      "site_id": "SITE_000",
+      "quantity": "HUBBARD_OCCUPATION",
+      "spin_channel": "DOWN",
+      "orbital_resolution": "TRACE_OVER_MANIFOLD",
+      "units": "dimensionless"
+    },
+    {
+      "observable_id": "S1_UP",
+      "subspace_id": "S1",
+      "site_id": "SITE_001",
+      "quantity": "HUBBARD_OCCUPATION",
+      "spin_channel": "UP",
+      "orbital_resolution": "TRACE_OVER_MANIFOLD",
+      "units": "dimensionless"
+    },
+    {
+      "observable_id": "S1_DOWN",
+      "subspace_id": "S1",
+      "site_id": "SITE_001",
+      "quantity": "HUBBARD_OCCUPATION",
+      "spin_channel": "DOWN",
+      "orbital_resolution": "TRACE_OVER_MANIFOLD",
+      "units": "dimensionless"
+    }
+  ]
+}

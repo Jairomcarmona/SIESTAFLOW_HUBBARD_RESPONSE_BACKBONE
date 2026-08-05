@@ -1,0 +1,23 @@
+{
+  "unit": "eV",
+  "initial_grid": [
+    -0.2,
+    -0.1,
+    0.0,
+    0.1,
+    0.2
+  ],
+  "symmetric_about_zero": true,
+  "adaptation": [
+    "ACCEPT_WINDOW",
+    "SHRINK_WINDOW",
+    "EXPAND_WINDOW",
+    "ADD_POINTS",
+    "REJECT_CANDIDATE"
+  ],
+  "limits": {
+    "max_abs_alpha": 0.5,
+    "max_points": 9
+  },
+  "zero_policy": "shared_reference"
+}

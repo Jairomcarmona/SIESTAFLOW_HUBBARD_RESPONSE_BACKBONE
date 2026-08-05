@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://siestaflow.invalid/schemas/v0.1.0/candidate_lock.schema.json",
+  "type": "object",
+  "properties": {
+    "campaign_id": { "type": "string" },
+    "candidate_id": { "type": "string" },
+    "plateau_id": { "type": "string" },
+    "locked_by": { "type": "string" },
+    "locked_at": { "type": "string", "format": "date-time" },
+    "rationale": { "type": "string" }
+  },
+  "required": ["campaign_id", "candidate_id", "plateau_id", "locked_by", "locked_at", "rationale"]
+}

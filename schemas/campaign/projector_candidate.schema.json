@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://siestaflow.invalid/schemas/v0.1.0/projector_candidate.schema.json",
+  "type": "object",
+  "properties": {
+    "candidate_id": { "type": "string" },
+    "campaign_id": { "type": "string" },
+    "parameters": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "status": { "enum": ["PROPOSED", "EVALUATED", "PLATEAU", "LOCKED", "REJECTED"] }
+  },
+  "required": ["candidate_id", "campaign_id", "parameters", "status"]
+}

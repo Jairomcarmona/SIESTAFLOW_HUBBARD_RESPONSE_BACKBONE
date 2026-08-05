@@ -1,0 +1,235 @@
+{
+  "candidate_id": "candidate_proj_default",
+  "aggregation_matrix": {
+    "row_ids": [
+      "site_A",
+      "site_B"
+    ],
+    "column_ids": [
+      "site_A_up",
+      "site_A_down",
+      "site_B_up",
+      "site_B_down"
+    ],
+    "values": [
+      [
+        1,
+        1,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        1,
+        1
+      ]
+    ]
+  },
+  "chi0": {
+    "raw": {
+      "row_ids": [
+        "site_A",
+        "site_B"
+      ],
+      "column_ids": [
+        "site_A",
+        "site_B"
+      ],
+      "values": [
+        [
+          -0.5,
+          -0.05
+        ],
+        [
+          -0.05,
+          -0.45
+        ]
+      ]
+    },
+    "symmetrized": {
+      "row_ids": [
+        "site_A",
+        "site_B"
+      ],
+      "column_ids": [
+        "site_A",
+        "site_B"
+      ],
+      "values": [
+        [
+          -0.5,
+          -0.05
+        ],
+        [
+          -0.05,
+          -0.45
+        ]
+      ]
+    },
+    "selected_kind": "raw",
+    "selected": {
+      "row_ids": [
+        "site_A",
+        "site_B"
+      ],
+      "column_ids": [
+        "site_A",
+        "site_B"
+      ],
+      "values": [
+        [
+          -0.5,
+          -0.05
+        ],
+        [
+          -0.05,
+          -0.45
+        ]
+      ]
+    },
+    "inverse": {
+      "row_ids": [
+        "site_A",
+        "site_B"
+      ],
+      "column_ids": [
+        "site_A",
+        "site_B"
+      ],
+      "values": [
+        [
+          -2.0224719101123596,
+          0.22471910112359553
+        ],
+        [
+          0.22471910112359553,
+          -2.247191011235955
+        ]
+      ]
+    },
+    "condition_number": 1.2667713009690789,
+    "singular_values": [
+      0.5309016994374948,
+      0.41909830056250524
+    ],
+    "rank": 2,
+    "left_residual_fro": 3.63437807340006e-18,
+    "right_residual_fro": 3.63437807340006e-18,
+    "antisymmetry_metric": 0.0
+  },
+  "chi": {
+    "raw": {
+      "row_ids": [
+        "site_A",
+        "site_B"
+      ],
+      "column_ids": [
+        "site_A",
+        "site_B"
+      ],
+      "values": [
+        [
+          -0.25,
+          -0.04
+        ],
+        [
+          -0.04,
+          -0.22
+        ]
+      ]
+    },
+    "symmetrized": {
+      "row_ids": [
+        "site_A",
+        "site_B"
+      ],
+      "column_ids": [
+        "site_A",
+        "site_B"
+      ],
+      "values": [
+        [
+          -0.25,
+          -0.04
+        ],
+        [
+          -0.04,
+          -0.22
+        ]
+      ]
+    },
+    "selected_kind": "raw",
+    "selected": {
+      "row_ids": [
+        "site_A",
+        "site_B"
+      ],
+      "column_ids": [
+        "site_A",
+        "site_B"
+      ],
+      "values": [
+        [
+          -0.25,
+          -0.04
+        ],
+        [
+          -0.04,
+          -0.22
+        ]
+      ]
+    },
+    "inverse": {
+      "row_ids": [
+        "site_A",
+        "site_B"
+      ],
+      "column_ids": [
+        "site_A",
+        "site_B"
+      ],
+      "values": [
+        [
+          -4.119850187265918,
+          0.749063670411985
+        ],
+        [
+          0.749063670411985,
+          -4.681647940074906
+        ]
+      ]
+    },
+    "condition_number": 1.4443522247471197,
+    "singular_values": [
+      0.27772001872658764,
+      0.19227998127341234
+    ],
+    "rank": 2,
+    "left_residual_fro": 1.1404956175176477e-16,
+    "right_residual_fro": 1.1404956175176477e-16,
+    "antisymmetry_metric": 0.0
+  },
+  "u_matrix": {
+    "row_ids": [
+      "site_A",
+      "site_B"
+    ],
+    "column_ids": [
+      "site_A",
+      "site_B"
+    ],
+    "values": [
+      [
+        2.0973782771535583,
+        -0.5243445692883895
+      ],
+      [
+        -0.5243445692883895,
+        2.4344569288389506
+      ]
+    ]
+  },
+  "formula": "inverse(chi0)-inverse(chi)",
+  "recommended_single_U_ev": null
+}

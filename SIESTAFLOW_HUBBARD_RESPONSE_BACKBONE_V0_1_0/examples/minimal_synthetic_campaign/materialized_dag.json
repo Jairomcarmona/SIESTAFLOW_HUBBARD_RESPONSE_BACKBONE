@@ -1,0 +1,82 @@
+{
+  "dag_id": "synthetic_dag_v1",
+  "campaign_id": "minimal_synthetic_two_site",
+  "nodes": [
+    {
+      "task_id": "method_lock",
+      "task_type": "METHOD_LOCK",
+      "content_hash": "1563b4b7d22e4bc535a31264caeb67a341ad14980818eae3d50813199f21087b",
+      "dependencies": [],
+      "inputs": {
+        "path": "methodology.lock.json"
+      },
+      "expected_outputs": [
+        "methodology.lock.json"
+      ],
+      "resources": {
+        "tasks": 1,
+        "cpus_per_task": 1,
+        "memory_mb": 64,
+        "walltime_seconds": 10
+      },
+      "retry_policy_id": "none",
+      "candidate_id": null
+    },
+    {
+      "task_id": "synthetic_response",
+      "task_type": "FULL_RESPONSE",
+      "content_hash": "1f17e54710d489c9e1c343701115ba08b750bbc092ce7239395421bb2aa77fff",
+      "dependencies": [
+        "method_lock"
+      ],
+      "inputs": {
+        "candidate": "candidate.lock.json"
+      },
+      "expected_outputs": [
+        "response_dataset.json"
+      ],
+      "resources": {
+        "tasks": 1,
+        "cpus_per_task": 1,
+        "memory_mb": 128,
+        "walltime_seconds": 30
+      },
+      "retry_policy_id": "none",
+      "candidate_id": "candidate_proj_default"
+    },
+    {
+      "task_id": "matrix_analysis",
+      "task_type": "MATRIX_ANALYSIS",
+      "content_hash": "c1a95a7a0ecf77368a8edc4f4788d006c9912700b0841b7c2118448367550b3e",
+      "dependencies": [
+        "synthetic_response"
+      ],
+      "inputs": {
+        "dataset": "response_dataset.json"
+      },
+      "expected_outputs": [
+        "matrix_bundle.json",
+        "gate_results.json"
+      ],
+      "resources": {
+        "tasks": 1,
+        "cpus_per_task": 1,
+        "memory_mb": 128,
+        "walltime_seconds": 30
+      },
+      "retry_policy_id": "none",
+      "candidate_id": "candidate_proj_default"
+    }
+  ],
+  "edges": [
+    {
+      "from": "method_lock",
+      "to": "synthetic_response"
+    },
+    {
+      "from": "synthetic_response",
+      "to": "matrix_analysis"
+    }
+  ],
+  "materialization_hash": "7a1eea2e91c5fe8822ebded75d9802bc71da9e296579188ad7be33d6d35f3a61"
+}

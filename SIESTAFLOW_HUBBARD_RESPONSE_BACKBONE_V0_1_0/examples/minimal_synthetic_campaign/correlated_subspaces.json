@@ -1,0 +1,82 @@
+{
+  "subspaces": [
+    {
+      "subspace_id": "site_A",
+      "atom_indices": [
+        1
+      ],
+      "species_label": "X_A",
+      "shell": {
+        "n": 3,
+        "l": 2
+      },
+      "projector_id": "proj_default",
+      "equivalence_group": null
+    },
+    {
+      "subspace_id": "site_B",
+      "atom_indices": [
+        2
+      ],
+      "species_label": "X_B",
+      "shell": {
+        "n": 3,
+        "l": 2
+      },
+      "projector_id": "proj_default",
+      "equivalence_group": null
+    }
+  ],
+  "observables": [
+    {
+      "observable_id": "site_A_up",
+      "subspace_id": "site_A",
+      "channel": "up"
+    },
+    {
+      "observable_id": "site_A_down",
+      "subspace_id": "site_A",
+      "channel": "down"
+    },
+    {
+      "observable_id": "site_B_up",
+      "subspace_id": "site_B",
+      "channel": "up"
+    },
+    {
+      "observable_id": "site_B_down",
+      "subspace_id": "site_B",
+      "channel": "down"
+    }
+  ],
+  "perturbation_targets": [
+    "site_A",
+    "site_B"
+  ],
+  "aggregation_matrix": {
+    "row_ids": [
+      "site_A",
+      "site_B"
+    ],
+    "column_ids": [
+      "site_A_up",
+      "site_A_down",
+      "site_B_up",
+      "site_B_down"
+    ],
+    "values": [
+      [
+        1,
+        1,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        1,
+        1
+      ]
+    ]
+  }
+}
