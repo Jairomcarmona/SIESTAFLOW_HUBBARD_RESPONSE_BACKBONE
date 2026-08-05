@@ -6,27 +6,16 @@ __pycache__/
 dist/
 build/
 
-# SIESTA simulation temporaries & outputs in examples
-examples/**/*.out
+# SIESTA heavy binary density matrices & temporary scratch logs
 examples/**/*.DM
-examples/**/*.fdf
-examples/**/*.psml
-examples/**/*.sh
-examples/**/*.bib
-examples/**/*.png
-examples/**/*.log
-examples/**/Cu3N_*
-examples/**/MnO_*
-examples/**/CoO_*
-examples/**/FeO_*
-examples/**/NiO_*
-examples/**/test_*
-
-# Preserved example scripts
-!examples/tmo_campaigns/run_cu3n_campaign.py
-!examples/tmo_campaigns/run_tmo_campaign.py
-!examples/tmo_campaigns/verify_backbone.py
-!examples/**/*.json
+examples/**/*.alloc
+examples/**/*.ORB_INDX
+examples/**/*.ion
+examples/**/*.ion.xml
+examples/**/*.STRUCT_OUT
+examples/**/*.XV
+examples/**/INPUT_TMP.*
+examples/**/fdf.*.log
 
 # System & OS
 .DS_Store

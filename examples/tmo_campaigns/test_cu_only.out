@@ -1,0 +1,44 @@
+Executable      : /home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta
+Version         : 5.4.2
+Architecture    : x86_64
+Compiler version: GNU-13.3.0
+Compiler flags  : -fallow-argument-mismatch -O3 -march=native
+Parallelisations: MPI
+Lua support
+ELSI support. Solvers:
+   ELPA (internal) 
+   NTPoly
+   OMM
+DFT-D3 support
+
+Runtime information:
+* Directory : /mnt/c/Users/Jairo/Downloads/SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0/examples/tmo_campaigns
+* Running in serial mode (only 1 MPI rank).
+>> Start of run:   5-AUG-2026   0:14:31
+
+                           *********************** 
+                           *  WELCOME TO SIESTA  * 
+                           *********************** 
+
+ NOTE: Siesta V5 introduces some new defaults for basis-set generation
+ NOTE: which might lead to slightly different numerical results.
+ NOTE: Please see the manual for full details and compatibility measures.
+
+
+reinit: Reading from file test_cu_only.fdf
+
+reinit: -----------------------------------------------------------------------
+reinit: System Name: Cu Test
+reinit: -----------------------------------------------------------------------
+reinit: System Label: cu_test
+reinit: -----------------------------------------------------------------------
+
+initatom: Reading input for the pseudopotentials and atomic orbitals ----------
+Species number:   1 Atomic number:   29 Label: Cu
+
+Ground state valence configuration (from tables):   4s01  4p00  3d10  4f00
+
+---- Processing specs for species: Cu
+pseudo_read: ERROR: Pseudopotential file not found: Cu.{vps,psf,psml}
+
+Stopping Program from Node:    0

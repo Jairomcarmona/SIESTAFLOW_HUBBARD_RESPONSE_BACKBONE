@@ -1,0 +1,40 @@
+Neighbors of:     1 N at:   0.0000  0.0000  0.0000
+    2 Cu1                   1.9050  Ang. Really at:  -3.5999  0.0000  0.0000
+    3 Cu2                   1.9050  Ang. Really at:   0.0000 -3.5999  0.0000
+    2 Cu1                   1.9050  Ang. Really at:   3.5999  0.0000  0.0000
+    3 Cu2                   1.9050  Ang. Really at:   0.0000  3.5999  0.0000
+    4 Cu2                   1.9050  Ang. Really at:   0.0000  0.0000  3.5999
+    4 Cu2                   1.9050  Ang. Really at:   0.0000  0.0000 -3.5999
+Neighbors of:     2 Cu1 at:   3.5999  0.0000  0.0000
+    1 N                     1.9050  Ang. Really at:   7.1999  0.0000  0.0000
+    1 N                     1.9050  Ang. Really at:   0.0000  0.0000  0.0000
+    3 Cu2                   2.6941  Ang. Really at:   0.0000 -3.5999  0.0000
+    4 Cu2                   2.6941  Ang. Really at:   0.0000  0.0000  3.5999
+    3 Cu2                   2.6941  Ang. Really at:   0.0000  3.5999  0.0000
+    3 Cu2                   2.6941  Ang. Really at:   7.1999 -3.5999  0.0000
+    3 Cu2                   2.6941  Ang. Really at:   7.1999  3.5999  0.0000
+    4 Cu2                   2.6941  Ang. Really at:   7.1999  0.0000 -3.5999
+    4 Cu2                   2.6941  Ang. Really at:   7.1999  0.0000  3.5999
+    4 Cu2                   2.6941  Ang. Really at:   0.0000  0.0000 -3.5999
+Neighbors of:     3 Cu2 at:   0.0000  3.5999  0.0000
+    1 N                     1.9050  Ang. Really at:   0.0000  7.1999  0.0000
+    1 N                     1.9050  Ang. Really at:   0.0000  0.0000  0.0000
+    2 Cu1                   2.6941  Ang. Really at:  -3.5999  0.0000  0.0000
+    2 Cu1                   2.6941  Ang. Really at:   3.5999  0.0000  0.0000
+    2 Cu1                   2.6941  Ang. Really at:  -3.5999  7.1999  0.0000
+    2 Cu1                   2.6941  Ang. Really at:   3.5999  7.1999  0.0000
+    4 Cu2                   2.6941  Ang. Really at:   0.0000  7.1999 -3.5999
+    4 Cu2                   2.6941  Ang. Really at:   0.0000  0.0000  3.5999
+    4 Cu2                   2.6941  Ang. Really at:   0.0000  7.1999  3.5999
+    4 Cu2                   2.6941  Ang. Really at:   0.0000  0.0000 -3.5999
+Neighbors of:     4 Cu2 at:   0.0000  0.0000  3.5999
+    1 N                     1.9050  Ang. Really at:   0.0000  0.0000  0.0000
+    1 N                     1.9050  Ang. Really at:   0.0000  0.0000  7.1999
+    3 Cu2                   2.6941  Ang. Really at:   0.0000 -3.5999  7.1999
+    3 Cu2                   2.6941  Ang. Really at:   0.0000  3.5999  0.0000
+    2 Cu1                   2.6941  Ang. Really at:  -3.5999  0.0000  7.1999
+    2 Cu1                   2.6941  Ang. Really at:   3.5999  0.0000  0.0000
+    2 Cu1                   2.6941  Ang. Really at:  -3.5999  0.0000  0.0000
+    2 Cu1                   2.6941  Ang. Really at:   3.5999  0.0000  7.1999
+    3 Cu2                   2.6941  Ang. Really at:   0.0000  3.5999  7.1999
+    3 Cu2                   2.6941  Ang. Really at:   0.0000 -3.5999  0.0000

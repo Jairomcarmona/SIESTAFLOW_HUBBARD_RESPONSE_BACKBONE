@@ -1,0 +1,35 @@
+At line 194 of file /home/jmc/siesta-5.4.2/Src/siesta_init.F (unit = 1, file = '0_NORMAL_EXIT')
+At line 194 of file /home/jmc/siesta-5.4.2/Src/siesta_init.F (unit = 1, file = '0_NORMAL_EXIT')
+Fortran runtime error: File cannot be deleted
+
+Error termination. Backtrace:
+Fortran runtime error: File cannot be deleted
+
+Error termination. Backtrace:
+At line 194 of file /home/jmc/siesta-5.4.2/Src/siesta_init.F (unit = 1, file = '0_NORMAL_EXIT')
+Fortran runtime error: File cannot be deleted
+
+Error termination. Backtrace:
+#0  0x7795ef823e59 in ???
+#1  0x7795ef824a71 in ???
+#2  0x6077a4455037 in __m_siesta_init_MOD_siesta_init
+#3  0x6077a4449c79 in main
+#0  0x771b77c23e59 in ???
+#1  0x771b77c24a71 in ???
+#2  0x59268f3c8037 in __m_siesta_init_MOD_siesta_init
+#3  0x59268f3bcc79 in main
+#0  0x7a9c26a23e59 in ???
+#1  0x7a9c26a24a71 in ???
+#2  0x636b34072037 in __m_siesta_init_MOD_siesta_init
+#3  0x636b34066c79 in main
+--------------------------------------------------------------------------
+Primary job  terminated normally, but 1 process returned
+a non-zero exit code. Per user-direction, the job has been aborted.
+--------------------------------------------------------------------------
+--------------------------------------------------------------------------
+mpirun detected that one or more processes exited with non-zero status, thus causing
+the job to be terminated. The first process to do so was:
+
+  Process name: [[12056,1],3]
+  Exit code:    2
+--------------------------------------------------------------------------

@@ -1,0 +1,52 @@
+import subprocess
+
+fdf_text = """SystemName Cu3N
+SystemLabel test_ua
+NumberOfAtoms 4
+NumberOfSpecies 3
+%block ChemicalSpeciesLabel
+ 1 29 Cu1
+ 2 29 Cu2
+ 3 7 N
+%endblock ChemicalSpeciesLabel
+LatticeConstant 3.81 Ang
+%block LatticeVectors
+ 1.0 0.0 0.0
+ 0.0 1.0 0.0
+ 0.0 0.0 1.0
+%endblock LatticeVectors
+AtomicCoordinatesFormat Fractional
+%block AtomicCoordinatesAndAtomicSpecies
+ 0.0 0.0 0.0 3
+ 0.5 0.0 0.0 1
+ 0.0 0.5 0.0 2
+ 0.0 0.0 0.5 2
+%endblock AtomicCoordinatesAndAtomicSpecies
+PAO.BasisSize DZP
+MeshCutoff 200.0 Ry
+%block kgrid_Monkhorst_Pack
+ 2 0 0 0.0
+ 0 2 0 0.0
+ 0 0 2 0.0
+%endblock kgrid_Monkhorst_Pack
+MaxSCFIterations 2
+DM.MixingWeight 0.1
+Spin non-polarized
+
+%block DFTU.proj
+  Cu1 1
+  3 2
+  1.76 0.1
+  0.0 0.05
+  0.0
+%endblock DFTU.proj
+DFTU.PotentialShift true
+"""
+
+with open('test_ua.fdf', 'w', newline='\n') as f:
+    f.write(fdf_text)
+
+with open('test_ua.fdf', 'r') as infile, open('test_ua.out', 'w') as outfile:
+    subprocess.run(['wsl', '/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta'], stdin=infile, stdout=outfile)
+
+print("Finished test_ua")

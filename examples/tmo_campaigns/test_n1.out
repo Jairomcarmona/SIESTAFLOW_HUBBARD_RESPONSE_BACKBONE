@@ -1,0 +1,94 @@
+Executable      : /home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta
+Version         : 5.4.2
+Architecture    : x86_64
+Compiler version: GNU-13.3.0
+Compiler flags  : -fallow-argument-mismatch -O3 -march=native
+Parallelisations: MPI
+Lua support
+ELSI support. Solvers:
+   ELPA (internal) 
+   NTPoly
+   OMM
+DFT-D3 support
+
+Runtime information:
+* Directory : /mnt/c/Users/Jairo/Downloads/SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0/examples/tmo_campaigns
+* Running in serial mode (only 1 MPI rank).
+>> Start of run:   5-AUG-2026   0:12:49
+
+                           *********************** 
+                           *  WELCOME TO SIESTA  * 
+                           *********************** 
+
+ NOTE: Siesta V5 introduces some new defaults for basis-set generation
+ NOTE: which might lead to slightly different numerical results.
+ NOTE: Please see the manual for full details and compatibility measures.
+
+
+reinit: Reading from standard input
+reinit: Dumping input in INPUT_TMP.25253
+************************** Dump of input data file ****************************
+SystemName Cu Test
+SystemLabel cu_test
+NumberOfAtoms 1
+NumberOfSpecies 1
+%block ChemicalSpeciesLabel
+ 1 29 Cu1
+%endblock ChemicalSpeciesLabel
+LatticeConstant 3.81 Ang
+%block LatticeVectors
+ 1.0 0.0 0.0
+ 0.0 1.0 0.0
+ 0.0 0.0 1.0
+%endblock LatticeVectors
+AtomicCoordinatesFormat Fractional
+%block AtomicCoordinatesAndAtomicSpecies
+ 0.0 0.0 0.0 1
+%endblock AtomicCoordinatesAndAtomicSpecies
+PAO.BasisSize DZP
+MeshCutoff 300.0 Ry
+MaxSCFIterations 1
+%block DFTU.proj
+  Cu1 1
+  1 2
+  0.0 0.0
+  0.0
+%endblock DFTU.proj
+************************** End of input data file *****************************
+
+reinit: -----------------------------------------------------------------------
+reinit: System Name: Cu Test
+reinit: -----------------------------------------------------------------------
+reinit: System Label: cu_test
+reinit: -----------------------------------------------------------------------
+
+initatom: Reading input for the pseudopotentials and atomic orbitals ----------
+Species number:   1 Atomic number:   29 Label: Cu1
+
+Ground state valence configuration (from tables):   4s01  4p00  3d10  4f00
+
+---- Processing specs for species: Cu1
+Reading pseudopotential information in PSML from:
+  Cu1.psml
+PSML file version: 1.1
+Using libxc ids:  101 130
+GGA--PBE XC_GGA_X_PBE--XC_GGA_C_PBE pb
+PSML uuid: 0b4f8810-be42-11e7-568c-2e433f4c6fd4
+Semicore shell(s) with  8 electrons included in the valence for Cu1
+
+---- Pseudopotential check for Cu
+
+Pseudized shells:
+3s( 2.00) rc: 1.26
+3p( 6.00) rc: 1.46
+3d(10.00) rc: 1.76
+Valence configuration for ps generation: 3s:3p:3d:4s: Total charge:  19.000000
+Semicore shell(s): 3s 3p
+Fallback to non-perturbative polarization scheme for Cu1
+Please see the manual if this is not desired in principle
+For Cu1, standard SIESTA heuristics set lmxkb to 3
+ (one more than the basis l, including polarization orbitals).
+Use PS.lmax or PS.KBprojectors blocks to override.
+Cu1 pseudopotential only contains V_ls up to l=2 -- lmxkb reset.
+DFTU projs require quantum numbers to exist. Check n and L
+Stopping Program from Node:    0

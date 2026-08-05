@@ -1,0 +1,2400 @@
+Executable      : /home/jmc/.local/siesta-5.4.2-serial/bin/siesta
+Version         : 5.4.2
+Architecture    : x86_64
+Compiler version: GNU-13.3.0
+Compiler flags  : -fallow-argument-mismatch -O3 -march=native
+Parallelisations: none
+DFT-D3 support
+
+Runtime information:
+* Directory : /tmp/siesta_run_MnO_SCR_-0.10
+* Running in serial mode.
+>> Start of run:   4-AUG-2026  23:19:51
+
+                           *********************** 
+                           *  WELCOME TO SIESTA  * 
+                           *********************** 
+
+ NOTE: Siesta V5 introduces some new defaults for basis-set generation
+ NOTE: which might lead to slightly different numerical results.
+ NOTE: Please see the manual for full details and compatibility measures.
+
+
+reinit: Reading from standard input
+reinit: Dumping input in INPUT_TMP.28882
+************************** Dump of input data file ****************************
+SystemName          Manganese Oxide (Rock-salt) Smoke Test
+SystemLabel         MnO_SCR_-0.10
+NumberOfAtoms       2
+NumberOfSpecies     2
+%block ChemicalSpeciesLabel
+ 1  25  Mn
+ 2   8  O
+%endblock ChemicalSpeciesLabel
+# Primitive cell of FCC Rock-salt (a = 4.445 Angstroms)
+LatticeConstant     4.445 Ang
+%block LatticeVectors
+  0.0  0.5  0.5
+  0.5  0.0  0.5
+  0.5  0.5  0.0
+%endblock LatticeVectors
+# Atom coordinates (fractional)
+AtomicCoordinatesFormat  Fractional
+%block AtomicCoordinatesAndAtomicSpecies
+ 0.0  0.0  0.0   1   # Mn at origin
+ 0.5  0.5  0.5   2   # O at half diagonal
+%endblock AtomicCoordinatesAndAtomicSpecies
+# Hyper-lightweight parameters for smoke test
+PAO.BasisSize       SZ         # Minimal basis (Single-Zeta) -> terrible physics, ultra fast
+MeshCutoff          150 Ry     # Low cutoff -> fast
+%block kgrid_Monkhorst_Pack
+ 1 0 0 0.0
+ 0 1 0 0.0
+ 0 0 1 0.0
+%endblock kgrid_Monkhorst_Pack
+# SCF settings
+MaxSCFIterations    50
+DM.MixingWeight     0.1
+DM.NumberPulay      3
+# Spin polarization (Antiferromagnetic-like guess for testing)
+Spin                polarized
+%block DM.InitSpin
+ 1 +5.0
+ 2  0.0
+%endblock DM.InitSpin
+# -------- HUBBARD U SETTINGS --------
+# We define a U to force SIESTA to print the 'hubbard_term' blocks
+DFTU.ProjectorGenerationMethod  1  # Use PAO orbitals
+DFTU.PotentialShift true
+# We output the XV and forces just to have them
+WriteCoorXmol       true
+WriteForces         true
+%block DFTU.proj
+  Mn   1
+  3  2
+  -0.1000  0.0000
+  0.0000
+%endblock DFTU.proj
+# --- SCREENED RESPONSE OVERRIDES ---
+DM.UseSaveDM true
+************************** End of input data file *****************************
+
+reinit: -----------------------------------------------------------------------
+reinit: System Name: Manganese Oxide (Rock-salt) Smoke Test
+reinit: -----------------------------------------------------------------------
+reinit: System Label: MnO_SCR_-0.10
+reinit: -----------------------------------------------------------------------
+
+NOTE on units for spin output: 
+{S} is the spin magnetic moment, in units of the Bohr magneton,
+assuming a g-factor for the electron spin of exactly 2.
+The spin magnetic moment is then numerically equal to the charge inbalance,
+in units of electrons, between the spin-up and -down channels.
+
+
+initatom: Reading input for the pseudopotentials and atomic orbitals ----------
+Species number:   1 Atomic number:   25 Label: Mn
+Species number:   2 Atomic number:    8 Label: O
+
+Ground state valence configuration (from tables):   4s02  4p00  3d05  4f00
+Ground state valence configuration (from tables):   2s02  2p04  3d00  4f00
+
+---- Processing specs for species: Mn
+Reading pseudopotential information in PSML from:
+  Mn.psml
+PSML file version: 1.1
+Using libxc ids:  101 130
+GGA--PBE XC_GGA_X_PBE--XC_GGA_C_PBE pb
+PSML uuid: 124d3920-be63-11e7-41c0-f3027dc3db3e
+Semicore shell(s) with  8 electrons included in the valence for Mn
+
+---- Processing specs for species: O
+Reading pseudopotential information in PSML from:
+  O.psml
+PSML file version: 1.1
+Using libxc ids:  101 130
+GGA--PBE XC_GGA_X_PBE--XC_GGA_C_PBE pb
+PSML uuid: 66518360-be62-11e7-6a04-293bfbad3b21
+
+---- Pseudopotential check for Mn
+
+Pseudized shells:
+3s( 2.00) rc: 1.11
+3p( 6.00) rc: 1.11
+3d( 5.00) rc: 1.36
+Valence configuration for ps generation: 3s:3p:3d:4s: Total charge:  15.000000
+Semicore shell(s): 3s 3p
+
+---- Pseudopotential check for O 
+
+Pseudized shells:
+2s( 2.00) rc: 1.26
+2p( 4.00) rc: 1.36
+3d( 0.00) rc: 1.26
+Valence configuration for ps generation: 2s:2p: Total charge:   6.000000
+For Mn, standard SIESTA heuristics set lmxkb to 3
+ (one more than the basis l, including polarization orbitals).
+Use PS.lmax or PS.KBprojectors blocks to override.
+For O, standard SIESTA heuristics set lmxkb to 2
+ (one more than the basis l, including polarization orbitals).
+Use PS.lmax or PS.KBprojectors blocks to override.
+Mn pseudopotential only contains V_ls up to l=2 -- lmxkb reset.
+
+<basis_specs>
+===============================================================================
+Mn                   Z=  25    Mass=  54.938        Charge= 0.17977+309
+Lmxo=2 Lmxkb= 2    BasisType=split      Semic=T
+L=0  Nsemic=1  Cnfigmx=4
+          i=1  nzeta=1  polorb=0  (3s)  (semicore shell)
+            splnorm:   0.15000    
+               vcte:    40.000    
+               rinn:  -0.90000    
+               qcoe:    0.0000    
+               qyuk:    0.0000    
+               qwid:   0.10000E-01
+                rcs:    0.0000    
+            lambdas:    1.0000    
+          i=2  nzeta=1  polorb=0  (4s)
+            splnorm:   0.15000    
+               vcte:    40.000    
+               rinn:  -0.90000    
+               qcoe:    0.0000    
+               qyuk:    0.0000    
+               qwid:   0.10000E-01
+                rcs:    0.0000    
+            lambdas:    1.0000    
+L=1  Nsemic=1  Cnfigmx=4
+          i=1  nzeta=1  polorb=0  (3p)  (semicore shell)
+            splnorm:   0.15000    
+               vcte:    40.000    
+               rinn:  -0.90000    
+               qcoe:    0.0000    
+               qyuk:    0.0000    
+               qwid:   0.10000E-01
+                rcs:    0.0000    
+            lambdas:    1.0000    
+          i=2  nzeta=0  polorb=0  (4p)  (empty shell (??) )
+L=2  Nsemic=0  Cnfigmx=3
+          i=1  nzeta=1  polorb=0  (3d)
+            splnorm:   0.15000    
+               vcte:    40.000    
+               rinn:  -0.90000    
+               qcoe:    0.0000    
+               qyuk:    0.0000    
+               qwid:   0.10000E-01
+                rcs:    0.0000    
+            lambdas:    1.0000    
+-------------------------------------------------------------------------------
+L=0  Nkbl=2  erefs: 0.17977+309 0.17977+309
+L=1  Nkbl=2  erefs: 0.17977+309 0.17977+309
+L=2  Nkbl=1  erefs: 0.17977+309
+-------------------------------------------------------------------------------
+L=2  n=3
+                  U:  -0.73499E-02
+                  J:    0.0000    
+               rinn:  -0.90000    
+               vcte:    40.000    
+             lambda:    1.0000    
+              width:   0.50000    
+                 rc:    0.0000    
+            dnrm_rc:   0.90000    
+===============================================================================
+</basis_specs>
+
+Using PAO.SplitTailNorm
+atom: Called for Mn                    (Z =  25)
+Maximum radius (at nrval) set to   50.00000 8518
+
+read_vps: Pseudopotential generation method:
+read_vps: ONCVPSP-3.Hamann's oncvpsp                        
+Valence charge in pseudo generation:   15.00000
+
+read_vps: Pseudopotential includes a core correction:
+read_vps: Pseudo-core for xc-correction
+
+xc_check: Exchange-correlation functional:
+xc_check: Ceperley-Alder
+xc_check: WARNING: Pseudopotential generated with GGA PBE functional
+Got Vlocal (oncv-fit) from psml data
+Choosing vlocal chloc cutoff:  5.072635
+qtot up to nchloc:   14.99974639
+atom: Maximum radius for chlocal:    5.07263
+atom: Maximum radius for r*vlocal+2*Zval:    5.07263
+Reading KB projs from Mn psml data
+Using scalar-relativistic projectors in PSML file
+
+PSML: Kleinman-Bylander projectors: 
+   l= 0   rc=  1.126360   Ekb= 44.071529
+   l= 0   rc=  1.126360   Ekb=  4.652397
+   l= 1   rc=  1.126360   Ekb=  5.643412
+   l= 1   rc=  1.126360   Ekb= -0.294693
+   l= 2   rc=  1.379341   Ekb=-17.489238
+   l= 2   rc=  1.379341   Ekb= -5.035197
+
+PSML: Total number of  Kleinman-Bylander projectors:  18
+atom: -------------------------------------------------------------------------
+
+atom: SANKEY-TYPE ORBITALS:
+
+SPLIT: Orbitals with angular momentum L= 0
+
+SPLIT: Basis orbitals for state 3s
+
+SPLIT: PAO cut-off radius determined from an
+SPLIT: energy shift=  0.010000 Ry
+Split based on tail norm
+
+   izeta = 1
+                 lambda =    1.000000
+                     rc =    2.486350
+                 energy =   -6.273890
+                kinetic =    3.308741
+    potential(screened) =   -9.582631
+       potential(ionic) =  -33.845190
+
+SPLIT: Basis orbitals for state 4s
+
+SPLIT: PAO cut-off radius determined from an
+SPLIT: energy shift=  0.010000 Ry
+Split based on tail norm
+
+   izeta = 1
+                 lambda =    1.000000
+                     rc =    6.968471
+                 energy =   -0.389352
+                kinetic =    0.928048
+    potential(screened) =   -1.317400
+       potential(ionic) =  -12.306816
+
+SPLIT: Orbitals with angular momentum L= 1
+
+SPLIT: Basis orbitals for state 3p
+
+SPLIT: PAO cut-off radius determined from an
+SPLIT: energy shift=  0.010000 Ry
+Split based on tail norm
+
+   izeta = 1
+                 lambda =    1.000000
+                     rc =    2.759952
+                 energy =   -3.980321
+                kinetic =    7.013586
+    potential(screened) =  -10.993908
+       potential(ionic) =  -34.700061
+
+SPLIT: Orbitals with angular momentum L= 2
+
+SPLIT: Basis orbitals for state 3d
+
+SPLIT: PAO cut-off radius determined from an
+SPLIT: energy shift=  0.010000 Ry
+Split based on tail norm
+
+   izeta = 1
+                 lambda =    1.000000
+                     rc =    4.351560
+                 energy =   -0.481876
+                kinetic =   10.410977
+    potential(screened) =  -10.892853
+       potential(ionic) =  -32.031382
+atom: Total number of Sankey-type orbitals: 10
+
+atm_pop: Valence configuration (for local Pseudopot. screening):
+ 3s( 2.00) 4s( 2.00)                                                  
+ 3p( 6.00) 4p( 0.00)                                                  
+ 3d( 5.00)                                                            
+Vna: chval, zval:   15.00000  15.00000
+
+Vna:  Cut-off radius for the neutral-atom potential:   6.968471
+comcore: Pseudo-core radius Rcore=  2.112999
+
+atom: _________________________________________________________________________
+Maximum radius (at nrval) set to   50.00000 8518
+
+dftu_proj_gen: PAO cut-off radius determined from an
+dftu_proj_gen: energy shift =  0.050000 Ry
+dftu_proj_gen: rco =  3.291515 Bohr
+
+<basis_specs>
+===============================================================================
+O                    Z=   8    Mass=  15.999        Charge= 0.17977+309
+Lmxo=1 Lmxkb= 2    BasisType=split      Semic=F
+L=0  Nsemic=0  Cnfigmx=2
+          i=1  nzeta=1  polorb=0  (2s)
+            splnorm:   0.15000    
+               vcte:    40.000    
+               rinn:  -0.90000    
+               qcoe:    0.0000    
+               qyuk:    0.0000    
+               qwid:   0.10000E-01
+                rcs:    0.0000    
+            lambdas:    1.0000    
+L=1  Nsemic=0  Cnfigmx=2
+          i=1  nzeta=1  polorb=0  (2p)
+            splnorm:   0.15000    
+               vcte:    40.000    
+               rinn:  -0.90000    
+               qcoe:    0.0000    
+               qyuk:    0.0000    
+               qwid:   0.10000E-01
+                rcs:    0.0000    
+            lambdas:    1.0000    
+-------------------------------------------------------------------------------
+L=0  Nkbl=1  erefs: 0.17977+309
+L=1  Nkbl=1  erefs: 0.17977+309
+L=2  Nkbl=1  erefs: 0.17977+309
+===============================================================================
+</basis_specs>
+
+Using PAO.SplitTailNorm
+atom: Called for O                     (Z =   8)
+Maximum radius (at nrval) set to   50.00000 8518
+
+read_vps: Pseudopotential generation method:
+read_vps: ONCVPSP-3.Hamann's oncvpsp                        
+Valence charge in pseudo generation:    6.00000
+
+read_vps: Pseudopotential includes a core correction:
+read_vps: Pseudo-core for xc-correction
+
+xc_check: Exchange-correlation functional:
+xc_check: Ceperley-Alder
+xc_check: WARNING: Pseudopotential generated with GGA PBE functional
+Got Vlocal (oncv-fit) from psml data
+Choosing vlocal chloc cutoff:  6.020499
+qtot up to nchloc:    6.00003129
+atom: Maximum radius for chlocal:    6.02050
+atom: Maximum radius for r*vlocal+2*Zval:    6.02050
+Reading KB projs from O psml data
+Using scalar-relativistic projectors in PSML file
+
+PSML: Kleinman-Bylander projectors: 
+   l= 0   rc=  1.277664   Ekb= 14.473397
+   l= 0   rc=  1.277664   Ekb=  1.995377
+   l= 1   rc=  1.372412   Ekb=-10.453761
+   l= 1   rc=  1.372412   Ekb= -2.576064
+   l= 2   rc=  1.277664   Ekb= -2.663910
+
+PSML: Total number of  Kleinman-Bylander projectors:  13
+atom: -------------------------------------------------------------------------
+
+atom: SANKEY-TYPE ORBITALS:
+
+SPLIT: Orbitals with angular momentum L= 0
+
+SPLIT: Basis orbitals for state 2s
+
+SPLIT: PAO cut-off radius determined from an
+SPLIT: energy shift=  0.010000 Ry
+Split based on tail norm
+
+   izeta = 1
+                 lambda =    1.000000
+                     rc =    3.560943
+                 energy =   -1.731627
+                kinetic =    1.580617
+    potential(screened) =   -3.312244
+       potential(ionic) =  -11.211072
+
+SPLIT: Orbitals with angular momentum L= 1
+
+SPLIT: Basis orbitals for state 2p
+
+SPLIT: PAO cut-off radius determined from an
+SPLIT: energy shift=  0.010000 Ry
+Split based on tail norm
+
+   izeta = 1
+                 lambda =    1.000000
+                     rc =    4.342846
+                 energy =   -0.639923
+                kinetic =    4.614178
+    potential(screened) =   -5.254101
+       potential(ionic) =  -12.884616
+atom: Total number of Sankey-type orbitals:  4
+
+atm_pop: Valence configuration (for local Pseudopot. screening):
+ 2s( 2.00)                                                            
+ 2p( 4.00)                                                            
+Vna: chval, zval:    6.00000   6.00000
+
+Vna:  Cut-off radius for the neutral-atom potential:   4.342846
+comcore: Pseudo-core radius Rcore=  1.340979
+
+atom: _________________________________________________________________________
+
+prinput: Basis input 
+
+PAO.BasisType split     
+
+%block ChemicalSpeciesLabel
+    1   25 Mn                      # Species index, atomic number, species label
+    2    8 O                       # Species index, atomic number, species label
+%endblock ChemicalSpeciesLabel
+
+%block PAO.Basis                 # Define Basis set
+# WARNING: This information might be incomplete!
+Mn                    4                    # Species label, number of l-shells
+ n=3   0   1                         # n, l, Nzeta 
+   2.486   
+   1.000   
+ n=4   0   1                         # n, l, Nzeta 
+   6.968   
+   1.000   
+ n=3   1   1                         # n, l, Nzeta 
+   2.760   
+   1.000   
+ n=3   2   1                         # n, l, Nzeta 
+   4.352   
+   1.000   
+O                     2                    # Species label, number of l-shells
+ n=2   0   1                         # n, l, Nzeta 
+   3.561   
+   1.000   
+ n=2   1   1                         # n, l, Nzeta 
+   4.343   
+   1.000   
+%endblock PAO.Basis
+
+prinput: ----------------------------------------------------------------------
+
+coor:   Atomic-coordinates input format  =     Fractional
+
+siesta: Atomic coordinates (Bohr) and species
+siesta:      0.00000   0.00000   0.00000  1        1
+siesta:      4.19992   4.19992   4.19992  2        2
+
+siesta: System type = bulk      
+
+initatomlists: Number of atoms, orbitals, and projectors:      2    14    31
+
+coxmol: Writing XMOL coordinates into file MnO_SCR_-0.10.xyz                                                                                                                                                                                                                   
+
+siesta: ******************** Simulation parameters ****************************
+siesta:
+siesta: The following are some of the parameters of the simulation.
+siesta: A complete list of the parameters used, including default values,
+siesta: can be found in file out.fdf
+siesta:
+redata: Spin configuration                          = collinear
+redata: Number of spin components                   = 2
+redata: Time-Reversal Symmetry                      = T
+redata: Spin spiral                                 = F
+redata: Long output                                 =   F
+redata: Number of Atomic Species                    =        2
+redata: Charge density info will appear in .RHO file
+redata: Write Mulliken charges (when)               = none
+redata: Write Mulliken Pop.                         = NO
+redata: Write Hirshfeld charges (when)              = none
+redata: Write Voronoi charges (when)                = none
+redata: Write spin charge (when)                    = scf
+redata: Matel table size (NRTAB)                    =     1024
+redata: Mesh Cutoff                                 =   150.0000 Ry
+redata: Net charge of the system                    =     0.0000 |e|
+redata: Min. number of SCF Iter                     =        0
+redata: Max. number of SCF Iter                     =       50
+redata: SCF convergence failure will abort job
+redata: SCF mix quantity                            = Hamiltonian
+redata: Mix DM or H after convergence               =   F
+redata: Recompute H after scf cycle                 =   F
+redata: Mix DM in first SCF step                    =   T
+redata: Write Pulay info on disk                    =   F
+redata: New DM Occupancy tolerance                  = 0.000000000001
+redata: No kicks to SCF
+redata: DM Mixing Weight for Kicks                  =     0.5000
+redata: Require Harris convergence for SCF          =   F
+redata: Harris energy tolerance for SCF             =     0.000100 eV
+redata: Require DM convergence for SCF              =   T
+redata: DM tolerance for SCF                        =     0.000100
+redata: Require EDM convergence for SCF             =   F
+redata: EDM tolerance for SCF                       =     0.001000 eV
+redata: Require H convergence for SCF               =   T
+redata: Hamiltonian tolerance for SCF               =     0.001000 eV
+redata: Require (free) Energy convergence for SCF   =   F
+redata: (free) Energy tolerance for SCF             =     0.000100 eV
+redata: Antiferro initial spin density              =   F
+redata: Using DFT-D3 dispersion                     =   F
+redata: Using Saved Data (generic)                  =   F
+redata: Use continuation files for DM               =   T
+redata: Neglect nonoverlap interactions             =   F
+redata: Method of Calculation                       = Diagonalization
+redata: Electronic Temperature                      =   300.0000 K
+redata: Fix the spin of the system                  =   F
+redata: Max. number of TDED Iter                    =        1
+redata: Number of TDED substeps                     =        3
+redata: Dynamics option                             = Single-point calculation
+mix.SCF: Pulay mixing                            = Pulay
+mix.SCF:    Variant                              = stable
+mix.SCF:    History steps                        = 3
+mix.SCF:    Linear mixing weight                 =     0.100000
+mix.SCF:    Mixing weight                        =     0.100000
+mix.SCF:    SVD condition                        = 0.1000E-07
+mix.SCF: Spin-component mixing                   all
+redata: ***********************************************************************
+
+%block SCF.Mixers
+  Pulay
+%endblock SCF.Mixers
+
+%block SCF.Mixer.Pulay
+  # Mixing method
+  method pulay
+  variant stable
+
+  # Mixing options
+  weight 0.1000
+  weight.linear 0.1000
+  history 3
+%endblock SCF.Mixer.Pulay
+
+DM_history_depth set to one: no extrapolation allowed by default for geometry relaxation
+Size of DM history Fstack: 1
+Total number of electrons:    21.000000
+Total ionic charge:    21.000000
+ Kpoints in:            1 . Kpoints trimmed:            1
+
+siesta: k-grid: Number of k-points = 1
+siesta: k-points from Monkhorst-Pack grid
+siesta: k-cutoff (effective) =     1.572 Ang
+siesta: k-point supercell and displacements
+siesta: k-grid:     1     0     0      0.000
+siesta: k-grid:     0     1     0      0.000
+siesta: k-grid:     0     0     1      0.000
+
+diag: Algorithm                                     = D&C
+diag: Used triangular part                          = Lower
+diag: Absolute tolerance                            =  0.100E-15
+diag: Orthogonalization factor                      =  0.100E-05
+diag: Memory factor                                 =  1.0000
+
+
+ts: **************************************************************
+ts: Save H and S matrices                           =    F
+ts: Save TSHS files in MD/FC simulation             =    F
+ts: Save DM and EDM matrices                        =    F
+ts: Only save the overlap matrix S                  =    F
+ts: **************************************************************
+
+************************ Begin: TS CHECKS AND WARNINGS ************************
+************************ End: TS CHECKS AND WARNINGS **************************
+
+
+                     ====================================
+                        Single-point calculation
+                     ====================================
+
+outcell: Unit cell vectors (Ang):
+        0.000000    2.222500    2.222500
+        2.222500    0.000000    2.222500
+        2.222500    2.222500    0.000000
+
+outcell: Cell vector modules (Ang)   :    3.143090    3.143090    3.143090
+outcell: Cell angles (23,13,12) (deg):     60.0000     60.0000     60.0000
+outcell: Cell volume (Ang**3)        :     21.9561
+Gamma-point calculation with interaction between periodic images
+Some features might not work optimally:
+e.g. DM initialization from atomic data
+<dSpData1D:S at geom step 0
+  <sparsity:sparsity for geom step 0
+    nrows_g=14 nrows=14 sparsity=1.0000 nnzs=196, refcount: 8>
+  <dData1D:(new from dSpData1D) n=196, refcount: 1>
+refcount: 1>
+new_DM -- step:     1
+Initializing Density Matrix...
+
+Attempting to read DM from file... Succeeded...
+DM from file:
+<dSpData2D:IO-DM: MnO_SCR_-0.10.DM
+  <sparsity:IO-DM: MnO_SCR_-0.10.DM
+    nrows_g=14 nrows=14 sparsity=1.0000 nnzs=196, refcount: 1>
+  <dData2D:(new from dSpData2D) n=196 m=2, refcount: 1>
+refcount: 1>
+DM to be used:
+<dSpData2D:Re-structured SpM
+  <sparsity:sparsity for geom step 0
+    nrows_g=14 nrows=14 sparsity=1.0000 nnzs=196, refcount: 9>
+  <dData2D:(new in restruct) n=196 m=2, refcount: 1>
+refcount: 1>
+No. of atoms with KB's overlaping orbs in proc 0. Max # of overlaps:       2      48
+
+InitMesh: MESH = 20 x 20 x 20 = 8000
+InitMesh: Mesh cutoff (required, used) =   150.000   167.857 Ry
+New grid distribution [1]: sub = 2
+hubbard_term: recalculating local occupations    1
+ hubbard_term: projector occupations
+ hubbard_term: atom, species:            1           1
+   1   1     0.97655     0.14096
+   1   2     0.00000     0.00004
+   1   3    -0.00000    -0.00002
+   1   4     0.00000     0.00004
+   1   5    -0.00000     0.00000
+   2   1     0.00000     0.00004
+   2   2     0.97655     0.14096
+   2   3     0.00000    -0.00001
+   2   4    -0.00000    -0.00004
+   2   5     0.00000     0.00001
+   3   1    -0.00000    -0.00002
+   3   2     0.00000    -0.00001
+   3   3     0.98556     0.00000
+   3   4     0.00000    -0.00001
+   3   5    -0.00000     0.00000
+   4   1     0.00000     0.00004
+   4   2    -0.00000    -0.00004
+   4   3     0.00000    -0.00001
+   4   4     0.97655     0.14096
+   4   5    -0.00000    -0.00001
+   5   1    -0.00000     0.00000
+   5   2     0.00000     0.00001
+   5   3    -0.00000    -0.00000
+   5   4    -0.00000    -0.00001
+   5   5     0.98556     0.00000
+hubbard_term: Total projector shell
+Occupations:     4.900759    0.422893    5.323652
+hubbard_term: maximum change in local occup.    0.985557
+hubbard_term: recalculating Hamiltonian
+
+stepf: Fermi-Dirac step function
+hubbard_term: recalculating local occupations    1
+ hubbard_term: projector occupations
+ hubbard_term: atom, species:            1           1
+   1   1     0.97655     0.54446
+   1   2     0.00000     0.00008
+   1   3    -0.00000    -0.00007
+   1   4     0.00000     0.00008
+   1   5    -0.00000     0.00000
+   2   1     0.00000     0.00008
+   2   2     0.97655     0.54446
+   2   3     0.00000    -0.00003
+   2   4    -0.00000    -0.00008
+   2   5     0.00000     0.00006
+   3   1    -0.00000    -0.00007
+   3   2     0.00000    -0.00003
+   3   3     0.98556     0.00000
+   3   4     0.00000    -0.00003
+   3   5     0.00000    -0.00000
+   4   1     0.00000     0.00008
+   4   2    -0.00000    -0.00008
+   4   3     0.00000    -0.00003
+   4   4     0.97655     0.54446
+   4   5    -0.00000    -0.00006
+   5   1    -0.00000     0.00000
+   5   2     0.00000     0.00006
+   5   3     0.00000    -0.00000
+   5   4     0.00000    -0.00006
+   5   5     0.98556     0.00000
+hubbard_term: Total projector shell
+Occupations:     4.900759    1.633370    6.534129
+hubbard_term: maximum change in local occup.    0.403493
+hubbard_term: recalculating Hamiltonian
+
+siesta: Program's energy decomposition (eV):
+siesta: Ebs     =      -428.865260
+siesta: Eions   =      4996.250168
+siesta: Ena     =       689.799470
+siesta: Ekin    =      1898.715685
+siesta: Enl     =      -273.946099
+siesta: Eso     =         0.000000
+siesta: Edftu   =        -0.653413
+siesta: DEna    =       -91.582113
+siesta: DUscf   =         9.682037
+siesta: DUext   =         0.000000
+siesta: Ex      =      -586.782602
+siesta: Ec      =       -49.031616
+siesta: Exc     =      -635.814218
+siesta: EbV     =         0.000000
+siesta: eta*DQ  =         0.000000
+siesta: Emadel  =         0.000000
+siesta: Emeta   =         0.000000
+siesta: Emolmec =         0.000000
+siesta: Ekinion =         0.000000
+siesta: Eharris =     -3374.838768
+siesta: Etot    =     -3400.048818
+siesta: FreeEng =     -3400.155969
+
+        iscf     Eharris(eV)        E_KS(eV)     FreeEng(eV)     dDmax    Ef(eV) dHmax(eV)
+   scf:    1    -3374.838768    -3400.048818    -3400.155969  0.419558 -2.710802 15.638081
+     spin moment: {S} , |S| = {        0.0        0.0    1.65481 }     1.65481
+timer: Routine,Calls,Time,% = IterSCF        1       0.033   2.76
+hubbard_term: recalculating local occupations    2
+ hubbard_term: projector occupations
+ hubbard_term: atom, species:            1           1
+   1   1     0.97655     0.00000
+   1   2     0.00000    -0.00000
+   1   3    -0.00000     0.00000
+   1   4     0.00000    -0.00000
+   1   5     0.00000    -0.00000
+   2   1     0.00000    -0.00000
+   2   2     0.97655     0.00000
+   2   3     0.00000    -0.00000
+   2   4    -0.00000     0.00000
+   2   5     0.00000    -0.00000
+   3   1    -0.00000     0.00000
+   3   2     0.00000    -0.00000
+   3   3     0.98556     0.00000
+   3   4     0.00000    -0.00000
+   3   5    -0.00000    -0.00000
+   4   1     0.00000    -0.00000
+   4   2    -0.00000     0.00000
+   4   3     0.00000    -0.00000
+   4   4     0.97655     0.00000
+   4   5     0.00000     0.00000
+   5   1     0.00000    -0.00000
+   5   2     0.00000    -0.00000
+   5   3    -0.00000    -0.00000
+   5   4     0.00000     0.00000
+   5   5     0.98556     0.00000
+hubbard_term: Total projector shell
+Occupations:     4.900759    0.000000    4.900759
+hubbard_term: maximum change in local occup.    0.544458
+hubbard_term: recalculating Hamiltonian
+   scf:    2    -3396.660929    -3410.658943    -3410.658944  0.578014 -3.293171  7.269332
+     spin moment: {S} , |S| = {        0.0        0.0    5.00000 }     5.00000
+hubbard_term: recalculating local occupations    3
+ hubbard_term: projector occupations
+ hubbard_term: atom, species:            1           1
+   1   1     0.97655     0.00000
+   1   2     0.00000    -0.00000
+   1   3    -0.00000     0.00000
+   1   4     0.00000    -0.00000
+   1   5    -0.00000    -0.00000
+   2   1     0.00000    -0.00000
+   2   2     0.97655     0.00000
+   2   3     0.00000    -0.00000
+   2   4    -0.00000     0.00000
+   2   5    -0.00000    -0.00000
+   3   1    -0.00000     0.00000
+   3   2     0.00000    -0.00000
+   3   3     0.98556     0.00000
+   3   4     0.00000    -0.00000
+   3   5     0.00000    -0.00000
+   4   1     0.00000    -0.00000
+   4   2    -0.00000     0.00000
+   4   3     0.00000    -0.00000
+   4   4     0.97655     0.00000
+   4   5    -0.00000     0.00000
+   5   1    -0.00000    -0.00000
+   5   2    -0.00000    -0.00000
+   5   3     0.00000    -0.00000
+   5   4    -0.00000     0.00000
+   5   5     0.98556     0.00000
+hubbard_term: Total projector shell
+Occupations:     4.900759    0.000000    4.900759
+hubbard_term: maximum change in local occup.    0.000000
+   scf:    3    -3410.953236    -3410.807401    -3410.807425  0.016926 -3.051164  6.714950
+     spin moment: {S} , |S| = {        0.0        0.0    5.00000 }     5.00000
+hubbard_term: recalculating local occupations    4
+ hubbard_term: projector occupations
+ hubbard_term: atom, species:            1           1
+   1   1     0.97655     0.92020
+   1   2     0.00000     0.00002
+   1   3    -0.00000    -0.00010
+   1   4     0.00000     0.00002
+   1   5    -0.00000     0.00000
+   2   1     0.00000     0.00002
+   2   2     0.97655     0.92020
+   2   3     0.00000    -0.00005
+   2   4    -0.00000    -0.00002
+   2   5     0.00000     0.00009
+   3   1    -0.00000    -0.00010
+   3   2     0.00000    -0.00005
+   3   3     0.98556     0.00000
+   3   4     0.00000    -0.00005
+   3   5    -0.00000     0.00000
+   4   1     0.00000     0.00002
+   4   2    -0.00000    -0.00002
+   4   3     0.00000    -0.00005
+   4   4     0.97655     0.92020
+   4   5    -0.00000    -0.00009
+   5   1    -0.00000     0.00000
+   5   2     0.00000     0.00009
+   5   3    -0.00000     0.00000
+   5   4    -0.00000    -0.00009
+   5   5     0.98556     0.00000
+hubbard_term: Total projector shell
+Occupations:     4.900759    2.760598    7.661357
+hubbard_term: maximum change in local occup.    0.920199
+hubbard_term: recalculating Hamiltonian
+   scf:    4    -3253.894170    -3365.493095    -3365.527658  0.975701 -2.652222 30.282231
+     spin moment: {S} , |S| = {        0.0        0.0   -0.65379 }    -0.65379
+hubbard_term: recalculating local occupations    5
+ hubbard_term: projector occupations
+ hubbard_term: atom, species:            1           1
+   1   1     0.97655     0.97584
+   1   2     0.00000     0.00000
+   1   3    -0.00000    -0.00010
+   1   4     0.00000     0.00000
+   1   5    -0.00000     0.00000
+   2   1     0.00000     0.00000
+   2   2     0.97655     0.97584
+   2   3     0.00000    -0.00005
+   2   4    -0.00000    -0.00000
+   2   5     0.00000     0.00009
+   3   1    -0.00000    -0.00010
+   3   2     0.00000    -0.00005
+   3   3     0.98556     0.00000
+   3   4     0.00000    -0.00005
+   3   5     0.00000     0.00000
+   4   1     0.00000     0.00000
+   4   2    -0.00000    -0.00000
+   4   3     0.00000    -0.00005
+   4   4     0.97655     0.97584
+   4   5    -0.00000    -0.00009
+   5   1    -0.00000     0.00000
+   5   2     0.00000     0.00009
+   5   3     0.00000     0.00000
+   5   4    -0.00000    -0.00009
+   5   5     0.98556     0.00000
+hubbard_term: Total projector shell
+Occupations:     4.900759    2.927518    7.828277
+hubbard_term: maximum change in local occup.    0.055640
+hubbard_term: recalculating Hamiltonian
+   scf:    5    -3351.065876    -3358.396276    -3358.397221  0.057975 -2.632172 32.614665
+     spin moment: {S} , |S| = {        0.0        0.0   -0.99563 }    -0.99563
+hubbard_term: recalculating local occupations    6
+ hubbard_term: projector occupations
+ hubbard_term: atom, species:            1           1
+   1   1     0.97655     0.00000
+   1   2     0.00000    -0.00000
+   1   3    -0.00000     0.00000
+   1   4     0.00000    -0.00000
+   1   5    -0.00000     0.00000
+   2   1     0.00000    -0.00000
+   2   2     0.97655     0.00000
+   2   3     0.00000    -0.00000
+   2   4    -0.00000     0.00000
+   2   5     0.00000    -0.00000
+   3   1    -0.00000     0.00000
+   3   2     0.00000    -0.00000
+   3   3     0.98556     0.00000
+   3   4     0.00000    -0.00000
+   3   5     0.00000    -0.00000
+   4   1     0.00000    -0.00000
+   4   2    -0.00000     0.00000
+   4   3     0.00000    -0.00000
+   4   4     0.97655     0.00000
+   4   5    -0.00000     0.00000
+   5   1    -0.00000     0.00000
+   5   2     0.00000    -0.00000
+   5   3    -0.00000    -0.00000
+   5   4    -0.00000     0.00000
+   5   5     0.98556     0.00000
+hubbard_term: Total projector shell
+Occupations:     4.900759    0.000000    4.900759
+hubbard_term: maximum change in local occup.    0.975839
+hubbard_term: recalculating Hamiltonian
+   scf:    6    -3386.809593    -3410.796177    -3410.796190  1.033682 -3.104266  6.708643
+     spin moment: {S} , |S| = {        0.0        0.0    5.00000 }     5.00000
+hubbard_term: recalculating local occupations    7
+ hubbard_term: projector occupations
+ hubbard_term: atom, species:            1           1
+   1   1     0.97655     0.00000
+   1   2     0.00000    -0.00000
+   1   3    -0.00000     0.00000
+   1   4     0.00000    -0.00000
+   1   5     0.00000    -0.00000
+   2   1     0.00000    -0.00000
+   2   2     0.97655     0.00000
+   2   3     0.00000    -0.00000
+   2   4    -0.00000     0.00000
+   2   5     0.00000    -0.00000
+   3   1    -0.00000     0.00000
+   3   2     0.00000    -0.00000
+   3   3     0.98556     0.00000
+   3   4     0.00000    -0.00000
+   3   5    -0.00000    -0.00000
+   4   1     0.00000    -0.00000
+   4   2    -0.00000     0.00000
+   4   3     0.00000    -0.00000
+   4   4     0.97655     0.00000
+   4   5     0.00000     0.00000
+   5   1     0.00000     0.00000
+   5   2     0.00000    -0.00000
+   5   3     0.00000    -0.00000
+   5   4     0.00000     0.00000
+   5   5     0.98556     0.00000
+hubbard_term: Total projector shell
+Occupations:     4.900759    0.000000    4.900759
+hubbard_term: maximum change in local occup.    0.000000
+   scf:    7    -3410.761087    -3410.778653    -3410.778659  0.003140 -3.160554  6.735420
+     spin moment: {S} , |S| = {        0.0        0.0    5.00000 }     5.00000
+hubbard_term: recalculating local occupations    8
+ hubbard_term: projector occupations
+ hubbard_term: atom, species:            1           1
+   1   1     0.97655     0.00000
+   1   2     0.00000     0.00000
+   1   3    -0.00000    -0.00000
+   1   4     0.00000     0.00000
+   1   5     0.00000     0.00000
+   2   1     0.00000     0.00000
+   2   2     0.97655     0.00000
+   2   3     0.00000    -0.00000
+   2   4    -0.00000    -0.00000
+   2   5    -0.00000     0.00000
+   3   1    -0.00000    -0.00000
+   3   2     0.00000    -0.00000
+   3   3     0.98556     0.00000
+   3   4     0.00000    -0.00000
+   3   5     0.00000     0.00000
+   4   1     0.00000     0.00000
+   4   2    -0.00000    -0.00000
+   4   3     0.00000    -0.00000
+   4   4     0.97655     0.00000
+   4   5     0.00000    -0.00000
+   5   1     0.00000    -0.00000
+   5   2    -0.00000     0.00000
+   5   3     0.00000    -0.00000
+   5   4     0.00000    -0.00000
+   5   5     0.98556     0.00000
+hubbard_term: Total projector shell
+Occupations:     4.900759    0.000001    4.900760
+hubbard_term: maximum change in local occup.    0.000000
+   scf:    8    -3411.326684    -3411.059258    -3411.068902  0.021078 -2.573996  6.212410
+     spin moment: {S} , |S| = {        0.0        0.0    5.00000 }     5.00000
+hubbard_term: recalculating local occupations    9
+ hubbard_term: projector occupations
+ hubbard_term: atom, species:            1           1
+   1   1     0.97655     0.97655
+   1   2     0.00000     0.00000
+   1   3    -0.00000    -0.00000
+   1   4     0.00000     0.00000
+   1   5    -0.00000    -0.00000
+   2   1     0.00000     0.00000
+   2   2     0.97655     0.97655
+   2   3     0.00000     0.00000
+   2   4    -0.00000    -0.00000
+   2   5     0.00000     0.00000
+   3   1    -0.00000    -0.00000
+   3   2     0.00000     0.00000
+   3   3     0.98556     0.98556
+   3   4     0.00000     0.00000
+   3   5     0.00000     0.00000
+   4   1     0.00000     0.00000
+   4   2    -0.00000    -0.00000
+   4   3     0.00000     0.00000
+   4   4     0.97655     0.97655
+   4   5    -0.00000    -0.00000
+   5   1    -0.00000    -0.00000
+   5   2     0.00000     0.00000
+   5   3     0.00000     0.00000
+   5   4    -0.00000    -0.00000
+   5   5     0.98556     0.98556
+hubbard_term: Total projector shell
+Occupations:     4.900759    4.900759    9.801518
+hubbard_term: maximum change in local occup.    0.985557
+hubbard_term: recalculating Hamiltonian
+   scf:    9    -2824.911711    -3226.828111    -3226.877578  1.034201 -3.401415 61.129964
+     spin moment: {S} , |S| = {        0.0        0.0    1.00000 }     1.00000
+hubbard_term: recalculating local occupations   10
+ hubbard_term: projector occupations
+ hubbard_term: atom, species:            1           1
+   1   1     0.97655     0.00001
+   1   2     0.00000     0.00000
+   1   3    -0.00000    -0.00000
+   1   4     0.00000     0.00000
+   1   5    -0.00000     0.00000
+   2   1     0.00000     0.00000
+   2   2     0.97655     0.00001
+   2   3     0.00000    -0.00000
+   2   4    -0.00000    -0.00000
+   2   5    -0.00000     0.00000
+   3   1    -0.00000    -0.00000
+   3   2     0.00000    -0.00000
+   3   3     0.98556     0.00000
+   3   4     0.00000    -0.00000
+   3   5     0.00000    -0.00000
+   4   1     0.00000     0.00000
+   4   2    -0.00000    -0.00000
+   4   3     0.00000    -0.00000
+   4   4     0.97655     0.00001
+   4   5     0.00000    -0.00000
+   5   1    -0.00000     0.00000
+   5   2    -0.00000     0.00000
+   5   3     0.00000    -0.00000
+   5   4     0.00000    -0.00000
+   5   5     0.98556     0.00000
+hubbard_term: Total projector shell
+Occupations:     4.900759    0.000029    4.900788
+hubbard_term: maximum change in local occup.    0.985557
+hubbard_term: recalculating Hamiltonian
+   scf:   10    -3374.734198    -3411.038583    -3411.044045  1.034201 -2.699489  5.925911
+     spin moment: {S} , |S| = {        0.0        0.0    4.99994 }     4.99994
+hubbard_term: recalculating local occupations   11
+ hubbard_term: projector occupations
+ hubbard_term: atom, species:            1           1
+   1   1     0.97655     0.00532
+   1   2     0.00000     0.00000
+   1   3    -0.00000    -0.00000
+   1   4     0.00000     0.00000
+   1   5    -0.00000    -0.00000
+   2   1     0.00000     0.00000
+   2   2     0.97655     0.00532
+   2   3     0.00000    -0.00000
+   2   4    -0.00000    -0.00000
+   2   5    -0.00000     0.00000
+   3   1    -0.00000    -0.00000
+   3   2     0.00000    -0.00000
+   3   3     0.98556     0.00000
+   3   4     0.00000    -0.00000
+   3   5    -0.00000    -0.00000
+   4   1     0.00000     0.00000
+   4   2    -0.00000    -0.00000
+   4   3     0.00000    -0.00000
+   4   4     0.97655     0.00532
+   4   5     0.00000    -0.00000
+   5   1    -0.00000    -0.00000
+   5   2    -0.00000     0.00000
+   5   3     0.00000    -0.00000
+   5   4     0.00000    -0.00000
+   5   5     0.98556     0.00000
+hubbard_term: Total projector shell
+Occupations:     4.900759    0.015954    4.916713
+hubbard_term: maximum change in local occup.    0.005308
+hubbard_term: recalculating Hamiltonian
+   scf:   11    -3411.305946    -3411.173604    -3411.181662  0.012215 -2.799973  5.349254
+     spin moment: {S} , |S| = {        0.0        0.0    4.96737 }     4.96737
+hubbard_term: recalculating local occupations   12
+ hubbard_term: projector occupations
+ hubbard_term: atom, species:            1           1
+   1   1     0.97655     0.08661
+   1   2     0.00000    -0.00000
+   1   3    -0.00000    -0.00001
+   1   4     0.00000    -0.00000
+   1   5     0.00000    -0.00000
+   2   1     0.00000    -0.00000
+   2   2     0.97655     0.08661
+   2   3     0.00000    -0.00001
+   2   4    -0.00000     0.00000
+   2   5     0.00000     0.00001
+   3   1    -0.00000    -0.00001
+   3   2     0.00000    -0.00001
+   3   3     0.98556     0.00000
+   3   4     0.00000    -0.00001
+   3   5    -0.00000    -0.00000
+   4   1     0.00000    -0.00000
+   4   2    -0.00000     0.00000
+   4   3     0.00000    -0.00001
+   4   4     0.97655     0.08661
+   4   5     0.00000    -0.00001
+   5   1     0.00000    -0.00000
+   5   2     0.00000     0.00001
+   5   3    -0.00000    -0.00000
+   5   4     0.00000    -0.00001
+   5   5     0.98556     0.00000
+hubbard_term: Total projector shell
+Occupations:     4.900759    0.259827    5.160586
+hubbard_term: maximum change in local occup.    0.081291
+hubbard_term: recalculating Hamiltonian
+   scf:   12    -3413.110818    -3412.413981    -3412.465818  0.081506 -2.866954  1.994131
+     spin moment: {S} , |S| = {        0.0        0.0    4.67767 }     4.67767
+hubbard_term: recalculating local occupations   13
+ hubbard_term: projector occupations
+ hubbard_term: atom, species:            1           1
+   1   1     0.97655     0.04764
+   1   2     0.00000     0.00001
+   1   3     0.00000    -0.00001
+   1   4     0.00000     0.00001
+   1   5     0.00000    -0.00000
+   2   1     0.00000     0.00001
+   2   2     0.97655     0.04764
+   2   3    -0.00000    -0.00000
+   2   4    -0.00000    -0.00001
+   2   5     0.00000     0.00000
+   3   1     0.00000    -0.00001
+   3   2    -0.00000    -0.00000
+   3   3     0.98556     0.00000
+   3   4    -0.00000    -0.00000
+   3   5     0.00000    -0.00000
+   4   1     0.00000     0.00001
+   4   2    -0.00000    -0.00001
+   4   3    -0.00000    -0.00000
+   4   4     0.97655     0.04764
+   4   5     0.00000    -0.00000
+   5   1     0.00000    -0.00000
+   5   2     0.00000     0.00000
+   5   3     0.00000    -0.00000
+   5   4     0.00000    -0.00000
+   5   5     0.98556     0.00000
+hubbard_term: Total projector shell
+Occupations:     4.900759    0.142914    5.043673
+hubbard_term: maximum change in local occup.    0.038971
+hubbard_term: recalculating Hamiltonian
+   scf:   13    -3411.381091    -3411.958557    -3411.990044  0.039074 -2.818465  3.599546
+     spin moment: {S} , |S| = {        0.0        0.0    4.71099 }     4.71099
+hubbard_term: recalculating local occupations   14
+ hubbard_term: projector occupations
+ hubbard_term: atom, species:            1           1
+   1   1     0.97655     0.71529
+   1   2     0.00000     0.00000
+   1   3    -0.00000    -0.00008
+   1   4     0.00000     0.00000
+   1   5    -0.00000    -0.00000
+   2   1     0.00000     0.00000
+   2   2     0.97655     0.71530
+   2   3     0.00000    -0.00004
+   2   4    -0.00000    -0.00000
+   2   5    -0.00000     0.00007
+   3   1    -0.00000    -0.00008
+   3   2     0.00000    -0.00004
+   3   3     0.98556     0.00000
+   3   4     0.00000    -0.00004
+   3   5     0.00000     0.00000
+   4   1     0.00000     0.00000
+   4   2    -0.00000    -0.00000
+   4   3     0.00000    -0.00004
+   4   4     0.97655     0.71530
+   4   5    -0.00000    -0.00007
+   5   1    -0.00000    -0.00000
+   5   2    -0.00000     0.00007
+   5   3     0.00000     0.00000
+   5   4    -0.00000    -0.00007
+   5   5     0.98556     0.00000
+hubbard_term: Total projector shell
+Occupations:     4.900759    2.145886    7.046645
+hubbard_term: maximum change in local occup.    0.667658
+hubbard_term: recalculating Hamiltonian
+   scf:   14    -3325.495067    -3386.347946    -3386.464546  0.677816 -2.865160 22.545278
+     spin moment: {S} , |S| = {        0.0        0.0    4.54150 }     4.54150
+hubbard_term: recalculating local occupations   15
+ hubbard_term: projector occupations
+ hubbard_term: atom, species:            1           1
+   1   1     0.97655     0.40165
+   1   2     0.00000    -0.00001
+   1   3    -0.00000    -0.00005
+   1   4     0.00000    -0.00001
+   1   5     0.00000    -0.00000
+   2   1     0.00000    -0.00001
+   2   2     0.97655     0.40165
+   2   3     0.00000    -0.00002
+   2   4    -0.00000     0.00001
+   2   5     0.00000     0.00004
+   3   1    -0.00000    -0.00005
+   3   2     0.00000    -0.00002
+   3   3     0.98556     0.00000
+   3   4     0.00000    -0.00002
+   3   5    -0.00000     0.00000
+   4   1     0.00000    -0.00001
+   4   2    -0.00000     0.00001
+   4   3     0.00000    -0.00002
+   4   4     0.97655     0.40165
+   4   5     0.00000    -0.00004
+   5   1     0.00000    -0.00000
+   5   2     0.00000     0.00004
+   5   3    -0.00000     0.00000
+   5   4     0.00000    -0.00004
+   5   5     0.98556     0.00000
+hubbard_term: Total projector shell
+Occupations:     4.900759    1.204957    6.105716
+hubbard_term: maximum change in local occup.    0.313643
+hubbard_term: recalculating Hamiltonian
+   scf:   15    -3420.499276    -3407.391432    -3407.504314  0.314474 -2.869267 10.319603
+     spin moment: {S} , |S| = {        0.0        0.0    4.89178 }     4.89178
+hubbard_term: recalculating local occupations   16
+ hubbard_term: projector occupations
+ hubbard_term: atom, species:            1           1
+   1   1     0.97655     0.05984
+   1   2     0.00000     0.00001
+   1   3    -0.00000    -0.00001
+   1   4     0.00000     0.00001
+   1   5     0.00000    -0.00000
+   2   1     0.00000     0.00001
+   2   2     0.97655     0.05984
+   2   3     0.00000    -0.00000
+   2   4    -0.00000    -0.00001
+   2   5     0.00000     0.00001
+   3   1    -0.00000    -0.00001
+   3   2     0.00000    -0.00000
+   3   3     0.98556     0.00000
+   3   4     0.00000    -0.00000
+   3   5    -0.00000    -0.00000
+   4   1     0.00000     0.00001
+   4   2    -0.00000    -0.00001
+   4   3     0.00000    -0.00000
+   4   4     0.97655     0.05984
+   4   5     0.00000    -0.00001
+   5   1     0.00000    -0.00000
+   5   2     0.00000     0.00001
+   5   3    -0.00000    -0.00000
+   5   4     0.00000    -0.00001
+   5   5     0.98556     0.00000
+hubbard_term: Total projector shell
+Occupations:     4.900759    0.179531    5.080290
+hubbard_term: maximum change in local occup.    0.341809
+hubbard_term: recalculating Hamiltonian
+   scf:   16    -3407.818624    -3412.134133    -3412.171360  0.405339 -2.806386  3.123913
+     spin moment: {S} , |S| = {        0.0        0.0    4.64013 }     4.64013
+hubbard_term: recalculating local occupations   17
+ hubbard_term: projector occupations
+ hubbard_term: atom, species:            1           1
+   1   1     0.97655     0.09751
+   1   2     0.00000     0.00002
+   1   3    -0.00000    -0.00001
+   1   4     0.00000     0.00002
+   1   5    -0.00000    -0.00000
+   2   1     0.00000     0.00002
+   2   2     0.97655     0.09751
+   2   3     0.00000    -0.00001
+   2   4    -0.00000    -0.00002
+   2   5    -0.00000     0.00001
+   3   1    -0.00000    -0.00001
+   3   2     0.00000    -0.00001
+   3   3     0.98556     0.00000
+   3   4     0.00000    -0.00001
+   3   5    -0.00000    -0.00000
+   4   1     0.00000     0.00002
+   4   2    -0.00000    -0.00002
+   4   3     0.00000    -0.00001
+   4   4     0.97655     0.09751
+   4   5    -0.00000    -0.00001
+   5   1    -0.00000    -0.00000
+   5   2    -0.00000     0.00001
+   5   3     0.00000    -0.00000
+   5   4    -0.00000    -0.00001
+   5   5     0.98556     0.00000
+hubbard_term: Total projector shell
+Occupations:     4.900759    0.292533    5.193292
+hubbard_term: maximum change in local occup.    0.037668
+hubbard_term: recalculating Hamiltonian
+   scf:   17    -3412.791338    -3412.519824    -3412.571530  0.041322 -2.764157  1.685495
+     spin moment: {S} , |S| = {        0.0        0.0    4.40282 }     4.40282
+hubbard_term: recalculating local occupations   18
+ hubbard_term: projector occupations
+ hubbard_term: atom, species:            1           1
+   1   1     0.97655     0.11183
+   1   2     0.00000     0.00003
+   1   3    -0.00000    -0.00001
+   1   4     0.00000     0.00003
+   1   5     0.00000    -0.00000
+   2   1     0.00000     0.00003
+   2   2     0.97655     0.11183
+   2   3     0.00000    -0.00001
+   2   4    -0.00000    -0.00003
+   2   5     0.00000     0.00001
+   3   1    -0.00000    -0.00001
+   3   2     0.00000    -0.00001
+   3   3     0.98556     0.00000
+   3   4     0.00000    -0.00001
+   3   5    -0.00000    -0.00000
+   4   1     0.00000     0.00003
+   4   2    -0.00000    -0.00003
+   4   3     0.00000    -0.00001
+   4   4     0.97655     0.11183
+   4   5     0.00000    -0.00001
+   5   1     0.00000    -0.00000
+   5   2     0.00000     0.00001
+   5   3    -0.00000    -0.00000
+   5   4     0.00000    -0.00001
+   5   5     0.98556     0.00000
+hubbard_term: Total projector shell
+Occupations:     4.900759    0.335479    5.236238
+hubbard_term: maximum change in local occup.    0.014316
+hubbard_term: recalculating Hamiltonian
+   scf:   18    -3412.673579    -3412.604774    -3412.661270  0.014389 -2.773116  1.115410
+     spin moment: {S} , |S| = {        0.0        0.0    4.31734 }     4.31734
+hubbard_term: recalculating local occupations   19
+ hubbard_term: projector occupations
+ hubbard_term: atom, species:            1           1
+   1   1     0.97655     0.20897
+   1   2     0.00000     0.00005
+   1   3    -0.00000    -0.00002
+   1   4     0.00000     0.00005
+   1   5    -0.00000    -0.00000
+   2   1     0.00000     0.00005
+   2   2     0.97655     0.20898
+   2   3     0.00000    -0.00001
+   2   4    -0.00000    -0.00005
+   2   5     0.00000     0.00002
+   3   1    -0.00000    -0.00002
+   3   2     0.00000    -0.00001
+   3   3     0.98556     0.00000
+   3   4     0.00000    -0.00001
+   3   5     0.00000    -0.00000
+   4   1     0.00000     0.00005
+   4   2    -0.00000    -0.00005
+   4   3     0.00000    -0.00001
+   4   4     0.97655     0.20898
+   4   5    -0.00000    -0.00002
+   5   1    -0.00000    -0.00000
+   5   2     0.00000     0.00002
+   5   3     0.00000    -0.00000
+   5   4    -0.00000    -0.00002
+   5   5     0.98556     0.00000
+hubbard_term: Total projector shell
+Occupations:     4.900759    0.626924    5.527683
+hubbard_term: maximum change in local occup.    0.097149
+hubbard_term: recalculating Hamiltonian
+   scf:   19    -3411.308338    -3412.330088    -3412.411683  0.103870 -2.730249  2.632405
+     spin moment: {S} , |S| = {        0.0        0.0    3.71645 }     3.71645
+hubbard_term: recalculating local occupations   20
+ hubbard_term: projector occupations
+ hubbard_term: atom, species:            1           1
+   1   1     0.97655     0.13308
+   1   2     0.00000     0.00003
+   1   3    -0.00000    -0.00001
+   1   4     0.00000     0.00003
+   1   5    -0.00000     0.00000
+   2   1     0.00000     0.00003
+   2   2     0.97655     0.13309
+   2   3     0.00000    -0.00001
+   2   4    -0.00000    -0.00003
+   2   5    -0.00000     0.00001
+   3   1    -0.00000    -0.00001
+   3   2     0.00000    -0.00001
+   3   3     0.98556     0.00000
+   3   4     0.00000    -0.00001
+   3   5    -0.00000     0.00000
+   4   1     0.00000     0.00003
+   4   2    -0.00000    -0.00003
+   4   3     0.00000    -0.00001
+   4   4     0.97655     0.13309
+   4   5    -0.00000    -0.00001
+   5   1    -0.00000     0.00000
+   5   2    -0.00000     0.00001
+   5   3    -0.00000     0.00000
+   5   4    -0.00000    -0.00001
+   5   5     0.98556     0.00000
+hubbard_term: Total projector shell
+Occupations:     4.900759    0.399254    5.300013
+hubbard_term: maximum change in local occup.    0.075890
+hubbard_term: recalculating Hamiltonian
+   scf:   20    -3412.569743    -3412.673597    -3412.738028  0.077028 -2.677506  0.386123
+     spin moment: {S} , |S| = {        0.0        0.0    4.18232 }     4.18232
+hubbard_term: recalculating local occupations   21
+ hubbard_term: projector occupations
+ hubbard_term: atom, species:            1           1
+   1   1     0.97655     0.16108
+   1   2     0.00000     0.00005
+   1   3    -0.00000    -0.00002
+   1   4     0.00000     0.00005
+   1   5     0.00000     0.00000
+   2   1     0.00000     0.00005
+   2   2     0.97655     0.16108
+   2   3     0.00000    -0.00001
+   2   4    -0.00000    -0.00005
+   2   5     0.00000     0.00001
+   3   1    -0.00000    -0.00002
+   3   2     0.00000    -0.00001
+   3   3     0.98556     0.00000
+   3   4     0.00000    -0.00001
+   3   5     0.00000    -0.00000
+   4   1     0.00000     0.00005
+   4   2    -0.00000    -0.00005
+   4   3     0.00000    -0.00001
+   4   4     0.97655     0.16108
+   4   5     0.00000    -0.00001
+   5   1     0.00000     0.00000
+   5   2     0.00000     0.00001
+   5   3     0.00000    -0.00000
+   5   4     0.00000    -0.00001
+   5   5     0.98556     0.00000
+hubbard_term: Total projector shell
+Occupations:     4.900759    0.483239    5.383998
+hubbard_term: maximum change in local occup.    0.027996
+hubbard_term: recalculating Hamiltonian
+   scf:   21    -3412.569025    -3412.651502    -3412.723121  0.028684 -2.684394  0.732847
+     spin moment: {S} , |S| = {        0.0        0.0    4.01031 }     4.01031
+hubbard_term: recalculating local occupations   22
+ hubbard_term: projector occupations
+ hubbard_term: atom, species:            1           1
+   1   1     0.97655     0.14762
+   1   2     0.00000     0.00007
+   1   3    -0.00000    -0.00001
+   1   4     0.00000     0.00007
+   1   5     0.00000     0.00000
+   2   1     0.00000     0.00007
+   2   2     0.97655     0.14762
+   2   3     0.00000    -0.00001
+   2   4    -0.00000    -0.00007
+   2   5     0.00000     0.00001
+   3   1    -0.00000    -0.00001
+   3   2     0.00000    -0.00001
+   3   3     0.98556     0.00000
+   3   4     0.00000    -0.00001
+   3   5     0.00000    -0.00000
+   4   1     0.00000     0.00007
+   4   2    -0.00000    -0.00007
+   4   3     0.00000    -0.00001
+   4   4     0.97655     0.14762
+   4   5     0.00000    -0.00001
+   5   1     0.00000     0.00000
+   5   2     0.00000     0.00001
+   5   3    -0.00000    -0.00000
+   5   4     0.00000    -0.00001
+   5   5     0.98556     0.00000
+hubbard_term: Total projector shell
+Occupations:     4.900759    0.442861    5.343620
+hubbard_term: maximum change in local occup.    0.013461
+hubbard_term: recalculating Hamiltonian
+   scf:   22    -3412.686806    -3412.675861    -3412.745538  0.013497 -2.640741  0.181236
+     spin moment: {S} , |S| = {        0.0        0.0    4.09301 }     4.09301
+hubbard_term: recalculating local occupations   23
+ hubbard_term: projector occupations
+ hubbard_term: atom, species:            1           1
+   1   1     0.97655     0.13700
+   1   2     0.00000     0.00006
+   1   3    -0.00000    -0.00001
+   1   4     0.00000     0.00006
+   1   5     0.00000     0.00000
+   2   1     0.00000     0.00006
+   2   2     0.97655     0.13700
+   2   3     0.00000    -0.00001
+   2   4    -0.00000    -0.00006
+   2   5     0.00000     0.00001
+   3   1    -0.00000    -0.00001
+   3   2     0.00000    -0.00001
+   3   3     0.98556     0.00000
+   3   4     0.00000    -0.00001
+   3   5     0.00000    -0.00000
+   4   1     0.00000     0.00006
+   4   2    -0.00000    -0.00006
+   4   3     0.00000    -0.00001
+   4   4     0.97655     0.13700
+   4   5    -0.00000    -0.00001
+   5   1     0.00000     0.00000
+   5   2     0.00000     0.00001
+   5   3     0.00000    -0.00000
+   5   4    -0.00000    -0.00001
+   5   5     0.98556     0.00000
+hubbard_term: Total projector shell
+Occupations:     4.900759    0.410992    5.311751
+hubbard_term: maximum change in local occup.    0.010623
+hubbard_term: recalculating Hamiltonian
+   scf:   23    -3412.668670    -3412.676855    -3412.743489  0.011516 -2.645370  0.299304
+     spin moment: {S} , |S| = {        0.0        0.0    4.15828 }     4.15828
+hubbard_term: recalculating local occupations   24
+ hubbard_term: projector occupations
+ hubbard_term: atom, species:            1           1
+   1   1     0.97655     0.14466
+   1   2     0.00000     0.00005
+   1   3    -0.00000    -0.00001
+   1   4     0.00000     0.00005
+   1   5    -0.00000     0.00000
+   2   1     0.00000     0.00005
+   2   2     0.97655     0.14466
+   2   3     0.00000    -0.00001
+   2   4    -0.00000    -0.00005
+   2   5    -0.00000     0.00001
+   3   1    -0.00000    -0.00001
+   3   2     0.00000    -0.00001
+   3   3     0.98556     0.00000
+   3   4     0.00000    -0.00001
+   3   5    -0.00000    -0.00000
+   4   1     0.00000     0.00005
+   4   2    -0.00000    -0.00005
+   4   3     0.00000    -0.00001
+   4   4     0.97655     0.14466
+   4   5    -0.00000    -0.00001
+   5   1    -0.00000     0.00000
+   5   2    -0.00000     0.00001
+   5   3     0.00000    -0.00000
+   5   4    -0.00000    -0.00001
+   5   5     0.98556     0.00000
+hubbard_term: Total projector shell
+Occupations:     4.900759    0.433977    5.334736
+hubbard_term: maximum change in local occup.    0.007662
+hubbard_term: recalculating Hamiltonian
+   scf:   24    -3412.676689    -3412.678896    -3412.746993  0.007682 -2.660054  0.097453
+     spin moment: {S} , |S| = {        0.0        0.0    4.11120 }     4.11120
+hubbard_term: recalculating local occupations   25
+ hubbard_term: projector occupations
+ hubbard_term: atom, species:            1           1
+   1   1     0.97655     0.15359
+   1   2     0.00000     0.00005
+   1   3    -0.00000    -0.00002
+   1   4     0.00000     0.00005
+   1   5     0.00000     0.00000
+   2   1     0.00000     0.00005
+   2   2     0.97655     0.15359
+   2   3     0.00000    -0.00001
+   2   4    -0.00000    -0.00005
+   2   5     0.00000     0.00001
+   3   1    -0.00000    -0.00002
+   3   2     0.00000    -0.00001
+   3   3     0.98556     0.00000
+   3   4     0.00000    -0.00001
+   3   5     0.00000    -0.00000
+   4   1     0.00000     0.00005
+   4   2    -0.00000    -0.00005
+   4   3     0.00000    -0.00001
+   4   4     0.97655     0.15359
+   4   5     0.00000    -0.00001
+   5   1     0.00000     0.00000
+   5   2     0.00000     0.00001
+   5   3     0.00000    -0.00000
+   5   4     0.00000    -0.00001
+   5   5     0.98556     0.00000
+hubbard_term: Total projector shell
+Occupations:     4.900759    0.460785    5.361544
+hubbard_term: maximum change in local occup.    0.008936
+hubbard_term: recalculating Hamiltonian
+   scf:   25    -3412.656765    -3412.670653    -3412.740363  0.008960 -2.681573  0.379024
+     spin moment: {S} , |S| = {        0.0        0.0    4.05630 }     4.05630
+hubbard_term: recalculating local occupations   26
+ hubbard_term: projector occupations
+ hubbard_term: atom, species:            1           1
+   1   1     0.97655     0.14096
+   1   2     0.00000     0.00004
+   1   3    -0.00000    -0.00002
+   1   4     0.00000     0.00004
+   1   5    -0.00000     0.00000
+   2   1     0.00000     0.00004
+   2   2     0.97655     0.14096
+   2   3     0.00000    -0.00001
+   2   4    -0.00000    -0.00004
+   2   5    -0.00000     0.00001
+   3   1    -0.00000    -0.00002
+   3   2     0.00000    -0.00001
+   3   3     0.98556     0.00000
+   3   4     0.00000    -0.00001
+   3   5    -0.00000    -0.00000
+   4   1     0.00000     0.00004
+   4   2    -0.00000    -0.00004
+   4   3     0.00000    -0.00001
+   4   4     0.97655     0.14096
+   4   5     0.00000    -0.00001
+   5   1    -0.00000     0.00000
+   5   2    -0.00000     0.00001
+   5   3    -0.00000    -0.00000
+   5   4    -0.00000    -0.00001
+   5   5     0.98556     0.00000
+hubbard_term: Total projector shell
+Occupations:     4.900759    0.422880    5.323639
+hubbard_term: maximum change in local occup.    0.012635
+hubbard_term: recalculating Hamiltonian
+   scf:   26    -3412.674718    -3412.679578    -3412.745846  0.013390 -2.680497  0.151328
+     spin moment: {S} , |S| = {        0.0        0.0    4.13393 }     4.13393
+hubbard_term: recalculating local occupations   27
+ hubbard_term: projector occupations
+ hubbard_term: atom, species:            1           1
+   1   1     0.97655     0.14674
+   1   2     0.00000     0.00004
+   1   3    -0.00000    -0.00002
+   1   4     0.00000     0.00004
+   1   5    -0.00000     0.00000
+   2   1     0.00000     0.00004
+   2   2     0.97655     0.14674
+   2   3     0.00000    -0.00001
+   2   4    -0.00000    -0.00004
+   2   5    -0.00000     0.00002
+   3   1    -0.00000    -0.00002
+   3   2     0.00000    -0.00001
+   3   3     0.98556     0.00000
+   3   4     0.00000    -0.00001
+   3   5     0.00000    -0.00000
+   4   1     0.00000     0.00004
+   4   2    -0.00000    -0.00004
+   4   3     0.00000    -0.00001
+   4   4     0.97655     0.14674
+   4   5    -0.00000    -0.00002
+   5   1    -0.00000     0.00000
+   5   2    -0.00000     0.00002
+   5   3     0.00000    -0.00000
+   5   4    -0.00000    -0.00002
+   5   5     0.98556     0.00000
+hubbard_term: Total projector shell
+Occupations:     4.900759    0.440235    5.340994
+hubbard_term: maximum change in local occup.    0.005785
+hubbard_term: recalculating Hamiltonian
+   scf:   27    -3412.675992    -3412.679134    -3412.746884  0.005872 -2.683558  0.083368
+     spin moment: {S} , |S| = {        0.0        0.0    4.09839 }     4.09839
+hubbard_term: recalculating local occupations   28
+ hubbard_term: projector occupations
+ hubbard_term: atom, species:            1           1
+   1   1     0.97655     0.14609
+   1   2     0.00000     0.00004
+   1   3    -0.00000    -0.00002
+   1   4     0.00000     0.00004
+   1   5    -0.00000     0.00000
+   2   1     0.00000     0.00004
+   2   2     0.97655     0.14609
+   2   3     0.00000    -0.00001
+   2   4    -0.00000    -0.00004
+   2   5    -0.00000     0.00002
+   3   1    -0.00000    -0.00002
+   3   2     0.00000    -0.00001
+   3   3     0.98556     0.00000
+   3   4     0.00000    -0.00001
+   3   5    -0.00000    -0.00000
+   4   1     0.00000     0.00004
+   4   2    -0.00000    -0.00004
+   4   3     0.00000    -0.00001
+   4   4     0.97655     0.14609
+   4   5    -0.00000    -0.00002
+   5   1    -0.00000     0.00000
+   5   2    -0.00000     0.00002
+   5   3    -0.00000    -0.00000
+   5   4    -0.00000    -0.00002
+   5   5     0.98556     0.00000
+hubbard_term: Total projector shell
+Occupations:     4.900759    0.438265    5.339024
+hubbard_term: maximum change in local occup.    0.000657
+   scf:   28    -3412.679717    -3412.679442    -3412.747038  0.000658 -2.682466  0.055400
+     spin moment: {S} , |S| = {        0.0        0.0    4.10242 }     4.10242
+hubbard_term: recalculating local occupations   29
+ hubbard_term: projector occupations
+ hubbard_term: atom, species:            1           1
+   1   1     0.97655     0.14514
+   1   2     0.00000     0.00004
+   1   3    -0.00000    -0.00002
+   1   4     0.00000     0.00004
+   1   5    -0.00000     0.00000
+   2   1     0.00000     0.00004
+   2   2     0.97655     0.14514
+   2   3     0.00000    -0.00001
+   2   4    -0.00000    -0.00004
+   2   5    -0.00000     0.00002
+   3   1    -0.00000    -0.00002
+   3   2     0.00000    -0.00001
+   3   3     0.98556     0.00000
+   3   4     0.00000    -0.00001
+   3   5     0.00000    -0.00000
+   4   1     0.00000     0.00004
+   4   2    -0.00000    -0.00004
+   4   3     0.00000    -0.00001
+   4   4     0.97655     0.14514
+   4   5    -0.00000    -0.00002
+   5   1    -0.00000     0.00000
+   5   2    -0.00000     0.00002
+   5   3     0.00000    -0.00000
+   5   4    -0.00000    -0.00002
+   5   5     0.98556     0.00000
+hubbard_term: Total projector shell
+Occupations:     4.900759    0.435407    5.336166
+hubbard_term: maximum change in local occup.    0.001609
+hubbard_term: recalculating Hamiltonian
+   scf:   29    -3412.680082    -3412.679799    -3412.747142  0.000991 -2.681438  0.013784
+     spin moment: {S} , |S| = {        0.0        0.0    4.10827 }     4.10827
+hubbard_term: recalculating local occupations   30
+ hubbard_term: projector occupations
+ hubbard_term: atom, species:            1           1
+   1   1     0.97655     0.14493
+   1   2     0.00000     0.00004
+   1   3    -0.00000    -0.00002
+   1   4     0.00000     0.00004
+   1   5     0.00000     0.00000
+   2   1     0.00000     0.00004
+   2   2     0.97655     0.14493
+   2   3     0.00000    -0.00001
+   2   4    -0.00000    -0.00004
+   2   5     0.00000     0.00002
+   3   1    -0.00000    -0.00002
+   3   2     0.00000    -0.00001
+   3   3     0.98556     0.00000
+   3   4     0.00000    -0.00001
+   3   5     0.00000    -0.00000
+   4   1     0.00000     0.00004
+   4   2    -0.00000    -0.00004
+   4   3     0.00000    -0.00001
+   4   4     0.97655     0.14493
+   4   5    -0.00000    -0.00002
+   5   1     0.00000     0.00000
+   5   2     0.00000     0.00002
+   5   3     0.00000    -0.00000
+   5   4    -0.00000    -0.00002
+   5   5     0.98556     0.00000
+hubbard_term: Total projector shell
+Occupations:     4.900759    0.434795    5.335554
+hubbard_term: maximum change in local occup.    0.000204
+   scf:   30    -3412.680233    -3412.680020    -3412.747149  0.000937 -2.684358  0.012865
+     spin moment: {S} , |S| = {        0.0        0.0    4.10953 }     4.10953
+hubbard_term: recalculating local occupations   31
+ hubbard_term: projector occupations
+ hubbard_term: atom, species:            1           1
+   1   1     0.97655     0.14506
+   1   2     0.00000     0.00004
+   1   3    -0.00000    -0.00002
+   1   4     0.00000     0.00004
+   1   5     0.00000    -0.00000
+   2   1     0.00000     0.00004
+   2   2     0.97655     0.14507
+   2   3     0.00000    -0.00001
+   2   4    -0.00000    -0.00004
+   2   5     0.00000     0.00002
+   3   1    -0.00000    -0.00002
+   3   2     0.00000    -0.00001
+   3   3     0.98556     0.00000
+   3   4     0.00000    -0.00001
+   3   5     0.00000    -0.00000
+   4   1     0.00000     0.00004
+   4   2    -0.00000    -0.00004
+   4   3     0.00000    -0.00001
+   4   4     0.97655     0.14507
+   4   5    -0.00000    -0.00002
+   5   1     0.00000    -0.00000
+   5   2     0.00000     0.00002
+   5   3     0.00000    -0.00000
+   5   4    -0.00000    -0.00002
+   5   5     0.98556     0.00000
+hubbard_term: Total projector shell
+Occupations:     4.900759    0.435195    5.335954
+hubbard_term: maximum change in local occup.    0.000071
+   scf:   31    -3412.680045    -3412.680033    -3412.747151  0.000281 -2.685308  0.007804
+     spin moment: {S} , |S| = {        0.0        0.0    4.10871 }     4.10871
+hubbard_term: recalculating local occupations   32
+ hubbard_term: projector occupations
+ hubbard_term: atom, species:            1           1
+   1   1     0.97655     0.14497
+   1   2     0.00000     0.00004
+   1   3    -0.00000    -0.00002
+   1   4     0.00000     0.00004
+   1   5    -0.00000     0.00000
+   2   1     0.00000     0.00004
+   2   2     0.97655     0.14497
+   2   3     0.00000    -0.00001
+   2   4    -0.00000    -0.00004
+   2   5    -0.00000     0.00002
+   3   1    -0.00000    -0.00002
+   3   2     0.00000    -0.00001
+   3   3     0.98556     0.00000
+   3   4     0.00000    -0.00001
+   3   5     0.00000    -0.00000
+   4   1     0.00000     0.00004
+   4   2    -0.00000    -0.00004
+   4   3     0.00000    -0.00001
+   4   4     0.97655     0.14497
+   4   5    -0.00000    -0.00002
+   5   1    -0.00000     0.00000
+   5   2    -0.00000     0.00002
+   5   3     0.00000    -0.00000
+   5   4    -0.00000    -0.00002
+   5   5     0.98556     0.00000
+hubbard_term: Total projector shell
+Occupations:     4.900759    0.434911    5.335670
+hubbard_term: maximum change in local occup.    0.000166
+   scf:   32    -3412.680175    -3412.680105    -3412.747151  0.000267 -2.686077  0.010069
+     spin moment: {S} , |S| = {        0.0        0.0    4.10929 }     4.10929
+hubbard_term: recalculating local occupations   33
+ hubbard_term: projector occupations
+ hubbard_term: atom, species:            1           1
+   1   1     0.97655     0.14518
+   1   2     0.00000     0.00005
+   1   3    -0.00000    -0.00002
+   1   4     0.00000     0.00005
+   1   5    -0.00000    -0.00000
+   2   1     0.00000     0.00005
+   2   2     0.97655     0.14518
+   2   3     0.00000    -0.00001
+   2   4    -0.00000    -0.00005
+   2   5    -0.00000     0.00002
+   3   1    -0.00000    -0.00002
+   3   2     0.00000    -0.00001
+   3   3     0.98556     0.00000
+   3   4     0.00000    -0.00001
+   3   5     0.00000    -0.00000
+   4   1     0.00000     0.00005
+   4   2    -0.00000    -0.00005
+   4   3     0.00000    -0.00001
+   4   4     0.97655     0.14518
+   4   5    -0.00000    -0.00002
+   5   1    -0.00000    -0.00000
+   5   2    -0.00000     0.00002
+   5   3     0.00000    -0.00000
+   5   4    -0.00000    -0.00002
+   5   5     0.98556     0.00000
+hubbard_term: Total projector shell
+Occupations:     4.900759    0.435543    5.336302
+hubbard_term: maximum change in local occup.    0.000045
+   scf:   33    -3412.680106    -3412.680107    -3412.747152  0.000345 -2.687093  0.004990
+     spin moment: {S} , |S| = {        0.0        0.0    4.10800 }     4.10800
+hubbard_term: recalculating local occupations   34
+ hubbard_term: projector occupations
+ hubbard_term: atom, species:            1           1
+   1   1     0.97655     0.14509
+   1   2     0.00000     0.00005
+   1   3    -0.00000    -0.00002
+   1   4     0.00000     0.00005
+   1   5    -0.00000    -0.00000
+   2   1     0.00000     0.00005
+   2   2     0.97655     0.14509
+   2   3     0.00000    -0.00001
+   2   4    -0.00000    -0.00005
+   2   5     0.00000     0.00002
+   3   1    -0.00000    -0.00002
+   3   2     0.00000    -0.00001
+   3   3     0.98556     0.00000
+   3   4     0.00000    -0.00001
+   3   5     0.00000    -0.00000
+   4   1     0.00000     0.00005
+   4   2    -0.00000    -0.00005
+   4   3     0.00000    -0.00001
+   4   4     0.97655     0.14509
+   4   5    -0.00000    -0.00002
+   5   1    -0.00000    -0.00000
+   5   2     0.00000     0.00002
+   5   3     0.00000    -0.00000
+   5   4    -0.00000    -0.00002
+   5   5     0.98556     0.00000
+hubbard_term: Total projector shell
+Occupations:     4.900759    0.435269    5.336028
+hubbard_term: maximum change in local occup.    0.000046
+   scf:   34    -3412.680184    -3412.680146    -3412.747152  0.000124 -2.687156  0.003649
+     spin moment: {S} , |S| = {        0.0        0.0    4.10856 }     4.10856
+hubbard_term: recalculating local occupations   35
+ hubbard_term: projector occupations
+ hubbard_term: atom, species:            1           1
+   1   1     0.97655     0.14512
+   1   2     0.00000     0.00005
+   1   3    -0.00000    -0.00002
+   1   4     0.00000     0.00005
+   1   5     0.00000     0.00000
+   2   1     0.00000     0.00005
+   2   2     0.97655     0.14512
+   2   3     0.00000    -0.00001
+   2   4    -0.00000    -0.00005
+   2   5     0.00000     0.00002
+   3   1    -0.00000    -0.00002
+   3   2     0.00000    -0.00001
+   3   3     0.98556     0.00000
+   3   4     0.00000    -0.00001
+   3   5     0.00000    -0.00000
+   4   1     0.00000     0.00005
+   4   2    -0.00000    -0.00005
+   4   3     0.00000    -0.00001
+   4   4     0.97655     0.14512
+   4   5    -0.00000    -0.00002
+   5   1     0.00000     0.00000
+   5   2     0.00000     0.00002
+   5   3     0.00000    -0.00000
+   5   4    -0.00000    -0.00002
+   5   5     0.98556     0.00000
+hubbard_term: Total projector shell
+Occupations:     4.900759    0.435360    5.336119
+hubbard_term: maximum change in local occup.    0.000016
+   scf:   35    -3412.680166    -3412.680156    -3412.747152  0.000111 -2.687252  0.003564
+     spin moment: {S} , |S| = {        0.0        0.0    4.10837 }     4.10837
+hubbard_term: recalculating local occupations   36
+ hubbard_term: projector occupations
+ hubbard_term: atom, species:            1           1
+   1   1     0.97655     0.14503
+   1   2     0.00000     0.00005
+   1   3    -0.00000    -0.00002
+   1   4     0.00000     0.00005
+   1   5     0.00000    -0.00000
+   2   1     0.00000     0.00005
+   2   2     0.97655     0.14503
+   2   3     0.00000    -0.00001
+   2   4    -0.00000    -0.00005
+   2   5     0.00000     0.00002
+   3   1    -0.00000    -0.00002
+   3   2     0.00000    -0.00001
+   3   3     0.98556     0.00000
+   3   4     0.00000    -0.00001
+   3   5     0.00000    -0.00000
+   4   1     0.00000     0.00005
+   4   2    -0.00000    -0.00005
+   4   3     0.00000    -0.00001
+   4   4     0.97655     0.14503
+   4   5    -0.00000    -0.00002
+   5   1     0.00000    -0.00000
+   5   2     0.00000     0.00002
+   5   3     0.00000    -0.00000
+   5   4    -0.00000    -0.00002
+   5   5     0.98556     0.00000
+hubbard_term: Total projector shell
+Occupations:     4.900759    0.435102    5.335861
+hubbard_term: maximum change in local occup.    0.000102
+   scf:   36    -3412.680215    -3412.680186    -3412.747152  0.000105 -2.687092  0.004383
+     spin moment: {S} , |S| = {        0.0        0.0    4.10890 }     4.10890
+hubbard_term: recalculating local occupations   37
+ hubbard_term: projector occupations
+ hubbard_term: atom, species:            1           1
+   1   1     0.97655     0.14507
+   1   2     0.00000     0.00005
+   1   3    -0.00000    -0.00002
+   1   4     0.00000     0.00005
+   1   5     0.00000    -0.00000
+   2   1     0.00000     0.00005
+   2   2     0.97655     0.14507
+   2   3     0.00000    -0.00001
+   2   4    -0.00000    -0.00005
+   2   5     0.00000     0.00002
+   3   1    -0.00000    -0.00002
+   3   2     0.00000    -0.00001
+   3   3     0.98556     0.00000
+   3   4     0.00000    -0.00001
+   3   5     0.00000    -0.00000
+   4   1     0.00000     0.00005
+   4   2    -0.00000    -0.00005
+   4   3     0.00000    -0.00001
+   4   4     0.97655     0.14507
+   4   5    -0.00000    -0.00002
+   5   1     0.00000    -0.00000
+   5   2     0.00000     0.00002
+   5   3     0.00000    -0.00000
+   5   4    -0.00000    -0.00002
+   5   5     0.98556     0.00000
+hubbard_term: Total projector shell
+Occupations:     4.900759    0.435220    5.335979
+hubbard_term: maximum change in local occup.    0.000063
+   scf:   37    -3412.680165    -3412.680175    -3412.747152  0.000041 -2.687035  0.003790
+     spin moment: {S} , |S| = {        0.0        0.0    4.10866 }     4.10866
+hubbard_term: recalculating local occupations   38
+ hubbard_term: projector occupations
+ hubbard_term: atom, species:            1           1
+   1   1     0.97655     0.14500
+   1   2     0.00000     0.00005
+   1   3    -0.00000    -0.00002
+   1   4     0.00000     0.00005
+   1   5     0.00000     0.00000
+   2   1     0.00000     0.00005
+   2   2     0.97655     0.14500
+   2   3     0.00000    -0.00001
+   2   4    -0.00000    -0.00005
+   2   5     0.00000     0.00002
+   3   1    -0.00000    -0.00002
+   3   2     0.00000    -0.00001
+   3   3     0.98556     0.00000
+   3   4     0.00000    -0.00001
+   3   5     0.00000    -0.00000
+   4   1     0.00000     0.00005
+   4   2    -0.00000    -0.00005
+   4   3     0.00000    -0.00001
+   4   4     0.97655     0.14500
+   4   5    -0.00000    -0.00002
+   5   1     0.00000     0.00000
+   5   2     0.00000     0.00002
+   5   3     0.00000    -0.00000
+   5   4    -0.00000    -0.00002
+   5   5     0.98556     0.00000
+hubbard_term: Total projector shell
+Occupations:     4.900759    0.435013    5.335772
+hubbard_term: maximum change in local occup.    0.000132
+   scf:   38    -3412.680204    -3412.680190    -3412.747151  0.000069 -2.686723  0.004707
+     spin moment: {S} , |S| = {        0.0        0.0    4.10908 }     4.10908
+hubbard_term: recalculating local occupations   39
+ hubbard_term: projector occupations
+ hubbard_term: atom, species:            1           1
+   1   1     0.97655     0.14501
+   1   2     0.00000     0.00005
+   1   3    -0.00000    -0.00002
+   1   4     0.00000     0.00005
+   1   5     0.00000    -0.00000
+   2   1     0.00000     0.00005
+   2   2     0.97655     0.14501
+   2   3     0.00000    -0.00001
+   2   4    -0.00000    -0.00005
+   2   5     0.00000     0.00002
+   3   1    -0.00000    -0.00002
+   3   2     0.00000    -0.00001
+   3   3     0.98556     0.00000
+   3   4     0.00000    -0.00001
+   3   5     0.00000    -0.00000
+   4   1     0.00000     0.00005
+   4   2    -0.00000    -0.00005
+   4   3     0.00000    -0.00001
+   4   4     0.97655     0.14501
+   4   5    -0.00000    -0.00002
+   5   1     0.00000    -0.00000
+   5   2     0.00000     0.00002
+   5   3     0.00000    -0.00000
+   5   4    -0.00000    -0.00002
+   5   5     0.98556     0.00000
+hubbard_term: Total projector shell
+Occupations:     4.900759    0.435033    5.335792
+hubbard_term: maximum change in local occup.    0.000125
+   scf:   39    -3412.680176    -3412.680183    -3412.747152  0.000027 -2.686446  0.004331
+     spin moment: {S} , |S| = {        0.0        0.0    4.10904 }     4.10904
+hubbard_term: recalculating local occupations   40
+ hubbard_term: projector occupations
+ hubbard_term: atom, species:            1           1
+   1   1     0.97655     0.14500
+   1   2     0.00000     0.00005
+   1   3    -0.00000    -0.00002
+   1   4     0.00000     0.00005
+   1   5     0.00000    -0.00000
+   2   1     0.00000     0.00005
+   2   2     0.97655     0.14500
+   2   3     0.00000    -0.00001
+   2   4    -0.00000    -0.00005
+   2   5     0.00000     0.00002
+   3   1    -0.00000    -0.00002
+   3   2     0.00000    -0.00001
+   3   3     0.98556     0.00000
+   3   4     0.00000    -0.00001
+   3   5     0.00000    -0.00000
+   4   1     0.00000     0.00005
+   4   2    -0.00000    -0.00005
+   4   3     0.00000    -0.00001
+   4   4     0.97655     0.14500
+   4   5    -0.00000    -0.00002
+   5   1     0.00000    -0.00000
+   5   2     0.00000     0.00002
+   5   3     0.00000    -0.00000
+   5   4    -0.00000    -0.00002
+   5   5     0.98556     0.00000
+hubbard_term: Total projector shell
+Occupations:     4.900759    0.435011    5.335770
+hubbard_term: maximum change in local occup.    0.000132
+   scf:   40    -3412.680168    -3412.680175    -3412.747152  0.000055 -2.686175  0.004217
+     spin moment: {S} , |S| = {        0.0        0.0    4.10908 }     4.10908
+hubbard_term: recalculating local occupations   41
+ hubbard_term: projector occupations
+ hubbard_term: atom, species:            1           1
+   1   1     0.97655     0.14535
+   1   2     0.00000     0.00005
+   1   3    -0.00000    -0.00002
+   1   4     0.00000     0.00005
+   1   5     0.00000    -0.00000
+   2   1     0.00000     0.00005
+   2   2     0.97655     0.14535
+   2   3     0.00000    -0.00001
+   2   4    -0.00000    -0.00005
+   2   5     0.00000     0.00002
+   3   1    -0.00000    -0.00002
+   3   2     0.00000    -0.00001
+   3   3     0.98556     0.00000
+   3   4     0.00000    -0.00001
+   3   5     0.00000    -0.00000
+   4   1     0.00000     0.00005
+   4   2    -0.00000    -0.00005
+   4   3     0.00000    -0.00001
+   4   4     0.97655     0.14535
+   4   5    -0.00000    -0.00002
+   5   1     0.00000    -0.00000
+   5   2     0.00000     0.00002
+   5   3     0.00000    -0.00000
+   5   4    -0.00000    -0.00002
+   5   5     0.98556     0.00000
+hubbard_term: Total projector shell
+Occupations:     4.900759    0.436043    5.336803
+hubbard_term: maximum change in local occup.    0.000212
+   scf:   41    -3412.679953    -3412.680069    -3412.747146  0.000377 -2.685520  0.011775
+     spin moment: {S} , |S| = {        0.0        0.0    4.10697 }     4.10697
+hubbard_term: recalculating local occupations   42
+ hubbard_term: projector occupations
+ hubbard_term: atom, species:            1           1
+   1   1     0.97655     0.14505
+   1   2     0.00000     0.00005
+   1   3    -0.00000    -0.00002
+   1   4     0.00000     0.00005
+   1   5    -0.00000    -0.00000
+   2   1     0.00000     0.00005
+   2   2     0.97655     0.14505
+   2   3     0.00000    -0.00001
+   2   4    -0.00000    -0.00005
+   2   5     0.00000     0.00002
+   3   1    -0.00000    -0.00002
+   3   2     0.00000    -0.00001
+   3   3     0.98556     0.00000
+   3   4     0.00000    -0.00001
+   3   5     0.00000    -0.00000
+   4   1     0.00000     0.00005
+   4   2    -0.00000    -0.00005
+   4   3     0.00000    -0.00001
+   4   4     0.97655     0.14505
+   4   5    -0.00000    -0.00002
+   5   1    -0.00000    -0.00000
+   5   2     0.00000     0.00002
+   5   3     0.00000    -0.00000
+   5   4    -0.00000    -0.00002
+   5   5     0.98556     0.00000
+hubbard_term: Total projector shell
+Occupations:     4.900759    0.435165    5.335924
+hubbard_term: maximum change in local occup.    0.000081
+   scf:   42    -3412.680205    -3412.680141    -3412.747152  0.000294 -2.685527  0.001388
+     spin moment: {S} , |S| = {        0.0        0.0    4.10877 }     4.10877
+hubbard_term: recalculating local occupations   43
+ hubbard_term: projector occupations
+ hubbard_term: atom, species:            1           1
+   1   1     0.97655     0.14506
+   1   2     0.00000     0.00005
+   1   3    -0.00000    -0.00002
+   1   4     0.00000     0.00005
+   1   5    -0.00000    -0.00000
+   2   1     0.00000     0.00005
+   2   2     0.97655     0.14506
+   2   3     0.00000    -0.00001
+   2   4    -0.00000    -0.00005
+   2   5     0.00000     0.00002
+   3   1    -0.00000    -0.00002
+   3   2     0.00000    -0.00001
+   3   3     0.98556     0.00000
+   3   4     0.00000    -0.00001
+   3   5     0.00000    -0.00000
+   4   1     0.00000     0.00005
+   4   2    -0.00000    -0.00005
+   4   3     0.00000    -0.00001
+   4   4     0.97655     0.14506
+   4   5    -0.00000    -0.00002
+   5   1    -0.00000    -0.00000
+   5   2     0.00000     0.00002
+   5   3     0.00000    -0.00000
+   5   4    -0.00000    -0.00002
+   5   5     0.98556     0.00000
+hubbard_term: Total projector shell
+Occupations:     4.900759    0.435188    5.335947
+hubbard_term: maximum change in local occup.    0.000073
+   scf:   43    -3412.680127    -3412.680134    -3412.747152  0.000033 -2.685438  0.001434
+     spin moment: {S} , |S| = {        0.0        0.0    4.10872 }     4.10872
+hubbard_term: recalculating local occupations   44
+ hubbard_term: projector occupations
+ hubbard_term: atom, species:            1           1
+   1   1     0.97655     0.14509
+   1   2     0.00000     0.00005
+   1   3    -0.00000    -0.00002
+   1   4     0.00000     0.00005
+   1   5     0.00000    -0.00000
+   2   1     0.00000     0.00005
+   2   2     0.97655     0.14509
+   2   3     0.00000    -0.00001
+   2   4    -0.00000    -0.00005
+   2   5     0.00000     0.00002
+   3   1    -0.00000    -0.00002
+   3   2     0.00000    -0.00001
+   3   3     0.98556     0.00000
+   3   4     0.00000    -0.00001
+   3   5     0.00000    -0.00000
+   4   1     0.00000     0.00005
+   4   2    -0.00000    -0.00005
+   4   3     0.00000    -0.00001
+   4   4     0.97655     0.14509
+   4   5    -0.00000    -0.00002
+   5   1     0.00000    -0.00000
+   5   2     0.00000     0.00002
+   5   3     0.00000    -0.00000
+   5   4    -0.00000    -0.00002
+   5   5     0.98556     0.00000
+hubbard_term: Total projector shell
+Occupations:     4.900759    0.435278    5.336037
+hubbard_term: maximum change in local occup.    0.000043
+   scf:   44    -3412.680078    -3412.680106    -3412.747152  0.000180 -2.685122  0.001894
+     spin moment: {S} , |S| = {        0.0        0.0    4.10854 }     4.10854
+hubbard_term: recalculating local occupations   45
+ hubbard_term: projector occupations
+ hubbard_term: atom, species:            1           1
+   1   1     0.97655     0.14509
+   1   2     0.00000     0.00005
+   1   3    -0.00000    -0.00002
+   1   4     0.00000     0.00005
+   1   5    -0.00000    -0.00000
+   2   1     0.00000     0.00005
+   2   2     0.97655     0.14509
+   2   3     0.00000    -0.00001
+   2   4    -0.00000    -0.00005
+   2   5     0.00000     0.00002
+   3   1    -0.00000    -0.00002
+   3   2     0.00000    -0.00001
+   3   3     0.98556     0.00000
+   3   4    -0.00000    -0.00001
+   3   5     0.00000    -0.00000
+   4   1     0.00000     0.00005
+   4   2    -0.00000    -0.00005
+   4   3    -0.00000    -0.00001
+   4   4     0.97655     0.14509
+   4   5    -0.00000    -0.00002
+   5   1    -0.00000    -0.00000
+   5   2     0.00000     0.00002
+   5   3     0.00000    -0.00000
+   5   4    -0.00000    -0.00002
+   5   5     0.98556     0.00000
+hubbard_term: Total projector shell
+Occupations:     4.900759    0.435264    5.336023
+hubbard_term: maximum change in local occup.    0.000048
+   scf:   45    -3412.680122    -3412.680114    -3412.747152  0.000085 -2.685509  0.000918
+     spin moment: {S} , |S| = {        0.0        0.0    4.10857 }     4.10857
+
+SCF Convergence by DM+H criterion
+max |DM_out - DM_in|         :     0.0000854275
+max |H_out - H_in|      (eV) :     0.0009179934
+DFT+U population converged by dTol_pop criteria:
+max |pop(DFT+U)_i - pop(DFT+U)_j|:     0.0000480269
+SCF cycle converged after 45 iterations
+
+Using DM_out to compute the final energy and forces
+No. of atoms with KB's overlaping orbs in proc 0. Max # of overlaps:       2      48
+hubbard_term: recalculating local occupations   46
+ hubbard_term: projector occupations
+ hubbard_term: atom, species:            1           1
+   1   1     0.97655     0.14509
+   1   2     0.00000     0.00005
+   1   3    -0.00000    -0.00002
+   1   4     0.00000     0.00005
+   1   5    -0.00000    -0.00000
+   2   1     0.00000     0.00005
+   2   2     0.97655     0.14509
+   2   3     0.00000    -0.00001
+   2   4    -0.00000    -0.00005
+   2   5     0.00000     0.00002
+   3   1    -0.00000    -0.00002
+   3   2     0.00000    -0.00001
+   3   3     0.98556     0.00000
+   3   4    -0.00000    -0.00001
+   3   5     0.00000    -0.00000
+   4   1     0.00000     0.00005
+   4   2    -0.00000    -0.00005
+   4   3    -0.00000    -0.00001
+   4   4     0.97655     0.14509
+   4   5    -0.00000    -0.00002
+   5   1    -0.00000    -0.00000
+   5   2     0.00000     0.00002
+   5   3     0.00000    -0.00000
+   5   4    -0.00000    -0.00002
+   5   5     0.98556     0.00000
+hubbard_term: Total projector shell
+Occupations:     4.900759    0.435264    5.336023
+hubbard_term: maximum change in local occup.    0.000048
+hubbard_term: recalculating Hamiltonian and forces
+
+siesta: E_KS(eV) =            -3412.6801
+
+siesta: E_KS - E_eggbox =     -3412.6801
+
+siesta: Atomic forces (eV/Ang):
+     1    0.000002    0.000000    0.000104
+     2   -0.000002   -0.000000   -0.000090
+----------------------------------------
+   Tot    0.000000    0.000000    0.000014
+----------------------------------------
+   Max    0.000104
+   Res    0.000056    sqrt( Sum f_i^2 / 3N )
+----------------------------------------
+   Max    0.000104    constrained
+
+Stress tensor Voigt[x,y,z,yz,xz,xy] (kbar):       -0.85       -0.85       -0.85        0.01        0.01        0.01
+(Free)E + p*V (eV/cell)    -3412.7355
+Target enthalpy (eV/cell)    -3412.7472
+
+coxmol: Writing XMOL coordinates into file MnO_SCR_-0.10.xyz                                                                                                                                                                                                                   
+
+siesta: Program's energy decomposition (eV):
+siesta: Ebs     =      -555.524551
+siesta: Eions   =      4996.250168
+siesta: Ena     =       689.799470
+siesta: Ekin    =      1809.888270
+siesta: Enl     =      -256.130611
+siesta: Eso     =         0.000000
+siesta: Edftu   =        -0.533602
+siesta: DEna    =       -35.033267
+siesta: DUscf   =         3.413930
+siesta: DUext   =         0.000000
+siesta: Ex      =      -579.230216
+siesta: Ec      =       -48.603921
+siesta: Exc     =      -627.834137
+siesta: EbV     =         0.000000
+siesta: eta*DQ  =         0.000000
+siesta: Emadel  =         0.000000
+siesta: Emeta   =         0.000000
+siesta: Emolmec =         0.000000
+siesta: Ekinion =         0.000000
+siesta: Eharris =     -3412.680122
+siesta: Etot    =     -3412.680114
+siesta: FreeEng =     -3412.747152
+
+siesta: Final energy (eV):
+siesta:  Band Struct. =    -555.524551
+siesta:       Kinetic =    1809.888270
+siesta:       Hartree =     922.682440
+siesta:         Edftu =      -0.533602
+siesta:       Eso     =       0.000000
+siesta:    Ext. field =       0.000000
+siesta:         Exch. =    -579.230216
+siesta:         Corr. =     -48.603921
+siesta:     Bulk bias =       0.000000
+siesta:   Exch.-corr. =    -627.834137
+siesta:  Ion-electron =   -3625.964420
+siesta:       Ion-ion =   -1890.918666
+siesta:       Ekinion =       0.000000
+siesta: D3 dispersion =       0.000000
+siesta:         Total =   -3412.680114
+siesta:         Fermi =      -2.685509
+
+siesta: Stress tensor (static) (eV/Ang**3):
+siesta:    -0.000530    0.000003    0.000003
+siesta:     0.000003   -0.000530    0.000003
+siesta:     0.000003    0.000003   -0.000530
+
+siesta: Cell volume =         21.956105 Ang**3
+
+siesta: Pressure (static):
+siesta:                Solid            Molecule  Units
+siesta:           0.00000577          0.00000580  Ry/Bohr**3
+siesta:           0.00052961          0.00053296  eV/Ang**3
+siesta:           0.84852772          0.85389594  kBar
+
+Basis Enthalpy Calculation:
+    Basis Pressure for species 1(Mn) :      0.2000000 GPa
+    Basis Pressure for species 2(O) :      0.2000000 GPa
+
+    Orbital volume contribution        =           0.452694 eV
+    (Free)E + p_basis*V_orbitals       =       -3412.294458 eV
+    (Free)Eharris+ p_basis*V_orbitals  =       -3412.294466 eV
+WARNING: BASIS_ENTHALPY and BASIS_HARRIS_ENTHALPY files are deprecated. They will be removed in future releases.
+Please use system_label.BASIS_ENTHALPY in your scripts instead.
+
+cite: Please indicate the Siesta version in published work: 5.4.2
+cite: This calculation has made use of features in the following articles
+cite: which we encourage you to cite in published work.
+cite: (Please see "MnO_SCR_-0.10.bib" for a BibTeX file.)
+        Primary SIESTA paper
+          DOI: www.doi.org/10.1088/0953-8984/14/11/302
+        LDA+U implementation
+          DOI: www.doi.org/10.1103/PhysRevB.57.1505
+        PSML pseudopotential format
+          DOI: www.doi.org/10.1016/j.cpc.2018.02.011
+
+
+timer: Elapsed wall time (sec) =       2.251
+timer: CPU execution times (sec):
+
+Routine            Calls   Time/call    Tot.time        %
+siesta                 1       2.319       2.319   100.00
+Setup                  1       0.341       0.341    14.69
+bands                  1       0.000       0.000     0.00
+KSV_init               1       0.000       0.000     0.00
+IterGeom               1       1.969       1.969    84.88
+geom_init              1       0.838       0.838    36.12
+state_init             1       0.699       0.699    30.12
+hsparse                1       0.004       0.004     0.19
+overlap                1       0.002       0.002     0.07
+Setup_H0               1       0.100       0.100     4.32
+naefs                  2       0.000       0.000     0.01
+dnaefs                 1       0.000       0.000     0.00
+two-body               1       0.000       0.000     0.00
+MolMec                 2       0.000       0.000     0.00
+kinefsm                2       0.001       0.002     0.10
+nlefsm                 2       0.005       0.010     0.45
+DHSCF_Init             1       0.089       0.089     3.85
+DHSCF1                 1       0.027       0.027     1.16
+InitMesh               1       0.026       0.026     1.13
+INITMESH               1       0.000       0.000     0.00
+DHSCF2                 1       0.062       0.062     2.68
+REMESH                 1       0.008       0.008     0.36
+REORD                206       0.000       0.003     0.12
+PHION                  1       0.039       0.039     1.69
+COMM_BSC             380       0.000       0.004     0.16
+POISON                48       0.000       0.011     0.48
+fft                   96       0.000       0.006     0.25
+setup_H               46       0.023       1.040    44.82
+hubbard_term          47       0.005       0.218     9.40
+DHSCF                 47       0.020       0.923    39.79
+DHSCF3                47       0.018       0.844    36.39
+rhoofd                47       0.008       0.396    17.09
+XC                    47       0.002       0.108     4.64
+GXC-CellXC            47       0.002       0.105     4.53
+gridxc@cellXC         47       0.002       0.105     4.52
+vmat                  47       0.007       0.316    13.62
+IterSCF               45       0.023       1.024    44.15
+compute_dm            45       0.000       0.010     0.45
+diagon                45       0.000       0.010     0.43
+r-eigvec              90       0.000       0.008     0.33
+r-buildHS             90       0.000       0.000     0.01
+rdiag                 90       0.000       0.007     0.30
+rdiag1                90       0.000       0.001     0.02
+rdiag2                90       0.000       0.001     0.03
+rdiag3                90       0.000       0.003     0.15
+rdiag4                90       0.000       0.001     0.04
+r-buildD              45       0.000       0.001     0.05
+MIXER                 44       0.000       0.002     0.07
+PostSCF                1       0.106       0.106     4.55
+FINAL_HF               1       0.105       0.105     4.55
+DHSCF4                 1       0.079       0.079     3.39
+dfscf                  1       0.071       0.071     3.06
+overfsm                1       0.001       0.001     0.04
+writeHSX               1       0.000       0.000     0.01
+state_analysis         1       0.000       0.000     0.02
+siesta_move            1       0.000       0.000     0.00
+Analysis               1       0.001       0.001     0.05
+optical                1       0.000       0.000     0.00
+  
+
+>> End of run:   4-AUG-2026  23:19:53
+Job completed
