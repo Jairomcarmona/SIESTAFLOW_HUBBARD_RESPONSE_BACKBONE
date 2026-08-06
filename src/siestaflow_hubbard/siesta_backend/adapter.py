@@ -2,6 +2,7 @@ import os
 import re
 import subprocess
 from typing import Dict, Any, List, Optional
+import sys
 import numpy as np
 
 from siestaflow_hubbard.domain.exceptions import (
