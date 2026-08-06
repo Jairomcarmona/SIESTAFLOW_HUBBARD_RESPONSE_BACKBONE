@@ -14,7 +14,7 @@ The primary mission of **SIESTAFLOW** is to provide a robust, automated, and aud
 
 1. **SIESTA as First-Class Native Backend**:
    - `siestaflow_hubbard.siesta_backend` is the primary, fully supported production backend.
-   - It natively manages FDF generation, `DFTU.proj` blocks, BARE response frozen-density overrides (`MaxSCFIterations 2`, `DM.MixingWeight 1.0`), and output parsing.
+   - It natively manages FDF generation, `DFTU.proj` blocks, BARE response frozen-density overrides (`MaxSCFIterations 2`, `DM.MixingWeight 1.0`, `SCF.MustConverge false`), and output parsing.
 
 2. **Abstract Interface (`BaseBackendAdapter`)**:
    - The separation between the mathematical core ($U = \chi_0^{-1} - \chi^{-1}$) and the backend ensures that SIESTA's file parsing logic does not contaminate the physical inversion algorithms.

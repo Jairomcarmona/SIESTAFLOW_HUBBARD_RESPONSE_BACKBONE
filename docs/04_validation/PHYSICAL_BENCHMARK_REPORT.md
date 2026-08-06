@@ -109,7 +109,7 @@ Adding polarization functions (DZP) and $\mathbf{k}$-space sampling completely r
 ```mermaid
 graph TD
     A[FDF Base Template] -->|FdfBuilder| B[Inject DFTU.proj & Set Overrides]
-    B -->|BARE Mode| C[MaxSCFIterations 2 + DM.MixingWeight 1.0]
+    B -->|BARE Mode| C[MaxSCFIterations 2 + DM.MixingWeight 1.0 + SCF.MustConverge false]
     B -->|SCREENED Mode| D[Full SCF Iterations]
     
     C & D -->|SiestaLRAdapter| E[Execute SIESTA via MPI n_procs=4]
