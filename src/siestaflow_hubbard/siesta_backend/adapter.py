@@ -59,7 +59,9 @@ class SiestaLRAdapter(BaseBackendAdapter):
             else:
                 launcher = f"mpirun -np {n_procs}"
 
-            cmd = f"cd {linux_cwd} && {launcher} {siesta_cmd} < {fdf_filename} > {out_filename}"
+            stdbuf_cmd = "stdbuf -oL -eL " if shutil.which("stdbuf") else ""
+            cmd = f"cd {linux_cwd} && {stdbuf_cmd}{launcher} {siesta_cmd} < {fdf_filename} > {out_filename}"
+            sys.stdout.flush()
             result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
             if result.returncode != 0:
                 raise ExecutionError(f"SIESTA execution failed in Slurm allocation:\n{result.stderr}")
