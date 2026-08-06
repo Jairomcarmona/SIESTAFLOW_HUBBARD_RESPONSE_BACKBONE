@@ -109,7 +109,9 @@ class FdfBuilder:
 
         mode_upper = response_mode.upper()
         if mode_upper == "BARE":
-            # For BARE calculations: strictly replace MaxSCFIterations to 2 and DM.MixingWeight to 1.0
+            # BARE is intentionally a short, frozen-density response. After
+            # two iterations the density is generally not converged to
+            # DM.Tolerance, so prevent SIESTA from aborting the response job.
             if re.search(r"(?i)^\s*MaxSCFIterations\b.*$", content, flags=re.MULTILINE):
                 content = re.sub(
                     r"(?i)^\s*MaxSCFIterations\b.*$",
@@ -129,6 +131,16 @@ class FdfBuilder:
                 )
             else:
                 content += "DM.MixingWeight     1.0\n"
+
+            if re.search(r"(?i)^\s*SCF\.MustConverge\b.*$", content, flags=re.MULTILINE):
+                content = re.sub(
+                    r"(?i)^\s*SCF\.MustConverge\b.*$",
+                    "SCF.MustConverge    false",
+                    content,
+                    flags=re.MULTILINE,
+                )
+            else:
+                content += "SCF.MustConverge    false\n"
 
             if not re.search(r"(?i)^\s*DM\.UseSaveDM\b", content, flags=re.MULTILINE):
                 content += "DM.UseSaveDM true\n"
