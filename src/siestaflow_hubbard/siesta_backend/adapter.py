@@ -50,10 +50,13 @@ class SiestaLRAdapter(BaseBackendAdapter):
 
         if in_slurm_allocation:
             # Direct execution inside active Slurm allocation
-            cmd = f"cd {linux_cwd} && mpirun -np {n_procs} {siesta_cmd} < {fdf_filename} > {out_filename}"
+            # Use native Slurm launcher 'srun' to avoid inter-node SSH key prompts in multi-node jobs
+            import shutil
+            launcher = "srun" if shutil.which("srun") else f"mpirun -np {n_procs}"
+            cmd = f"cd {linux_cwd} && {launcher} {siesta_cmd} < {fdf_filename} > {out_filename}"
             result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
             if result.returncode != 0:
-                raise ExecutionError(f"SIESTA MPI execution failed in Slurm allocation:\n{result.stderr}")
+                raise ExecutionError(f"SIESTA execution failed in Slurm allocation:\n{result.stderr}")
         else:
             # Submit standalone job via sbatch --wait or bash fallback
             wsl_workdir = f"/tmp/siesta_run_{job_name}"
