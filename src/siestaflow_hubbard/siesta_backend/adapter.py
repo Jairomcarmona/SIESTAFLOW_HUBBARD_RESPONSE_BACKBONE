@@ -50,9 +50,15 @@ class SiestaLRAdapter(BaseBackendAdapter):
 
         if in_slurm_allocation:
             # Direct execution inside active Slurm allocation
-            # Use native Slurm launcher 'srun' to avoid inter-node SSH key prompts in multi-node jobs
+            # Yoltla system mandate: mpiexec.hydra -bootstrap ssh
             import shutil
-            launcher = "srun" if shutil.which("srun") else f"mpirun -np {n_procs}"
+            if shutil.which("mpiexec.hydra"):
+                launcher = "mpiexec.hydra -bootstrap ssh"
+            elif shutil.which("srun"):
+                launcher = "srun"
+            else:
+                launcher = f"mpirun -np {n_procs}"
+
             cmd = f"cd {linux_cwd} && {launcher} {siesta_cmd} < {fdf_filename} > {out_filename}"
             result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
             if result.returncode != 0:
