@@ -132,6 +132,11 @@ def run_yoltla_cu3n_campaign(siesta_bin: str = "siesta", n_procs: int = 16):
         projections=ref_proj
     )
 
+    print(f"  -> Prepared FDF: {ref_fdf_path}")
+    print(f"  -> Output log:   {ref_out_path}")
+    print(f"  -> Launching SIESTA via MPI ({n_procs} cores)...")
+    sys.stdout.flush()
+
     adapter.run_siesta_slurm(ref_fdf_name, ref_out_name, cwd, n_procs=n_procs)
 
     ref_dm_run = os.path.join(cwd, f"{system}_ref_run.DM")
@@ -140,11 +145,13 @@ def run_yoltla_cu3n_campaign(siesta_bin: str = "siesta", n_procs: int = 16):
         shutil.copy(ref_dm_run, ref_dm_saved)
 
     print(f"  -> Reference State successfully calculated on Yoltla.")
+    sys.stdout.flush()
 
     system_records = []
 
     # 2. SCREENED Perturbations
     print(f"\n[{system}] 2. Running SCREENED Perturbations...")
+    sys.stdout.flush()
     for alpha in alpha_grid_vals:
         run_name = f"{system}_SCR_{alpha:+.2f}"
         fdf_name = f"{run_name}.fdf"
@@ -165,7 +172,8 @@ def run_yoltla_cu3n_campaign(siesta_bin: str = "siesta", n_procs: int = 16):
         if os.path.exists(ref_dm_saved):
             shutil.copy(ref_dm_saved, target_dm)
 
-        print(f"  -> SCREENED alpha = {alpha:+.2f} eV...")
+        print(f"  -> SCREENED alpha = {alpha:+.2f} eV (FDF: {fdf_name}, OUT: {out_name})...")
+        sys.stdout.flush()
         adapter.run_siesta_slurm(fdf_name, out_name, cwd, n_procs=n_procs)
 
         recs = adapter.extract_occupations(
@@ -177,9 +185,11 @@ def run_yoltla_cu3n_campaign(siesta_bin: str = "siesta", n_procs: int = 16):
         system_records.extend(recs)
         if recs:
             print(f"     Occup (Cu1 3d) = {recs[0].occupation:.6f}")
+        sys.stdout.flush()
 
     # 3. BARE Perturbations
     print(f"\n[{system}] 3. Running BARE Perturbations...")
+    sys.stdout.flush()
     for alpha in alpha_grid_vals:
         run_name = f"{system}_BARE_{alpha:+.2f}"
         fdf_name = f"{run_name}.fdf"
@@ -200,7 +210,8 @@ def run_yoltla_cu3n_campaign(siesta_bin: str = "siesta", n_procs: int = 16):
         if os.path.exists(ref_dm_saved):
             shutil.copy(ref_dm_saved, target_dm)
 
-        print(f"  -> BARE alpha = {alpha:+.2f} eV...")
+        print(f"  -> BARE alpha = {alpha:+.2f} eV (FDF: {fdf_name}, OUT: {out_name})...")
+        sys.stdout.flush()
         adapter.run_siesta_slurm(fdf_name, out_name, cwd, n_procs=n_procs)
 
         recs = adapter.extract_occupations(
@@ -212,6 +223,7 @@ def run_yoltla_cu3n_campaign(siesta_bin: str = "siesta", n_procs: int = 16):
         system_records.extend(recs)
         if recs:
             print(f"     Occup (Cu1 3d) = {recs[0].occupation:.6f}")
+        sys.stdout.flush()
 
     # 4. Results Processing
     print(f"\n[{system}] 4. OLS Linear Regression & U Extraction...")
