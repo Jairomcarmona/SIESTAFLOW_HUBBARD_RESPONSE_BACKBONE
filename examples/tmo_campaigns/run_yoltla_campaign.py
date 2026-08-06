@@ -240,4 +240,5 @@ def run_yoltla_cu3n_campaign(siesta_bin: str = "siesta", n_procs: int = 16):
 
 if __name__ == "__main__":
     siesta_bin = sys.argv[1] if len(sys.argv) > 1 else "siesta"
-    run_yoltla_cu3n_campaign(siesta_bin=siesta_bin)
+    n_procs = int(sys.argv[2]) if len(sys.argv) > 2 else int(os.environ.get("SLURM_NTASKS", 64))
+    run_yoltla_cu3n_campaign(siesta_bin=siesta_bin, n_procs=n_procs)
