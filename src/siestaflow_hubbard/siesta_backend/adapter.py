@@ -28,42 +28,73 @@ class SiestaLRAdapter(BaseBackendAdapter):
         if result.returncode != 0:
             raise ExecutionError(f"SIESTA execution failed with return code {result.returncode}:\n{result.stderr}")
 
-    def run_siesta_slurm(self, fdf_filename: str, out_filename: str, cwd: str, n_procs: int = 4) -> None:
-        """Runs SIESTA via SLURM inside WSL (parallel) in Linux native space to prevent /mnt/c file locks."""
+    def run_siesta_slurm(self, fdf_filename: str, out_filename: str, cwd: str = ".", n_procs: int = 4) -> None:
+        """
+        Runs SIESTA via SLURM or MPI, supporting both native Linux HPC clusters (like Yoltla)
+        and WSL development environments. Automatically detects active SLURM job allocations.
+        """
         job_name = fdf_filename.replace('.fdf', '')
-        wsl_workdir = f"/tmp/siesta_run_{job_name}"
-        wsl_cwd = "/mnt/c" + cwd[2:].replace("\\", "/")
+        abs_cwd = os.path.abspath(cwd)
 
-        bash_script = f"""
+        # Detect OS & path format (Windows/WSL vs Native Linux HPC like Yoltla)
+        is_windows = os.name == 'nt' or '\\' in abs_cwd
+        if is_windows:
+            linux_cwd = "/mnt/c" + abs_cwd[2:].replace("\\", "/")
+            siesta_cmd = self.wsl_siesta_path
+        else:
+            linux_cwd = abs_cwd
+            siesta_cmd = self.wsl_siesta_path if self.wsl_siesta_path != "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta" else "siesta"
+
+        # Check if already inside an active SLURM allocation (e.g. on Yoltla node)
+        in_slurm_allocation = "SLURM_JOB_ID" in os.environ
+
+        if in_slurm_allocation:
+            # Direct execution inside active Slurm allocation
+            cmd = f"cd {linux_cwd} && mpirun -np {n_procs} {siesta_cmd} < {fdf_filename} > {out_filename}"
+            result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+            if result.returncode != 0:
+                raise ExecutionError(f"SIESTA MPI execution failed in Slurm allocation:\n{result.stderr}")
+        else:
+            # Submit standalone job via sbatch --wait or bash fallback
+            wsl_workdir = f"/tmp/siesta_run_{job_name}"
+            bash_script = f"""#!/bin/bash
 rm -rf {wsl_workdir}
 mkdir -p {wsl_workdir}
-cp {wsl_cwd}/*.fdf {wsl_cwd}/*.psml {wsl_cwd}/*.DM {wsl_workdir}/ 2>/dev/null || true
+cp {linux_cwd}/*.fdf {linux_cwd}/*.psml {linux_cwd}/*.DM {wsl_workdir}/ 2>/dev/null || true
 
 cat << 'EOF' > {wsl_workdir}/submit.sh
 #!/bin/bash
 #SBATCH --job-name={job_name}
 #SBATCH --ntasks={n_procs}
 #SBATCH --output=slurm_{job_name}.out
-#SBATCH --partition=local
+#SBATCH --partition=batch
 
 cd {wsl_workdir}
-mpirun -np {n_procs} {self.wsl_siesta_path} < {fdf_filename} > {out_filename}
+mpirun -np {n_procs} {siesta_cmd} < {fdf_filename} > {out_filename}
 EOF
 
 chmod +x {wsl_workdir}/submit.sh
-cd {wsl_workdir} && sbatch --wait {wsl_workdir}/submit.sh
-cp {wsl_workdir}/{out_filename} {wsl_cwd}/ 2>/dev/null || true
-cp {wsl_workdir}/*.DM {wsl_cwd}/ 2>/dev/null || true
+if command -v sbatch >/dev/null 2>&1; then
+    cd {wsl_workdir} && sbatch --wait {wsl_workdir}/submit.sh
+else
+    cd {wsl_workdir} && bash {wsl_workdir}/submit.sh
+fi
+cp {wsl_workdir}/{out_filename} {linux_cwd}/ 2>/dev/null || true
+cp {wsl_workdir}/*.DM {linux_cwd}/ 2>/dev/null || true
 """
-        wsl_runner_file = os.path.join(cwd, f"run_wsl_{job_name}.sh")
-        with open(wsl_runner_file, 'w', newline='\n') as f:
-            f.write(bash_script)
+            runner_file = os.path.join(abs_cwd, f"run_slurm_{job_name}.sh")
+            with open(runner_file, 'w', newline='\n') as f:
+                f.write(bash_script)
 
-        wsl_runner_path = "/mnt/c" + wsl_runner_file[2:].replace("\\", "/")
-        cmd = f'wsl bash {wsl_runner_path}'
-        result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
-        if result.returncode != 0:
-            raise ExecutionError(f"SLURM execution failed with return code {result.returncode}:\n{result.stderr}")
+            if is_windows:
+                linux_runner_path = "/mnt/c" + runner_file[2:].replace("\\", "/")
+                cmd = f"wsl bash {linux_runner_path}"
+            else:
+                cmd = f"bash {runner_file}"
+
+            result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+            if result.returncode != 0:
+                raise ExecutionError(f"SLURM/MPI execution failed with return code {result.returncode}:\n{result.stderr}")
 
     def prepare_input(self, fdf_template: str, alpha: float, mode: str) -> str:
         from siestaflow_hubbard.siesta_backend.fdf_builder import FdfBuilder
