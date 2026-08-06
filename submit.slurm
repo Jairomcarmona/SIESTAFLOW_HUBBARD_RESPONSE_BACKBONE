@@ -20,5 +20,5 @@ module load python 2>/dev/null || true
 # Activar entorno virtual
 source venv/bin/activate
 
-# Ejecución de la campaña de producción de Cu3N
-python examples/tmo_campaigns/run_yoltla_campaign.py siesta 64
+# Ejecución de la campaña de producción de Cu3N con 64 procesadores
+python -u examples/tmo_campaigns/run_yoltla_campaign.py siesta 64
