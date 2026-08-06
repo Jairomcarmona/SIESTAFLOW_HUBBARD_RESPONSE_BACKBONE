@@ -88,6 +88,13 @@ def run_yoltla_cu3n_campaign(siesta_bin: str = "siesta", n_procs: int = 16):
     cwd = current_dir
     ref_template = prepare_yoltla_cu3n_workspace(siesta_bin)
 
+    # Ensure pseudopotentials exist in working directory
+    for psml in ["Cu.psml", "N.psml"]:
+        src_psml = os.path.join(current_dir, psml)
+        dst_psml = os.path.join(cwd, psml)
+        if os.path.exists(src_psml) and src_psml != dst_psml:
+            shutil.copy(src_psml, dst_psml)
+
     system = "Cu3N_Yoltla"
     tm_symbol = "Cu1"
     target_atom_idx = 2
@@ -98,8 +105,10 @@ def run_yoltla_cu3n_campaign(siesta_bin: str = "siesta", n_procs: int = 16):
     adapter = SiestaLRAdapter(wsl_siesta_path=siesta_bin)
     fdf_builder = FdfBuilder()
 
-    ref_fdf = f"{system}_ref_run.fdf"
-    ref_out = f"{system}_ref.out"
+    ref_fdf_name = f"{system}_ref_run.fdf"
+    ref_out_name = f"{system}_ref.out"
+    ref_fdf_path = os.path.join(cwd, ref_fdf_name)
+    ref_out_path = os.path.join(cwd, ref_out_name)
 
     # 1. Reference State
     print(f"\n[{system}] 1. Calculating Reference State (alpha = 0.00 eV)...")
@@ -117,16 +126,18 @@ def run_yoltla_cu3n_campaign(siesta_bin: str = "siesta", n_procs: int = 16):
     ref_proj = [dict(base_proj, alpha=0.0000)]
     fdf_builder.prepare_fdf_screened(
         base_fdf_path=ref_template,
-        target_fdf_path=ref_fdf,
+        target_fdf_path=ref_fdf_path,
         alpha=0.0000,
         run_name=f"{system}_ref",
         projections=ref_proj
     )
 
-    adapter.run_siesta_slurm(ref_fdf, ref_out, cwd, n_procs=n_procs)
+    adapter.run_siesta_slurm(ref_fdf_name, ref_out_name, cwd, n_procs=n_procs)
 
-    if os.path.exists(f"{system}_ref_run.DM") and not os.path.exists(f"{system}_ref.DM"):
-        shutil.copy(f"{system}_ref_run.DM", f"{system}_ref.DM")
+    ref_dm_run = os.path.join(cwd, f"{system}_ref_run.DM")
+    ref_dm_saved = os.path.join(cwd, f"{system}_ref.DM")
+    if os.path.exists(ref_dm_run) and not os.path.exists(ref_dm_saved):
+        shutil.copy(ref_dm_run, ref_dm_saved)
 
     print(f"  -> Reference State successfully calculated on Yoltla.")
 
@@ -136,8 +147,10 @@ def run_yoltla_cu3n_campaign(siesta_bin: str = "siesta", n_procs: int = 16):
     print(f"\n[{system}] 2. Running SCREENED Perturbations...")
     for alpha in alpha_grid_vals:
         run_name = f"{system}_SCR_{alpha:+.2f}"
-        fdf_path = f"{run_name}.fdf"
-        out_path = f"{run_name}.out"
+        fdf_name = f"{run_name}.fdf"
+        out_name = f"{run_name}.out"
+        fdf_path = os.path.join(cwd, fdf_name)
+        out_path = os.path.join(cwd, out_name)
 
         proj = [dict(base_proj, alpha=alpha)]
         fdf_builder.prepare_fdf_screened(
@@ -148,11 +161,12 @@ def run_yoltla_cu3n_campaign(siesta_bin: str = "siesta", n_procs: int = 16):
             projections=proj
         )
 
-        if os.path.exists(f"{system}_ref.DM"):
-            shutil.copy(f"{system}_ref.DM", f"{run_name}.DM")
+        target_dm = os.path.join(cwd, f"{run_name}.DM")
+        if os.path.exists(ref_dm_saved):
+            shutil.copy(ref_dm_saved, target_dm)
 
         print(f"  -> SCREENED alpha = {alpha:+.2f} eV...")
-        adapter.run_siesta_slurm(fdf_path, out_path, cwd, n_procs=n_procs)
+        adapter.run_siesta_slurm(fdf_name, out_name, cwd, n_procs=n_procs)
 
         recs = adapter.extract_occupations(
             out_path,
@@ -168,8 +182,10 @@ def run_yoltla_cu3n_campaign(siesta_bin: str = "siesta", n_procs: int = 16):
     print(f"\n[{system}] 3. Running BARE Perturbations...")
     for alpha in alpha_grid_vals:
         run_name = f"{system}_BARE_{alpha:+.2f}"
-        fdf_path = f"{run_name}.fdf"
-        out_path = f"{run_name}.out"
+        fdf_name = f"{run_name}.fdf"
+        out_name = f"{run_name}.out"
+        fdf_path = os.path.join(cwd, fdf_name)
+        out_path = os.path.join(cwd, out_name)
 
         proj = [dict(base_proj, alpha=alpha)]
         fdf_builder.prepare_fdf_bare(
@@ -180,11 +196,12 @@ def run_yoltla_cu3n_campaign(siesta_bin: str = "siesta", n_procs: int = 16):
             projections=proj
         )
 
-        if os.path.exists(f"{system}_ref.DM"):
-            shutil.copy(f"{system}_ref.DM", f"{run_name}.DM")
+        target_dm = os.path.join(cwd, f"{run_name}.DM")
+        if os.path.exists(ref_dm_saved):
+            shutil.copy(ref_dm_saved, target_dm)
 
         print(f"  -> BARE alpha = {alpha:+.2f} eV...")
-        adapter.run_siesta_slurm(fdf_path, out_path, cwd, n_procs=n_procs)
+        adapter.run_siesta_slurm(fdf_name, out_name, cwd, n_procs=n_procs)
 
         recs = adapter.extract_occupations(
             out_path,
