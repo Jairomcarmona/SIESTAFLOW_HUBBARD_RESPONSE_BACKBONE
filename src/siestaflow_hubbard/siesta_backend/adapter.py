@@ -1,8 +1,11 @@
 import os
 import re
+import shlex
+import shutil
 import subprocess
 from typing import Dict, Any, List, Optional
 import sys
+import uuid
 import numpy as np
 
 from siestaflow_hubbard.domain.exceptions import (
@@ -51,17 +54,58 @@ class SiestaLRAdapter(BaseBackendAdapter):
 
         if in_slurm_allocation:
             # Direct execution inside active Slurm allocation
-            # Yoltla system mandate: mpiexec.hydra -bootstrap ssh
-            import shutil
+            # Yoltla system mandate: Hydra with an explicit rank count and
+            # allocation placement.  The previous implementation selected
+            # Hydra but silently dropped n_procs, so the 64-task allocation
+            # was never passed to the MPI launcher.
             if shutil.which("mpiexec.hydra"):
-                launcher = "mpiexec.hydra -bootstrap ssh"
+                launcher_parts = ["mpiexec.hydra", "-bootstrap", "ssh", "-np", str(n_procs)]
+                nodelist = os.environ.get("SLURM_JOB_NODELIST", "").strip()
+                if nodelist and shutil.which("scontrol"):
+                    hosts_result = subprocess.run(
+                        ["scontrol", "show", "hostnames", nodelist],
+                        capture_output=True,
+                        text=True,
+                        check=False,
+                    )
+                    if hosts_result.returncode != 0:
+                        raise ExecutionError(
+                            "Could not resolve the Yoltla allocation hostnames: "
+                            f"{hosts_result.stderr.strip()}"
+                        )
+                    hosts = [line.strip() for line in hosts_result.stdout.splitlines() if line.strip()]
+                    if not hosts:
+                        raise ExecutionError("Yoltla allocation resolved to no compute hosts")
+                    ppn_match = re.match(r"\s*(\d+)", os.environ.get("SLURM_NTASKS_PER_NODE", ""))
+                    ppn = int(ppn_match.group(1)) if ppn_match else None
+                    if ppn is None:
+                        if n_procs % len(hosts) != 0:
+                            raise ExecutionError(
+                                "Cannot derive an even Yoltla MPI placement from the allocation: "
+                                f"{n_procs} ranks over {len(hosts)} hosts"
+                            )
+                        ppn = n_procs // len(hosts)
+                    if n_procs > len(hosts) * ppn:
+                        raise ExecutionError(
+                            "Requested MPI ranks exceed the Yoltla placement: "
+                            f"{n_procs} > {len(hosts)}*{ppn}"
+                        )
+                    launcher_parts.extend([
+                        "-hosts", ",".join(hosts),
+                        "-ppn", str(ppn),
+                        "-genv", "FI_PSM3_UUID", str(uuid.uuid4()),
+                    ])
+                launcher = " ".join(shlex.quote(part) for part in launcher_parts)
             elif shutil.which("srun"):
-                launcher = "srun"
+                launcher = f"srun --ntasks={n_procs} --cpus-per-task=1 --exclusive"
             else:
                 launcher = f"mpirun -np {n_procs}"
 
             stdbuf_cmd = "stdbuf -oL -eL " if shutil.which("stdbuf") else ""
-            cmd = f"cd {linux_cwd} && {stdbuf_cmd}{launcher} {siesta_cmd} < {fdf_filename} > {out_filename}"
+            cmd = (
+                f"cd {shlex.quote(linux_cwd)} && {stdbuf_cmd}{launcher} "
+                f"{shlex.quote(siesta_cmd)} < {shlex.quote(fdf_filename)} > {shlex.quote(out_filename)}"
+            )
             sys.stdout.flush()
             result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
             if result.returncode != 0:
