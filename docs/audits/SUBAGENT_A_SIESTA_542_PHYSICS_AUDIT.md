@@ -1,0 +1,131 @@
+# Subagent A — SIESTA 5.4.2 Physics Audit
+
+**Auditor:** Subagent A (SIESTA Physics/Source Auditor)
+**Date:** 2026-08-07
+**Contract:** `SIESTA_5_4_2_SOURCE_CONTRACT`
+**Source:** Official SIESTA documentation and `Src/dftu_specs.f`, `Src/siesta_forces.F90`, `Src/setup_hamiltonian.F`, `Src/dftu.F` from GitLab tag 5.4.2.
+
+---
+
+## Audit Record 1: DFTU.Proj Block Format (Method 2)
+
+```
+CLAIM: DFTU.Proj method-2 format uses 3 lines per shell, but SIESTA 5.4.2 supports an optional 4th line for a contraction factor (lambda).
+AUTHORITATIVE SOURCE: Src/dftu_specs.f (lines 467-592)
+OBSERVED SEMANTICS:
+  The parser loops over each shell and reads:
+    Line 1: n  l        (lines 467-494)
+    Line 2: U  J        (lines 537-547)
+    Line 3: rc  omega   (lines 549-573)
+    Line 4: lambda      (optional scale factor, lines 575-592)
+  If line 4 is not a real number, it backspaces and moves to the next shell.
+IMPLICATION FOR SIESTAFLOW:
+  The current serializer outputs 5 lines:
+    n l
+    rc width
+    u_val alpha
+    j_val
+  This means SIESTA interprets the variables as:
+    n     -> n
+    l     -> l
+    rc    -> U (Hubbard U)
+    width -> J (Hund's J)
+    u_val -> rc (Cutoff radius)
+    alpha -> omega (Fermi smearing)
+    j_val -> lambda (Contraction factor)
+  This is a CRITICAL physical failure.
+  SYNTAX/PARSING: Potentially valid (SIESTA parses it without crashing).
+  SEMANTICS: Invalid (all variables are mapped to the wrong physical quantities).
+CONFIDENCE: CONFIRMED
+```
+
+## Audit Record 2: DFTU.PotentialShift Semantics
+
+```
+CLAIM: When DFTU.PotentialShift = true, the U value in DFTU.Proj is treated as a local
+       potential shift (alpha) for linear response U calculation.
+AUTHORITATIVE SOURCE: SIESTA official documentation
+OBSERVED SEMANTICS:
+  - false (default): U is the standard Hubbard U correction.
+  - true: U is interpreted as a local potential shift (alpha).
+IMPLICATION FOR SIESTAFLOW:
+  For linear response: set U = alpha (perturbation strength), J = 0.
+  Projector parameters (n, l, rc, omega) MUST be invariant across the alpha scan.
+CONFIDENCE: CONFIRMED
+```
+
+## Audit Record 3: DFTU.FirstIteration Behavior
+
+```
+CLAIM: DFTU.FirstIteration behavior and its relationship to DFTU.PotentialShift.
+AUTHORITATIVE SOURCE: Src/dftu_specs.f (lines 402-409)
+OBSERVED SEMANTICS:
+  ```fortran
+  ! Src/dftu_specs.f
+  dftu_init = fdf_get('LDAU.FirstIteration', dftu_shift )
+  dftu_init = fdf_get('DFTU.FirstIteration', dftu_init )
+  ! When the local potential shift is applied
+  ! the initial iteration is forced to calculate the DFT+U terms
+  if ( dftu_shift ) dftu_init = .true.
+  ```
+  SIESTA 5.4.2 internally forces the first iteration to calculate the DFT+U terms when `DFTU.PotentialShift = T`.
+IMPLICATION FOR SIESTAFLOW:
+  While SIESTA forces it internally, explicitly writing `DFTU.FirstIteration T` in the FDF is required for auditability, reproducibility, and clarity of the computational contract.
+  The absence of this boolean in the current codebase is an auditability/explicit-contract deficiency, but NOT a demonstrated physical failure under PotentialShift.
+CONFIDENCE: CONFIRMED
+```
+
+## Audit Record 4: SCF Loop Occupation Evaluation Sequence
+
+```
+CLAIM: The exact sequence of density evaluation and Hubbard term construction within the SCF loop.
+AUTHORITATIVE SOURCE: Src/siesta_forces.F90, Src/setup_hamiltonian.F, Src/dftu.F
+OBSERVED SEMANTICS:
+  SOURCE_MAPPING_COMPLETE
+  
+  CONFIRMED FROM SOURCE:
+  1. `siesta_forces.F90` manages the SCF loop (`iscf`).
+  2. For `iscf=1`, `setup_hamiltonian(0)` or `setup_hamiltonian(1)` is called with the initial density matrix `D_in` (which is the frozen reference DM read from disk).
+  3. `setup_hamiltonian` calls `hubbard_term(..., D_in)`.
+  4. `hubbard_term` (in `dftu.F`) computes local occupations (`Ski`) directly from `D_in` and prints them to stdout. This is the BARE occupation `n0(alpha)`.
+  5. `hubbard_term` then builds the Hubbard Hamiltonian (`Vi_Hubbard`) using these occupations and the shifted potential (`alpha`).
+  6. The SCF loop continues (diagonalization `compute_DM`, mixing `mix_dm`, next `iscf`).
+  7. Upon convergence, `siesta_forces.F90` exits the loop and calls `post_scf_work()`, which calls `final_H_f_stress()`, which calls `hubbard_term` one final time on the converged `Dscf`. This evaluates and prints the SCREENED occupation `n(alpha)`.
+
+  CANNOT BE ESTABLISHED FROM SOURCE ALONE:
+  - Whether the Python stdout text parser correctly isolates these sequential events (it currently uses a regex that only captures the *last* block).
+  - The numerical behavior of mixing limits on the first step.
+
+  MUST BE TESTED IN PHASE 4:
+  - Experimental validation that `n_ref` (from unperturbed run), `n0(alpha)` (from step 1), and `n(alpha)` (from converged step) are distinct and physically meaningful.
+  - Development of an event-oriented parser to capture all three quantities robustly, avoiding collapse into a single variable.
+IMPLICATION FOR SIESTAFLOW:
+  The Fortran source confirms that SIESTA computes `n0(alpha)` on step 1 and `n(alpha)` after convergence. The flaw is in the SIESTAFLOW parser, which discards intermediate events. Phase 4 must experimentally validate the capture of these distinct values.
+CONFIDENCE: CONFIRMED
+```
+
+## Audit Record 5: Boolean Enforcement
+
+```
+CLAIM: Mandatory booleans must be overridden by value, not presence.
+AUTHORITATIVE SOURCE: SIESTA FDF parsing logic (last-key-wins).
+OBSERVED SEMANTICS:
+  If a base FDF contains `DFTU.PotentialShift false` and the builder only appends `true` if the key is absent, the false value persists.
+IMPLICATION FOR SIESTAFLOW:
+  Must switch to value-based override: always write the correct value.
+CONFIDENCE: CONFIRMED
+```
+
+---
+
+## Summary
+
+| Audit Item | Status | Gate Impact |
+|-----------|--------|-------------|
+| DFTU.Proj grammar (method-2) | **CONFIRMED** — SYNTAX: valid, SEMANTICS: invalid. | Blocks FDF_MATERIALIZATION_VALIDATED |
+| DFTU.PotentialShift semantics | **CONFIRMED** — U = alpha when true | Blocks FDF_MATERIALIZATION_VALIDATED |
+| DFTU.FirstIteration | **CONFIRMED** — Forced internally, but must be explicit for auditability. | Blocks FDF_MATERIALIZATION_VALIDATED |
+| SCF occupation sequence | **CONFIRMED FROM SOURCE** — Sequence verified. | Phase 4 must validate experimental extraction |
+| Boolean enforcement | **CONFIRMED** — Must override by value. | Blocks FDF_MATERIALIZATION_VALIDATED |
+
+**Gate `SIESTA_542_GRAMMAR_CONFIRMED`: PASSED AND FORMALLY CLOSED.**
