@@ -1,8 +1,7 @@
 import re
 from typing import List, Dict, Optional
 from siestaflow_hubbard.siesta_backend.fdf_validator import FdfValidator, FdfParser
-
-
+from siestaflow_hubbard.siesta_backend.dftu_models import DftuProjector, DftuProjectorBlock
 
 class FdfBuilder:
     """Handles reading an FDF file and writing it out with linear response modifications."""
@@ -18,37 +17,53 @@ class FdfBuilder:
         with open(path, "w", encoding="utf-8", newline='\n') as f:
             f.write(content)
 
-    def construct_dftu_proj_block(self, projections: List[Dict]) -> str:
+    def construct_dftu_proj_block(self, projections: List[Dict], alpha: float) -> str:
         """
-        Constructs the DFTU.proj block with 5 lines per projection and exact spacing.
-        Prototype format:
-        %block DFTU.proj
-          Mn   1
-          3  2
-          {rc:.4f}  {width:.4f}
-          {alpha:.4f}  {u_val:.4f}
-          {j_val:.4f}
-        %endblock DFTU.proj
+        Constructs the DFTU.proj block enforcing the 4-line method-2 format.
+        For linear response, U is strictly mapped to alpha, and J is strictly 0.0.
         """
+        blocks = []
+        # Group projections by species (assuming 1 block per species)
+        species_map = {}
+        for proj_dict in projections:
+            sp = proj_dict.get("species", "Mn")
+            if sp not in species_map:
+                species_map[sp] = []
+            
+            # Map U to alpha and J to 0 for linear response
+            proj = DftuProjector(
+                n=proj_dict.get("n", 3),
+                l=proj_dict.get("l", 2),
+                U=alpha,  # LINEAR RESPONSE CONTRACT
+                J=0.0,    # LINEAR RESPONSE CONTRACT
+                rc=proj_dict.get("rc", 3.0),
+                omega=proj_dict.get("omega", 0.05),
+                lambda_factor=proj_dict.get("lambda_factor", None)
+            )
+            species_map[sp].append(proj)
+        
         lines = ["%block DFTU.proj"]
-        for proj in projections:
-            species = proj.get("species", "Mn")
-            num_shells = proj.get("num_shells", 1)
-            n = proj.get("n", 3)
-            l = proj.get("l", 2)
-            rc = proj.get("rc", 0.0)
-            width = proj.get("width", 0.0)
-            alpha = proj.get("alpha", 0.0)
-            u_val = proj.get("u_val", 0.0)
-            j_val = proj.get("j_val", 0.0)
-
-            lines.append(f"  {species}   {num_shells}")
-            lines.append(f"  {n}  {l}")
-            lines.append(f"  {rc:.4f}  {width:.4f}")
-            lines.append(f"  {u_val:.4f}  {alpha:.4f}")
-            lines.append(f"  {j_val:.4f}")
+        for sp, projs in species_map.items():
+            block = DftuProjectorBlock(species=sp, projectors=projs)
+            lines.append(block.serialize())
         lines.append("%endblock DFTU.proj")
+        
         return "\n".join(lines)
+
+    def replace_or_append_fdf_key(self, content: str, key: str, value: str) -> str:
+        """Replaces an FDF key by value, or appends it if absent."""
+        # Case insensitive match for the key at the start of a line
+        pattern = re.compile(rf"^\s*{re.escape(key)}\b.*$", flags=re.IGNORECASE | re.MULTILINE)
+        replacement = f"{key} {value}"
+        
+        if pattern.search(content):
+            content = pattern.sub(replacement, content)
+        else:
+            # Ensure the file ends with a newline before appending
+            if not content.endswith("\n"):
+                content += "\n"
+            content += f"{replacement}\n"
+        return content
 
     def modify_fdf_content(
         self,
@@ -57,84 +72,53 @@ class FdfBuilder:
         run_name: Optional[str] = None,
         response_mode: str = "SCREENED",
         species: str = "Mn",
-        num_shells: int = 1,
         n: int = 3,
         l: int = 2,
-        u_val: float = 0.0,
-        j_val: float = 0.0,
+        rc: float = 3.0,
+        omega: float = 0.05,
+        lambda_factor: Optional[float] = None,
         projections: Optional[List[Dict]] = None,
     ) -> str:
         """Modifies FDF text content for BARE or SCREENED response mode."""
-        # Replace SystemLabel if run_name is provided
+        
         if run_name:
-            if re.search(r"(?i)^\s*SystemLabel\b.*$", content, flags=re.MULTILINE):
-                content = re.sub(
-                    r"(?i)^\s*SystemLabel\b.*$",
-                    f"SystemLabel         {run_name}",
-                    content,
-                    flags=re.MULTILINE,
-                )
-            else:
-                content = f"SystemLabel         {run_name}\n" + content
+            content = self.replace_or_append_fdf_key(content, "SystemLabel", run_name)
 
-        # Construct projection specification
         if projections is None:
             projections = [
                 {
                     "species": species,
-                    "num_shells": num_shells,
                     "n": n,
                     "l": l,
-                    "alpha": alpha,
-                    "u_val": u_val,
-                    "j_val": j_val,
+                    "rc": rc,
+                    "omega": omega,
+                    "lambda_factor": lambda_factor
                 }
             ]
 
-        proj_block_str = self.construct_dftu_proj_block(projections)
+        proj_block_str = self.construct_dftu_proj_block(projections, alpha)
 
-        # Remove pre-existing DFTU.proj block if present
+        # Remove pre-existing DFTU.proj block if present (both LDAU and DFTU)
         content = re.sub(
-            r"(?i)%block\s+DFTU\.proj.*?%endblock\s+DFTU\.proj",
+            r"%block\s+(DFTU|LDAU)\.proj.*?%endblock\s+(DFTU|LDAU)\.proj",
             "",
             content,
-            flags=re.DOTALL,
+            flags=re.IGNORECASE | re.DOTALL,
         )
 
         content = content.rstrip() + "\n\n" + proj_block_str + "\n"
 
-        # Append DFTU.PotentialShift true if not present
-        if not re.search(r"(?i)^\s*DFTU\.PotentialShift\b", content, flags=re.MULTILINE):
-            content += "DFTU.PotentialShift true\n"
+        # Explicitly enforce linear response booleans by VALUE (not presence)
+        content = self.replace_or_append_fdf_key(content, "DFTU.PotentialShift", "true")
+        content = self.replace_or_append_fdf_key(content, "DFTU.FirstIteration", "true")
 
         mode_upper = response_mode.upper()
         if mode_upper == "BARE":
-            # For BARE calculations: strictly replace MaxSCFIterations to 2 and DM.MixingWeight to 1.0
-            if re.search(r"(?i)^\s*MaxSCFIterations\b.*$", content, flags=re.MULTILINE):
-                content = re.sub(
-                    r"(?i)^\s*MaxSCFIterations\b.*$",
-                    "MaxSCFIterations    2",
-                    content,
-                    flags=re.MULTILINE,
-                )
-            else:
-                content += "MaxSCFIterations    2\n"
-
-            if re.search(r"(?i)^\s*DM\.MixingWeight\b.*$", content, flags=re.MULTILINE):
-                content = re.sub(
-                    r"(?i)^\s*DM\.MixingWeight\b.*$",
-                    "DM.MixingWeight     1.0",
-                    content,
-                    flags=re.MULTILINE,
-                )
-            else:
-                content += "DM.MixingWeight     1.0\n"
-
-            if not re.search(r"(?i)^\s*DM\.UseSaveDM\b", content, flags=re.MULTILINE):
-                content += "DM.UseSaveDM true\n"
+            content = self.replace_or_append_fdf_key(content, "MaxSCFIterations", "2")
+            content = self.replace_or_append_fdf_key(content, "DM.MixingWeight", "1.0")
+            content = self.replace_or_append_fdf_key(content, "DM.UseSaveDM", "true")
         elif mode_upper == "SCREENED":
-            if not re.search(r"(?i)^\s*DM\.UseSaveDM\b", content, flags=re.MULTILINE):
-                content += "DM.UseSaveDM true\n"
+            content = self.replace_or_append_fdf_key(content, "DM.UseSaveDM", "true")
 
         # Apply geometry enforcement
         parser = FdfParser(content)
@@ -151,11 +135,11 @@ class FdfBuilder:
         run_name: Optional[str] = None,
         response_mode: str = "SCREENED",
         species: str = "Mn",
-        num_shells: int = 1,
         n: int = 3,
         l: int = 2,
-        u_val: float = 0.0,
-        j_val: float = 0.0,
+        rc: float = 3.0,
+        omega: float = 0.05,
+        lambda_factor: Optional[float] = None,
         projections: Optional[List[Dict]] = None,
     ) -> str:
         """Reads base FDF file, applies modifications, and writes target FDF file."""
@@ -166,11 +150,11 @@ class FdfBuilder:
             run_name=run_name,
             response_mode=response_mode,
             species=species,
-            num_shells=num_shells,
             n=n,
             l=l,
-            u_val=u_val,
-            j_val=j_val,
+            rc=rc,
+            omega=omega,
+            lambda_factor=lambda_factor,
             projections=projections,
         )
         self.write_fdf(target_fdf_path, modified_content)
@@ -184,7 +168,6 @@ class FdfBuilder:
         run_name: Optional[str] = None,
         **kwargs,
     ) -> str:
-        """Convenience method for BARE response mode."""
         return self.prepare_fdf(
             base_fdf_path=base_fdf_path,
             target_fdf_path=target_fdf_path,
@@ -202,7 +185,6 @@ class FdfBuilder:
         run_name: Optional[str] = None,
         **kwargs,
     ) -> str:
-        """Convenience method for SCREENED response mode."""
         return self.prepare_fdf(
             base_fdf_path=base_fdf_path,
             target_fdf_path=target_fdf_path,
@@ -211,3 +193,43 @@ class FdfBuilder:
             response_mode="SCREENED",
             **kwargs,
         )
+
+    def preflight_verify(self, fdf_content: str, expected_alpha: float) -> bool:
+        """
+        Semantic Preflight Verification.
+        Parses the generated FDF content to ensure U == expected_alpha and J == 0.
+        """
+        # A simple verification parser that looks inside %block DFTU.proj
+        match = re.search(r"%block\s+DFTU\.proj(.*?)%endblock\s+DFTU\.proj", fdf_content, flags=re.IGNORECASE | re.DOTALL)
+        if not match:
+            return False
+        
+        lines = [line.strip() for line in match.group(1).strip().split('\n') if line.strip()]
+        # lines[0] = species num_shells
+        # lines[1] = n l
+        # lines[2] = U J
+        if len(lines) < 3:
+            return False
+            
+        parts = lines[2].split()
+        if len(parts) < 2:
+            return False
+            
+        try:
+            u_val = float(parts[0])
+            j_val = float(parts[1])
+            # Account for floating point formatting precision
+            if abs(u_val - expected_alpha) > 1e-4:
+                return False
+            if abs(j_val - 0.0) > 1e-4:
+                return False
+        except ValueError:
+            return False
+            
+        # Verify booleans
+        if not re.search(r"^\s*DFTU\.PotentialShift\s+true", fdf_content, flags=re.IGNORECASE | re.MULTILINE):
+            return False
+        if not re.search(r"^\s*DFTU\.FirstIteration\s+true", fdf_content, flags=re.IGNORECASE | re.MULTILINE):
+            return False
+            
+        return True
