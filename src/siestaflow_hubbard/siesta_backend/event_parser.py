@@ -140,8 +140,16 @@ def parse_hubbard_population_events(output_content: str) -> List[HubbardPopulati
         current_summary_line = None
 
     
+    current_iscf = 1
+    
     for line_idx, line in enumerate(lines):
         # Context tracking
+        # When a step completes, SIESTA prints "scf:    1" etc.
+        # The next events belong to scf_iteration + 1
+        scf_match = re.match(r'^\s*scf:\s+(\d+)', line)
+        if scf_match:
+            current_iscf = int(scf_match.group(1)) + 1
+            
         iscf_match = re.search(r'siesta:\s+iscf\s*=\s*(\d+)', line)
         if iscf_match:
             current_iscf = int(iscf_match.group(1))

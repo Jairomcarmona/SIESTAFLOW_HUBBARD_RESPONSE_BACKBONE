@@ -26,12 +26,18 @@ class DftuProjector:
             lines.append(f"  {self.lambda_factor:.4f}")
         return "\n".join(lines)
     
+    @property
+    def effective_lambda(self) -> float:
+        """SIESTA 5.4.2 contract: omitted lambda defaults to 1.0."""
+        return 1.0 if self.lambda_factor is None else self.lambda_factor
+
     def get_fingerprint(self) -> str:
         """
         Returns a SHA-256 fingerprint of the structural components (everything except U/J).
         This proves that the projector geometry remains invariant across an alpha scan.
+        Uses effective_lambda so explicitly providing 1.0 vs omitting it yields the same fingerprint.
         """
-        structural_data = f"{self.n}:{self.l}:{self.rc:.4f}:{self.omega:.4f}:{self.lambda_factor}"
+        structural_data = f"{self.n}:{self.l}:{self.rc:.4f}:{self.omega:.4f}:{self.effective_lambda:.4f}"
         return hashlib.sha256(structural_data.encode("utf-8")).hexdigest()
 
 @dataclass
@@ -50,6 +56,5 @@ class DftuProjectorBlock:
 
     def get_fingerprint(self) -> str:
         """Returns a combined structural fingerprint for the entire block."""
-        return hashlib.sha256(
-            "".join(p.get_fingerprint() for p in self.projectors).encode("utf-8")
-        ).hexdigest()
+        data = f"{self.species}:" + "".join(p.get_fingerprint() for p in self.projectors)
+        return hashlib.sha256(data.encode("utf-8")).hexdigest()

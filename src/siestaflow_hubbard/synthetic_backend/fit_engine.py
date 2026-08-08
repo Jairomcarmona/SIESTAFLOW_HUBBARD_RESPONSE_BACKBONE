@@ -20,8 +20,10 @@ class RegressionQualityPolicy:
     max_design_condition: Optional[float] = None
     require_symmetric_grid: bool = False
 
+from ..domain.provenance import ScientificArtifact
+
 @dataclass
-class RegressionRecord:
+class RegressionRecord(ScientificArtifact):
     """Record containing fit results and diagnostics for an (observable, channel) pair.
 
     Attributes:
@@ -58,6 +60,32 @@ class RegressionRecord:
     asymmetry_available: bool = False
     slope_std_err: float = float('nan')
     diagnostic_status: str = "FIT_VALID"
+    
+    def __post_init__(self):
+        self.artifact_type = "RegressionRecord"
+        payload = {
+            "artifact_type": self.artifact_type,
+            "schema_version": self.schema_version,
+            "observable_index": self.observable_index,
+            "channel_index": self.channel_index,
+            "slope": self.slope,
+            "intercept": self.intercept,
+            "residual_norm": self.residual_norm,
+            "r_squared": self.r_squared,
+            "n_points": self.n_points,
+            "design_condition_number": self.design_condition_number,
+            "design_rank": self.design_rank,
+            "design_singular_values": self.design_singular_values,
+            "residuals": self.residuals,
+            "max_abs_residual": self.max_abs_residual,
+            "asymmetry": self.asymmetry,
+            "asymmetry_available": self.asymmetry_available,
+            "slope_std_err": self.slope_std_err,
+            "diagnostic_status": self.diagnostic_status,
+            "methodology_lock_hash": self.methodology_lock_hash,
+            "source_artifact_ids": self.source_artifact_ids
+        }
+        self.generate_identity(payload)
 
 class FitEngine:
     def __init__(self, strategy: FitterStrategy = None, policy: RegressionQualityPolicy = None):

@@ -6,6 +6,8 @@ from ..domain.cardinals import Cardinals
 from ..domain.provenance import PerturbationIdentity, ObservableIdentity, ResponseMatrix
 from ..domain.exceptions import RecordCompletenessError
 
+from ..domain.matrix_pipeline import compute_antisymmetry, symmetrize
+
 def assemble_provenance_matrix(
     regression_records: List[RegressionRecord],
     cardinals: Cardinals,
@@ -50,15 +52,12 @@ def assemble_provenance_matrix(
         seen_pairs.add(pair)
         
         R_vals[o, p] = r.slope
-        
-        # We store the regression diagnostic status as a pseudo regression_id for provenance,
-        # or we could store a hash of the regression record.
-        # Here we just store a string representation.
-        reg_id = f"REG-O{o}-P{p}-{r.diagnostic_status}"
-        regression_ids[(row_ids[o], col_ids[p])] = reg_id
+        regression_ids[(row_ids[o], col_ids[p])] = getattr(r, 'artifact_id', f"REG-O{o}-P{p}")
 
     if len(seen_pairs) != expected_count:
         raise RecordCompletenessError("Not all (o, p) pairs covered.")
+
+    sym_R = symmetrize(R_vals) if R_vals.shape[0] == R_vals.shape[1] else None
 
     return ResponseMatrix(
         matrix=R_vals,
@@ -66,6 +65,8 @@ def assemble_provenance_matrix(
         column_ids=col_ids,
         units=units,
         regression_ids=regression_ids,
+        raw_matrix=R_vals,
+        symmetrized_matrix=sym_R,
         methodology_lock_hash=methodology_lock_hash
     )
 
@@ -75,31 +76,67 @@ def transform_to_chi(
     subspace_identities: List[str]
 ) -> ResponseMatrix:
     """
-    Applies the transformation chi = A @ R.
-    Returns a new ResponseMatrix representing chi or chi0.
+    Applies the linear response transformation chi = A @ R.
+    Returns a raw ResponseMatrix. Symmetrization is NOT applied unconditionally.
     """
+    from ..domain.matrix_pipeline import compute_antisymmetry, symmetrize
+    
     chi_vals = cardinals.chi(R_matrix.matrix)
+    
+    _, _, rel_frob = compute_antisymmetry(chi_vals)
+    chi_sym = symmetrize(chi_vals)
     
     if len(subspace_identities) != cardinals.N:
         raise ValueError(f"Expected {cardinals.N} subspace identities, got {len(subspace_identities)}")
         
-    # The columns of chi remain the perturbation channels
     col_ids = R_matrix.column_ids
-    # The rows of chi become the subspace identities
     row_ids = subspace_identities
 
-    # We map the regression IDs by taking the union of dependencies,
-    # but for now we just pass a simple dict to indicate transformation.
     chi_reg_ids = {}
     for i, r_id in enumerate(row_ids):
         for j, c_id in enumerate(col_ids):
-            chi_reg_ids[(r_id, c_id)] = "TRANSFORMED"
+            matched_reg = R_matrix.regression_ids.get((R_matrix.row_ids[0], c_id))
+            if not matched_reg or matched_reg.startswith("REG-"):
+                matched_reg = f"PROV-{r_id}-{c_id}"
+            chi_reg_ids[(r_id, c_id)] = matched_reg
+
+    source_ids = [R_matrix.artifact_id] if hasattr(R_matrix, 'artifact_id') and R_matrix.artifact_id else []
 
     return ResponseMatrix(
-        matrix=chi_vals,
+        matrix=chi_vals, # STRICT CANONICAL LR RAW DEFINITION
         row_ids=row_ids,
         column_ids=col_ids,
         units=R_matrix.units,
         regression_ids=chi_reg_ids,
-        methodology_lock_hash=R_matrix.methodology_lock_hash
+        raw_matrix=chi_vals,
+        symmetrized_matrix=chi_sym,
+        antisymmetry_norm=rel_frob,
+        methodology_lock_hash=R_matrix.methodology_lock_hash,
+        source_artifact_ids=source_ids
+    )
+
+def select_response_matrix(response_matrix: ResponseMatrix, policy: str = "RAW") -> ResponseMatrix:
+    """
+    Selects between RAW and SYMMETRIZED matrix representations based on an explicit numerical policy.
+    """
+    if policy.upper() == "RAW":
+        target = response_matrix.raw_matrix if response_matrix.raw_matrix is not None else response_matrix.matrix
+    elif policy.upper() in ("SYMMETRIZED", "SYM"):
+        target = response_matrix.symmetrized_matrix if response_matrix.symmetrized_matrix is not None else response_matrix.matrix
+    else:
+        raise ValueError(f"Unknown response matrix policy: {policy}")
+        
+    source_ids = [response_matrix.artifact_id] if hasattr(response_matrix, 'artifact_id') and response_matrix.artifact_id else []
+    
+    return ResponseMatrix(
+        matrix=target,
+        row_ids=response_matrix.row_ids,
+        column_ids=response_matrix.column_ids,
+        units=response_matrix.units,
+        regression_ids=response_matrix.regression_ids,
+        raw_matrix=response_matrix.raw_matrix,
+        symmetrized_matrix=response_matrix.symmetrized_matrix,
+        antisymmetry_norm=response_matrix.antisymmetry_norm,
+        methodology_lock_hash=response_matrix.methodology_lock_hash,
+        source_artifact_ids=source_ids
     )

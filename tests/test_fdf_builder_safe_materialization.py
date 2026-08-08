@@ -42,11 +42,15 @@ def test_fdf_builder_safe_materialization(dummy_base_fdf, tmp_path):
     # The old false must be gone
     assert "DFTU.PotentialShift false" not in modified_content
     
+    # Create the expected block for verification
+    expected_proj = DftuProjector(n=3, l=2, U=alpha_val, J=0.0, rc=4.2, omega=0.07, lambda_factor=1.1)
+    expected_block = DftuProjectorBlock(species="Fe", projectors=[expected_proj])
+    
     # Assert preflight verifies the correct physical values
-    assert builder.preflight_verify(modified_content, expected_alpha=alpha_val) == True
+    assert builder.preflight_verify(modified_content, expected_alpha=alpha_val, expected_block=expected_block) == True
     
     # Assert wrong alpha fails
-    assert builder.preflight_verify(modified_content, expected_alpha=0.10) == False
+    assert builder.preflight_verify(modified_content, expected_alpha=0.10, expected_block=expected_block) == False
 
 def test_adversarial_old_serializer_rejected():
     """
@@ -74,9 +78,12 @@ DFTU.FirstIteration true
     # expected_alpha is 0.01.
     builder = FdfBuilder()
     
+    expected_proj = DftuProjector(n=3, l=2, U=0.01, J=0.0, rc=3.0, omega=0.05)
+    expected_block = DftuProjectorBlock(species="Mn", projectors=[expected_proj])
+    
     # Preflight should fail because it expects U=0.01, J=0 on line 3, 
     # but finds 3.0 0.05 instead.
-    assert builder.preflight_verify(old_broken_format, expected_alpha=0.01) == False
+    assert builder.preflight_verify(old_broken_format, expected_alpha=0.01, expected_block=expected_block) == False
 
 def test_bare_mode_overrides(dummy_base_fdf, tmp_path):
     """Tests that BARE mode correctly limits SCF iterations."""

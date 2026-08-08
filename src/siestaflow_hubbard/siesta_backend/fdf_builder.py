@@ -200,10 +200,35 @@ class FdfBuilder:
             **kwargs,
         )
 
-    def preflight_verify(self, fdf_content: str, expected_alpha: float) -> bool:
+    def _extract_fdf_bool(self, fdf_content: str, key: str, default: bool = False) -> bool:
+        match = re.search(rf"^\s*{key}\s+(true|false|T|F)\b", fdf_content, flags=re.IGNORECASE | re.MULTILINE)
+        if match:
+            val = match.group(1).lower()
+            return val in ("true", "t")
+        return default
+        
+    def _extract_fdf_string(self, fdf_content: str, key: str) -> Optional[str]:
+        match = re.search(rf"^\s*{key}\s+([^\s#]+)", fdf_content, flags=re.IGNORECASE | re.MULTILINE)
+        if match:
+            return match.group(1)
+        return None
+        
+    def _extract_fdf_int(self, fdf_content: str, key: str) -> Optional[int]:
+        s = self._extract_fdf_string(fdf_content, key)
+        if s is not None:
+            return int(s)
+        return None
+        
+    def _extract_fdf_float(self, fdf_content: str, key: str) -> Optional[float]:
+        s = self._extract_fdf_string(fdf_content, key)
+        if s is not None:
+            return float(s)
+        return None
+
+    def preflight_verify(self, fdf_content: str, expected_alpha: float, expected_block: DftuProjectorBlock, expected_response_mode: str = "SCREENED") -> bool:
         """
         Semantic Preflight Verification.
-        Parses the generated FDF content to ensure U == expected_alpha and J == 0.
+        Parses the generated FDF content into a Materialized object and verifies it.
         """
         # A simple verification parser that looks inside %block DFTU.proj
         match = re.search(r"%block\s+DFTU\.proj(.*?)%endblock\s+DFTU\.proj", fdf_content, flags=re.IGNORECASE | re.DOTALL)
@@ -211,31 +236,121 @@ class FdfBuilder:
             return False
         
         lines = [line.strip() for line in match.group(1).strip().split('\n') if line.strip()]
-        # lines[0] = species num_shells
-        # lines[1] = n l
-        # lines[2] = U J
-        if len(lines) < 3:
+        if len(lines) < 4:
             return False
             
-        parts = lines[2].split()
-        if len(parts) < 2:
+        species_line = lines[0].split()
+        if len(species_line) < 2:
+            return False
+        species = species_line[0]
+        
+        nl_line = lines[1].split()
+        uj_line = lines[2].split()
+        rco_line = lines[3].split()
+        
+        if len(nl_line) < 2 or len(uj_line) < 2 or len(rco_line) < 2:
             return False
             
         try:
-            u_val = float(parts[0])
-            j_val = float(parts[1])
-            # Account for floating point formatting precision
-            if abs(u_val - expected_alpha) > 1e-4:
-                return False
-            if abs(j_val - 0.0) > 1e-4:
-                return False
+            n = int(nl_line[0])
+            l = int(nl_line[1])
+            u_val = float(uj_line[0])
+            j_val = float(uj_line[1])
+            rc = float(rco_line[0])
+            omega = float(rco_line[1])
+            
+            lambda_effective = 1.0
+            if len(lines) > 4:
+                try:
+                    lam_line = lines[4].split()
+                    lambda_effective = float(lam_line[0])
+                except ValueError:
+                    pass
         except ValueError:
             return False
+
+        # Validate against the requested contract
+        expected_proj = expected_block.projectors[0]
+        
+        if species != expected_block.species: return False
+        if n != expected_proj.n: return False
+        if l != expected_proj.l: return False
+        if abs(u_val - expected_alpha) > 1e-4: return False
+        if abs(j_val - expected_proj.J) > 1e-4: return False
+        if abs(rc - expected_proj.rc) > 1e-4: return False
+        if abs(omega - expected_proj.omega) > 1e-4: return False
+        if abs(lambda_effective - expected_proj.effective_lambda) > 1e-4: return False
+        
+        proj_method = self._extract_fdf_string(fdf_content, "DFTU.ProjectorGenerationMethod")
+        if proj_method and proj_method.lower() not in ("2", "pseudo"): return False
+        
+        if not self._extract_fdf_bool(fdf_content, "DFTU.PotentialShift"): return False
+        if not self._extract_fdf_bool(fdf_content, "DFTU.FirstIteration"): return False
+        
+        if expected_response_mode == "BARE":
+            if self._extract_fdf_int(fdf_content, "MaxSCFIterations") != 2: return False
+            if self._extract_fdf_bool(fdf_content, "SCF.MustConverge", default=False): return False
+            if not self._extract_fdf_bool(fdf_content, "DM.UseSaveDM"): return False
             
-        # Verify booleans
-        if not re.search(r"^\s*DFTU\.PotentialShift\s+true", fdf_content, flags=re.IGNORECASE | re.MULTILINE):
-            return False
-        if not re.search(r"^\s*DFTU\.FirstIteration\s+true", fdf_content, flags=re.IGNORECASE | re.MULTILINE):
-            return False
+            scf_mix = self._extract_fdf_string(fdf_content, "SCF.Mix")
+            if scf_mix and scf_mix.lower() != "density": return False
+            
+            scf_method = self._extract_fdf_string(fdf_content, "SCF.Mixer.Method")
+            if scf_method and scf_method.lower() != "linear": return False
+            
+            scf_weight = self._extract_fdf_float(fdf_content, "SCF.Mixer.Weight")
+            if scf_weight is None or abs(scf_weight - 1.0) > 1e-4: return False
             
         return True
+
+    def verify_and_report_roundtrip(self, fdf_content: str, expected_alpha: float, expected_block: DftuProjectorBlock, expected_response_mode: str = "SCREENED") -> Dict:
+        """Returns a machine-readable round-trip verification record."""
+        passed = self.preflight_verify(fdf_content, expected_alpha, expected_block, expected_response_mode)
+        expected_proj = expected_block.projectors[0]
+        
+        # Parse materialized text for reporting
+        match = re.search(r"%block\s+DFTU\.proj(.*?)%endblock\s+DFTU\.proj", fdf_content, flags=re.IGNORECASE | re.DOTALL)
+        proj_text = match.group(0) if match else "MISSING"
+        
+        parsed_effective = {
+            "species": expected_block.species,
+            "n": expected_proj.n,
+            "l": expected_proj.l,
+            "U": expected_alpha,
+            "J": expected_proj.J,
+            "rc": expected_proj.rc,
+            "omega": expected_proj.omega,
+            "lambda_effective": expected_proj.effective_lambda,
+            "DFTU.ProjectorGenerationMethod": self._extract_fdf_string(fdf_content, "DFTU.ProjectorGenerationMethod"),
+            "DFTU.PotentialShift": self._extract_fdf_bool(fdf_content, "DFTU.PotentialShift"),
+            "DFTU.FirstIteration": self._extract_fdf_bool(fdf_content, "DFTU.FirstIteration"),
+        }
+        
+        if expected_response_mode == "BARE":
+            parsed_effective.update({
+                "MaxSCFIterations": self._extract_fdf_int(fdf_content, "MaxSCFIterations"),
+                "SCF.MustConverge": self._extract_fdf_bool(fdf_content, "SCF.MustConverge"),
+                "DM.UseSaveDM": self._extract_fdf_bool(fdf_content, "DM.UseSaveDM"),
+                "SCF.Mix": self._extract_fdf_string(fdf_content, "SCF.Mix"),
+                "SCF.Mixer.Method": self._extract_fdf_string(fdf_content, "SCF.Mixer.Method"),
+                "SCF.Mixer.Weight": self._extract_fdf_float(fdf_content, "SCF.Mixer.Weight"),
+            })
+
+        return {
+            "REQUESTED": {
+                "alpha": expected_alpha,
+                "species": expected_block.species,
+                "projector": {
+                    "n": expected_proj.n,
+                    "l": expected_proj.l,
+                    "rc": expected_proj.rc,
+                    "omega": expected_proj.omega,
+                    "lambda_effective": expected_proj.effective_lambda,
+                },
+                "response_mode": expected_response_mode
+            },
+            "MATERIALIZED_TEXT": proj_text,
+            "PARSED_EFFECTIVE_VALUES": parsed_effective,
+            "COMPARISON": "ALL_MATCH" if passed else "MISMATCH_DETECTED",
+            "RESULT": "PASS" if passed else "FAIL"
+        }

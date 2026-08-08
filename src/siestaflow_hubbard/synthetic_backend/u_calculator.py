@@ -39,9 +39,16 @@ def align_matrices(chi0: ResponseMatrix, chi: ResponseMatrix) -> Tuple[np.ndarra
 
     return chi0_val, chi_val
 
-def compute_u_matrix(chi0: ResponseMatrix, chi: ResponseMatrix, policy: NumericalPolicy) -> HubbardInteractionMatrix:
+def compute_u_matrix(
+    chi0: ResponseMatrix, 
+    chi: ResponseMatrix, 
+    policy: NumericalPolicy,
+    u_matrix_policy: str = "RAW"
+) -> HubbardInteractionMatrix:
     """
     Computes the Hubbard U matrix from bare (chi0) and screened (chi) susceptibilities.
+    Enforces canonical LR definition U_raw = inv(chi0) - inv(chi).
+    Symmetrization is controlled by u_matrix_policy ('RAW' or 'SYMMETRIZED').
     """
     chi0_val, chi_val = align_matrices(chi0, chi)
     
@@ -77,20 +84,33 @@ def compute_u_matrix(chi0: ResponseMatrix, chi: ResponseMatrix, policy: Numerica
         inv_chi0 = np.linalg.pinv(chi0_val)
         inv_chi = np.linalg.pinv(chi_val)
 
-    # U = inv(chi0) - inv(chi)
-    U_val = inv_chi0 - inv_chi
+    # U_raw = inv(chi0) - inv(chi) (STRICT CANONICAL LINEAR RESPONSE DEFINITION)
+    U_raw = inv_chi0 - inv_chi
+    
+    from ..domain.matrix_pipeline import compute_antisymmetry, symmetrize
+    _, _, rel_frob = compute_antisymmetry(U_raw)
+    U_sym = symmetrize(U_raw)
+    
+    selected_values = U_sym if u_matrix_policy.upper() in ("SYMMETRIZED", "SYM") else U_raw
+    
+    chi0_source_id = getattr(chi0, 'artifact_id', chi0.methodology_lock_hash)
+    chi_source_id = getattr(chi, 'artifact_id', chi.methodology_lock_hash)
     
     return HubbardInteractionMatrix(
         row_subspace_ids=chi0.row_ids.copy(),
         column_subspace_ids=chi0.column_ids.copy(),
-        values=U_val,
-        chi0_source_id=chi0.methodology_lock_hash,
-        chi_source_id=chi.methodology_lock_hash,
+        values=selected_values,
+        raw_values=U_raw,
+        symmetrized_values=U_sym,
+        antisymmetry_norm=rel_frob,
+        chi0_source_id=chi0_source_id,
+        chi_source_id=chi_source_id,
         methodology_lock_hash="U_MATRIX_LOCK",
         rank_diagnostics=rank_status,
         condition_diagnostics=max_cond,
-        inverse_residuals=0.0, # Not strictly calculated for simple inverse unless solving Ax=B
+        inverse_residuals=0.0,
         uncertainty_info=None,
         units="eV",
-        recommended_single_U_ev=None
+        recommended_single_U_ev=None,
+        source_artifact_ids=[chi0_source_id, chi_source_id]
     )

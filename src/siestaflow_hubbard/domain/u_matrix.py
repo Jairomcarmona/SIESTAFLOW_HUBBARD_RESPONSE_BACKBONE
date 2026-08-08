@@ -25,8 +25,10 @@ class NumericalPolicy:
     enforce_physical_gauge: bool = False
 
 
-@dataclass(frozen=True)
-class HubbardInteractionMatrix:
+from .provenance import ScientificArtifact
+
+@dataclass
+class HubbardInteractionMatrix(ScientificArtifact):
     """
     Strict provenance-bearing container for the calculated Hubbard U interaction matrix.
     """
@@ -35,12 +37,15 @@ class HubbardInteractionMatrix:
     values: np.ndarray
     chi0_source_id: str
     chi_source_id: str
-    methodology_lock_hash: str
     rank_diagnostics: GaugeRankStatus
     condition_diagnostics: float
     inverse_residuals: float
     uncertainty_info: Any  # TBD for full uncertainty quantification
     units: str = "eV"
+    
+    raw_values: Optional[np.ndarray] = None
+    symmetrized_values: Optional[np.ndarray] = None
+    antisymmetry_norm: float = 0.0
     
     # Explicitly enforce separation of human decision from the bare matrix computation
     recommended_single_U_ev: Optional[float] = None
@@ -49,6 +54,7 @@ class HubbardInteractionMatrix:
         """
         Enforce dimensional consistency between row/column IDs and the underlying numpy array.
         """
+        self.artifact_type = "HubbardInteractionMatrix"
         O = len(self.row_subspace_ids)
         P = len(self.column_subspace_ids)
         
@@ -57,3 +63,23 @@ class HubbardInteractionMatrix:
                 f"Matrix shape mismatch. Expected ({O}, {P}) based on subspace IDs, "
                 f"but got {self.values.shape}."
             )
+            
+        payload = {
+            "artifact_type": self.artifact_type,
+            "schema_version": self.schema_version,
+            "units": self.units,
+            "matrix": self.values,
+            "raw_matrix": self.raw_values,
+            "symmetrized_matrix": self.symmetrized_values,
+            "antisymmetry_norm": self.antisymmetry_norm,
+            "row_subspace_ids": self.row_subspace_ids,
+            "column_subspace_ids": self.column_subspace_ids,
+            "chi0_source_id": self.chi0_source_id,
+            "chi_source_id": self.chi_source_id,
+            "rank_diagnostics": self.rank_diagnostics.name,
+            "condition_diagnostics": self.condition_diagnostics,
+            "inverse_residuals": self.inverse_residuals,
+            "methodology_lock_hash": self.methodology_lock_hash,
+            "source_artifact_ids": self.source_artifact_ids
+        }
+        self.generate_identity(payload)

@@ -14,7 +14,7 @@
 - **Reference DM SHA-256:** `c30a3266e6fdd52bbe26b66854d1eea540e68f53d937547c6c418e8887cf49cd`
 - **Geometry Fingerprint:** LatticeConstant 4.445 Ang, fractional 0 0 0 (Mn), 0.5 0.5 0.5 (O)
 - **Projector Fingerprint:** PAO method 2
-- **Parameters:** `rc=3.0`, `omega=0.05`, `lambda=0.0`, `J=0.0`
+- **Parameters:** `rc=3.0`, `omega=0.05`, `lambda=0.0`, `J=0.0` *(Correction: SIESTA 5.4.2 actually defaults omitted lambda to 1.0. This historical note is preserved but the effective value was 1.0)*
 - **Pseudopotential Hashes:** 
   - Mn: `0b97ccd71456e4a7b28316f78ddb30bb1f6a82d9aba386c7fde78090d31c0dc6`
   - O: `224ded5c59176d9bcb76d19b7a4a68a48d5dffabf8b262f64d5760250e87c35e`
