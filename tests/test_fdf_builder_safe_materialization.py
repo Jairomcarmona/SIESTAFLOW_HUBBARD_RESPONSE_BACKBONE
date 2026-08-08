@@ -90,4 +90,4 @@ def test_bare_mode_overrides(dummy_base_fdf, tmp_path):
     )
     
     assert "MaxSCFIterations 2" in content
-    assert "DM.MixingWeight 1.0" in content
+    assert "SCF.Mixer.Weight 1.0" in content

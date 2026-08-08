@@ -1,5 +1,5 @@
-from dataclasses import dataclass
-from typing import List
+from dataclasses import dataclass, field
+from typing import List, Optional
 import numpy as np
 
 from ..domain.cardinals import Cardinals
@@ -7,6 +7,18 @@ from ..domain.exceptions import RecordCompletenessError
 from .population_generator import OccupationRecord
 from .fit_strategies import FitterStrategy, OLSFitterStrategy, WeightedFitterStrategy
 
+
+class FitRejectionError(Exception):
+    pass
+
+@dataclass
+class RegressionQualityPolicy:
+    """Configurable gates for accepting a regression fit."""
+    min_r_squared: Optional[float] = None
+    max_absolute_residual: Optional[float] = None
+    max_relative_asymmetry: Optional[float] = None
+    max_design_condition: Optional[float] = None
+    require_symmetric_grid: bool = False
 
 @dataclass
 class RegressionRecord:
@@ -20,20 +32,37 @@ class RegressionRecord:
         residual_norm: Norm of the residual vector from lstsq fit.
         r_squared: Coefficient of determination (R^2) goodness of fit.
         n_points: Number of alpha sample points used in regression.
-        condition_number: Condition number of the design matrix X.
+        design_condition_number: Condition number of the design matrix X.
+        design_rank: Rank of the design matrix X.
+        design_singular_values: Singular values of the design matrix X.
+        residuals: List of residuals for each point.
+        max_abs_residual: Maximum absolute residual.
+        asymmetry: Absolute asymmetry between positive and negative perturbations.
+        asymmetry_available: Whether a symmetric grid permitted asymmetry calculation.
+        slope_std_err: Standard error of the slope estimate.
+        diagnostic_status: String categorical status of the fit.
     """
     observable_index: int
     channel_index: int
-    slope: float            # dn/dalpha in 1/eV
-    intercept: float        # n at alpha=0
-    residual_norm: float    # from lstsq
-    r_squared: float        # goodness of fit
+    slope: float
+    intercept: float
+    residual_norm: float
+    r_squared: float
     n_points: int
-    condition_number: float # of the design matrix
+    design_condition_number: float
+    design_rank: int = 2
+    design_singular_values: List[float] = field(default_factory=list)
+    residuals: List[float] = field(default_factory=list)
+    max_abs_residual: float = 0.0
+    asymmetry: float = 0.0
+    asymmetry_available: bool = False
+    slope_std_err: float = float('nan')
+    diagnostic_status: str = "FIT_VALID"
 
 class FitEngine:
-    def __init__(self, strategy: FitterStrategy = None):
+    def __init__(self, strategy: FitterStrategy = None, policy: RegressionQualityPolicy = None):
         self.strategy = strategy or OLSFitterStrategy()
+        self.policy = policy or RegressionQualityPolicy()
 
 
     def fit_slopes(
@@ -63,12 +92,49 @@ class FitEngine:
                 alpha_values = np.array([r.alpha_ev for r in sub_records], dtype=float)
                 occupation_values = np.array([r.occupation for r in sub_records], dtype=float)
 
-                slope, intercept = self.strategy.fit(alpha_values, occupation_values)
+                slope, intercept, diags = self.strategy.fit(
+                    alpha_values, occupation_values
+                )
                 
-                # Mock values for unchanged diagnostics
-                residual_norm = 0.0
-                r_squared = 1.0
-                cond_num = 1.0
+                r_squared = diags["r_squared"]
+                residuals = diags["residuals"]
+                residual_norm = float(np.linalg.norm(residuals))
+                max_abs_residual = float(np.max(np.abs(residuals))) if len(residuals) > 0 else 0.0
+                
+                diag_status = diags["diagnostic_status"]
+                
+                # Check policy rejections
+                if self.policy.min_r_squared is not None and not np.isnan(r_squared):
+                    if r_squared < self.policy.min_r_squared:
+                        diag_status = "FIT_REJECTED_BY_LOCKED_POLICY"
+                        raise FitRejectionError(
+                            f"Regression rejected: R^2 ({r_squared:.4f}) is below the policy threshold ({self.policy.min_r_squared}). "
+                            f"Observable {o}, Channel {p}."
+                        )
+                
+                if self.policy.max_absolute_residual is not None:
+                    if max_abs_residual > self.policy.max_absolute_residual:
+                        diag_status = "FIT_REJECTED_BY_LOCKED_POLICY"
+                        raise FitRejectionError(
+                            f"Regression rejected: Max absolute residual ({max_abs_residual:.4f}) exceeds policy threshold ({self.policy.max_absolute_residual})."
+                        )
+                
+                if self.policy.require_symmetric_grid and not diags["asymmetry_available"]:
+                    diag_status = "FIT_REJECTED_BY_LOCKED_POLICY"
+                    raise FitRejectionError("Regression rejected: Symmetric grid required by policy but not available.")
+                    
+                if self.policy.max_relative_asymmetry is not None and diags["asymmetry_available"]:
+                    if abs(diags["asymmetry"]) > self.policy.max_relative_asymmetry:
+                        diag_status = "FIT_REJECTED_BY_LOCKED_POLICY"
+                        raise FitRejectionError(f"Regression rejected: Asymmetry ({diags['asymmetry']:.4f}) exceeds threshold.")
+                        
+                if self.policy.max_design_condition is not None:
+                    if diags["design_condition_number"] > self.policy.max_design_condition:
+                        diag_status = "FIT_REJECTED_BY_LOCKED_POLICY"
+                        raise FitRejectionError(f"Regression rejected: Design condition number ({diags['design_condition_number']:.4f}) exceeds threshold.")
+                
+                if not np.isnan(r_squared) and r_squared < 0.5 and diag_status == "FIT_VALID":
+                    diag_status = "FIT_QUALITY_WARNING"
 
                 regression_records.append(
                     RegressionRecord(
@@ -79,7 +145,15 @@ class FitEngine:
                         residual_norm=residual_norm,
                         r_squared=r_squared,
                         n_points=n_points,
-                        condition_number=cond_num,
+                        design_condition_number=diags["design_condition_number"],
+                        design_rank=diags["design_rank"],
+                        design_singular_values=diags["design_singular_values"],
+                        residuals=residuals,
+                        max_abs_residual=max_abs_residual,
+                        asymmetry=diags["asymmetry"],
+                        asymmetry_available=diags["asymmetry_available"],
+                        slope_std_err=diags["slope_std_err"],
+                        diagnostic_status=diag_status
                     )
                 )
 

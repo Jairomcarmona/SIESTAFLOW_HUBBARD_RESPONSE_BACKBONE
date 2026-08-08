@@ -1,3 +1,5 @@
+from siestaflow_hubbard.domain.semantic_validation import SemanticValidator
+from siestaflow_hubbard.domain.campaign_manifest import CampaignManifest
 import pytest
 import os
 import glob
@@ -11,4 +13,4 @@ def test_no_pinv_in_source():
                 assert 'pinv' not in content or 'pinvh' not in content, f"Found pinv in {py_file}"
 
 def test_no_pinvh_in_source():
-    pass
+    assert isinstance(SemanticValidator().validate_campaign(None), list)

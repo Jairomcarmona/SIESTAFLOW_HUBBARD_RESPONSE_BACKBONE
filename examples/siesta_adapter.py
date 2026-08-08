@@ -58,7 +58,11 @@ class SiestaAdapter:
 
     def run_siesta_slurm(self, fdf_filename, out_filename, cwd, n_procs=4):
         """Runs SIESTA via SLURM inside WSL (parallel) in Linux native space to prevent /mnt/c file locks."""
-        job_name = fdf_filename.replace('.fdf', '')
+        job_name = os.path.basename(fdf_filename).replace('.fdf', '')
+        
+        # Extract basenames since we cd to wsl_workdir
+        fdf_basename = os.path.basename(fdf_filename)
+        out_basename = os.path.basename(out_filename)
         
         # Build commands for WSL execution in /tmp/siesta_run_<job_name>
         wsl_workdir = f"/tmp/siesta_run_{job_name}"
@@ -82,12 +86,13 @@ cat << 'EOF' > {wsl_workdir}/submit.sh
 #SBATCH --partition=local
 
 cd {wsl_workdir}
-mpirun -np {n_procs} {self.wsl_siesta_path} < {fdf_filename} > {out_filename}
+sed -i 's/\\r$//' {fdf_basename}
+mpirun -np {n_procs} {self.wsl_siesta_path} < {fdf_basename} > {out_basename}
 EOF
 
 chmod +x {wsl_workdir}/submit.sh
 cd {wsl_workdir} && sbatch --wait {wsl_workdir}/submit.sh
-cp {wsl_workdir}/{out_filename} {wsl_cwd}/ 2>/dev/null || true
+cp {wsl_workdir}/{out_basename} {wsl_cwd}/ 2>/dev/null || true
 cp {wsl_workdir}/*.DM {wsl_cwd}/ 2>/dev/null || true
 """
         # Save temporary script to trigger via WSL

@@ -110,13 +110,19 @@ class FdfBuilder:
 
         # Explicitly enforce linear response booleans by VALUE (not presence)
         content = self.replace_or_append_fdf_key(content, "DFTU.PotentialShift", "true")
+        content = self.replace_or_append_fdf_key(content, "DFTU.ProjectorGenerationMethod", "2")
         content = self.replace_or_append_fdf_key(content, "DFTU.FirstIteration", "true")
 
         mode_upper = response_mode.upper()
         if mode_upper == "BARE":
             content = self.replace_or_append_fdf_key(content, "MaxSCFIterations", "2")
-            content = self.replace_or_append_fdf_key(content, "DM.MixingWeight", "1.0")
+            content = self.replace_or_append_fdf_key(content, "SCF.MustConverge", "F")
             content = self.replace_or_append_fdf_key(content, "DM.UseSaveDM", "true")
+            content = self.replace_or_append_fdf_key(content, "SCF.Mix", "density")
+            content = self.replace_or_append_fdf_key(content, "SCF.Mixer.Method", "Linear")
+            content = self.replace_or_append_fdf_key(content, "SCF.Mixer.Weight", "1.0")
+            # Clear old default if present
+            content = re.sub(r"^\s*DM\.MixingWeight\b.*$", "", content, flags=re.IGNORECASE | re.MULTILINE)
         elif mode_upper == "SCREENED":
             content = self.replace_or_append_fdf_key(content, "DM.UseSaveDM", "true")
 

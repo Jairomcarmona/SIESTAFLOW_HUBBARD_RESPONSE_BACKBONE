@@ -1,0 +1,180 @@
+{
+  "problem_identity": {
+    "reference_dm_sha256": "c30a3266e6fdd52bbe26b66854d1eea540e68f53d937547c6c418e8887cf49cd",
+    "geometry_fingerprint": "LatticeConstant 4.445 Ang, fractional 0 0 0 (Mn), 0.5 0.5 0.5 (O)",
+    "projector_fingerprint": "PAO method 2",
+    "rc": 3.0,
+    "omega": 0.05,
+    "lambda": "not specified (defaults to 0.0 in 5.4.2)",
+    "J": 0.0,
+    "pseudopotential_hashes": {
+      "Mn": "0b97ccd71456e4a7b28316f78ddb30bb1f6a82d9aba386c7fde78090d31c0dc6",
+      "O": "224ded5c59176d9bcb76d19b7a4a68a48d5dffabf8b262f64d5760250e87c35e"
+    },
+    "basis_methodology": "SZ, 150 Ry, 1x1x1 k-grid",
+    "siesta_runtime_identity": {
+      "path": "/home/jmc/.local/siesta-5.4.2-serial/bin/siesta",
+      "sha256": "e6e33807a931a6b63e89c39a796865fb963ba485fe4c311fcdc7f5d2abd1cc53",
+      "version": "Executable      : /home/jmc/.local/siesta-5.4.2-serial/bin/siesta",
+      "environment": "WSL (Local) - NOT Yoltla"
+    }
+  },
+  "primary_occupation_table": [
+    {
+      "alpha": -0.02,
+      "n_ref": 5.38019,
+      "candidate_n0": 5.59238,
+      "candidate_n_screened": 5.38337,
+      "bare_events_total": 3,
+      "n_ref_event_idx": 0,
+      "n0_event_idx": 1,
+      "scr_events_total": 15,
+      "n_scr_event_idx": 14,
+      "scr_converged": true,
+      "scr_iterations": 13,
+      "scr_final_metric": -3412.321762
+    },
+    {
+      "alpha": -0.01,
+      "n_ref": 5.38019,
+      "candidate_n0": 5.49887,
+      "candidate_n_screened": 5.38196,
+      "bare_events_total": 3,
+      "n_ref_event_idx": 0,
+      "n0_event_idx": 1,
+      "scr_events_total": 15,
+      "n_scr_event_idx": 14,
+      "scr_converged": true,
+      "scr_iterations": 13,
+      "scr_final_metric": -3412.267935
+    },
+    {
+      "alpha": 0.0,
+      "n_ref": 5.38019,
+      "candidate_n0": 5.41538,
+      "candidate_n_screened": 5.38049,
+      "bare_events_total": 3,
+      "n_ref_event_idx": 0,
+      "n0_event_idx": 1,
+      "scr_events_total": 9,
+      "n_scr_event_idx": 8,
+      "scr_converged": true,
+      "scr_iterations": 7,
+      "scr_final_metric": -3412.214123
+    },
+    {
+      "alpha": 0.01,
+      "n_ref": 5.38019,
+      "candidate_n0": 5.34149,
+      "candidate_n_screened": 5.37902,
+      "bare_events_total": 3,
+      "n_ref_event_idx": 0,
+      "n0_event_idx": 1,
+      "scr_events_total": 11,
+      "n_scr_event_idx": 10,
+      "scr_converged": true,
+      "scr_iterations": 9,
+      "scr_final_metric": -3412.160326
+    },
+    {
+      "alpha": 0.02,
+      "n_ref": 5.38019,
+      "candidate_n0": 5.2765699999999995,
+      "candidate_n_screened": 5.37731,
+      "bare_events_total": 3,
+      "n_ref_event_idx": 0,
+      "n0_event_idx": 1,
+      "scr_events_total": 12,
+      "n_scr_event_idx": 11,
+      "scr_converged": true,
+      "scr_iterations": 10,
+      "scr_final_metric": -3412.106544
+    }
+  ],
+  "diagnostics_bare": {
+    "slope": -7.890000000000039,
+    "intercept": 5.4249379999999965,
+    "r_squared": 0.9949073413302084,
+    "residuals": [
+      0.009642000000003037,
+      -0.004967999999996309,
+      -0.009557999999996625,
+      -0.004547999999996222,
+      0.009432000000003882
+    ],
+    "max_abs_residual": 0.009642000000003037,
+    "asymmetry": -0.0006299999999992423
+  },
+  "diagnostics_screened": {
+    "slope": -0.15060000000002535,
+    "intercept": 5.380429999999997,
+    "r_squared": 0.9986684631845948,
+    "residuals": [
+      -7.199999999762952e-05,
+      2.400000000335467e-05,
+      6.000000000305761e-05,
+      9.600000000276054e-05,
+      -0.00010799999999644427
+    ],
+    "max_abs_residual": 0.00010799999999644427,
+    "asymmetry": 0.00010799999999822063
+  },
+  "repeatability": [
+    {
+      "alpha": -0.02,
+      "mode": "BARE",
+      "orig_val": 5.59238,
+      "new_val": 5.59238,
+      "diff": 0.0,
+      "pass": true
+    },
+    {
+      "alpha": -0.02,
+      "mode": "SCREENED",
+      "orig_val": 5.38337,
+      "new_val": 5.38337,
+      "diff": 0.0,
+      "pass": true
+    },
+    {
+      "alpha": 0.0,
+      "mode": "BARE",
+      "orig_val": 5.41538,
+      "new_val": 5.41538,
+      "diff": 0.0,
+      "pass": true
+    },
+    {
+      "alpha": 0.0,
+      "mode": "SCREENED",
+      "orig_val": 5.38049,
+      "new_val": 5.38049,
+      "diff": 0.0,
+      "pass": true
+    },
+    {
+      "alpha": 0.02,
+      "mode": "BARE",
+      "orig_val": 5.2765699999999995,
+      "new_val": 5.2765699999999995,
+      "diff": 0.0,
+      "pass": true
+    },
+    {
+      "alpha": 0.02,
+      "mode": "SCREENED",
+      "orig_val": 5.37731,
+      "new_val": 5.37731,
+      "diff": 0.0,
+      "pass": true
+    }
+  ],
+  "structural_negative_controls": {
+    "NC-02_changed_projector": "EXPECTED: REJECTED_BEFORE_EXECUTION (To be implemented in Phase 5 RegEngine)",
+    "NC-03_old_serializer": "EXPECTED: REJECTED_BEFORE_EXECUTION (fdf_builder enforces strict 5.4.2 block generation now)",
+    "NC-04_wrong_alpha": "EXPECTED: REJECTED_BEFORE_EXECUTION (preflight_verify in FdfBuilder can enforce this)",
+    "NC-05_event1_mislabeled_as_bare": "PASS (Insufficient events to extract BARE observation. Need at least 2.)",
+    "NC-06_final_mislabeled_as_bare": "PASS (Insufficient events to extract BARE observation. Need at least 2.)",
+    "NC-07_missing_convergence_screened": "PASS (SCREENED observation rejected: SCF did not converge.)"
+  }
+}
