@@ -15,4 +15,10 @@ def recover_U(R_bare: np.ndarray, R_screened: np.ndarray, cardinals: Cardinals |
         chi0 = R_bare
         chi = R_screened
         
-    return invert_chi(chi0) - invert_chi(chi)
+    from ..domain.matrix_pipeline import symmetrize, select_matrix
+    
+    U_raw = invert_chi(chi0, condition_threshold=condition_threshold) - invert_chi(chi, condition_threshold=condition_threshold)
+    U_sym = symmetrize(U_raw)
+    
+    # By default we should enforce the physical symmetric constraint
+    return select_matrix(U_raw, U_sym, policy="symmetrized", methodology_lock_ref="U_RECOVERY")

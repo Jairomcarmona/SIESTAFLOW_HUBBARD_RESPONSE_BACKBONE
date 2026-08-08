@@ -40,54 +40,22 @@ def init_campaign(args):
 def converge_campaign(args):
     print(f"Running convergence for {args.campaign_json}")
     manifest = CampaignManifest.load_from_file(args.campaign_json)
-    
-    if manifest.state == CampaignState.DRAFT or manifest.state == CampaignState.SUSPENDED:
-        manifest.transition(CampaignState.LOCKED)
-        manifest.transition(CampaignState.CONVERGENCE_RUNNING)
-    elif manifest.state == CampaignState.LOCKED:
-        manifest.transition(CampaignState.CONVERGENCE_RUNNING)
-        
-    # Simulate convergence
-    manifest.transition(CampaignState.CONVERGED)
-    manifest.save_to_file(args.campaign_json)
-    print("Convergence completed.")
+    raise NotImplementedError("NOT_IMPLEMENTED: Missing physical evidence to perform this transition")
 
 def run_campaign(args):
     print(f"Running production campaign for {args.campaign_json}")
     manifest = CampaignManifest.load_from_file(args.campaign_json)
-    
-    if manifest.state == CampaignState.CONVERGED or manifest.state == CampaignState.SUSPENDED:
-        manifest.transition(CampaignState.LINEAR_RESPONSE_RUNNING)
-        
-    # Simulate completion
-    manifest.transition(CampaignState.COMPLETED)
-    manifest.save_to_file(args.campaign_json)
-    print("Campaign completed.")
+    raise NotImplementedError("NOT_IMPLEMENTED: Missing physical evidence to perform this transition")
 
 def resume_campaign(args):
     print(f"Resuming campaign {args.campaign_json}")
     manifest = CampaignManifest.load_from_file(args.campaign_json)
-    
-    # Just printing for now since actual execution skips steps if valid
-    print(f"Resuming from state {manifest.state}")
+    raise NotImplementedError("NOT_IMPLEMENTED: Missing physical evidence to perform this transition")
     
 def report_campaign(args):
     print(f"Generating evidence report for {args.campaign_json}")
     manifest = CampaignManifest.load_from_file(args.campaign_json)
-    
-    exporter = EvidenceExporter(output_dir=".")
-    
-    # Fake data for demonstration
-    report_data = {
-        "geometry_spin": {"spin_mode": "collinear"},
-        "convergence_history": {"steps": 15},
-        "linear_response": [{"alpha": 0.1, "n_alpha": 0.05, "r2": 0.99, "chi0": 1.2, "chi": 1.5}],
-        "susceptibility_inversion": {"U_eff": 4.5},
-        "provenance": [{"file": "campaign.json", "hash": "abc"}]
-    }
-    
-    exporter.export(report_data)
-    print("Report generated in EVIDENCE_REPORT.md and EVIDENCE_REPORT.html")
+    raise NotImplementedError("NOT_IMPLEMENTED: Missing physical evidence to perform this transition")
 
 def main():
     parser = argparse.ArgumentParser(description="SIESTAFLOW CLI")

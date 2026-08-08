@@ -83,7 +83,7 @@ def invert_matrix(M: np.ndarray, diagnostics: MatrixDiagnostics, tolerance: floa
         
     return M_inv
 
-def invert_chi(chi: np.ndarray) -> np.ndarray:
+def invert_chi(chi: np.ndarray, condition_threshold: float = 1000.0) -> np.ndarray:
     """Convenience direct inversion for U = inv(chi0) - inv(chi)."""
-    diag = compute_diagnostics(chi)
+    diag = compute_diagnostics(chi, condition_threshold=condition_threshold)
     return invert_matrix(chi, diag)

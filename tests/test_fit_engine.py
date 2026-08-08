@@ -111,3 +111,32 @@ def test_roundtrip_noiseless_U_recovery(
 
     U_recovered = recover_U(R_bare_fit, R_scr_fit, cardinals)
     np.testing.assert_allclose(U_recovered, U_TRUE_C1, atol=1e-10)
+
+def test_weighted_fit_strategy():
+    from siestaflow_hubbard.synthetic_backend.fit_strategies import WeightedFitterStrategy
+    
+    # create some noisy data with alpha values
+    alpha_vals = np.array([-0.2, -0.1, 0.0, 0.1, 0.2])
+    true_m, true_c = 2.0, 5.0
+    occupations = true_m * alpha_vals + true_c
+    
+    # add noise that is larger at larger alpha
+    noise = np.array([0.05, 0.01, 0.0, -0.01, -0.05])
+    occupations += noise
+    
+    fitter = WeightedFitterStrategy()
+    m, c, diag = fitter.fit(alpha_vals, occupations)
+    
+    # Test that slope and intercept are close to truth (weights help reduce impact of noise at ends)
+    assert np.isclose(c, 5.0, atol=1e-7)
+    
+    # Test diagnostics calculation
+    assert "slope_std_err" in diag
+    assert "design_condition_number" in diag
+    assert "asymmetry" in diag
+    assert "r_squared" in diag
+    
+    # Ensure standard error is computed
+    assert not np.isnan(diag["slope_std_err"])
+    assert diag["slope_std_err"] > 0
+    assert diag["r_squared"] > 0.9

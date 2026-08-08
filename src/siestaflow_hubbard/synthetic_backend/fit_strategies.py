@@ -10,10 +10,19 @@ class FitterStrategy(abc.ABC):
         """
         pass
 
-def _compute_diagnostics(alpha_vals: np.ndarray, occupations: np.ndarray, m: float, c: float, A: np.ndarray) -> dict:
-    residuals = occupations - (m * alpha_vals + c)
+def _compute_diagnostics(alpha_vals: np.ndarray, occupations: np.ndarray, m: float, c: float, A: np.ndarray, weights: np.ndarray = None) -> dict:
+    if weights is None:
+        weights = np.ones_like(alpha_vals)
+        
+    residuals = weights * (occupations - (m * alpha_vals + c))
     ss_res = np.sum(residuals**2)
-    ss_tot = np.sum((occupations - np.mean(occupations))**2)
+    
+    w2 = weights**2
+    if np.sum(w2) > 0:
+        w_mean = np.average(occupations, weights=w2)
+    else:
+        w_mean = np.mean(occupations)
+    ss_tot = np.sum(w2 * (occupations - w_mean)**2)
     
     diagnostic_status = "FIT_VALID"
     r_squared = float("nan")
@@ -41,7 +50,11 @@ def _compute_diagnostics(alpha_vals: np.ndarray, occupations: np.ndarray, m: flo
     n = len(alpha_vals)
     if n > 2 and ss_tot > 1e-12 and design_rank == 2:
         s_err = np.sqrt(ss_res / (n - 2))
-        slope_std_err = float(s_err / np.sqrt(np.sum((alpha_vals - np.mean(alpha_vals))**2)))
+        try:
+            cov = s_err**2 * np.linalg.inv(A.T @ A)
+            slope_std_err = float(np.sqrt(cov[0, 0]))
+        except np.linalg.LinAlgError:
+            slope_std_err = float('nan')
     else:
         slope_std_err = float('nan')
         if n < 2:
@@ -86,4 +99,4 @@ class WeightedFitterStrategy(FitterStrategy):
         Aw = W @ A
         yw = W @ occupations
         m, c = np.linalg.lstsq(Aw, yw, rcond=None)[0]
-        return float(m), float(c), _compute_diagnostics(alpha_vals, occupations, m, c, A)
+        return float(m), float(c), _compute_diagnostics(alpha_vals, occupations, m, c, Aw, weights=weights)
