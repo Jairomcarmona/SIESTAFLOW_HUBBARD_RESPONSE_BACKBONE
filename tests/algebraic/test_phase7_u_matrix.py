@@ -15,7 +15,7 @@ def test_U7A_1x1():
     chi = ResponseMatrix(np.array([[-0.5]]), ["Site0"], ["P0"], "eV", methodology_lock_hash="hash2")
     policy = NumericalPolicy()
     
-    u_mat = compute_u_matrix(chi0, chi, policy)
+    u_mat = compute_u_matrix(chi0, chi, policy, methodology_lock_hash="mock_lock")
     
     assert u_mat.values.shape == (1, 1)
     assert u_mat.values[0, 0] == pytest.approx(1.0) # (-1) - (-2) = 1
@@ -31,7 +31,7 @@ def test_U7B_coupled_2x2():
     chi = ResponseMatrix(chi_val, ["Site0", "Site1"], ["P0", "P1"], "eV", methodology_lock_hash="hash2")
     policy = NumericalPolicy()
     
-    u_mat = compute_u_matrix(chi0, chi, policy)
+    u_mat = compute_u_matrix(chi0, chi, policy, methodology_lock_hash="mock_lock")
     
     expected_inv_chi0 = np.linalg.inv(chi0_val)
     expected_inv_chi = np.linalg.inv(chi_val)
@@ -53,7 +53,7 @@ def test_U7C_label_permutation():
     chi = ResponseMatrix(chi_permuted, ["Site1", "Site0"], ["P1", "P0"], "eV", methodology_lock_hash="hash2")
     
     policy = NumericalPolicy()
-    u_mat = compute_u_matrix(chi0, chi, policy)
+    u_mat = compute_u_matrix(chi0, chi, policy, methodology_lock_hash="mock_lock")
     
     expected_inv_chi0 = np.linalg.inv(chi0_val)
     expected_inv_chi = np.linalg.inv(chi_val)
@@ -68,7 +68,7 @@ def test_U7D_singular_response():
     policy = NumericalPolicy()
     
     with pytest.raises(InversionError, match="Singular matrix"):
-        compute_u_matrix(chi0, chi, policy)
+        compute_u_matrix(chi0, chi, policy, methodology_lock_hash="mock_lock")
 
 def test_U7E_ill_conditioned_response():
     """U7-E: ill-conditioned response"""
@@ -77,10 +77,10 @@ def test_U7E_ill_conditioned_response():
     policy = NumericalPolicy(max_condition_number=100) # strict policy
     
     with pytest.raises(InversionError, match="exceeds allowed"):
-        compute_u_matrix(chi0, chi, policy)
+        compute_u_matrix(chi0, chi, policy, methodology_lock_hash="mock_lock")
         
     policy_fallback = NumericalPolicy(max_condition_number=100, allow_pinv_fallback=True)
-    u_mat = compute_u_matrix(chi0, chi, policy_fallback)
+    u_mat = compute_u_matrix(chi0, chi, policy_fallback, methodology_lock_hash="mock_lock")
     assert u_mat.rank_diagnostics == GaugeRankStatus.ILL_CONDITIONED
 
 def test_U7F_chi0_chi_swap():
@@ -91,5 +91,7 @@ def test_U7F_chi0_chi_swap():
     chi_fake_1 = ResponseMatrix(np.array([[-1.0]]), ["Site0"], ["P0"], "eV", methodology_lock_hash="hash2")
     policy = NumericalPolicy()
     
-    with pytest.raises(ConventionSwapError, match="Did you swap chi and chi0"):
-        compute_u_matrix(chi_fake_0, chi_fake_1, policy)
+    # Removed ConventionSwapError as per RC_FINAL_CORRECTION
+    # We just compute the matrix now
+    u_mat = compute_u_matrix(chi_fake_0, chi_fake_1, policy, methodology_lock_hash="mock_lock")
+    assert u_mat is not None

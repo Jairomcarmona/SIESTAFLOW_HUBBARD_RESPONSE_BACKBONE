@@ -66,7 +66,7 @@ class ResponseMatrix(ScientificArtifact):
     row_ids: List[str]
     column_ids: List[str]
     units: str
-    regression_ids: Dict[Tuple[str, str], str] = field(default_factory=dict)
+    regression_ids: Dict[Tuple[str, str], List[str]] = field(default_factory=dict)
     
     raw_matrix: Optional[np.ndarray] = None
     symmetrized_matrix: Optional[np.ndarray] = None

@@ -9,7 +9,7 @@ DFT-D3 support
 Runtime information:
 * Directory : /tmp/siesta_run_MnO_val_-0.02_BARE
 * Running in serial mode.
->> Start of run:   7-AUG-2026   2:32:21
+>> Start of run:   8-AUG-2026   3:59:53
 
                            *********************** 
                            *  WELCOME TO SIESTA  * 
@@ -21,7 +21,7 @@ Runtime information:
 
 
 reinit: Reading from standard input
-reinit: Dumping input in INPUT_TMP.58407
+reinit: Dumping input in INPUT_TMP.49839
 ************************** Dump of input data file ****************************
 SystemName          Manganese Oxide (Rock-salt) Smoke Test
 SystemLabel MnO_val
@@ -633,102 +633,102 @@ New grid distribution [1]: sub = 2
 hubbard_term: recalculating local occupations    1
  hubbard_term: projector occupations
  hubbard_term: atom, species:            1           1
-   1   1     0.98880     0.14273
+   1   1     0.98880     0.14284
    1   2     0.00000     0.00004
    1   3    -0.00000    -0.00002
    1   4     0.00000     0.00004
-   1   5    -0.00000     0.00000
+   1   5     0.00000    -0.00000
    2   1     0.00000     0.00004
-   2   2     0.98880     0.14273
+   2   2     0.98880     0.14284
    2   3     0.00000    -0.00001
    2   4    -0.00000    -0.00004
-   2   5     0.00000     0.00001
+   2   5    -0.00000     0.00002
    3   1    -0.00000    -0.00002
    3   2     0.00000    -0.00001
    3   3     0.99280     0.00000
    3   4     0.00000    -0.00001
-   3   5    -0.00000     0.00000
+   3   5     0.00000     0.00000
    4   1     0.00000     0.00004
    4   2    -0.00000    -0.00004
    4   3     0.00000    -0.00001
-   4   4     0.98880     0.14273
-   4   5    -0.00000    -0.00001
-   5   1    -0.00000     0.00000
-   5   2     0.00000     0.00001
-   5   3    -0.00000    -0.00000
-   5   4    -0.00000    -0.00001
+   4   4     0.98880     0.14284
+   4   5    -0.00000    -0.00002
+   5   1     0.00000    -0.00000
+   5   2    -0.00000     0.00002
+   5   3     0.00000     0.00000
+   5   4    -0.00000    -0.00002
    5   5     0.99280     0.00000
 hubbard_term: Total projector shell
-Occupations:     4.952008    0.428201    5.380209
+Occupations:     4.952008    0.428507    5.380515
 hubbard_term: maximum change in local occup.    0.992797
 hubbard_term: recalculating Hamiltonian
 
 stepf: Fermi-Dirac step function
 
 siesta: Program's energy decomposition (eV):
-siesta: Ebs     =      -556.298439
+siesta: Ebs     =      -556.275332
 siesta: Eions   =      4996.250168
 siesta: Ena     =       689.799470
-siesta: Ekin    =      1808.348449
-siesta: Enl     =      -255.464692
+siesta: Ekin    =      1808.371619
+siesta: Enl     =      -255.469820
 siesta: Eso     =         0.000000
-siesta: Edftu   =        -0.107604
-siesta: DEna    =       -34.310242
-siesta: DUscf   =         3.415981
+siesta: Edftu   =        -0.107610
+siesta: DEna    =       -34.324638
+siesta: DUscf   =         3.413906
 siesta: DUext   =         0.000000
-siesta: Ex      =      -579.096306
-siesta: Ec      =       -48.588214
-siesta: Exc     =      -627.684520
+siesta: Ex      =      -579.097664
+siesta: Ec      =       -48.588403
+siesta: Exc     =      -627.686067
 siesta: EbV     =         0.000000
 siesta: eta*DQ  =         0.000000
 siesta: Emadel  =         0.000000
 siesta: Emeta   =         0.000000
 siesta: Emolmec =         0.000000
 siesta: Ekinion =         0.000000
-siesta: Eharris =     -3412.240379
-siesta: Etot    =     -3412.253327
-siesta: FreeEng =     -3412.337162
+siesta: Eharris =     -3412.242701
+siesta: Etot    =     -3412.253309
+siesta: FreeEng =     -3412.333876
 
         iscf     Eharris(eV)        E_KS(eV)     FreeEng(eV)     dDmax    Ef(eV) dHmax(eV)
-   scf:    1    -3412.240379    -3412.253327    -3412.337162  0.071009 -2.672244 83.700624
-     spin moment: {S} , |S| = {        0.0        0.0    3.70475 }     3.70475
-timer: Routine,Calls,Time,% = IterSCF        1       0.042   3.59
+   scf:    1    -3412.242701    -3412.253309    -3412.333876  0.054195 -2.672249 83.696746
+     spin moment: {S} , |S| = {        0.0        0.0    3.80299 }     3.80299
+timer: Routine,Calls,Time,% = IterSCF        1       0.017   2.51
 hubbard_term: recalculating local occupations    2
  hubbard_term: projector occupations
  hubbard_term: atom, species:            1           1
-   1   1     0.98880     0.21346
-   1   2     0.00000     0.00006
-   1   3    -0.00000    -0.00003
-   1   4     0.00000     0.00006
+   1   1     0.98880     0.19726
+   1   2     0.00000     0.00007
+   1   3     0.00000    -0.00002
+   1   4     0.00000     0.00007
    1   5    -0.00000     0.00000
-   2   1     0.00000     0.00006
-   2   2     0.98880     0.21346
-   2   3     0.00000    -0.00001
-   2   4    -0.00000    -0.00006
-   2   5    -0.00000     0.00002
-   3   1    -0.00000    -0.00003
-   3   2     0.00000    -0.00001
+   2   1     0.00000     0.00007
+   2   2     0.98880     0.19727
+   2   3    -0.00000    -0.00001
+   2   4    -0.00000    -0.00007
+   2   5     0.00000     0.00002
+   3   1     0.00000    -0.00002
+   3   2    -0.00000    -0.00001
    3   3     0.99280     0.00000
-   3   4     0.00000    -0.00001
+   3   4    -0.00000    -0.00001
    3   5    -0.00000    -0.00000
-   4   1     0.00000     0.00006
-   4   2    -0.00000    -0.00006
-   4   3     0.00000    -0.00001
-   4   4     0.98880     0.21346
-   4   5    -0.00000    -0.00002
+   4   1     0.00000     0.00007
+   4   2    -0.00000    -0.00007
+   4   3    -0.00000    -0.00001
+   4   4     0.98880     0.19727
+   4   5     0.00000    -0.00002
    5   1    -0.00000     0.00000
-   5   2    -0.00000     0.00002
-   5   3     0.00000    -0.00000
-   5   4    -0.00000    -0.00002
+   5   2     0.00000     0.00002
+   5   3    -0.00000    -0.00000
+   5   4     0.00000    -0.00002
    5   5     0.99280     0.00000
 hubbard_term: Total projector shell
-Occupations:     4.952008    0.640376    5.592384
-hubbard_term: maximum change in local occup.    0.070726
+Occupations:     4.952008    0.591804    5.543811
+hubbard_term: maximum change in local occup.    0.054434
 hubbard_term: recalculating Hamiltonian
-   scf:    2    -3414.354124    -3411.864984    -3411.864988  0.229465 -3.463130  2.699121
+   scf:    2    -3413.786103    -3412.021615    -3412.021615  0.212750 -3.520827  2.074724
      spin moment: {S} , |S| = {        0.0        0.0    5.00000 }     5.00000
 SCF_NOT_CONV: SCF did not converge  in maximum number of steps.
-Geom step, scf iteration, dDmax, dHmax:    0     2      0.229465     0.198382
+Geom step, scf iteration, dDmax, dHmax:    0     2      0.212750     0.152489
 
 Using DM_out to compute the final energy and forces
 No. of atoms with KB's overlaping orbs in proc 0. Max # of overlaps:       2      48
@@ -737,117 +737,117 @@ hubbard_term: recalculating local occupations    3
  hubbard_term: atom, species:            1           1
    1   1     0.98880     0.00000
    1   2     0.00000    -0.00000
-   1   3    -0.00000     0.00000
+   1   3    -0.00000    -0.00000
    1   4     0.00000    -0.00000
-   1   5    -0.00000    -0.00000
+   1   5     0.00000    -0.00000
    2   1     0.00000    -0.00000
    2   2     0.98880     0.00000
-   2   3    -0.00000    -0.00000
+   2   3     0.00000     0.00000
    2   4    -0.00000     0.00000
-   2   5     0.00000    -0.00000
-   3   1    -0.00000     0.00000
-   3   2    -0.00000    -0.00000
-   3   3     0.99279     0.00000
-   3   4    -0.00000    -0.00000
+   2   5     0.00000     0.00000
+   3   1    -0.00000    -0.00000
+   3   2     0.00000     0.00000
+   3   3     0.99280     0.00000
+   3   4     0.00000     0.00000
    3   5    -0.00000    -0.00000
    4   1     0.00000    -0.00000
    4   2    -0.00000     0.00000
-   4   3    -0.00000    -0.00000
+   4   3     0.00000     0.00000
    4   4     0.98880     0.00000
-   4   5    -0.00000     0.00000
-   5   1    -0.00000    -0.00000
-   5   2     0.00000    -0.00000
+   4   5    -0.00000    -0.00000
+   5   1     0.00000    -0.00000
+   5   2     0.00000     0.00000
    5   3    -0.00000    -0.00000
-   5   4    -0.00000     0.00000
-   5   5     0.99279     0.00000
+   5   4    -0.00000    -0.00000
+   5   5     0.99280     0.00000
 hubbard_term: Total projector shell
-Occupations:     4.952002    0.000000    4.952002
-hubbard_term: maximum change in local occup.    0.213460
+Occupations:     4.952008    0.000000    4.952008
+hubbard_term: maximum change in local occup.    0.197269
 hubbard_term: recalculating Hamiltonian and forces
 
-siesta: E_KS(eV) =            -3409.9191
+siesta: E_KS(eV) =            -3410.1172
 
-siesta: E_KS - E_eggbox =     -3409.9191
+siesta: E_KS - E_eggbox =     -3410.1172
 
 siesta: Atomic forces (eV/Ang):
-     1   -0.000001   -0.000000   -0.000006
-     2    0.000001    0.000000    0.000006
+     1    0.000000    0.000000   -0.000002
+     2   -0.000000   -0.000000    0.000002
 ----------------------------------------
-   Tot    0.000000    0.000000    0.000000
+   Tot   -0.000000   -0.000000    0.000000
 ----------------------------------------
-   Max    0.000006
-   Res    0.000003    sqrt( Sum f_i^2 / 3N )
+   Max    0.000002
+   Res    0.000001    sqrt( Sum f_i^2 / 3N )
 ----------------------------------------
-   Max    0.000006    constrained
+   Max    0.000002    constrained
 
-Stress tensor Voigt[x,y,z,yz,xz,xy] (kbar):      177.69      177.69      177.69       -0.01       -0.01       -0.01
-(Free)E + p*V (eV/cell)    -3412.3542
-Target enthalpy (eV/cell)    -3409.9191
+Stress tensor Voigt[x,y,z,yz,xz,xy] (kbar):      159.20      159.20      159.20       -0.01       -0.01       -0.01
+(Free)E + p*V (eV/cell)    -3412.2988
+Target enthalpy (eV/cell)    -3410.1172
 
 coxmol: Writing XMOL coordinates into file MnO_val.xyz                                                                                                                                                                                                                         
 
 siesta: Program's energy decomposition (eV):
-siesta: Ebs     =      -540.427470
+siesta: Ebs     =      -544.036272
 siesta: Eions   =      4996.250168
 siesta: Ena     =       689.799470
-siesta: Ekin    =      1780.281834
-siesta: Enl     =      -249.168076
+siesta: Ekin    =      1779.755335
+siesta: Enl     =      -249.358598
 siesta: Eso     =         0.000000
 siesta: Edftu   =        -0.099040
-siesta: DEna    =       -17.202623
-siesta: DUscf   =        10.102535
+siesta: DEna    =       -16.606615
+siesta: DUscf   =         9.723376
 siesta: DUext   =         0.000000
-siesta: Ex      =      -579.015717
-siesta: Ec      =       -48.367317
-siesta: Exc     =      -627.383034
+siesta: Ex      =      -578.725100
+siesta: Ec      =       -48.355832
+siesta: Exc     =      -627.080932
 siesta: EbV     =         0.000000
 siesta: eta*DQ  =         0.000000
 siesta: Emadel  =         0.000000
 siesta: Emeta   =         0.000000
 siesta: Emolmec =         0.000000
 siesta: Ekinion =         0.000000
-siesta: Eharris =     -3414.354124
-siesta: Etot    =     -3409.919102
-siesta: FreeEng =     -3409.919106
+siesta: Eharris =     -3413.786103
+siesta: Etot    =     -3410.117172
+siesta: FreeEng =     -3410.117172
 
 siesta: Final energy (eV):
-siesta:  Band Struct. =    -540.427470
-siesta:       Kinetic =    1780.281834
-siesta:       Hartree =     892.194096
+siesta:  Band Struct. =    -544.036272
+siesta:       Kinetic =    1779.755335
+siesta:       Hartree =     891.287278
 siesta:         Edftu =      -0.099040
 siesta:       Eso     =       0.000000
 siesta:    Ext. field =       0.000000
-siesta:         Exch. =    -579.015717
-siesta:         Corr. =     -48.367317
+siesta:         Exch. =    -578.725100
+siesta:         Corr. =     -48.355832
 siesta:     Bulk bias =       0.000000
-siesta:   Exch.-corr. =    -627.383034
-siesta:  Ion-electron =   -3563.994293
+siesta:   Exch.-corr. =    -627.080932
+siesta:  Ion-electron =   -3563.061148
 siesta:       Ion-ion =   -1890.918666
 siesta:       Ekinion =       0.000000
 siesta: D3 dispersion =       0.000000
-siesta:         Total =   -3409.919102
-siesta:         Fermi =      -3.463130
+siesta:         Total =   -3410.117172
+siesta:         Fermi =      -3.520827
 
 siesta: Stress tensor (static) (eV/Ang**3):
-siesta:     0.110905   -0.000009   -0.000009
-siesta:    -0.000009    0.110905   -0.000009
-siesta:    -0.000009   -0.000009    0.110905
+siesta:     0.099364   -0.000005   -0.000005
+siesta:    -0.000005    0.099364   -0.000005
+siesta:    -0.000005   -0.000005    0.099364
 
 siesta: Cell volume =         21.956105 Ang**3
 
 siesta: Pressure (static):
 siesta:                Solid            Molecule  Units
-siesta:          -0.00120791         -0.00120791  Ry/Bohr**3
-siesta:          -0.11090513         -0.11090537  eV/Ang**3
-siesta:        -177.68960489       -177.68998491  kBar
+siesta:          -0.00108221         -0.00108221  Ry/Bohr**3
+siesta:          -0.09936375         -0.09936382  eV/Ang**3
+siesta:        -159.19827852       -159.19838599  kBar
 
 Basis Enthalpy Calculation:
     Basis Pressure for species 1(Mn) :      0.2000000 GPa
     Basis Pressure for species 2(O) :      0.2000000 GPa
 
     Orbital volume contribution        =           0.452694 eV
-    (Free)E + p_basis*V_orbitals       =       -3409.466412 eV
-    (Free)Eharris+ p_basis*V_orbitals  =       -3413.901433 eV
+    (Free)E + p_basis*V_orbitals       =       -3409.664478 eV
+    (Free)Eharris+ p_basis*V_orbitals  =       -3413.333409 eV
 WARNING: BASIS_ENTHALPY and BASIS_HARRIS_ENTHALPY files are deprecated. They will be removed in future releases.
 Please use system_label.BASIS_ENTHALPY in your scripts instead.
 
@@ -863,68 +863,68 @@ cite: (Please see "MnO_val.bib" for a BibTeX file.)
           DOI: www.doi.org/10.1016/j.cpc.2018.02.011
 
 
-timer: Elapsed wall time (sec) =       1.374
+timer: Elapsed wall time (sec) =       0.648
 timer: CPU execution times (sec):
 
 Routine            Calls   Time/call    Tot.time        %
-siesta                 1       1.427       1.427    99.99
-Setup                  1       0.348       0.348    24.40
+siesta                 1       0.785       0.785    99.99
+Setup                  1       0.222       0.222    28.31
 bands                  1       0.000       0.000     0.00
 KSV_init               1       0.000       0.000     0.00
-IterGeom               1       1.062       1.062    74.42
-geom_init              1       0.789       0.789    55.28
-state_init             1       0.714       0.714    50.04
-hsparse                1       0.005       0.005     0.34
-overlap                1       0.001       0.001     0.09
-Setup_H0               1       0.075       0.075     5.24
+IterGeom               1       0.554       0.554    70.60
+geom_init              1       0.423       0.423    53.85
+state_init             1       0.378       0.378    48.14
+hsparse                1       0.003       0.003     0.42
+overlap                1       0.001       0.001     0.10
+Setup_H0               1       0.045       0.045     5.71
 naefs                  2       0.000       0.000     0.01
-dnaefs                 1       0.000       0.000     0.00
+dnaefs                 1       0.000       0.000     0.01
 two-body               1       0.000       0.000     0.00
 MolMec                 2       0.000       0.000     0.00
-kinefsm                2       0.002       0.003     0.22
-nlefsm                 2       0.002       0.004     0.28
-DHSCF_Init             1       0.071       0.071     4.98
-DHSCF1                 1       0.022       0.022     1.51
-InitMesh               1       0.021       0.021     1.49
+kinefsm                2       0.001       0.002     0.21
+nlefsm                 2       0.001       0.002     0.27
+DHSCF_Init             1       0.043       0.043     5.48
+DHSCF1                 1       0.015       0.015     1.89
+InitMesh               1       0.015       0.015     1.88
 INITMESH               1       0.000       0.000     0.00
-DHSCF2                 1       0.049       0.049     3.46
-REMESH                 1       0.004       0.004     0.28
-REORD                 30       0.000       0.001     0.04
-PHION                  1       0.034       0.034     2.37
-COMM_BSC              28       0.000       0.000     0.03
-POISON                 4       0.000       0.002     0.11
-fft                    8       0.000       0.001     0.04
-IterSCF                2       0.037       0.074     5.19
-setup_H                2       0.035       0.070     4.88
-hubbard_term           3       0.010       0.029     2.05
-DHSCF                  3       0.077       0.232    16.28
-DHSCF3                 3       0.025       0.076     5.31
-rhoofd                 3       0.012       0.037     2.56
-XC                     3       0.003       0.009     0.64
-GXC-CellXC             3       0.003       0.009     0.60
-gridxc@cellXC          3       0.003       0.009     0.60
-vmat                   3       0.009       0.027     1.92
-compute_dm             2       0.002       0.003     0.24
-diagon                 2       0.002       0.003     0.23
-r-eigvec               4       0.001       0.003     0.22
+DHSCF2                 1       0.028       0.028     3.58
+REMESH                 1       0.003       0.003     0.44
+REORD                 30       0.000       0.000     0.05
+PHION                  1       0.017       0.017     2.17
+COMM_BSC              28       0.000       0.000     0.04
+POISON                 4       0.000       0.001     0.11
+fft                    8       0.000       0.000     0.04
+IterSCF                2       0.016       0.033     4.20
+setup_H                2       0.016       0.032     4.08
+hubbard_term           3       0.005       0.014     1.84
+DHSCF                  3       0.037       0.112    14.29
+DHSCF3                 3       0.014       0.042     5.37
+rhoofd                 3       0.007       0.020     2.49
+XC                     3       0.002       0.006     0.73
+GXC-CellXC             3       0.002       0.005     0.68
+gridxc@cellXC          3       0.002       0.005     0.67
+vmat                   3       0.005       0.016     1.98
+compute_dm             2       0.000       0.000     0.06
+diagon                 2       0.000       0.000     0.06
+r-eigvec               4       0.000       0.000     0.04
 r-buildHS              4       0.000       0.000     0.00
-rdiag                  4       0.001       0.003     0.22
-rdiag1                 4       0.000       0.000     0.02
-rdiag2                 4       0.000       0.000     0.02
-rdiag3                 4       0.000       0.001     0.10
-rdiag4                 4       0.000       0.000     0.03
+rdiag                  4       0.000       0.000     0.04
+rdiag1                 4       0.000       0.000     0.01
+rdiag2                 4       0.000       0.000     0.00
+rdiag3                 4       0.000       0.000     0.02
+rdiag4                 4       0.000       0.000     0.00
 r-buildD               2       0.000       0.000     0.00
 MIXER                  2       0.000       0.000     0.00
-PostSCF                1       0.197       0.197    13.82
-FINAL_HF               1       0.197       0.197    13.82
-DHSCF4                 1       0.157       0.157    10.97
-dfscf                  1       0.144       0.144    10.06
-overfsm                1       0.001       0.001     0.10
-state_analysis         1       0.002       0.002     0.11
+PostSCF                1       0.098       0.098    12.46
+FINAL_HF               1       0.098       0.098    12.45
+DHSCF4                 1       0.070       0.070     8.92
+dfscf                  1       0.063       0.063     8.03
+overfsm                1       0.001       0.001     0.11
+state_analysis         1       0.001       0.001     0.08
 siesta_move            1       0.000       0.000     0.00
-Analysis               1       0.003       0.003     0.19
+Analysis               1       0.001       0.001     0.10
 optical                1       0.000       0.000     0.00
   
 
->> End of run:   7-AUG-2026   2:32:22
+>> End of run:   8-AUG-2026   3:59:53
 Job completed

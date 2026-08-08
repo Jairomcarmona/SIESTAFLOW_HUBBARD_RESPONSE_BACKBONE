@@ -58,10 +58,16 @@ def analyze_window(alphas, pops):
     x = x[mask]
     y = y[mask]
     if len(x) < 2:
-        return np.nan, np.nan
+        return np.nan, np.nan, np.nan
     A = np.vstack([x, np.ones(len(x))]).T
     m, c = np.linalg.lstsq(A, y, rcond=None)[0]
-    return m, c
+    
+    # Compute residuals explicitly
+    y_pred = m * x + c
+    res_array = np.abs(y - y_pred)
+    max_res = np.max(res_array)
+    
+    return m, c, max_res
 
 def main():
     alphas = [-0.02, -0.01, 0.00, 0.01, 0.02]
@@ -92,38 +98,45 @@ def main():
     inner_bare_pops = [bare_pops[i] for i in inner_indices]
     inner_scr_pops = [scr_pops[i] for i in inner_indices]
     
-    bare_full_m, bare_full_c = analyze_window(alphas, bare_pops)
-    bare_in_m, bare_in_c = analyze_window(inner_alphas, inner_bare_pops)
+    bare_full_m, bare_full_c, bare_full_res = analyze_window(alphas, bare_pops)
+    bare_in_m, bare_in_c, bare_in_res = analyze_window(inner_alphas, inner_bare_pops)
     
-    scr_full_m, scr_full_c = analyze_window(alphas, scr_pops)
-    scr_in_m, scr_in_c = analyze_window(inner_alphas, inner_scr_pops)
+    scr_full_m, scr_full_c, scr_full_res = analyze_window(alphas, scr_pops)
+    scr_in_m, scr_in_c, scr_in_res = analyze_window(inner_alphas, inner_scr_pops)
     
-    # Left and right secants
-    left_sec_bare = (bare_pops[2] - bare_pops[0]) / (alphas[2] - alphas[0])
-    right_sec_bare = (bare_pops[4] - bare_pops[2]) / (alphas[4] - alphas[2])
-    asym_bare = abs(right_sec_bare - left_sec_bare)
+    # Left and right secants for +/- 0.02
+    left_sec_bare_02 = (bare_pops[2] - bare_pops[0]) / (alphas[2] - alphas[0])
+    right_sec_bare_02 = (bare_pops[4] - bare_pops[2]) / (alphas[4] - alphas[2])
+    asym_bare_02 = abs(right_sec_bare_02 - left_sec_bare_02)
     
-    left_sec_scr = (scr_pops[2] - scr_pops[0]) / (alphas[2] - alphas[0])
-    right_sec_scr = (scr_pops[4] - scr_pops[2]) / (alphas[4] - alphas[2])
-    asym_scr = abs(right_sec_scr - left_sec_scr)
+    # Left and right secants for +/- 0.01
+    left_sec_bare_01 = (bare_pops[2] - bare_pops[1]) / (alphas[2] - alphas[1])
+    right_sec_bare_01 = (bare_pops[3] - bare_pops[2]) / (alphas[3] - alphas[2])
+    asym_bare_01 = abs(right_sec_bare_01 - left_sec_bare_01)
+    
+    left_sec_scr_02 = (scr_pops[2] - scr_pops[0]) / (alphas[2] - alphas[0])
+    right_sec_scr_02 = (scr_pops[4] - scr_pops[2]) / (alphas[4] - alphas[2])
+    asym_scr_02 = abs(right_sec_scr_02 - left_sec_scr_02)
+    
+    left_sec_scr_01 = (scr_pops[2] - scr_pops[1]) / (alphas[2] - alphas[1])
+    right_sec_scr_01 = (scr_pops[3] - scr_pops[2]) / (alphas[3] - alphas[2])
+    asym_scr_01 = abs(right_sec_scr_01 - left_sec_scr_01)
     
     print("\n--- BARE ---")
-    print(f"Full OLS slope: {bare_full_m:.4f}, intercept: {bare_full_c:.6f}")
-    print(f"Inner OLS slope: {bare_in_m:.4f}, intercept: {bare_in_c:.6f}")
+    print(f"Full OLS slope: {bare_full_m:.4f}, max_res: {bare_full_res:.6f}")
+    print(f"Inner OLS slope: {bare_in_m:.4f}, max_res: {bare_in_res:.6f}")
     print(f"Slope diff: {abs(bare_full_m - bare_in_m):.4f}")
     print(f"Rel diff: {abs(bare_full_m - bare_in_m)/abs(bare_full_m)*100:.2f}%")
-    print(f"Left secant: {left_sec_bare:.4f}")
-    print(f"Right secant: {right_sec_bare:.4f}")
-    print(f"Asymmetry: {asym_bare:.4f}")
+    print(f"+/- 0.02 Secants -> left: {left_sec_bare_02:.4f}, right: {right_sec_bare_02:.4f}, asym: {asym_bare_02:.4f}")
+    print(f"+/- 0.01 Secants -> left: {left_sec_bare_01:.4f}, right: {right_sec_bare_01:.4f}, asym: {asym_bare_01:.4f}")
     
     print("\n--- SCREENED ---")
-    print(f"Full OLS slope: {scr_full_m:.4f}, intercept: {scr_full_c:.6f}")
-    print(f"Inner OLS slope: {scr_in_m:.4f}, intercept: {scr_in_c:.6f}")
+    print(f"Full OLS slope: {scr_full_m:.4f}, max_res: {scr_full_res:.6f}")
+    print(f"Inner OLS slope: {scr_in_m:.4f}, max_res: {scr_in_res:.6f}")
     print(f"Slope diff: {abs(scr_full_m - scr_in_m):.4f}")
     print(f"Rel diff: {abs(scr_full_m - scr_in_m)/abs(scr_full_m)*100:.2f}%")
-    print(f"Left secant: {left_sec_scr:.4f}")
-    print(f"Right secant: {right_sec_scr:.4f}")
-    print(f"Asymmetry: {asym_scr:.4f}")
+    print(f"+/- 0.02 Secants -> left: {left_sec_scr_02:.4f}, right: {right_sec_scr_02:.4f}, asym: {asym_scr_02:.4f}")
+    print(f"+/- 0.01 Secants -> left: {left_sec_scr_01:.4f}, right: {right_sec_scr_01:.4f}, asym: {asym_scr_01:.4f}")
     
     print("\n--- RESTART DRIFT ---")
     # from previous outputs or phase4 json, n_ref was about 5.380190

@@ -13,7 +13,7 @@ def assemble_provenance_matrix(
     cardinals: Cardinals,
     perturbation_identities: List[PerturbationIdentity],
     observable_identities: List[ObservableIdentity],
-    methodology_lock_hash: str = "TBD",
+    methodology_lock_hash: str = "UNKNOWN",
     units: str = "1/eV"
 ) -> ResponseMatrix:
     """
@@ -34,7 +34,7 @@ def assemble_provenance_matrix(
 
     R_vals = np.zeros((cardinals.O, cardinals.P), dtype=float)
     seen_pairs = set()
-    regression_ids: Dict[Tuple[str, str], str] = {}
+    regression_ids: Dict[Tuple[str, str], List[str]] = {}
 
     row_ids = [obs.channel_id for obs in observable_identities]
     col_ids = [pert.channel_id for pert in perturbation_identities]
@@ -52,7 +52,7 @@ def assemble_provenance_matrix(
         seen_pairs.add(pair)
         
         R_vals[o, p] = r.slope
-        regression_ids[(row_ids[o], col_ids[p])] = getattr(r, 'artifact_id', f"REG-O{o}-P{p}")
+        regression_ids[(row_ids[o], col_ids[p])] = [getattr(r, 'artifact_id', f"REG-O{o}-P{p}")]
 
     if len(seen_pairs) != expected_count:
         raise RecordCompletenessError("Not all (o, p) pairs covered.")
@@ -95,10 +95,12 @@ def transform_to_chi(
     chi_reg_ids = {}
     for i, r_id in enumerate(row_ids):
         for j, c_id in enumerate(col_ids):
-            matched_reg = R_matrix.regression_ids.get((R_matrix.row_ids[0], c_id))
-            if not matched_reg or matched_reg.startswith("REG-"):
-                matched_reg = f"PROV-{r_id}-{c_id}"
-            chi_reg_ids[(r_id, c_id)] = matched_reg
+            contributing = []
+            for k, obs_id in enumerate(R_matrix.row_ids):
+                if cardinals.A[i, k] != 0:
+                    r_list = R_matrix.regression_ids.get((obs_id, c_id), [])
+                    contributing.extend(r_list)
+            chi_reg_ids[(r_id, c_id)] = list(set(contributing))
 
     source_ids = [R_matrix.artifact_id] if hasattr(R_matrix, 'artifact_id') and R_matrix.artifact_id else []
 

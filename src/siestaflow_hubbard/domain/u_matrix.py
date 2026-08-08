@@ -40,8 +40,9 @@ class HubbardInteractionMatrix(ScientificArtifact):
     rank_diagnostics: GaugeRankStatus
     condition_diagnostics: float
     inverse_residuals: float
-    uncertainty_info: Any  # TBD for full uncertainty quantification
+    uncertainty_info: Optional[Any] = None
     units: str = "eV"
+    inversion_method: str = "DIRECT"
     
     raw_values: Optional[np.ndarray] = None
     symmetrized_values: Optional[np.ndarray] = None
@@ -79,6 +80,7 @@ class HubbardInteractionMatrix(ScientificArtifact):
             "rank_diagnostics": self.rank_diagnostics.name,
             "condition_diagnostics": self.condition_diagnostics,
             "inverse_residuals": self.inverse_residuals,
+            "inversion_method": self.inversion_method,
             "methodology_lock_hash": self.methodology_lock_hash,
             "source_artifact_ids": self.source_artifact_ids
         }

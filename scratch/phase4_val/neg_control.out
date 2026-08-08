@@ -9,7 +9,7 @@ DFT-D3 support
 Runtime information:
 * Directory : /tmp/siesta_run_MnO_val_+0.02_BARE
 * Running in serial mode.
->> Start of run:   7-AUG-2026   2:33:15
+>> Start of run:   8-AUG-2026   4:00:41
 
                            *********************** 
                            *  WELCOME TO SIESTA  * 
@@ -21,7 +21,7 @@ Runtime information:
 
 
 reinit: Reading from standard input
-reinit: Dumping input in INPUT_TMP.11586
+reinit: Dumping input in INPUT_TMP.96844
 ************************** Dump of input data file ****************************
 SystemName          Manganese Oxide (Rock-salt) Smoke Test
 SystemLabel MnO_val
@@ -686,7 +686,7 @@ siesta: FreeEng =     -3434.183517
         iscf     Eharris(eV)        E_KS(eV)     FreeEng(eV)     dDmax    Ef(eV) dHmax(eV)
    scf:    1    -3415.977536    -3434.183517    -3434.183517  0.376566 -6.122763 86.721347
      spin moment: {S} , |S| = {        0.0        0.0    5.00000 }     5.00000
-timer: Routine,Calls,Time,% = IterSCF        1       0.017   2.54
+timer: Routine,Calls,Time,% = IterSCF        1       0.017   2.62
 hubbard_term: recalculating local occupations    2
  hubbard_term: projector occupations
  hubbard_term: atom, species:            1           1
@@ -856,47 +856,47 @@ cite: (Please see "MnO_val.bib" for a BibTeX file.)
           DOI: www.doi.org/10.1016/j.cpc.2018.02.011
 
 
-timer: Elapsed wall time (sec) =       0.695
+timer: Elapsed wall time (sec) =       0.669
 timer: CPU execution times (sec):
 
 Routine            Calls   Time/call    Tot.time        %
-siesta                 1       0.795       0.795    99.99
-Setup                  1       0.227       0.227    28.56
+siesta                 1       0.760       0.760    99.99
+Setup                  1       0.219       0.219    28.84
 bands                  1       0.000       0.000     0.00
 KSV_init               1       0.000       0.000     0.00
-IterGeom               1       0.560       0.560    70.43
-geom_init              1       0.432       0.432    54.29
-state_init             1       0.394       0.394    49.55
-hsparse                1       0.003       0.003     0.32
-overlap                1       0.001       0.001     0.09
-Setup_H0               1       0.038       0.038     4.74
-naefs                  2       0.000       0.000     0.02
+IterGeom               1       0.534       0.534    70.17
+geom_init              1       0.407       0.407    53.57
+state_init             1       0.370       0.370    48.65
+hsparse                1       0.002       0.002     0.33
+overlap                1       0.001       0.001     0.11
+Setup_H0               1       0.037       0.037     4.91
+naefs                  2       0.000       0.000     0.01
 dnaefs                 1       0.000       0.000     0.01
 two-body               1       0.000       0.000     0.00
 MolMec                 2       0.000       0.000     0.00
-kinefsm                2       0.001       0.002     0.19
-nlefsm                 2       0.001       0.002     0.29
-DHSCF_Init             1       0.036       0.036     4.49
-DHSCF1                 1       0.011       0.011     1.44
-InitMesh               1       0.011       0.011     1.43
+kinefsm                2       0.001       0.002     0.20
+nlefsm                 2       0.001       0.002     0.30
+DHSCF_Init             1       0.035       0.035     4.66
+DHSCF1                 1       0.011       0.011     1.50
+InitMesh               1       0.011       0.011     1.50
 INITMESH               1       0.000       0.000     0.00
-DHSCF2                 1       0.024       0.024     3.04
+DHSCF2                 1       0.024       0.024     3.15
 REMESH                 1       0.002       0.002     0.24
 REORD                 30       0.000       0.000     0.04
-PHION                  1       0.016       0.016     2.07
+PHION                  1       0.017       0.017     2.18
 COMM_BSC              28       0.000       0.000     0.03
 POISON                 4       0.000       0.001     0.11
 fft                    8       0.000       0.000     0.04
-IterSCF                2       0.016       0.033     4.13
-setup_H                2       0.016       0.032     3.99
-hubbard_term           3       0.004       0.013     1.65
-DHSCF                  3       0.037       0.110    13.85
-DHSCF3                 3       0.013       0.038     4.74
-rhoofd                 3       0.006       0.018     2.22
-XC                     3       0.002       0.005     0.64
-GXC-CellXC             3       0.002       0.005     0.59
-gridxc@cellXC          3       0.002       0.005     0.58
-vmat                   3       0.005       0.014     1.72
+IterSCF                2       0.017       0.033     4.35
+setup_H                2       0.016       0.032     4.21
+hubbard_term           3       0.004       0.013     1.75
+DHSCF                  3       0.036       0.108    14.22
+DHSCF3                 3       0.013       0.038     4.97
+rhoofd                 3       0.006       0.018     2.33
+XC                     3       0.002       0.005     0.65
+GXC-CellXC             3       0.002       0.005     0.60
+gridxc@cellXC          3       0.002       0.005     0.60
+vmat                   3       0.005       0.014     1.81
 compute_dm             2       0.000       0.000     0.06
 diagon                 2       0.000       0.000     0.06
 r-eigvec               4       0.000       0.000     0.04
@@ -908,16 +908,16 @@ rdiag3                 4       0.000       0.000     0.02
 rdiag4                 4       0.000       0.000     0.00
 r-buildD               2       0.000       0.000     0.00
 MIXER                  2       0.000       0.000     0.00
-PostSCF                1       0.095       0.095    11.89
-FINAL_HF               1       0.095       0.095    11.88
-DHSCF4                 1       0.072       0.072     9.11
-dfscf                  1       0.066       0.066     8.25
-overfsm                1       0.001       0.001     0.09
+PostSCF                1       0.092       0.092    12.15
+FINAL_HF               1       0.092       0.092    12.15
+DHSCF4                 1       0.070       0.070     9.26
+dfscf                  1       0.064       0.064     8.37
+overfsm                1       0.001       0.001     0.10
 state_analysis         1       0.001       0.001     0.07
 siesta_move            1       0.000       0.000     0.00
 Analysis               1       0.001       0.001     0.08
 optical                1       0.000       0.000     0.00
   
 
->> End of run:   7-AUG-2026   2:33:16
+>> End of run:   8-AUG-2026   4:00:41
 Job completed

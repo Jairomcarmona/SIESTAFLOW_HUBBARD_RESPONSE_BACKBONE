@@ -32,25 +32,53 @@ def main():
     os.makedirs(work_dir, exist_ok=True)
 
     base_fdf = os.path.join(base_dir, "MnO_ref.fdf")
-    base_dm = os.path.join(base_dir, "MnO_ref.DM")
-
-    if not os.path.exists(base_fdf) or not os.path.exists(base_dm):
-        raise RuntimeError(f"Missing validation fixtures in {base_dir}")
+    if not os.path.exists(base_fdf):
+        raise RuntimeError(f"Missing base FDF fixture in {base_dir}")
 
     # Copy PSMLs
     for file in os.listdir(base_dir):
         if file.endswith('.psml'):
             shutil.copy(os.path.join(base_dir, file), os.path.join(work_dir, file))
 
-    ref_dm_hash = hash_file(base_dm)
-    print(f"Reference DM locked. SHA-256: {ref_dm_hash}")
-
     adapter = SiestaAdapter(wsl_siesta_path="/home/jmc/.local/siesta-5.4.2-serial/bin/siesta")
     builder = FdfBuilder()
-
-    alpha_grid = [-0.02, -0.01, 0.0, 0.01, 0.02]
-    target_species = "Mn"
     
+    target_species = "Mn"
+    alpha_grid = [-0.02, -0.01, 0.0, 0.01, 0.02]
+    
+    print("\n--- GENERATING METHOD-2 REFERENCE (ALPHA=0.0) ---")
+    with open(base_fdf, 'r') as f:
+        base_content = f.read()
+    
+    ref_fdf_path = os.path.join(work_dir, "MnO_Method2_Ref.fdf")
+    ref_out_path = os.path.join(work_dir, "MnO_Method2_Ref.out")
+    
+    base_content = builder.replace_or_append_fdf_key(base_content, "SystemLabel", "MnO_Method2_Ref")
+    
+    ref_content = builder.modify_fdf_content(
+        content=base_content,
+        alpha=0.0,
+        response_mode="SCREENED",  # Fully converged SCF
+        species=target_species,
+        n=3, l=2, rc=3.0, omega=0.05
+    )
+    with open(ref_fdf_path, 'w', newline='\n') as f:
+        f.write(ref_content)
+        
+    print("  Running SIESTA for Method-2 Reference...")
+    adapter.run_siesta_slurm(ref_fdf_path, ref_out_path, work_dir, n_procs=1)
+    
+    generated_dm = os.path.join(work_dir, "MnO_Method2_Ref.DM")
+    if not os.path.exists(generated_dm):
+        raise RuntimeError(f"Reference DM generation failed! File not found: {generated_dm}")
+        
+    base_dm = os.path.join(work_dir, "MnO_ref_base.DM")
+    shutil.copy(generated_dm, base_dm)
+    
+    ref_dm_hash = hash_file(base_dm)
+    print(f"Reference DM locked (Method-2 compatible). SHA-256: {ref_dm_hash}")
+
+
     n_ref_traces = []
     n0_traces = []
     n_traces = []
@@ -105,12 +133,27 @@ def main():
         if len(bare_events) < 2:
             raise RuntimeError(f"SIESTA did not output at least 2 events for BARE alpha={alpha}. Found {len(bare_events)}")
             
-        n_ref_event = Siesta542BarePolicyV1.get_reference_observation(bare_events)
-        n0_event = Siesta542BarePolicyV1.get_bare_observation(bare_events)
+        from siestaflow_hubbard.siesta_backend.observation_selector import ObservationContext
+        bare_context = ObservationContext(
+            siesta_version="5.4.2",
+            calculation_mode="BARE",
+            reference_dm_sha256=ref_dm_hash,
+            projector_fingerprint="mock",
+            scf_mix_target="density",
+            scf_mixer_method="Linear",
+            scf_mixer_weight=1.0,
+            max_scf_iterations=2,
+            convergence_confirmed=False,
+            final_scf_iteration=None,
+            post_scf_population_occurrence=None
+        )
+        
+        n_ref_event = Siesta542BarePolicyV1.get_reference_observation(bare_events, bare_context)
+        n0_event = Siesta542BarePolicyV1.get_bare_observation(bare_events, bare_context)
         
         # Target atom: atom 1 (Cu)
-        n_ref_trace = n_ref_event.atoms[0].trace_total
-        n0_trace = n0_event.atoms[0].trace_total
+        n_ref_trace = n_ref_event.event.atoms[0].trace_total
+        n0_trace = n0_event.event.atoms[0].trace_total
         
         n_ref_traces.append(n_ref_trace)
         n0_traces.append(n0_trace)
@@ -142,9 +185,22 @@ def main():
             scr_log = f.read()
             
         scr_events = parse_hubbard_population_events(scr_log)
-        n_scr_event = Siesta542BarePolicyV1.get_screened_observation(scr_events)
+        scr_context = ObservationContext(
+            siesta_version="5.4.2",
+            calculation_mode="SCREENED",
+            reference_dm_sha256=ref_dm_hash,
+            projector_fingerprint="mock",
+            scf_mix_target="density",
+            scf_mixer_method="Linear",
+            scf_mixer_weight=1.0,
+            max_scf_iterations=50,
+            convergence_confirmed=True,
+            final_scf_iteration=max([e.scf_iteration for e in scr_events if e.scf_iteration is not None], default=1) if scr_events else 1,
+            post_scf_population_occurrence=None
+        )
+        n_scr_event = Siesta542BarePolicyV1.get_screened_observation(scr_events, scr_context)
         
-        n_trace = n_scr_event.atoms[0].trace_total
+        n_trace = n_scr_event.event.atoms[0].trace_total
         n_traces.append(n_trace)
         print(f"  n     = {n_trace:.6f}")
 
@@ -186,8 +242,8 @@ def main():
             neg_log = f.read()
         
         neg_events = parse_hubbard_population_events(neg_log)
-        neg_n_ref_event = Siesta542BarePolicyV1.get_reference_observation(neg_events)
-        neg_n_ref = neg_n_ref_event.atoms[0].trace_total
+        neg_n_ref_event = Siesta542BarePolicyV1.get_reference_observation(neg_events, bare_context)
+        neg_n_ref = neg_n_ref_event.event.atoms[0].trace_total
         
         if abs(neg_n_ref - n_ref_mean) < 1e-4:
             print("NEGATIVE CONTROL FAILURE: n_ref is identical even when DM is deleted!")

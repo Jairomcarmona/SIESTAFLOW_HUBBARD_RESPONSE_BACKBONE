@@ -43,6 +43,7 @@ def compute_u_matrix(
     chi0: ResponseMatrix, 
     chi: ResponseMatrix, 
     policy: NumericalPolicy,
+    methodology_lock_hash: str,
     u_matrix_policy: str = "RAW"
 ) -> HubbardInteractionMatrix:
     """
@@ -51,11 +52,6 @@ def compute_u_matrix(
     Symmetrization is controlled by u_matrix_policy ('RAW' or 'SYMMETRIZED').
     """
     chi0_val, chi_val = align_matrices(chi0, chi)
-    
-    # Verify chi0/chi swap convention
-    # Physically, the bare response (chi0) should be larger in magnitude than screened response (chi) on the diagonal
-    if np.any(np.abs(np.diag(chi_val)) > np.abs(np.diag(chi0_val))):
-        raise ConventionSwapError("Diagonal elements of chi are larger than chi0. Did you swap chi and chi0?")
         
     # Analyze condition number
     cond_chi0 = np.linalg.cond(chi0_val)
@@ -70,10 +66,12 @@ def compute_u_matrix(
             raise InversionError(f"Matrix condition number {max_cond} exceeds allowed {policy.max_condition_number}.")
             
     # Check for singularity/rank deficiency
+    inversion_method = "DIRECT"
     try:
         if policy.allow_pinv_fallback and rank_status == GaugeRankStatus.ILL_CONDITIONED:
             inv_chi0 = np.linalg.pinv(chi0_val)
             inv_chi = np.linalg.pinv(chi_val)
+            inversion_method = "PSEUDOINVERSE"
         else:
             inv_chi0 = np.linalg.inv(chi0_val)
             inv_chi = np.linalg.inv(chi_val)
@@ -83,6 +81,14 @@ def compute_u_matrix(
             raise InversionError(f"Singular matrix encountered: {e}")
         inv_chi0 = np.linalg.pinv(chi0_val)
         inv_chi = np.linalg.pinv(chi_val)
+        inversion_method = "PSEUDOINVERSE"
+
+    # Compute inversion residuals
+    N = chi0_val.shape[0]
+    I_matrix = np.eye(N)
+    res_chi0 = np.linalg.norm(inv_chi0 @ chi0_val - I_matrix)
+    res_chi = np.linalg.norm(inv_chi @ chi_val - I_matrix)
+    max_residual = float(max(res_chi0, res_chi))
 
     # U_raw = inv(chi0) - inv(chi) (STRICT CANONICAL LINEAR RESPONSE DEFINITION)
     U_raw = inv_chi0 - inv_chi
@@ -93,8 +99,8 @@ def compute_u_matrix(
     
     selected_values = U_sym if u_matrix_policy.upper() in ("SYMMETRIZED", "SYM") else U_raw
     
-    chi0_source_id = getattr(chi0, 'artifact_id', chi0.methodology_lock_hash)
-    chi_source_id = getattr(chi, 'artifact_id', chi.methodology_lock_hash)
+    chi0_source_id = getattr(chi0, 'artifact_id', getattr(chi0, 'methodology_lock_hash', "UNKNOWN"))
+    chi_source_id = getattr(chi, 'artifact_id', getattr(chi, 'methodology_lock_hash', "UNKNOWN"))
     
     return HubbardInteractionMatrix(
         row_subspace_ids=chi0.row_ids.copy(),
@@ -105,10 +111,11 @@ def compute_u_matrix(
         antisymmetry_norm=rel_frob,
         chi0_source_id=chi0_source_id,
         chi_source_id=chi_source_id,
-        methodology_lock_hash="U_MATRIX_LOCK",
+        methodology_lock_hash=methodology_lock_hash,
         rank_diagnostics=rank_status,
         condition_diagnostics=max_cond,
-        inverse_residuals=0.0,
+        inverse_residuals=max_residual,
+        inversion_method=inversion_method,
         uncertainty_info=None,
         units="eV",
         recommended_single_U_ev=None,

@@ -1,7 +1,41 @@
 import re
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Any
+from dataclasses import dataclass
 from siestaflow_hubbard.siesta_backend.fdf_validator import FdfValidator, FdfParser
 from siestaflow_hubbard.siesta_backend.dftu_models import DftuProjector, DftuProjectorBlock
+
+@dataclass(frozen=True)
+class MaterializedDftuContract:
+    species: str
+    n: int
+    l: int
+    U: float
+    J: float
+    rc: float
+    omega: float
+    lambda_effective: float
+    projector_method: Optional[str]
+    potential_shift: bool
+    first_iteration: bool
+    max_scf_iterations: Optional[int]
+    must_converge: Optional[bool]
+    use_save_dm: Optional[bool]
+    scf_mix: Optional[str]
+    mixer_method: Optional[str]
+    mixer_weight: Optional[float]
+    
+    @property
+    def is_bare_valid(self) -> bool:
+        if self.max_scf_iterations != 2: return False
+        if self.must_converge is not False: return False
+        if self.use_save_dm is not True: return False
+        if not self.scf_mix or self.scf_mix.lower() != "density": return False
+        if not self.mixer_method or self.mixer_method.lower() != "linear": return False
+        if self.mixer_weight is None or abs(self.mixer_weight - 1.0) > 1e-4: return False
+        if not self.projector_method or self.projector_method.lower() not in ("2", "pseudo"): return False
+        if not self.potential_shift: return False
+        if not self.first_iteration: return False
+        return True
 
 class FdfBuilder:
     """Handles reading an FDF file and writing it out with linear response modifications."""
@@ -225,31 +259,49 @@ class FdfBuilder:
             return float(s)
         return None
 
-    def preflight_verify(self, fdf_content: str, expected_alpha: float, expected_block: DftuProjectorBlock, expected_response_mode: str = "SCREENED") -> bool:
-        """
-        Semantic Preflight Verification.
-        Parses the generated FDF content into a Materialized object and verifies it.
-        """
-        # A simple verification parser that looks inside %block DFTU.proj
+    def parse_materialized_dftu_contract(self, fdf_content: str, target_species: str) -> Optional[MaterializedDftuContract]:
+        """Parses the materialized FDF text directly and returns a typed contract object."""
+        # Find the DFTU.proj block and look for the specific species
         match = re.search(r"%block\s+DFTU\.proj(.*?)%endblock\s+DFTU\.proj", fdf_content, flags=re.IGNORECASE | re.DOTALL)
         if not match:
-            return False
-        
-        lines = [line.strip() for line in match.group(1).strip().split('\n') if line.strip()]
-        if len(lines) < 4:
-            return False
+            return None
             
-        species_line = lines[0].split()
-        if len(species_line) < 2:
-            return False
-        species = species_line[0]
+        block_text = match.group(1).strip()
+        species_lines = []
+        in_species = False
+        for line in block_text.split('\n'):
+            line = line.strip()
+            if not line: continue
+            
+            parts = line.split()
+            if not in_species:
+                if parts[0] == target_species:
+                    in_species = True
+                    species_lines.append(line)
+            else:
+                species_lines.append(line)
+                # If we have 5 lines, we definitely have the whole shell block (including lambda)
+                # If we have 4 lines, we might be at the end of the block. We should peek at the next line,
+                # but in a simple loop it's hard. Instead we can just collect all lines for this species
+                # until we hit another species (line with 2 elements where first is string).
+                if len(parts) == 2 and not parts[1].replace('.','',1).isdigit():
+                    # Another species started (e.g. "O 1")
+                    species_lines.pop()
+                    break
+                if len(species_lines) == 5:
+                    break
         
-        nl_line = lines[1].split()
-        uj_line = lines[2].split()
-        rco_line = lines[3].split()
+        if len(species_lines) < 4:
+            return None
+            
+        species = species_lines[0].split()[0]
+        
+        nl_line = species_lines[1].split()
+        uj_line = species_lines[2].split()
+        rco_line = species_lines[3].split()
         
         if len(nl_line) < 2 or len(uj_line) < 2 or len(rco_line) < 2:
-            return False
+            return None
             
         try:
             n = int(nl_line[0])
@@ -260,81 +312,93 @@ class FdfBuilder:
             omega = float(rco_line[1])
             
             lambda_effective = 1.0
-            if len(lines) > 4:
-                try:
-                    lam_line = lines[4].split()
+            if len(species_lines) > 4:
+                lam_line = species_lines[4].split()
+                if lam_line:
                     lambda_effective = float(lam_line[0])
-                except ValueError:
-                    pass
         except ValueError:
-            return False
+            return None
+            
+        return MaterializedDftuContract(
+            species=species,
+            n=n,
+            l=l,
+            U=u_val,
+            J=j_val,
+            rc=rc,
+            omega=omega,
+            lambda_effective=lambda_effective,
+            projector_method=self._extract_fdf_string(fdf_content, "DFTU.ProjectorGenerationMethod"),
+            potential_shift=self._extract_fdf_bool(fdf_content, "DFTU.PotentialShift"),
+            first_iteration=self._extract_fdf_bool(fdf_content, "DFTU.FirstIteration"),
+            max_scf_iterations=self._extract_fdf_int(fdf_content, "MaxSCFIterations"),
+            must_converge=self._extract_fdf_bool(fdf_content, "SCF.MustConverge"),
+            use_save_dm=self._extract_fdf_bool(fdf_content, "DM.UseSaveDM"),
+            scf_mix=self._extract_fdf_string(fdf_content, "SCF.Mix"),
+            mixer_method=self._extract_fdf_string(fdf_content, "SCF.Mixer.Method"),
+            mixer_weight=self._extract_fdf_float(fdf_content, "SCF.Mixer.Weight")
+        )
 
-        # Validate against the requested contract
-        expected_proj = expected_block.projectors[0]
-        
-        if species != expected_block.species: return False
-        if n != expected_proj.n: return False
-        if l != expected_proj.l: return False
-        if abs(u_val - expected_alpha) > 1e-4: return False
-        if abs(j_val - expected_proj.J) > 1e-4: return False
-        if abs(rc - expected_proj.rc) > 1e-4: return False
-        if abs(omega - expected_proj.omega) > 1e-4: return False
-        if abs(lambda_effective - expected_proj.effective_lambda) > 1e-4: return False
-        
-        proj_method = self._extract_fdf_string(fdf_content, "DFTU.ProjectorGenerationMethod")
-        if proj_method and proj_method.lower() not in ("2", "pseudo"): return False
-        
-        if not self._extract_fdf_bool(fdf_content, "DFTU.PotentialShift"): return False
-        if not self._extract_fdf_bool(fdf_content, "DFTU.FirstIteration"): return False
-        
-        if expected_response_mode == "BARE":
-            if self._extract_fdf_int(fdf_content, "MaxSCFIterations") != 2: return False
-            if self._extract_fdf_bool(fdf_content, "SCF.MustConverge", default=False): return False
-            if not self._extract_fdf_bool(fdf_content, "DM.UseSaveDM"): return False
-            
-            scf_mix = self._extract_fdf_string(fdf_content, "SCF.Mix")
-            if scf_mix and scf_mix.lower() != "density": return False
-            
-            scf_method = self._extract_fdf_string(fdf_content, "SCF.Mixer.Method")
-            if scf_method and scf_method.lower() != "linear": return False
-            
-            scf_weight = self._extract_fdf_float(fdf_content, "SCF.Mixer.Weight")
-            if scf_weight is None or abs(scf_weight - 1.0) > 1e-4: return False
-            
-        return True
+    def preflight_verify(self, fdf_content: str, expected_alpha: float, expected_block: DftuProjectorBlock, expected_response_mode: str = "SCREENED") -> bool:
+        """Wrapper around verify_and_report_roundtrip for backward compatibility."""
+        res = self.verify_and_report_roundtrip(fdf_content, expected_alpha, expected_block, expected_response_mode)
+        return res["RESULT"] == "PASS"
 
     def verify_and_report_roundtrip(self, fdf_content: str, expected_alpha: float, expected_block: DftuProjectorBlock, expected_response_mode: str = "SCREENED") -> Dict:
-        """Returns a machine-readable round-trip verification record."""
-        passed = self.preflight_verify(fdf_content, expected_alpha, expected_block, expected_response_mode)
-        expected_proj = expected_block.projectors[0]
+        """Returns a machine-readable round-trip verification record based on materialized parsing."""
+        parsed_contract = self.parse_materialized_dftu_contract(fdf_content, expected_block.species)
         
-        # Parse materialized text for reporting
         match = re.search(r"%block\s+DFTU\.proj(.*?)%endblock\s+DFTU\.proj", fdf_content, flags=re.IGNORECASE | re.DOTALL)
         proj_text = match.group(0) if match else "MISSING"
         
-        parsed_effective = {
-            "species": expected_block.species,
-            "n": expected_proj.n,
-            "l": expected_proj.l,
-            "U": expected_alpha,
-            "J": expected_proj.J,
-            "rc": expected_proj.rc,
-            "omega": expected_proj.omega,
-            "lambda_effective": expected_proj.effective_lambda,
-            "DFTU.ProjectorGenerationMethod": self._extract_fdf_string(fdf_content, "DFTU.ProjectorGenerationMethod"),
-            "DFTU.PotentialShift": self._extract_fdf_bool(fdf_content, "DFTU.PotentialShift"),
-            "DFTU.FirstIteration": self._extract_fdf_bool(fdf_content, "DFTU.FirstIteration"),
-        }
+        passed = False
+        parsed_effective = {}
+        expected_proj = expected_block.projectors[0]
         
-        if expected_response_mode == "BARE":
-            parsed_effective.update({
-                "MaxSCFIterations": self._extract_fdf_int(fdf_content, "MaxSCFIterations"),
-                "SCF.MustConverge": self._extract_fdf_bool(fdf_content, "SCF.MustConverge"),
-                "DM.UseSaveDM": self._extract_fdf_bool(fdf_content, "DM.UseSaveDM"),
-                "SCF.Mix": self._extract_fdf_string(fdf_content, "SCF.Mix"),
-                "SCF.Mixer.Method": self._extract_fdf_string(fdf_content, "SCF.Mixer.Method"),
-                "SCF.Mixer.Weight": self._extract_fdf_float(fdf_content, "SCF.Mixer.Weight"),
-            })
+        if parsed_contract:
+            # Map parsed_contract back to dict
+            parsed_effective = {
+                "species": parsed_contract.species,
+                "n": parsed_contract.n,
+                "l": parsed_contract.l,
+                "U": parsed_contract.U,
+                "J": parsed_contract.J,
+                "rc": parsed_contract.rc,
+                "omega": parsed_contract.omega,
+                "lambda_effective": parsed_contract.lambda_effective,
+                "DFTU.ProjectorGenerationMethod": parsed_contract.projector_method,
+                "DFTU.PotentialShift": parsed_contract.potential_shift,
+                "DFTU.FirstIteration": parsed_contract.first_iteration,
+            }
+            if expected_response_mode == "BARE":
+                parsed_effective.update({
+                    "MaxSCFIterations": parsed_contract.max_scf_iterations,
+                    "SCF.MustConverge": parsed_contract.must_converge,
+                    "DM.UseSaveDM": parsed_contract.use_save_dm,
+                    "SCF.Mix": parsed_contract.scf_mix,
+                    "SCF.Mixer.Method": parsed_contract.mixer_method,
+                    "SCF.Mixer.Weight": parsed_contract.mixer_weight,
+                })
+            
+            # Check correctness
+            checks = [
+                parsed_contract.species == expected_block.species,
+                parsed_contract.n == expected_proj.n,
+                parsed_contract.l == expected_proj.l,
+                abs(parsed_contract.U - expected_alpha) < 1e-4,
+                abs(parsed_contract.J - expected_proj.J) < 1e-4,
+                abs(parsed_contract.rc - expected_proj.rc) < 1e-4,
+                abs(parsed_contract.omega - expected_proj.omega) < 1e-4,
+                abs(parsed_contract.lambda_effective - expected_proj.effective_lambda) < 1e-4,
+                parsed_contract.projector_method and parsed_contract.projector_method.lower() in ("2", "pseudo"),
+                parsed_contract.potential_shift is True,
+                parsed_contract.first_iteration is True
+            ]
+            
+            if expected_response_mode == "BARE":
+                checks.append(parsed_contract.is_bare_valid)
+                
+            passed = all(checks)
 
         return {
             "REQUESTED": {
