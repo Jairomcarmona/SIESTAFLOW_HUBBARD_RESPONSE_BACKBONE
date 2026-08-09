@@ -1,0 +1,45 @@
+{
+  "task": "P4-B_ALPHA0_CONTROL",
+  "validation_system": "MnO",
+  "reference_dm_sha256": "f24aee2fbdc52238e816edf50ae7c06cfd41efafb13966a8219731c0d3c3d74b",
+  "bare": {
+    "fdf_sha256": "d87e1004359f05117be201f0cded2aff17db7d12e0121f1674b3b406430f9e21",
+    "output_sha256": "a092bf12da4f0406712850511018bd842da687670d066940b32ed434937cfc6b",
+    "parent_dm_sha256": "f24aee2fbdc52238e816edf50ae7c06cfd41efafb13966a8219731c0d3c3d74b",
+    "projector_fingerprint": "3e53915648cdce6991c6e0ecc89febb14db0fd2a98f2aa5eb89d1fed5c654ab7",
+    "contract": {
+      "projector_generation_method": "2",
+      "potential_shift": true,
+      "first_iteration": true,
+      "use_save_dm": true,
+      "scf_mix": "density",
+      "scf_mixer_method": "Linear",
+      "scf_mixer_weight": 1.0,
+      "max_scf_iterations": 2,
+      "must_converge": false
+    },
+    "reference_event_id": "b4176d2dcac791e049186ad3d633924db2a9d32c5951f08b64430c057cc4020d",
+    "bare_event_id": "8dadef09e6052fbf035ca1ff69af233d34e073f961877734193ce6ec8883d554",
+    "n_ref": 5.37225,
+    "n0_alpha0": 5.36834
+  },
+  "screened": {
+    "fdf_sha256": "c35dfac051dabf26f6ef640298b78e17c0007f8e373bed629c1b52b1c7bf287d",
+    "output_sha256": "b7ee9bf38571bd645d369f45878bf341408e9e632f68ce29a062709f4386c258",
+    "parent_dm_sha256": "f24aee2fbdc52238e816edf50ae7c06cfd41efafb13966a8219731c0d3c3d74b",
+    "projector_fingerprint": "3e53915648cdce6991c6e0ecc89febb14db0fd2a98f2aa5eb89d1fed5c654ab7",
+    "convergence": {
+      "scf_converged": true,
+      "scf_iteration_count": 10,
+      "converged_scf_iteration": 10,
+      "final_convergence_metric": "0.0000133482"
+    },
+    "screened_event_id": "0c89c269a2a14416f86ca900edf24194a2bc7ffdeaba514694808f29ae3ac385",
+    "n_alpha0": 5.37214
+  },
+  "diagnostics": {
+    "restart_drift": -0.003910000000000302,
+    "screened_return": -0.00011000000000027654
+  },
+  "new_real_siesta_runs": 2
+}
