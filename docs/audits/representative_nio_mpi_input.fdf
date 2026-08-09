@@ -1,0 +1,70 @@
+SystemName          NiO AFM-II Benchmark Cell
+SystemLabel NiO_colJ0_SCREENED_alpha_pos0p01
+
+NumberOfAtoms       4
+NumberOfSpecies 3
+
+%block ChemicalSpeciesLabel
+  1  28  NiLR0
+  2  28  NiLR1
+  3   8  O
+%endblock ChemicalSpeciesLabel
+
+LatticeConstant     4.17 Ang
+%block LatticeVectors
+  0.0  1.0  1.0
+  0.5  0.0  0.5
+  0.5  0.5  0.0
+%endblock LatticeVectors
+
+AtomicCoordinatesFormat  Fractional
+%block AtomicCoordinatesAndAtomicSpecies
+        0.00        0.00        0.00    1   # NiLR0
+        0.50        0.00        0.00    2   # NiLR1
+        0.25        0.50        0.50    3   # O
+        0.75        0.50        0.50    3   # O
+%endblock AtomicCoordinatesAndAtomicSpecies
+
+PAO.BasisSize       DZP
+PAO.EnergyShift     0.005 Ry
+PAO.SplitNorm       0.15
+PAO.BasisType       split
+
+MeshCutoff          200 Ry
+%block kgrid_Monkhorst_Pack
+ 2 0 0 0.0
+ 0 4 0 0.0
+ 0 0 4 0.0
+%endblock kgrid_Monkhorst_Pack
+
+MaxSCFIterations 500
+DM.MixingWeight 0.05
+DM.NumberPulay 5
+
+Spin  polarized
+%block DM.InitSpin
+  1 +5.0
+  2 +5.0
+  3  0.0
+%endblock DM.InitSpin
+DFTU.ProjectorGenerationMethod 2
+DFTU.PotentialShift true
+
+WriteMullikenPop 1
+WriteCoorXmol true
+WriteForces   true
+WriteDM true
+DFTU.FirstIteration true
+DM.UseSaveDM true
+MD.NumCGsteps       0
+
+%block DFTU.proj
+  NiLR0   1
+  3  2
+  0.0100  0.0000
+  3.0000  0.0500
+  NiLR1   1
+  3  2
+  0.0000  0.0000
+  3.0000  0.0500
+%endblock DFTU.proj
