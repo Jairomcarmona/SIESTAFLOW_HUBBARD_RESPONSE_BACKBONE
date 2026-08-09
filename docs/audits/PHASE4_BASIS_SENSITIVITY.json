@@ -1,0 +1,83 @@
+{
+  "task": "P4_BASIS_SIZE_SENSITIVITY",
+  "baseline": "SZ_200Ry",
+  "new_campaign": "DZP_200Ry",
+  "new_siesta_runs": 19,
+  "sz_basis_parameters": "PAO.BasisSize=SZ, PAO.EnergyShift=0.02 Ry, PAO.SplitNorm=0.15, PAO.BasisType=split",
+  "dzp_basis_parameters": "PAO.BasisSize=DZP, PAO.EnergyShift=0.02 Ry, PAO.SplitNorm=0.15, PAO.BasisType=split",
+  "chi0_SZ": [
+    [
+      -0.6168999999999771,
+      0.44420000000003995
+    ],
+    [
+      0.44420000000003995,
+      -0.6168999999999771
+    ]
+  ],
+  "chi0_DZP": [
+    [
+      -1.9027999999999212,
+      -0.6504999999999469
+    ],
+    [
+      -0.6504999999999469,
+      -1.9027999999999212
+    ]
+  ],
+  "chi_SZ": [
+    [
+      -0.06919999999995374,
+      0.013400000000060983
+    ],
+    [
+      0.013400000000060983,
+      -0.06919999999995374
+    ]
+  ],
+  "chi_DZP": [
+    [
+      -0.3367999999999453,
+      -0.19969999999997115
+    ],
+    [
+      -0.19969999999997115,
+      -0.3367999999999453
+    ]
+  ],
+  "U_SZ": [
+    [
+      11.647439141245636,
+      0.48331985619866336
+    ],
+    [
+      0.48331985619866336,
+      11.647439141245634
+    ]
+  ],
+  "U_DZP": [
+    [
+      3.9838490990852,
+      -2.5115662222100243
+    ],
+    [
+      -2.5115662222100243,
+      3.9838490990852007
+    ]
+  ],
+  "differences": {
+    "u00_abs_diff": 7.663590042160436,
+    "u00_rel_diff": 0.6579635187809063,
+    "u01_abs_diff": 2.9948860784086877,
+    "u01_rel_diff": 6.1964888054954494,
+    "u_matrix_abs_diff": 11.636146695272172,
+    "u_matrix_rel_diff": 0.7058138160874656,
+    "eigenmode_diffs": {
+      "uniform_mode": 10.65847612056912,
+      "staggered_mode": 4.668703963751745
+    }
+  },
+  "basis_sensitivity": "LARGE",
+  "next_recommended_step": "C. investigate basis-generation parameters",
+  "scientific_status": "DIAGNOSTICS_ONLY"
+}
