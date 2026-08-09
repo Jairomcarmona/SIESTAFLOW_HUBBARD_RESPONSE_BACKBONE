@@ -1,0 +1,44 @@
+{
+  "task": "P4-A_METHOD2_REFERENCE",
+  "validation_system": "MnO",
+  "runtime": {
+    "siesta_version": "5.4.2",
+    "binary_path": "/home/jmc/.local/siesta-5.4.2-serial/bin/siesta",
+    "binary_sha256": "e6e33807a931a6b63e89c39a796865fb963ba485fe4c311fcdc7f5d2abd1cc53"
+  },
+  "inputs": {
+    "fdf_sha256": "da1250d79ac43b1ab456d8c1268524b690c60bfb91e25a21c48d5644486698ed",
+    "mn_pseudo_sha256": "0b97ccd71456e4a7b28316f78ddb30bb1f6a82d9aba386c7fde78090d31c0dc6",
+    "o_pseudo_sha256": "224ded5c59176d9bcb76d19b7a4a68a48d5dffabf8b262f64d5760250e87c35e"
+  },
+  "projector": {
+    "method": 2,
+    "species": "Mn",
+    "n": 3,
+    "l": 2,
+    "U": 0.0,
+    "J": 0.0,
+    "rc": 3.0,
+    "omega": 0.05,
+    "lambda_declared": null,
+    "lambda_effective": 1.0,
+    "fingerprint": "3e53915648cdce6991c6e0ecc89febb14db0fd2a98f2aa5eb89d1fed5c654ab7"
+  },
+  "scf": {
+    "converged": true,
+    "iterations": 309,
+    "final_metric": "0.0000556191"
+  },
+  "outputs": {
+    "output_sha256": "1e1828d0a3ea3861976eb56c8efaca2500ebe64540a8003c653314de54de17eb",
+    "reference_dm_sha256": "f24aee2fbdc52238e816edf50ae7c06cfd41efafb13966a8219731c0d3c3d74b"
+  },
+  "reference_occupation": {
+    "value": 5.3722199999999996,
+    "atom_id": 1,
+    "species": "Mn",
+    "event_occurrence": 310,
+    "scf_iteration": 309
+  },
+  "real_siesta_runs": 1
+}
