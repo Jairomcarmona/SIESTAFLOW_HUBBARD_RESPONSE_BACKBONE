@@ -595,3 +595,134 @@ def test_real_observations_enter_production_nxn_engine():
     assert abs(result.U_matrix[0, 1] - 0.55875) < 0.01
     assert abs(result.U_matrix[1, 0] - 0.55875) < 0.01
 
+
+def test_generic_n4_matrix_engine_synthetic():
+    """
+    N=4 generic matrix test: production NxN engine must accept 4 observed sites,
+    4 perturbation columns, and produce chi0(4x4), chi(4x4), U(4x4).
+    Uses Cu2O-like equivalent-site structure (diagonal=d, offdiag=o)
+    but contains NO Cu2O-specific mathematics.
+    """
+    n = 4
+    site_labels = list(range(n))
+    alpha_grid = [-0.01, 0.00, +0.01]
+
+    # Construct synthetic 4x4 chi0 and chi with cubic symmetry
+    d0, o0 = -0.30, 0.05   # bare
+    d,  o  = -0.09, 0.01   # screened
+    chi0_true = np.full((n, n), o0); np.fill_diagonal(chi0_true, d0)
+    chi_true  = np.full((n, n), o);  np.fill_diagonal(chi_true,  d)
+
+    n_ref = [9.5] * n
+    obs = []
+    for J in range(n):
+        for alpha in alpha_grid:
+            occ_bare = [n_ref[I] + chi0_true[I, J] * alpha for I in range(n)]
+            occ_scrn = [n_ref[I] + chi_true[I, J]  * alpha for I in range(n)]
+            obs.append(ResponseObservation(
+                perturbation_site=J, alpha=alpha, site_labels=site_labels,
+                occupations_ref=n_ref, occupations_bare=occ_bare,
+                occupations_screened=occ_scrn,
+            ))
+
+    result = analyze_matrix_response_campaign(obs)
+
+    assert result.chi0_raw.shape == (4, 4), f"chi0 shape {result.chi0_raw.shape} != (4,4)"
+    assert result.chi_raw.shape  == (4, 4), f"chi shape {result.chi_raw.shape} != (4,4)"
+    assert result.U_matrix.shape == (4, 4), f"U shape {result.U_matrix.shape} != (4,4)"
+    assert result.matrix_status == "FULL_RANK"
+
+    # Recovered chi0/chi must match synthetic input
+    assert np.allclose(result.chi0_raw, chi0_true, atol=1e-8)
+    assert np.allclose(result.chi_raw,  chi_true,  atol=1e-8)
+
+    # U correctness: verify analytic formula for this circulant structure
+    U_diag = float(np.linalg.inv(chi0_true)[0, 0] - np.linalg.inv(chi_true)[0, 0])
+    assert abs(result.U_matrix[0, 0] - U_diag) < 1e-6
+    assert abs(result.U_matrix[2, 2] - U_diag) < 1e-6
+
+
+def test_split_species_four_aliases():
+    """
+    materialize_split_species_fdf must produce CuLR0..CuLR3 (4 aliases)
+    for a system with 4 Cu atoms. Tests N=4 species splitting generically.
+    """
+    from siestaflow_hubbard.siesta_backend.fdf_builder import materialize_split_species_fdf
+    base_fdf = """
+NumberOfAtoms 6
+NumberOfSpecies 2
+%block ChemicalSpeciesLabel
+ 1  29  Cu
+ 2   8  O
+%endblock ChemicalSpeciesLabel
+%block AtomicCoordinatesAndAtomicSpecies
+ 0.00  0.00  0.00  2
+ 0.50  0.50  0.50  2
+ 0.25  0.25  0.25  1
+ 0.25  0.75  0.75  1
+ 0.75  0.25  0.75  1
+ 0.75  0.75  0.25  1
+%endblock AtomicCoordinatesAndAtomicSpecies
+"""
+    new_fdf, labels = materialize_split_species_fdf(base_fdf, target_species="Cu", new_prefix="CuLR")
+    assert labels == ["CuLR0", "CuLR1", "CuLR2", "CuLR3"]
+    for lbl in labels:
+        assert lbl in new_fdf
+    assert "NumberOfSpecies 5" in new_fdf or "NumberOfSpecies  5" in new_fdf
+    # Atomic number 29 must be preserved for all 4 aliases
+    assert new_fdf.count(" 29 ") >= 4 or new_fdf.count("  29  ") >= 4
+
+
+def test_nonpolarized_occupation_parse():
+    """
+    Parser must correctly extract occupation trace from non-polarized SIESTA Hubbard output.
+    Non-polarized Occupations: line has exactly 2 fields (up, total=2*up).
+    trace_total must equal 2 * trace_up.
+    """
+    from siestaflow_hubbard.siesta_backend.event_parser import parse_hubbard_population_events
+
+    fake_nonpol_output = """
+hubbard_term: recalculating local occupations 1
+hubbard_term:  atom,  species:   1   1
+  1  1   0.88000
+  1  2   0.00000
+  1  3   0.00000
+  1  4   0.00000
+  1  5   0.00000
+  2  1   0.00000
+  2  2   0.88000
+  2  3   0.00000
+  2  4   0.00000
+  2  5   0.00000
+  3  1   0.00000
+  3  2   0.00000
+  3  3   0.88000
+  3  4   0.00000
+  3  5   0.00000
+  4  1   0.00000
+  4  2   0.00000
+  4  3   0.00000
+  4  4   0.88000
+  4  5   0.00000
+  5  1   0.00000
+  5  2   0.00000
+  5  3   0.00000
+  5  4   0.00000
+  5  5   0.88000
+  Occupations:   4.40000  4.40000
+recalculating Hamiltonian
+"""
+    events = parse_hubbard_population_events(fake_nonpol_output)
+    assert len(events) == 1
+    assert len(events[0].atoms) == 1
+    atom = events[0].atoms[0]
+    # Non-polarized: single channel
+    assert atom.channel_count == 1
+    # trace_up = sum of diagonal = 5 * 0.88 = 4.4
+    # trace_total = trace_up + trace_up (no down channel) = 8.8
+    assert abs(atom.trace_up - 5 * 0.88) < 1e-9
+    assert abs(atom.trace_total - 2 * 5 * 0.88) < 1e-9
+    # Non-polarized Occupations: prints per-spin value twice: "4.4  4.4"
+    # printed_total = printed_up + printed_up = 8.8
+    assert abs(atom.printed_total_trace - 2 * 5 * 0.88) < 1e-6
+

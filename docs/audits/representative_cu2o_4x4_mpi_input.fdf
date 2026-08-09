@@ -1,0 +1,76 @@
+SystemName          Cu2O Cuprite 4x4 Hubbard Benchmark
+SystemLabel Cu2O_J0_SCREENED_apos0p010
+
+NumberOfAtoms       6
+NumberOfSpecies 5
+
+%block ChemicalSpeciesLabel
+  1  29  CuLR0
+  2  29  CuLR1
+  3  29  CuLR2
+  4  29  CuLR3
+  5   8  O
+%endblock ChemicalSpeciesLabel
+
+LatticeConstant     4.27 Ang
+%block LatticeVectors
+ 1.0  0.0  0.0
+ 0.0  1.0  0.0
+ 0.0  0.0  1.0
+%endblock LatticeVectors
+
+AtomicCoordinatesFormat  Fractional
+%block AtomicCoordinatesAndAtomicSpecies
+        0.00        0.00        0.00    5   # O
+        0.50        0.50        0.50    5   # O
+        0.25        0.25        0.25    1   # CuLR0
+        0.25        0.75        0.75    2   # CuLR1
+        0.75        0.25        0.75    3   # CuLR2
+        0.75        0.75        0.25    4   # CuLR3
+%endblock AtomicCoordinatesAndAtomicSpecies
+
+SpinPolarized false
+
+PAO.BasisSize       DZP
+PAO.EnergyShift     0.005 Ry
+PAO.SplitNorm       0.15
+PAO.BasisType       split
+
+MeshCutoff          200 Ry
+%block kgrid_Monkhorst_Pack
+ 4 0 0 0.0
+ 0 4 0 0.0
+ 0 0 4 0.0
+%endblock kgrid_Monkhorst_Pack
+
+MaxSCFIterations    500
+DM.MixingWeight     0.05
+DM.NumberPulay      5
+DFTU.ProjectorGenerationMethod 2
+DFTU.PotentialShift true
+
+WriteMullikenPop 1
+WriteForces      true
+WriteDM          true
+DFTU.FirstIteration true
+DM.UseSaveDM true
+MD.NumCGsteps       0
+
+%block DFTU.proj
+  CuLR0   1
+  3  2
+  0.0100  0.0000
+  3.0000  0.0500
+  CuLR1   1
+  3  2
+  0.0000  0.0000
+  3.0000  0.0500
+  CuLR2   1
+  3  2
+  0.0000  0.0000
+  3.0000  0.0500
+  CuLR3   1
+  3  2
+  0.0000  0.0000
+  3.0000  0.0500
+%endblock DFTU.proj
