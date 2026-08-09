@@ -1,5 +1,5 @@
 {
-  "task": "P4-A_METHOD2_REFERENCE",
+  "task": "P4-A1_REFERENCE_EVENT_SELECTION",
   "validation_system": "MnO",
   "runtime": {
     "siesta_version": "5.4.2",
@@ -26,7 +26,8 @@
   },
   "scf": {
     "converged": true,
-    "iterations": 309,
+    "converged_scf_iteration": 309,
+    "iteration_count": 309,
     "final_metric": "0.0000556191"
   },
   "outputs": {
@@ -37,8 +38,18 @@
     "value": 5.3722199999999996,
     "atom_id": 1,
     "species": "Mn",
-    "event_occurrence": 310,
-    "scf_iteration": 309
+    "event_occurrence": 309,
+    "event_scf_iteration": 309,
+    "selection_policy": "converged_scf_iteration_semantic_match",
+    "selection_evidence": {
+      "converged_scf_iteration": 309,
+      "candidate_event_occurrences": [
+        309
+      ],
+      "selected_event_occurrence": 309,
+      "ambiguity": false
+    }
   },
-  "real_siesta_runs": 1
+  "original_p4_a_siesta_runs": 1,
+  "new_real_siesta_runs": 0
 }
