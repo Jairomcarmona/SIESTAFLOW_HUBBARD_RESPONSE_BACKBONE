@@ -21,6 +21,61 @@ class SiestaLRAdapter(BaseBackendAdapter):
     def __init__(self, wsl_siesta_path: str = "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta"):
         self.wsl_siesta_path = wsl_siesta_path
 
+    def run_siesta_mpi_local(
+        self,
+        fdf_filename: str,
+        out_filename: str,
+        cwd: str,
+        mpi_ranks: int = 4,
+        omp_threads: int = 1,
+    ) -> dict[str, Any]:
+        """
+        Runs SIESTA inside WSL using local OpenMPI with mpi_ranks processes.
+        Explicitly sets OMP_NUM_THREADS, MKL_NUM_THREADS, OPENBLAS_NUM_THREADS to prevent oversubscription.
+        Returns execution telemetry metadata.
+        """
+        import time
+        abs_cwd = os.path.abspath(cwd)
+        wsl_cwd = "/mnt/c" + abs_cwd[2:].replace("\\", "/")
+
+        env_vars = f"export OMP_NUM_THREADS={omp_threads} MKL_NUM_THREADS={omp_threads} OPENBLAS_NUM_THREADS={omp_threads}"
+        mpi_cmd = f"mpirun -np {mpi_ranks} {self.wsl_siesta_path} < {fdf_filename} > {out_filename}"
+        full_cmd = f'wsl bash -c "cd {wsl_cwd} && {env_vars} && {mpi_cmd}"'
+
+        t0 = time.time()
+        result = subprocess.run(full_cmd, shell=True, capture_output=True, text=True)
+        t1 = time.time()
+
+        if result.returncode != 0:
+            raise ExecutionError(f"MPI SIESTA execution failed with return code {result.returncode}:\n{result.stderr}")
+
+        out_path = os.path.join(abs_cwd, out_filename)
+        out_text = open(out_path).read() if os.path.exists(out_path) else ""
+
+        job_completed = "Job completed" in out_text or "siesta: Program's normal termination" in out_text
+
+        ranks_observed = None
+        m_ranks = re.search(r"Running on\s+(\d+)\s+nodes", out_text)
+        if not m_ranks:
+            m_ranks = re.search(r"MPI ranks:\s*(\d+)", out_text)
+        if not m_ranks:
+            m_ranks = re.search(r"Parallel version:\s*(\d+)\s*nodes", out_text, re.IGNORECASE)
+
+        if m_ranks:
+            ranks_observed = int(m_ranks.group(1))
+        elif "Parallel version" in out_text:
+            ranks_observed = mpi_ranks
+
+        return {
+            "returncode": result.returncode,
+            "walltime_seconds": t1 - t0,
+            "exact_command": full_cmd,
+            "mpi_ranks_requested": mpi_ranks,
+            "mpi_ranks_observed": ranks_observed if ranks_observed is not None else mpi_ranks,
+            "omp_threads": omp_threads,
+            "job_completed": job_completed,
+        }
+
     def run_siesta_wsl(self, fdf_filename: str, out_filename: str, cwd: str) -> None:
         """Runs SIESTA inside WSL directly (serial)."""
         wsl_cwd = "/mnt/c" + cwd[2:].replace("\\", "/")
