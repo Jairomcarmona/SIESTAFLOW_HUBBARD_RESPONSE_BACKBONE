@@ -69,6 +69,8 @@
   "bare": {
     "chi0_full": -7.060599999999963,
     "chi0_inner": -7.028999999999968,
+    "chi0_central_001": -7.028999999999996,
+    "chi0_central_002": -7.068500000000011,
     "chi0_rel_diff": 0.004475540322351488,
     "R2_full": 0.9938073769725706,
     "max_abs_residual_full": 0.009574000000001526,
@@ -78,6 +80,8 @@
   "screened": {
     "chi_full": -0.10289999999995691,
     "chi_inner": -0.1034999999999992,
+    "chi_central_001": -0.10349999999998971,
+    "chi_central_002": -0.1027499999999959,
     "chi_rel_diff": 0.005830903790500876,
     "R2_full": 0.9998385287418864,
     "max_abs_residual_full": 2.700000000022129e-05,
@@ -87,6 +91,8 @@
   "u_values": {
     "U_full_eV": 9.576541960623928,
     "U_inner_eV": 9.519568000890795,
+    "U_central_001_eV": 9.519568000891681,
+    "U_central_002_eV": 9.590887366192915,
     "U_abs_diff": 0.05697395973313313,
     "U_rel_diff": 0.005949324919933957
   },
@@ -95,5 +101,5 @@
     "restart_drift": -0.003910000000000302,
     "screened_alpha0_drift": -0.00011000000000027654
   },
-  "scientific_verdict": "WINDOW_DEPENDENT"
+  "scientific_verdict": "DIAGNOSTICS_ONLY"
 }

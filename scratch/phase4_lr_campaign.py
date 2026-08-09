@@ -29,7 +29,6 @@ from siestaflow_hubbard.siesta_backend.observation_selector import (
 from siestaflow_hubbard.domain.scalar_lr import (
     ResponsePoint,
     analyze_scalar_response_campaign,
-    fit_response,
     compute_scalar_u,
 )
 from scratch.phase4_method2_revalidation import (
@@ -374,6 +373,8 @@ def main():
         "bare": {
             "chi0_full": result.chi0_full,
             "chi0_inner": result.chi0_inner,
+            "chi0_central_001": result.chi0_central_001,
+            "chi0_central_002": result.chi0_central_002,
             "chi0_rel_diff": result.chi0_rel_diff,
             "R2_full": result.bare_full.r_squared,
             "max_abs_residual_full": result.bare_full.max_abs_residual,
@@ -383,6 +384,8 @@ def main():
         "screened": {
             "chi_full": result.chi_full,
             "chi_inner": result.chi_inner,
+            "chi_central_001": result.chi_central_001,
+            "chi_central_002": result.chi_central_002,
             "chi_rel_diff": result.chi_rel_diff,
             "R2_full": result.screened_full.r_squared,
             "max_abs_residual_full": result.screened_full.max_abs_residual,
@@ -392,6 +395,8 @@ def main():
         "u_values": {
             "U_full_eV": result.U_full,
             "U_inner_eV": result.U_inner,
+            "U_central_001_eV": result.U_central_001,
+            "U_central_002_eV": result.U_central_002,
             "U_abs_diff": result.U_abs_diff,
             "U_rel_diff": result.U_rel_diff,
         },
@@ -415,34 +420,40 @@ def main():
     print()
     print(f"N_REF_SPREAD: {result.n_ref_spread:.6f}")
     print()
-    print(f"CHI0_FULL:  {result.chi0_full:.6f} eV-1")
-    print(f"CHI0_INNER: {result.chi0_inner:.6f} eV-1")
-    print(f"CHI0_REL_DIFF: {result.chi0_rel_diff:.4%}")
+    print(f"CHI0_FULL:        {result.chi0_full:.6f} eV-1")
+    print(f"CHI0_INNER:       {result.chi0_inner:.6f} eV-1")
+    print(f"CHI0_CENTRAL_001: {result.chi0_central_001:.6f} eV-1")
+    print(f"CHI0_CENTRAL_002: {result.chi0_central_002:.6f} eV-1")
+    print(f"CHI0_REL_DIFF:    {result.chi0_rel_diff:.4%}")
     print()
-    print(f"CHI_FULL:   {result.chi_full:.6f} eV-1")
-    print(f"CHI_INNER:  {result.chi_inner:.6f} eV-1")
-    print(f"CHI_REL_DIFF: {result.chi_rel_diff:.4%}")
+    print(f"CHI_FULL:         {result.chi_full:.6f} eV-1")
+    print(f"CHI_INNER:        {result.chi_inner:.6f} eV-1")
+    print(f"CHI_CENTRAL_001:  {result.chi_central_001:.6f} eV-1")
+    print(f"CHI_CENTRAL_002:  {result.chi_central_002:.6f} eV-1")
+    print(f"CHI_REL_DIFF:     {result.chi_rel_diff:.4%}")
     print()
     print(f"BARE_R2:     {result.bare_full.r_squared:.8f}")
     print(f"SCREENED_R2: {result.screened_full.r_squared:.8f}")
     print()
-    print(f"BARE_ASYMMETRY_001:     {result.bare_full.asymmetry_001}")
-    print(f"BARE_ASYMMETRY_002:     {result.bare_full.asymmetry_002}")
-    print(f"SCREENED_ASYMMETRY_001: {result.screened_full.asymmetry_001}")
-    print(f"SCREENED_ASYMMETRY_002: {result.screened_full.asymmetry_002}")
+    print(f"BARE_ASYMMETRY_001:     {result.bare_full.asymmetry_001:.6f}")
+    print(f"BARE_ASYMMETRY_002:     {result.bare_full.asymmetry_002:.6f}")
+    print(f"SCREENED_ASYMMETRY_001: {result.screened_full.asymmetry_001:.6f}")
+    print(f"SCREENED_ASYMMETRY_002: {result.screened_full.asymmetry_002:.6f}")
     print()
-    print(f"RESTART_DRIFT:         {result.restart_drift:.6f}")
-    print(f"SCREENED_ALPHA0_DRIFT: {result.screened_alpha0_drift:.6f}")
+    print(f"RESTART_DRIFT:         {result.restart_drift:.6f}  [diagnostic only]")
+    print(f"SCREENED_ALPHA0_DRIFT: {result.screened_alpha0_drift:.6f}  [diagnostic only]")
     print()
-    print(f"U_FULL:     {result.U_full:.4f} eV")
-    print(f"U_INNER:    {result.U_inner:.4f} eV")
-    print(f"U_ABS_DIFF: {result.U_abs_diff:.4f} eV")
-    print(f"U_REL_DIFF: {result.U_rel_diff:.4%}")
+    print(f"U_FULL:        {result.U_full:.5f} eV")
+    print(f"U_INNER:       {result.U_inner:.5f} eV")
+    print(f"U_CENTRAL_001: {result.U_central_001:.5f} eV")
+    print(f"U_CENTRAL_002: {result.U_central_002:.5f} eV")
+    print(f"U_ABS_DIFF:    {result.U_abs_diff:.5f} eV")
+    print(f"U_REL_DIFF:    {result.U_rel_diff:.4%}")
     print()
     print(f"SCIENTIFIC_VERDICT: {result.scientific_verdict}")
     print()
     print(f"PRODUCTION_FUNCTIONS: src/siestaflow_hubbard/domain/scalar_lr.py")
-    print(f"  fit_response(), evaluate_linearity(), compute_scalar_u(), analyze_scalar_response_campaign()")
+    print(f"  fit_response(), compute_scalar_u(), analyze_scalar_response_campaign()")
     print()
     print(f"TESTS: tests/unit/test_scalar_lr.py")
     print()
