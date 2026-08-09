@@ -1,5 +1,5 @@
 {
-  "task": "P4-A1_REFERENCE_EVENT_SELECTION",
+  "task": "P4-A2_ARTIFACT_HASH_INTEGRITY",
   "validation_system": "MnO",
   "runtime": {
     "siesta_version": "5.4.2",
@@ -31,8 +31,19 @@
     "final_metric": "0.0000556191"
   },
   "outputs": {
-    "output_sha256": "1e1828d0a3ea3861976eb56c8efaca2500ebe64540a8003c653314de54de17eb",
+    "output_sha256": "4f7c97c2852b8811cb0930cbe8ebfb5c69bd5abc1b53d34149e0755a3224080a",
     "reference_dm_sha256": "f24aee2fbdc52238e816edf50ae7c06cfd41efafb13966a8219731c0d3c3d74b"
+  },
+  "artifact_integrity": {
+    "fdf_expected_sha256": "da1250d79ac43b1ab456d8c1268524b690c60bfb91e25a21c48d5644486698ed",
+    "fdf_observed_sha256": "da1250d79ac43b1ab456d8c1268524b690c60bfb91e25a21c48d5644486698ed",
+    "fdf_match": true,
+    "output_expected_sha256": "4f7c97c2852b8811cb0930cbe8ebfb5c69bd5abc1b53d34149e0755a3224080a",
+    "output_observed_sha256": "4f7c97c2852b8811cb0930cbe8ebfb5c69bd5abc1b53d34149e0755a3224080a",
+    "output_match": true,
+    "dm_expected_sha256": "f24aee2fbdc52238e816edf50ae7c06cfd41efafb13966a8219731c0d3c3d74b",
+    "dm_observed_sha256": "f24aee2fbdc52238e816edf50ae7c06cfd41efafb13966a8219731c0d3c3d74b",
+    "dm_match": true
   },
   "reference_occupation": {
     "value": 5.3722199999999996,

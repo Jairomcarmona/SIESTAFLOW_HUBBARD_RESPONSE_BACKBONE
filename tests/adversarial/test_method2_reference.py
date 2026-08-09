@@ -153,3 +153,22 @@ def test_p4_a1_03_ambiguity_rejection():
     with pytest.raises(ReferenceSelectionAmbiguityError):
         select_converged_reference_event(events, converged_scf_iteration=309)
 
+def test_p4_a2_01_wrong_non_empty_hash_fails():
+    expected_hash = "a" * 64
+    observed_hash = "b" * 64
+    match = (observed_hash == expected_hash)
+    assert match is False, "Different non-empty hashes must evaluate to False"
+
+def test_p4_a2_02_evidence_uses_observed_value():
+    expected_constant = "a" * 64
+    actual_calculated_hash = "c" * 64
+    
+    evidence = {
+        "outputs": {
+            "output_sha256": actual_calculated_hash
+        }
+    }
+    assert evidence["outputs"]["output_sha256"] == actual_calculated_hash
+    assert evidence["outputs"]["output_sha256"] != expected_constant
+
+

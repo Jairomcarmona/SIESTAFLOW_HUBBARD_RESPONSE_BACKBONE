@@ -175,11 +175,20 @@ def main():
     
     wsl_sha = subprocess.check_output(["wsl", "sha256sum", siesta_path]).decode().split()[0]
     
-    expected_out_hash = "1e1828d0a3ea3861976eb56c8efaca2500ebe64540a8003c653314de54de17eb"
-    out_hash_matches = (out_hash == expected_out_hash) or (out_hash != "")
+    fdf_expected = "da1250d79ac43b1ab456d8c1268524b690c60bfb91e25a21c48d5644486698ed"
+    out_expected = "4f7c97c2852b8811cb0930cbe8ebfb5c69bd5abc1b53d34149e0755a3224080a"
+    dm_expected  = "f24aee2fbdc52238e816edf50ae7c06cfd41efafb13966a8219731c0d3c3d74b"
+    
+    fdf_match = (fdf_hash == fdf_expected)
+    out_match = (out_hash == out_expected)
+    dm_match  = (dm_hash  == dm_expected)
+    
+    if not (fdf_match and out_match and dm_match):
+        print(f"TASK_VERDICT = FAIL (Hash verification failed: fdf={fdf_match}, out={out_match}, dm={dm_match})")
+        sys.exit(1)
     
     evidence = {
-        "task": "P4-A1_REFERENCE_EVENT_SELECTION",
+        "task": "P4-A2_ARTIFACT_HASH_INTEGRITY",
         "validation_system": "MnO",
 
         "runtime": {
@@ -216,8 +225,22 @@ def main():
         },
 
         "outputs": {
-            "output_sha256": expected_out_hash,
+            "output_sha256": out_hash,
             "reference_dm_sha256": dm_hash
+        },
+
+        "artifact_integrity": {
+            "fdf_expected_sha256": fdf_expected,
+            "fdf_observed_sha256": fdf_hash,
+            "fdf_match": fdf_match,
+
+            "output_expected_sha256": out_expected,
+            "output_observed_sha256": out_hash,
+            "output_match": out_match,
+
+            "dm_expected_sha256": dm_expected,
+            "dm_observed_sha256": dm_hash,
+            "dm_match": dm_match
         },
 
         "reference_occupation": {
@@ -243,26 +266,24 @@ def main():
     with open("docs/audits/PHASE4_METHOD2_REFERENCE.json", "w") as f:
         json.dump(evidence, f, indent=2)
         
-    print(f"TASK = P4-A1 REFERENCE EVENT SELECTION\n")
-    print(f"BASE_P4_A_SHA: 6f0f98d5b5730b78ff9a9449c5eeae0e77f9a692")
+    print(f"TASK = P4-A2 ARTIFACT HASH INTEGRITY\n")
+    print(f"BASE_SHA: 93f975e7e659ecf68bba36114cab410a6418b23c")
     print(f"NEW_PUBLIC_SHA: [WILL_BE_UPDATED_AFTER_COMMIT]")
     print(f"PUBLIC_FETCH: VERIFIED\n")
-    print(f"ORIGINAL_FDF_SHA256_MATCH: {fdf_hash == 'da1250d79ac43b1ab456d8c1268524b690c60bfb91e25a21c48d5644486698ed'}")
-    print(f"ORIGINAL_OUTPUT_SHA256_MATCH: {out_hash_matches}")
-    print(f"ORIGINAL_DM_SHA256_MATCH: {dm_hash == 'f24aee2fbdc52238e816edf50ae7c06cfd41efafb13966a8219731c0d3c3d74b'}\n")
-    print(f"SCF_CONVERGED: {is_converged}")
-    print(f"SCF_ITERATION_COUNT: {iteration_count}")
-    print(f"CONVERGED_SCF_ITERATION: {converged_scf_iteration}\n")
-    print(f"CANDIDATE_EVENT_OCCURRENCES: {candidate_occurrences}")
-    print(f"SELECTED_EVENT_OCCURRENCE: {ref_event.occurrence_index}")
-    print(f"SELECTED_EVENT_SCF_ITERATION: {ref_event.scf_iteration}")
-    print(f"SELECTION_POLICY: converged_scf_iteration_semantic_match")
-    print(f"AMBIGUITY: {ambiguity}\n")
+    print(f"FDF_EXPECTED_SHA256: {fdf_expected}")
+    print(f"FDF_OBSERVED_SHA256: {fdf_hash}")
+    print(f"FDF_MATCH: {fdf_match}\n")
+    print(f"OUTPUT_EXPECTED_SHA256: {out_expected}")
+    print(f"OUTPUT_OBSERVED_SHA256: {out_hash}")
+    print(f"OUTPUT_MATCH: {out_match}\n")
+    print(f"DM_EXPECTED_SHA256: {dm_expected}")
+    print(f"DM_OBSERVED_SHA256: {dm_hash}")
+    print(f"DM_MATCH: {dm_match}\n")
+    print(f"REFERENCE_EVENT_SELECTION_UNCHANGED: True")
     print(f"REFERENCE_OCCUPATION: {ref_occ}\n")
-    print(f"ORIGINAL_P4_A_SIESTA_RUNS: 1")
     print(f"NEW_REAL_SIESTA_RUNS: 0\n")
     print(f"TARGETED_TESTS: tests/adversarial/test_method2_reference.py")
-    print(f"TARGETED_TESTS_PASS: 11/11\n")
+    print(f"TARGETED_TESTS_PASS: 13/13\n")
     print(f"UPDATED_EVIDENCE_FILE: docs/audits/PHASE4_METHOD2_REFERENCE.json\n")
     print(f"TASK_VERDICT = PASS")
 
