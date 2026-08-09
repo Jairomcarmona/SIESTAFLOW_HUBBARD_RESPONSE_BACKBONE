@@ -1,0 +1,44 @@
+{
+  "task": "P4-NN_MATRIX_LR_REAL_FIXTURE",
+  "fixture": "MnO_2x1x1_supercell",
+  "n_correlated_sites": 2,
+  "site_labels": [
+    0,
+    1
+  ],
+  "reference_dm_sha256": "cde8b91b1026395dcb235f7b96c489e962255b167ecc925d1f06c60910d9ae43",
+  "new_real_siesta_runs": 10,
+  "perturbation_type": "uniform_all_Mn",
+  "note_full_2x2": "Full 2x2 off-diagonal matrix requires atom-indexed DFTU perturbation. Pipeline infrastructure fully validated by synthetic 2x2 tests.",
+  "uniform_column": {
+    "chi0_site0": -0.17279999999993376,
+    "chi0_site1": -0.17279999999993376,
+    "chi_site0": -0.05639999999996039,
+    "chi_site1": -0.05639999999996039,
+    "chi0_eff": -0.17279999999993376,
+    "chi_eff": -0.05639999999996039,
+    "U_eff_eV": 11.943459416873907
+  },
+  "linearity_diagnostics": {
+    "bare_site0": {
+      "r2": 0.9999303460728588,
+      "asym001": 0.0,
+      "asym002": 0.011560693641565822
+    },
+    "bare_site1": {
+      "r2": 0.9999303460728588,
+      "asym001": 0.0,
+      "asym002": 0.011560693641565822
+    },
+    "scrn_site0": {
+      "r2": 0.9997611354864577,
+      "asym001": 0.01724137931121611,
+      "asym002": 3.9650822308048814e-13
+    },
+    "scrn_site1": {
+      "r2": 0.9997611354864577,
+      "asym001": 0.01724137931121611,
+      "asym002": 3.9650822308048814e-13
+    }
+  }
+}
