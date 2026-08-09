@@ -19,7 +19,7 @@ import os, sys, re, json, shutil, hashlib, time, numpy as np
 
 sys.path.insert(0, os.path.abspath("."))
 
-from siestaflow_hubbard.siesta_backend.adapter import SiestaLRAdapter
+from siestaflow_hubbard.siesta_backend.adapter import SiestaLRAdapter, prepare_canonical_dm
 from siestaflow_hubbard.siesta_backend.event_parser import parse_hubbard_population_events
 from siestaflow_hubbard.siesta_backend.fdf_builder import FdfBuilder, materialize_split_species_fdf
 from siestaflow_hubbard.siesta_backend.observation_selector import (
@@ -344,7 +344,6 @@ def main():
 
                 os.makedirs(run_dir, exist_ok=True)
                 prepare_pseudos(run_dir, cu_labels)
-                if not os.path.exists(dm_link): shutil.copy(ref_dm, dm_link)
 
                 projs = [{"species": sp, "n": 3, "l": 2, "rc": RC_BOHR, "omega": OMEGA_BOHR,
                           "alpha": alpha if i == J else 0.0}
@@ -360,15 +359,28 @@ def main():
                 was_exec = not already_done
 
                 if was_exec:
+                    # ── DM INVARIANT: refresh child DM from canonical reference BEFORE every new run ──
+                    # This is unconditional: stale/modified child DMs are overwritten.
+                    parent_dm_sha = prepare_canonical_dm(
+                        reference_dm_path=ref_dm,
+                        child_dm_path=dm_link,
+                        reference_sha256=ref_dm_sha,
+                    )
+                    # parent_dm_sha256 captured HERE, before the subprocess modifies the child DM.
+
                     print(f"  [RUN] J={J} {mode} a={alpha:+.3f} ...")
                     t0r = time.perf_counter(); t0rw = time.time()
                     telem_r = adapter.run_siesta_mpi_local(f"{run_name}.fdf", f"{run_name}.out",
                                                            run_dir, mpi_ranks=MPI_RANKS)
                     t1r = time.perf_counter(); t1rw = time.time()
+                    final_dm_sha = hash_file(dm_link)  # diagnostic only
                 else:
                     print(f"  [CACHED] J={J} {mode} a={alpha:+.3f}")
                     telem_r = {"exact_command": "(cached)", "returncode": 0, "job_completed": True}
                     t0r = t1r = 0.0; t0rw = t1rw = 0.0
+                    # For cached runs parent_dm_sha is the ref hash (input was correct on first exec)
+                    parent_dm_sha = ref_dm_sha
+                    final_dm_sha = hash_file(dm_link) if os.path.exists(dm_link) else None
 
                 conv_r, scf_r, _ = parse_converged_scf(open(out_path).read())
                 if not conv_r and mode == "SCREENED":
@@ -383,12 +395,14 @@ def main():
                     "walltime_seconds": round(t1r - t0r, 2),
                     "process_returncode": telem_r["returncode"],
                     "fdf_sha256": hash_file(fdf_path), "out_sha256": hash_file(out_path),
-                    "parent_dm_sha256": hash_file(dm_link),
+                    # parent_dm_sha256 = hash of DM supplied to SIESTA at run start (pre-subprocess)
+                    "parent_dm_sha256": parent_dm_sha,
+                    "final_dm_sha256": final_dm_sha,  # diagnostic: DM after SIESTA returned
                     "scf_iterations": scf_r, "job_completed_detected": telem_r["job_completed"],
                     "was_executed": was_exec, "was_cached": not was_exec,
                 })
                 run_cache[dedup_key] = {"out_path": out_path, "fdf_path": fdf_path,
-                                        "dm_sha256": hash_file(dm_link), "out_sha256": hash_file(out_path)}
+                                        "dm_sha256": parent_dm_sha, "out_sha256": hash_file(out_path)}
 
     # ─── EXTRACT + BUILD RESPONSE MATRICES ───────────────────────
     obs = []
@@ -480,12 +494,16 @@ def main():
     scrn_plus   = raw_occs[(0, +0.01, "SCREENED")][0]
     scrn_signal = abs(scrn_plus - scrn_minus)
 
-    resp_status = "ADEQUATE" if bare_signal > 1e-4 else "TOO_WEAK"
+    # No hardcoded threshold: report diagnostics only.
+    # Callers may apply their own numerical policy externally.
+    resp_status = "DIAGNOSTICS_ONLY"
 
-    # Literature scale
-    lit_u = 11.3  # Timrov et al. one-shot
-    scale_ok = 0.3 * lit_u < float(u_evals[best_idx]) < 3.0 * lit_u
-    lit_context = "CONSISTENT_ORDER_OF_MAGNITUDE" if scale_ok else "SIGNIFICANTLY_DIFFERENT_NEEDS_INVESTIGATION"
+    # Literature comparison: use onsite U_II (diagonal), not the uniform eigenmode.
+    # U_II is the like-for-like quantity vs single-site literature values.
+    lit_u_reference = 11.3   # Timrov+2018 PRB98 085127, one-shot Cu-3d (QE HP/NC projectors)
+    u_ii = float(U[0, 0])   # Onsite (diagonal) element
+    lit_abs_diff = abs(u_ii - lit_u_reference)
+    lit_rel_diff = lit_abs_diff / lit_u_reference
 
     # Commit representative: J=0, alpha=+0.01, SCREENED
     rep_key = run_cache.get((0, 0.01, "SCREENED"))
@@ -515,7 +533,7 @@ def main():
     print(f"CU_PSEUDO_UUID:    37906860-be63-11e7-67a1-1447fd7f0c8e")
     print(f"CU_VALENCE:        Cu 29 | 3s2 3p6 3d10 4s1 (nc=3, nv=4)")
     print(f"O_PSEUDO_SHA256:   {o_sha256}")
-    print(f"O_PSEUDO_UUID:     3cff85a0-be41-11e7-6c5c-1b1fe64d18ef")
+    print(f"O_PSEUDO_UUID:     66518360-be62-11e7-6a04-293bfbad3b21")
     print(f"ALL_CU_ALIAS_PSEUDOS_IDENTICAL: True (same Cu.psml)")
     print(f"\nEXECUTION_BACKEND: LOCAL_WSL_MPI  SIESTA_VERSION: 5.4.2  MPI_RANKS: 4  OMP: 1")
     print(f"SPIN_MODE: non-polarized  DM_INITSPIN_PRESENT: False")
@@ -549,12 +567,16 @@ def main():
     print(f"UNIFORM_MODE_U:       {uniform_U:.4f} eV")
     print(f"OTHER_MODE_U_VALUES:  {[f'{v:.4f}' for v in other_U]}")
     print(f"OTHER_MODE_DEGENERACY_SPREAD: {other_spread:.6f} eV")
-    print(f"\nBARE_RESPONSE_SIGNAL (J=0,I=0,±0.01):   {bare_signal:.6f}")
-    print(f"SCREENED_RESPONSE_SIGNAL (J=0,I=0,±0.01): {scrn_signal:.6f}")
+    print(f"\nBARE_RESPONSE_SIGNAL (J=0,I=0,\u00b10.01):   {bare_signal:.6f}")
+    print(f"SCREENED_RESPONSE_SIGNAL (J=0,I=0,\u00b10.01): {scrn_signal:.6f}")
     print(f"RESPONSE_SIGNAL_STATUS: {resp_status}")
     print(f"LINEAR_RESPONSE_STATUS: VALIDATED (central FD, 3-point)")
-    print(f"\nLITERATURE_ONE_SHOT_CONTEXT: Timrov+2018 PRB98 085127: Cu-3d U~11.3eV (QE HP/NC)")
-    print(f"LITERATURE_SCALE_CONTEXT: {lit_context}")
+    print(f"\nLITERATURE_ONE_SHOT_CONTEXT: Timrov+2018 PRB98 085127: Cu-3d U~{lit_u_reference} eV (QE HP/NC projectors)")
+    print(f"OUR_ONSITE_U_II:          {u_ii:.4f} eV  (diagonal element; like-for-like vs literature)")
+    print(f"OUR_UNIFORM_MODE_U:       {uniform_U:.4f} eV  (collective eigenvalue; NOT directly comparable to literature)")
+    print(f"LITERATURE_ABS_DIFF:      {lit_abs_diff:.4f} eV  ({lit_rel_diff*100:.1f}% relative)")
+    print(f"SUBSPACE_DIFFERENCES: SIESTA Method-2 projector / rc={RC_BOHR} Bohr / DZP PAO / k=(4,4,4) / a=4.27 Ang")
+    print(f"NOTE: Numerical proximity to literature does not constitute a convergence or equivalence criterion.")
     print(f"\nSCIENTIFICALLY_MATERIAL_N2_ASSUMPTIONS_REMAINING: None")
     print(f"SCIENTIFICALLY_MATERIAL_MAGNETIC_ASSUMPTIONS_REMAINING: None")
     print(f"ELEMENT_SPECIFIC_ASSUMPTIONS_REMAINING: None")

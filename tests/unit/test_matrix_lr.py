@@ -726,3 +726,110 @@ recalculating Hamiltonian
     # printed_total = printed_up + printed_up = 8.8
     assert abs(atom.printed_total_trace - 2 * 5 * 0.88) < 1e-6
 
+
+# ─────────────────── DM Invariant Tests ────────────────────────────────────
+
+def test_dm_invariant_stale_child_overwritten(tmp_path):
+    """
+    Test A: stale child DM must be overwritten before every new execution.
+
+    Scenario:
+      reference.DM = canonical bytes A
+      child.DM     = stale bytes B  (from a prior failed/modified run)
+
+    After prepare_canonical_dm():
+      child.DM content and SHA256 == reference.DM
+    """
+    import hashlib
+    from siestaflow_hubbard.siesta_backend.adapter import prepare_canonical_dm
+
+    ref_dm   = tmp_path / "reference.DM"
+    child_dm = tmp_path / "child.DM"
+
+    canonical_bytes = b"canonical_dm_data_AAAA"
+    stale_bytes     = b"stale_modified_dm_BBBB"
+
+    ref_dm.write_bytes(canonical_bytes)
+    child_dm.write_bytes(stale_bytes)   # stale state before new run
+
+    ref_sha = hashlib.sha256(canonical_bytes).hexdigest()
+
+    # Must overwrite stale child unconditionally
+    returned_sha = prepare_canonical_dm(
+        reference_dm_path=str(ref_dm),
+        child_dm_path=str(child_dm),
+        reference_sha256=ref_sha,
+    )
+
+    # Child must now contain canonical bytes
+    assert child_dm.read_bytes() == canonical_bytes, "Stale child DM was not overwritten"
+    assert returned_sha == ref_sha, "Returned SHA must match reference"
+    assert hashlib.sha256(child_dm.read_bytes()).hexdigest() == ref_sha
+
+
+def test_dm_invariant_manifest_hash_is_prerun(tmp_path):
+    """
+    Test B: parent_dm_sha256 in manifest must equal the PRE-RUN reference DM hash,
+    not the hash of the DM after SIESTA has modified it.
+
+    Simulates:
+      1. reference DM -> child DM  (prepare_canonical_dm)
+      2. Record parent_dm_sha256 = returned hash (pre-run)
+      3. Simulate SIESTA modifying the child DM
+      4. Verify manifest.parent_dm_sha256 != final child hash
+         but == canonical reference hash
+    """
+    import hashlib
+    from siestaflow_hubbard.siesta_backend.adapter import prepare_canonical_dm
+
+    ref_dm   = tmp_path / "reference.DM"
+    child_dm = tmp_path / "child.DM"
+
+    canonical_bytes  = b"canonical_reference_dm_bytes"
+    post_run_bytes   = b"siesta_has_modified_this_dm_after_scf"
+
+    ref_dm.write_bytes(canonical_bytes)
+    ref_sha = hashlib.sha256(canonical_bytes).hexdigest()
+
+    # Step 1+2: prepare and record BEFORE subprocess
+    parent_dm_sha256 = prepare_canonical_dm(
+        reference_dm_path=str(ref_dm),
+        child_dm_path=str(child_dm),
+        reference_sha256=ref_sha,
+    )
+
+    # Step 3: simulate SIESTA modifying the child DM
+    child_dm.write_bytes(post_run_bytes)
+    final_dm_sha = hashlib.sha256(post_run_bytes).hexdigest()
+
+    # Step 4: parent_dm_sha256 must be the PRE-RUN canonical hash
+    assert parent_dm_sha256 == ref_sha, (
+        "parent_dm_sha256 must equal canonical reference hash (pre-run)"
+    )
+    assert parent_dm_sha256 != final_dm_sha, (
+        "parent_dm_sha256 must NOT equal post-run child hash"
+    )
+
+
+def test_dm_invariant_raises_on_corrupt_source(tmp_path):
+    """
+    prepare_canonical_dm must raise RuntimeError if the copied child hash
+    does not match the supplied reference_sha256 (source corruption guard).
+    """
+    import hashlib
+    from siestaflow_hubbard.siesta_backend.adapter import prepare_canonical_dm
+
+    ref_dm   = tmp_path / "reference.DM"
+    child_dm = tmp_path / "child.DM"
+
+    real_bytes   = b"real_dm_content"
+    wrong_sha256 = "0" * 64   # deliberately wrong expected hash
+
+    ref_dm.write_bytes(real_bytes)
+
+    with pytest.raises(RuntimeError, match="Parent DM identity mismatch"):
+        prepare_canonical_dm(
+            reference_dm_path=str(ref_dm),
+            child_dm_path=str(child_dm),
+            reference_sha256=wrong_sha256,
+        )

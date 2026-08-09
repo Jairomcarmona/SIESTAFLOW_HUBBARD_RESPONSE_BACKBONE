@@ -1,5 +1,7 @@
+import hashlib
 import os
 import re
+import shutil
 import subprocess
 from typing import Dict, Any, List, Optional
 import sys
@@ -13,6 +15,65 @@ from siestaflow_hubbard.domain.exceptions import (
 )
 from siestaflow_hubbard.synthetic_backend.population_generator import OccupationRecord
 from siestaflow_hubbard.domain.interfaces import BaseBackendAdapter
+
+
+def prepare_canonical_dm(
+    reference_dm_path: str,
+    child_dm_path: str,
+    reference_sha256: str,
+) -> str:
+    """
+    Enforce the parent-DM execution invariant for a linear-response perturbation run.
+
+    Scientific rule:
+        All perturbations belonging to the same LR campaign must start
+        from the same canonical reference DM.
+
+    This function must be called BEFORE every real subprocess execution,
+    unconditionally, regardless of whether a prior child DM already exists.
+
+    Steps
+    -----
+    1. Copy the canonical reference DM -> child DM path (overwrite any stale child).
+    2. Hash the child DM immediately after the copy.
+    3. Assert the hash matches the expected reference hash.
+    4. Return the verified hash (to be recorded as parent_dm_sha256 in manifest).
+
+    Parameters
+    ----------
+    reference_dm_path : str
+        Absolute path to the canonical reference DM (produced by the unperturbed run).
+    child_dm_path : str
+        Absolute path where the child DM should be placed before the run.
+    reference_sha256 : str
+        Pre-computed SHA256 of the reference DM.  Used to detect any source corruption.
+
+    Returns
+    -------
+    str
+        SHA256 of the child DM immediately after copy (== reference_sha256 on success).
+
+    Raises
+    ------
+    RuntimeError
+        If the post-copy child hash does not equal the reference hash.
+    """
+    shutil.copy2(reference_dm_path, child_dm_path)
+
+    with open(child_dm_path, "rb") as fh:
+        child_sha = hashlib.sha256(fh.read()).hexdigest()
+
+    if child_sha != reference_sha256:
+        raise RuntimeError(
+            f"Parent DM identity mismatch after copy.\n"
+            f"  Reference: {reference_sha256}\n"
+            f"  Child:     {child_sha}\n"
+            f"  Source:    {reference_dm_path}\n"
+            f"  Dest:      {child_dm_path}"
+        )
+
+    return child_sha
+
 
 
 class SiestaLRAdapter(BaseBackendAdapter):
