@@ -33,6 +33,7 @@ class LRScientificConfiguration:
     Complete scientific specification for a Linear Response campaign.
 
     Supports arbitrary N correlated sites and arbitrary materials.
+    Unit semantics for DFTU.proj method-2 are explicitly declared in Bohr.
     """
     system_label: str
     structure_summary: dict                 # e.g. {"lattice_constant": 4.445, "atoms": 4}
@@ -45,10 +46,24 @@ class LRScientificConfiguration:
     supercell: tuple[int, int, int]         # e.g. (2, 1, 1)
     projector_n: int = 3
     projector_l: int = 2
-    projector_rc: float = 3.0               # Angstroms
-    projector_omega: float = 0.05           # Angstroms
+    projector_rc_bohr: float = 3.0          # SIESTA Method-2 unit: Bohr
+    projector_omega_bohr: float = 0.05      # SIESTA Method-2 unit: Bohr
+    projector_units: str = "Bohr"
+    pao_energy_shift_ry: float = 0.02       # Ry
+    pao_split_norm: float = 0.15
+    pao_basis_type: str = "split"
     alpha_grid: list[float] = field(default_factory=lambda: [-0.02, -0.01, 0.00, 0.01, 0.02])
     spin_configuration: str = "polarized"
+
+    @property
+    def projector_rc(self) -> float:
+        """Backward-compatibility property returning projector_rc_bohr."""
+        return self.projector_rc_bohr
+
+    @property
+    def projector_omega(self) -> float:
+        """Backward-compatibility property returning projector_omega_bohr."""
+        return self.projector_omega_bohr
 
     def n_sites(self) -> int:
         return len(self.correlated_sites)
@@ -68,8 +83,12 @@ class LRScientificConfiguration:
             "supercell": list(self.supercell),
             "projector_n": self.projector_n,
             "projector_l": self.projector_l,
-            "projector_rc": float(self.projector_rc),
-            "projector_omega": float(self.projector_omega),
+            "projector_rc_bohr": float(self.projector_rc_bohr),
+            "projector_omega_bohr": float(self.projector_omega_bohr),
+            "projector_units": self.projector_units,
+            "pao_energy_shift_ry": float(self.pao_energy_shift_ry),
+            "pao_split_norm": float(self.pao_split_norm),
+            "pao_basis_type": self.pao_basis_type,
             "alpha_grid": [float(a) for a in self.alpha_grid],
             "spin_configuration": self.spin_configuration,
         }
@@ -92,8 +111,12 @@ class LRScientificConfiguration:
             "supercell": list(self.supercell),
             "projector_n": self.projector_n,
             "projector_l": self.projector_l,
-            "projector_rc": float(self.projector_rc),
-            "projector_omega": float(self.projector_omega),
+            "projector_rc_bohr": float(self.projector_rc_bohr),
+            "projector_omega_bohr": float(self.projector_omega_bohr),
+            "projector_units": self.projector_units,
+            "pao_energy_shift_ry": float(self.pao_energy_shift_ry),
+            "pao_split_norm": float(self.pao_split_norm),
+            "pao_basis_type": self.pao_basis_type,
             "spin_configuration": self.spin_configuration,
         }
         json_str = json.dumps(payload, sort_keys=True)
@@ -204,7 +227,8 @@ def generate_single_dimension_scan(
     """
     valid_params = {
         "mesh_cutoff_ry", "kgrid", "basis_size", "supercell",
-        "projector_rc", "projector_omega", "alpha_grid"
+        "projector_rc", "projector_omega", "projector_rc_bohr", "projector_omega_bohr",
+        "pao_energy_shift_ry", "pao_split_norm", "pao_basis_type", "alpha_grid"
     }
     if param_name not in valid_params:
         raise ValueError(
