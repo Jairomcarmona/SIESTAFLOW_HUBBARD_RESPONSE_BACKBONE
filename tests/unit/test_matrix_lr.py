@@ -443,3 +443,90 @@ def test_element_diagnostics_r2_exact_linear():
         assert d.fit_full.r_squared >= 0.9999, (
             f"R²={d.fit_full.r_squared} for (I={d.obs_site}, J={d.pert_site}, mode={d.mode})"
         )
+
+
+def test_split_species_fdf_materialization():
+    """materialize_split_species_fdf must produce MnLR0 and MnLR1 with correct species labels and atom counts."""
+    from siestaflow_hubbard.siesta_backend.fdf_builder import materialize_split_species_fdf
+    base_fdf = """
+SystemName Base Test
+SystemLabel Base
+NumberOfAtoms 4
+NumberOfSpecies 2
+%block ChemicalSpeciesLabel
+ 1  25  Mn
+ 2   8  O
+%endblock ChemicalSpeciesLabel
+%block AtomicCoordinatesAndAtomicSpecies
+ 0.00  0.00  0.00  1
+ 0.50  0.00  0.00  1
+ 0.25  0.50  0.50  2
+ 0.75  0.50  0.50  2
+%endblock AtomicCoordinatesAndAtomicSpecies
+"""
+    new_fdf, species_labels = materialize_split_species_fdf(base_fdf, target_species="Mn", new_prefix="MnLR")
+    assert species_labels == ["MnLR0", "MnLR1"]
+    assert "MnLR0" in new_fdf
+    assert "MnLR1" in new_fdf
+    assert "NumberOfSpecies 3" in new_fdf or "NumberOfSpecies  3" in new_fdf
+
+
+def test_uniform_mode_reconstruction_from_2x2_matrix():
+    """
+    Uniform mode reconstruction: row sums (chi0_00 + chi0_01) and (chi_00 + chi_01)
+    must equal the response under uniform perturbation [alpha, alpha].
+    """
+    chi0 = np.array([[-0.6170, 0.4436], [0.4436, -0.6170]])
+    chi  = np.array([[-0.0698, 0.0139], [0.0139, -0.0698]])
+
+    # Row sum = uniform response
+    chi0_u_row0 = chi0[0, 0] + chi0[0, 1]
+    chi_u_row0  = chi[0, 0] + chi[0, 1]
+
+    assert abs(chi0_u_row0 - (-0.1734)) < 1e-4
+    assert abs(chi_u_row0 - (-0.0559)) < 1e-4
+
+    v_u = np.array([1.0, 1.0]) / np.sqrt(2.0)
+    U_mat = np.linalg.inv(chi0) - np.linalg.inv(chi)
+    U_u_proj = float(v_u.T @ U_mat @ v_u)
+
+    # Reconstructed uniform U must be close to 12.12 eV (and close to 11.94 eV scalar)
+    assert abs(U_u_proj - 12.1221) < 0.01
+
+
+def test_real_observations_enter_production_nxn_engine():
+    """
+    Real 2×2 MnO measurements passed into analyze_matrix_response_campaign(...)
+    must produce full-rank U_matrix with off-diagonal terms U_01 == U_10 == 0.55875 eV.
+    """
+    # Actual measured values from the 2×2 campaign
+    mno_2x2_chi0 = np.array([[-0.617000, 0.443600], [0.443600, -0.617000]])
+    mno_2x2_chi  = np.array([[-0.069800, 0.013900], [0.013900, -0.069800]])
+
+    alpha_grid = [-0.02, -0.01, 0.00, 0.01, 0.02]
+    site_labels = [0, 1]
+    n_ref = [5.41803, 5.41803]
+
+    obs = []
+    for J_idx, J in enumerate(site_labels):
+        for alpha in alpha_grid:
+            occ_bare = [n_ref[I] + mno_2x2_chi0[I, J_idx] * alpha for I in range(2)]
+            occ_scrn = [n_ref[I] + mno_2x2_chi[I, J_idx] * alpha for I in range(2)]
+            obs.append(ResponseObservation(
+                perturbation_site=J,
+                alpha=alpha,
+                site_labels=site_labels,
+                occupations_ref=n_ref,
+                occupations_bare=occ_bare,
+                occupations_screened=occ_scrn,
+            ))
+
+    result = analyze_matrix_response_campaign(obs)
+
+    assert result.matrix_status == "FULL_RANK"
+    assert result.U_matrix is not None
+    assert abs(result.U_matrix[0, 0] - 11.56332) < 0.01
+    assert abs(result.U_matrix[1, 1] - 11.56332) < 0.01
+    assert abs(result.U_matrix[0, 1] - 0.55875) < 0.01
+    assert abs(result.U_matrix[1, 0] - 0.55875) < 0.01
+

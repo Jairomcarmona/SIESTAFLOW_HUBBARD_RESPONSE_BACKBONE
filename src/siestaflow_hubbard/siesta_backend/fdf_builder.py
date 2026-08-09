@@ -51,24 +51,23 @@ class FdfBuilder:
         with open(path, "w", encoding="utf-8", newline='\n') as f:
             f.write(content)
 
-    def construct_dftu_proj_block(self, projections: List[Dict], alpha: float) -> str:
+    def construct_dftu_proj_block(self, projections: List[Dict], alpha: float = 0.0) -> str:
         """
         Constructs the DFTU.proj block enforcing the 4-line method-2 format.
-        For linear response, U is strictly mapped to alpha, and J is strictly 0.0.
+        If a projection dict contains 'alpha' or 'U', that value is used for that species;
+        otherwise the parameter `alpha` is used as fallback.
         """
-        blocks = []
-        # Group projections by species (assuming 1 block per species)
         species_map = {}
         for proj_dict in projections:
             sp = proj_dict.get("species", "Mn")
             if sp not in species_map:
                 species_map[sp] = []
             
-            # Map U to alpha and J to 0 for linear response
+            u_val = proj_dict.get("alpha", proj_dict.get("U", alpha))
             proj = DftuProjector(
                 n=proj_dict.get("n", 3),
                 l=proj_dict.get("l", 2),
-                U=alpha,  # LINEAR RESPONSE CONTRACT
+                U=u_val,  # LINEAR RESPONSE CONTRACT
                 J=0.0,    # LINEAR RESPONSE CONTRACT
                 rc=proj_dict.get("rc", 3.0),
                 omega=proj_dict.get("omega", 0.05),
@@ -418,3 +417,147 @@ class FdfBuilder:
             "COMPARISON": "ALL_MATCH" if passed else "MISMATCH_DETECTED",
             "RESULT": "PASS" if passed else "FAIL"
         }
+
+
+def materialize_split_species_fdf(
+    content: str,
+    target_species: str = "Mn",
+    new_prefix: str = "MnLR",
+) -> tuple[str, list[str]]:
+    """
+    Splits all atoms of `target_species` in FDF content into distinct species aliases:
+    f"{new_prefix}0", f"{new_prefix}1", ..., f"{new_prefix}{N-1}".
+
+    Returns (modified_fdf_content, list_of_new_species_labels).
+    Supports arbitrary N.
+    """
+    # 1. Parse ChemicalSpeciesLabel to find species index and atomic number for target_species
+    spec_block_m = re.search(
+        r"%block\s+ChemicalSpeciesLabel(.*?)%endblock\s+ChemicalSpeciesLabel",
+        content, flags=re.DOTALL | re.IGNORECASE
+    )
+    if not spec_block_m:
+        raise ValueError("ChemicalSpeciesLabel block not found in FDF content")
+
+    spec_lines = [l.strip() for l in spec_block_m.group(1).splitlines() if l.strip()]
+    target_spec_idx = None
+    target_atomic_number = None
+    other_species = []  # list of (idx, atomic_num, label)
+
+    for line in spec_lines:
+        parts = line.split()
+        if len(parts) >= 3:
+            s_idx = int(parts[0])
+            s_z = int(parts[1])
+            s_label = parts[2]
+            if s_label == target_species or (target_species in s_label and s_z == 25):
+                target_spec_idx = s_idx
+                target_atomic_number = s_z
+            else:
+                other_species.append((s_idx, s_z, s_label))
+
+    if target_spec_idx is None:
+        raise ValueError(f"Target species '{target_species}' not found in ChemicalSpeciesLabel")
+
+    # 2. Parse AtomicCoordinatesAndAtomicSpecies to find all target species atoms
+    coords_block_m = re.search(
+        r"%block\s+AtomicCoordinatesAndAtomicSpecies(.*?)%endblock\s+AtomicCoordinatesAndAtomicSpecies",
+        content, flags=re.DOTALL | re.IGNORECASE
+    )
+    if not coords_block_m:
+        raise ValueError("AtomicCoordinatesAndAtomicSpecies block not found in FDF content")
+
+    coords_lines = coords_block_m.group(1).splitlines()
+    target_atom_indices = []
+    parsed_atoms = []
+
+    for line in coords_lines:
+        sline = line.strip()
+        if not sline or sline.startswith("#"):
+            continue
+        code_part = sline.split("#")[0].strip()
+        parts = code_part.split()
+        if len(parts) >= 4:
+            x, y, z, s_idx = parts[0], parts[1], parts[2], int(parts[3])
+            parsed_atoms.append((x, y, z, s_idx, line))
+            if s_idx == target_spec_idx:
+                target_atom_indices.append(len(parsed_atoms) - 1)
+
+    N = len(target_atom_indices)
+    if N == 0:
+        raise ValueError(f"No atoms with species index {target_spec_idx} found in coordinates")
+
+    new_species_labels = [f"{new_prefix}{i}" for i in range(N)]
+
+    # 3. Build new species table
+    # Indices 1..N: MnLR0..MnLR(N-1)
+    # Index N+1..: other species
+    new_spec_lines = ["%block ChemicalSpeciesLabel"]
+    for i, label in enumerate(new_species_labels, start=1):
+        new_spec_lines.append(f" {i:2d}  {target_atomic_number:2d}  {label}")
+
+    old_to_new_spec_idx = {}
+    next_idx = N + 1
+    for old_idx, z, label in other_species:
+        old_to_new_spec_idx[old_idx] = next_idx
+        new_spec_lines.append(f" {next_idx:2d}  {z:2d}  {label}")
+        next_idx += 1
+
+    new_spec_lines.append("%endblock ChemicalSpeciesLabel")
+    new_spec_block_str = "\n".join(new_spec_lines)
+
+    # 4. Build new coordinates block
+    new_coords_lines = ["%block AtomicCoordinatesAndAtomicSpecies"]
+    target_counter = 0
+    for x, y, z, s_idx, orig_line in parsed_atoms:
+        if s_idx == target_spec_idx:
+            new_s_idx = target_counter + 1  # 1..N
+            label_comment = new_species_labels[target_counter]
+            target_counter += 1
+        else:
+            new_s_idx = old_to_new_spec_idx[s_idx]
+            label_comment = "O" if new_s_idx > N else "other"
+
+        new_coords_lines.append(f"  {x:>10}  {y:>10}  {z:>10}   {new_s_idx:2d}   # {label_comment}")
+
+    new_coords_lines.append("%endblock AtomicCoordinatesAndAtomicSpecies")
+    new_coords_block_str = "\n".join(new_coords_lines)
+
+    # 5. Build new DM.InitSpin if present
+    new_spin_block_str = ""
+    spin_block_m = re.search(
+        r"%block\s+DM\.InitSpin(.*?)%endblock\s+DM\.InitSpin",
+        content, flags=re.DOTALL | re.IGNORECASE
+    )
+    if spin_block_m:
+        spin_lines = ["%block DM.InitSpin"]
+        # Give +5.0 to MnLR sites, 0.0 to others
+        for i in range(1, N + 1):
+            spin_lines.append(f" {i:2d} +5.0")
+        for i in range(N + 1, next_idx):
+            spin_lines.append(f" {i:2d}  0.0")
+        spin_lines.append("%endblock DM.InitSpin")
+        new_spin_block_str = "\n".join(spin_lines)
+
+    # 6. Replace blocks in content
+    new_content = content
+    new_content = re.sub(
+        r"%block\s+ChemicalSpeciesLabel.*?%endblock\s+ChemicalSpeciesLabel",
+        new_spec_block_str, new_content, flags=re.DOTALL | re.IGNORECASE
+    )
+    new_content = re.sub(
+        r"%block\s+AtomicCoordinatesAndAtomicSpecies.*?%endblock\s+AtomicCoordinatesAndAtomicSpecies",
+        new_coords_block_str, new_content, flags=re.DOTALL | re.IGNORECASE
+    )
+    if spin_block_m and new_spin_block_str:
+        new_content = re.sub(
+            r"%block\s+DM\.InitSpin.*?%endblock\s+DM\.InitSpin",
+            new_spin_block_str, new_content, flags=re.DOTALL | re.IGNORECASE
+        )
+
+    # Update NumberOfSpecies
+    builder = FdfBuilder()
+    new_content = builder.replace_or_append_fdf_key(new_content, "NumberOfSpecies", str(next_idx - 1))
+
+    return new_content, new_species_labels
+
