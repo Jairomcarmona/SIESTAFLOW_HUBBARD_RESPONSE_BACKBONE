@@ -1,0 +1,99 @@
+{
+  "task": "P4-C_SCALAR_LR_PIPELINE",
+  "validation_system": "MnO",
+  "reference_dm_sha256": "f24aee2fbdc52238e816edf50ae7c06cfd41efafb13966a8219731c0d3c3d74b",
+  "projector_fingerprint": "3e53915648cdce6991c6e0ecc89febb14db0fd2a98f2aa5eb89d1fed5c654ab7",
+  "new_real_siesta_runs": 0,
+  "observation_table": [
+    {
+      "alpha": -0.02,
+      "n_ref": 5.37225,
+      "n0": 5.52855,
+      "n": 5.37418,
+      "parent_dm_sha256": "f24aee2fbdc52238e816edf50ae7c06cfd41efafb13966a8219731c0d3c3d74b",
+      "projector_fingerprint": "3e53915648cdce6991c6e0ecc89febb14db0fd2a98f2aa5eb89d1fed5c654ab7",
+      "bare_fdf_sha256": "a9f8d554a68d231914b432197f55c1af05af5a8348bd34df1c5dead6347246b5",
+      "bare_out_sha256": "c26424e6628c6d6fec322f72a1bd2610db3cf0cd4e7081f602cbcfda6130d99a",
+      "screened_fdf_sha256": "75b3047300f172cc46e244a63b95a756e1c90ffe01a0bb6213dc10f0a2f5bd97",
+      "screened_out_sha256": "3935f47ca4e0e6f27b78be305432528147d166d5d49e6cc1a67085d99d9a7eeb"
+    },
+    {
+      "alpha": -0.01,
+      "n_ref": 5.37225,
+      "n0": 5.44335,
+      "n": 5.3732,
+      "parent_dm_sha256": "f24aee2fbdc52238e816edf50ae7c06cfd41efafb13966a8219731c0d3c3d74b",
+      "projector_fingerprint": "3e53915648cdce6991c6e0ecc89febb14db0fd2a98f2aa5eb89d1fed5c654ab7",
+      "bare_fdf_sha256": "4ac4aa76dcbc8baf7a81779aee943efc9ad7944777107f499e5360fbd7c18782",
+      "bare_out_sha256": "47e600420ab43549148dcf153163689ab9405e1c2caf3d1bd1bfc2c8b6469e99",
+      "screened_fdf_sha256": "dc5a3e91eed6dd42165305c472b7b40bf903fa872aafdca42a0c3fb78b1234eb",
+      "screened_out_sha256": "f4708d92959783eadbaf673d170489e7bc22618c173337c246bfb96c75c36afa"
+    },
+    {
+      "alpha": 0.0,
+      "n_ref": 5.37225,
+      "n0": 5.36834,
+      "n": 5.37214,
+      "parent_dm_sha256": "f24aee2fbdc52238e816edf50ae7c06cfd41efafb13966a8219731c0d3c3d74b",
+      "projector_fingerprint": "3e53915648cdce6991c6e0ecc89febb14db0fd2a98f2aa5eb89d1fed5c654ab7",
+      "bare_fdf_sha256": "d87e1004359f05117be201f0cded2aff17db7d12e0121f1674b3b406430f9e21",
+      "bare_out_sha256": "a092bf12da4f0406712850511018bd842da687670d066940b32ed434937cfc6b",
+      "screened_fdf_sha256": "c35dfac051dabf26f6ef640298b78e17c0007f8e373bed629c1b52b1c7bf287d",
+      "screened_out_sha256": "b7ee9bf38571bd645d369f45878bf341408e9e632f68ce29a062709f4386c258"
+    },
+    {
+      "alpha": 0.01,
+      "n_ref": 5.37225,
+      "n0": 5.30277,
+      "n": 5.37113,
+      "parent_dm_sha256": "f24aee2fbdc52238e816edf50ae7c06cfd41efafb13966a8219731c0d3c3d74b",
+      "projector_fingerprint": "3e53915648cdce6991c6e0ecc89febb14db0fd2a98f2aa5eb89d1fed5c654ab7",
+      "bare_fdf_sha256": "c36651e314f1f606bd5e2b1a14d691e87540bd9029163971b1591fad01f636ee",
+      "bare_out_sha256": "ae2a057c1da5e8c25c546138bc0a6788397670df7fdac1a1b1f41d7100e9db2f",
+      "screened_fdf_sha256": "851264973d5355e1844ad73b1b44a2cd0c843683c644bc6ebfd70101e0873cd9",
+      "screened_out_sha256": "c63e7898fa08fc9d6006e9929de14451c10f812fd8074cd39aae409482ac531c"
+    },
+    {
+      "alpha": 0.02,
+      "n_ref": 5.37225,
+      "n0": 5.24581,
+      "n": 5.37007,
+      "parent_dm_sha256": "f24aee2fbdc52238e816edf50ae7c06cfd41efafb13966a8219731c0d3c3d74b",
+      "projector_fingerprint": "3e53915648cdce6991c6e0ecc89febb14db0fd2a98f2aa5eb89d1fed5c654ab7",
+      "bare_fdf_sha256": "abc114f21061689d5f2b6d5a3644e9e7be7e93dcbbd394f2d0cb6c1d41813820",
+      "bare_out_sha256": "f5e48e493ed5c59b29b7ba48bd95c9ef9f75c92b40490bcfda8924568e767233",
+      "screened_fdf_sha256": "f3aa676e2daf631f9d3e76cb87c8ffadd9470ea516726a5e50d391a98ec87740",
+      "screened_out_sha256": "4aa17ccb547ec0477c1e8bb76df823401de2f33a2d541c56d53a125ece3baf3b"
+    }
+  ],
+  "bare": {
+    "chi0_full": -7.060599999999963,
+    "chi0_inner": -7.028999999999968,
+    "chi0_rel_diff": 0.004475540322351488,
+    "R2_full": 0.9938073769725706,
+    "max_abs_residual_full": 0.009574000000001526,
+    "asymmetry_001": 0.06715037700952964,
+    "asymmetry_002": 0.13326731272547174
+  },
+  "screened": {
+    "chi_full": -0.10289999999995691,
+    "chi_inner": -0.1034999999999992,
+    "chi_rel_diff": 0.005830903790500876,
+    "R2_full": 0.9998385287418864,
+    "max_abs_residual_full": 2.700000000022129e-05,
+    "asymmetry_001": 0.02415458937192678,
+    "asymmetry_002": 0.00729927007293276
+  },
+  "u_values": {
+    "U_full_eV": 9.576541960623928,
+    "U_inner_eV": 9.519568000890795,
+    "U_abs_diff": 0.05697395973313313,
+    "U_rel_diff": 0.005949324919933957
+  },
+  "diagnostics": {
+    "n_ref_spread": 0.0,
+    "restart_drift": -0.003910000000000302,
+    "screened_alpha0_drift": -0.00011000000000027654
+  },
+  "scientific_verdict": "WINDOW_DEPENDENT"
+}
