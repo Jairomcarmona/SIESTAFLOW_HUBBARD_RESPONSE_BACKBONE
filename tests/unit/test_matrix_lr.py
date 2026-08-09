@@ -471,6 +471,71 @@ NumberOfSpecies 2
     assert "NumberOfSpecies 3" in new_fdf or "NumberOfSpecies  3" in new_fdf
 
 
+def test_split_species_ni_dminitspin_preserved():
+    """
+    Regression: DM.InitSpin must be preserved exactly through a Ni->NiLR0/NiLR1 split.
+    The splitter must NOT regenerate spin values from Mn assumptions or any atomic-number logic.
+    """
+    from siestaflow_hubbard.siesta_backend.fdf_builder import materialize_split_species_fdf
+    base_fdf = """
+SystemName NiO Test
+NumberOfAtoms 4
+NumberOfSpecies 2
+%block ChemicalSpeciesLabel
+ 1  28  Ni
+ 2   8  O
+%endblock ChemicalSpeciesLabel
+%block AtomicCoordinatesAndAtomicSpecies
+ 0.00  0.00  0.00  1
+ 0.50  0.00  0.00  1
+ 0.25  0.50  0.50  2
+ 0.75  0.50  0.50  2
+%endblock AtomicCoordinatesAndAtomicSpecies
+%block DM.InitSpin
+ 1 +2.0
+ 2 -2.0
+ 3  0.0
+ 4  0.0
+%endblock DM.InitSpin
+"""
+    new_fdf, species_labels = materialize_split_species_fdf(base_fdf, target_species="Ni", new_prefix="NiLR")
+    assert species_labels == ["NiLR0", "NiLR1"]
+    assert "NiLR0" in new_fdf
+    assert "NiLR1" in new_fdf
+    # DM.InitSpin must be EXACTLY preserved: atom 1 = +2.0, atom 2 = -2.0
+    assert " 1 +2.0" in new_fdf, "DM.InitSpin atom 1 must remain +2.0 (antiferromagnetic NiLR0)"
+    assert " 2 -2.0" in new_fdf, "DM.InitSpin atom 2 must remain -2.0 (antiferromagnetic NiLR1)"
+    assert " 3  0.0" in new_fdf, "DM.InitSpin atom 3 (O) must remain 0.0"
+    assert " 4  0.0" in new_fdf, "DM.InitSpin atom 4 (O) must remain 0.0"
+    # Must NOT contain Mn-specific +5.0 spin initialization
+    assert "+5.0" not in new_fdf, "Mn-specific +5.0 spin must NOT appear for Ni system"
+
+
+def test_split_species_arbitrary_atomic_number():
+    """
+    Regression: materialize_split_species_fdf must work for any atomic number,
+    not just Z=25 (Mn). Fe (Z=26) must split correctly.
+    """
+    from siestaflow_hubbard.siesta_backend.fdf_builder import materialize_split_species_fdf
+    base_fdf = """
+NumberOfAtoms 2
+NumberOfSpecies 2
+%block ChemicalSpeciesLabel
+ 1  26  Fe
+ 2   8  O
+%endblock ChemicalSpeciesLabel
+%block AtomicCoordinatesAndAtomicSpecies
+ 0.00  0.00  0.00  1
+ 0.25  0.50  0.50  2
+%endblock AtomicCoordinatesAndAtomicSpecies
+"""
+    new_fdf, species_labels = materialize_split_species_fdf(base_fdf, target_species="Fe", new_prefix="FeLR")
+    assert species_labels == ["FeLR0"]
+    assert "FeLR0" in new_fdf
+    # Atomic number 26 must be preserved
+    assert " 26 " in new_fdf or "  26  " in new_fdf
+
+
 def test_uniform_mode_reconstruction_from_2x2_matrix():
     """
     Uniform mode reconstruction: row sums (chi0_00 + chi0_01) and (chi_00 + chi_01)

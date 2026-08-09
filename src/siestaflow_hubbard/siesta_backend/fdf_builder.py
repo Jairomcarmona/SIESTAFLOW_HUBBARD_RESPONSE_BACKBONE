@@ -450,7 +450,7 @@ def materialize_split_species_fdf(
             s_idx = int(parts[0])
             s_z = int(parts[1])
             s_label = parts[2]
-            if s_label == target_species or (target_species in s_label and s_z == 25):
+            if s_label == target_species:
                 target_spec_idx = s_idx
                 target_atomic_number = s_z
             else:
@@ -523,21 +523,19 @@ def materialize_split_species_fdf(
     new_coords_lines.append("%endblock AtomicCoordinatesAndAtomicSpecies")
     new_coords_block_str = "\n".join(new_coords_lines)
 
-    # 5. Build new DM.InitSpin if present
+    # 5. Preserve DM.InitSpin exactly.
+    # The species split reorders species labels but does NOT reorder atoms.
+    # Therefore atom indices in DM.InitSpin remain identical and the block
+    # must not be regenerated. Magnetic initialization belongs to the material
+    # configuration, not the generic species splitter.
     new_spin_block_str = ""
     spin_block_m = re.search(
         r"%block\s+DM\.InitSpin(.*?)%endblock\s+DM\.InitSpin",
         content, flags=re.DOTALL | re.IGNORECASE
     )
     if spin_block_m:
-        spin_lines = ["%block DM.InitSpin"]
-        # Give +5.0 to MnLR sites, 0.0 to others
-        for i in range(1, N + 1):
-            spin_lines.append(f" {i:2d} +5.0")
-        for i in range(N + 1, next_idx):
-            spin_lines.append(f" {i:2d}  0.0")
-        spin_lines.append("%endblock DM.InitSpin")
-        new_spin_block_str = "\n".join(spin_lines)
+        # Preserve verbatim – no regeneration
+        new_spin_block_str = spin_block_m.group(0)
 
     # 6. Replace blocks in content
     new_content = content
