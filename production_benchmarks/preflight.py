@@ -100,6 +100,10 @@ def check_pseudopotential_files(mat: str, mat_cfg: Dict[str, Any],
             )
             continue
 
+        if not os.path.isfile(found) or os.path.getsize(found) <= 0:
+            failures.append(f"[{mat}] {sp}: PSML is empty or not a regular file: {found}")
+            continue
+
         found_paths[sp] = found
 
         # SHA256 check
@@ -236,8 +240,10 @@ def check_slurm_profile(campaign_dir: str, failures: List[str]) -> None:
         if field not in p:
             failures.append(f"Slurm profile missing required field: {field}")
     sb = p.get('siesta_binary', '')
-    if not sb:
-        failures.append("Slurm profile: siesta_binary is empty")
+    if not sb or '/path/to/siesta' in sb:
+        failures.append("Slurm profile: siesta_binary is empty or a prohibited placeholder")
+    if p.get('mpi_launcher') in ('', 'srun'):
+        failures.append("Slurm profile: explicit verified MPI launcher is required")
     nt = p.get('ntasks_total', 0)
     nodes = p.get('nodes', 1)
     if nodes > 0 and nt % nodes != 0:
@@ -345,9 +351,8 @@ def run_preflight(campaign_dir: str,
 
     print("[ ] Checking pseudopotential files, SHA256, and PSML UUIDs...")
     for mat, cfg in mat_cfgs.items():
-        # Check in pseudos/<mat>/ or pseudos/
-        mat_pseudo_dirs = pseudo_dirs + [os.path.join(campaign_dir, 'pseudos', mat)]
-        check_pseudopotential_files(mat, cfg, mat_pseudo_dirs, failures)
+        # Canonical root is the only production pseudo authority.
+        check_pseudopotential_files(mat, cfg, pseudo_dirs, failures)
 
     print("[ ] Validating geometries from coordinates...")
     for mat, cfg in mat_cfgs.items():

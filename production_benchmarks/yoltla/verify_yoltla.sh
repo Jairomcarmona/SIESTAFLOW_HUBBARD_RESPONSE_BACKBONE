@@ -1,28 +1,20 @@
 #!/bin/bash
-# Yoltla pre-campaign verification
-set -e
+# Run on Yoltla before sbatch; this script never launches SIESTA calculations.
+set -euo pipefail
 echo '=== YOLTLA ENVIRONMENT VERIFICATION ==='
-# Check SIESTA binary
-SIESTA=${SIESTA_BIN:-$(which siesta 2>/dev/null || echo 'NOT_FOUND')}
-if [ -x "$SIESTA" ]; then
-  VER=$($SIESTA --version 2>&1 | head -1 || echo 'unknown')
-  echo "SIESTA_BINARY: $SIESTA"
-  echo "SIESTA_VERSION_STRING: $VER"
-else
-  echo "SIESTA_BINARY: NOT_FOUND"
-fi
-# Check MPI
-MPIRUN=$(which mpirun 2>/dev/null || which srun 2>/dev/null || echo NOT_FOUND)
-echo "MPI_LAUNCHER: $MPIRUN"
-# Check scratch
+module avail siesta 2>&1 || true
+module load siesta/5.4.2-intel-oneapi
+SIESTA=${SIESTA_BIN:-$(command -v siesta || true)}
+MPI=${MPI_LAUNCHER:-$(command -v mpiexec.hydra || true)}
+[ -n "$SIESTA" ] && [ -x "$SIESTA" ] || { echo 'SIESTA_BINARY: NOT_FOUND'; exit 1; }
+[ -n "$MPI" ] && [ -x "$MPI" ] || { echo 'MPI_LAUNCHER: NOT_FOUND'; exit 1; }
+echo "SIESTA_BINARY: $SIESTA"
+"$SIESTA" --version || "$SIESTA" -v || true
+echo "MPI_LAUNCHER: $MPI"
+ldd "$SIESTA" | grep -E 'mpi|ifcore|mkl' || true
 SCRATCH=${SCRATCH_BASE:-/scratch/$USER}
-mkdir -p $SCRATCH && echo "SCRATCH_WRITABLE: True" || echo "SCRATCH_WRITABLE: False"
-# Check pseudopotentials
+mkdir -p "$SCRATCH" && echo 'SCRATCH_WRITABLE: True' || { echo 'SCRATCH_WRITABLE: False'; exit 1; }
 for PSML in Fe.psml Ni.psml Cu.psml O.psml N.psml; do
-  if [ -f "pseudos/$PSML" ]; then
-    echo "PSEUDO_$PSML: PRESENT"
-  else
-    echo "PSEUDO_$PSML: MISSING"
-  fi
+  [ -s "pseudos/$PSML" ] && echo "PSEUDO_$PSML: PRESENT" || { echo "PSEUDO_$PSML: MISSING"; exit 1; }
 done
 echo '=== VERIFICATION COMPLETE ==='

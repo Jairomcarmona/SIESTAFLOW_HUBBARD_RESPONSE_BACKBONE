@@ -1710,8 +1710,18 @@ def test_rc0_missing_occupations_rejected(tmp_path):
 def test_valid_bare_nonconverged_accepted(tmp_path):
     """Test P: BARE mode with returncode 0 and occupation data is ACCEPTED even if SCF did not converge."""
     out_file = tmp_path / 'siesta.out'
-    out_file.write_text("siesta: Normal completion\nSCF: NOT CONVERGED\nMulliken population analysis\n")
+    out_file.write_text("""siesta: Normal completion
+SCF: NOT CONVERGED
+hubbard_term: recalculating local occupations 1
+  hubbard_term: atom, species:    1    1
+    1    1    0.6000   0.2000
+    Occupations:   0.6000   0.2000   0.8000
+  hubbard_term: atom, species:    2    1
+    1    1    0.2000   0.6000
+    Occupations:   0.2000   0.6000   0.8000
+recalculating Hamiltonian
+""")
 
-    mat_cfg = {'spin_mode': 'collinear_polarized'}
+    mat_cfg = {'spin_mode': 'collinear_polarized', 'n_correlated_sites': 2}
     res = verify_siesta_run_semantics(str(out_file), 'BARE', mat_cfg)
     assert res['passed'] is True

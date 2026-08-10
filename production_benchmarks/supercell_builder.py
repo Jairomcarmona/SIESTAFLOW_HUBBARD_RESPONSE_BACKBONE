@@ -115,21 +115,18 @@ def assign_afm_ordering(
     new_lat   = np.asarray(new_lat,   dtype=float)
     prim_lat  = np.asarray(prim_lat,  dtype=float)
 
-    n_plane = np.array([1.0, 1.0, 1.0]) / np.sqrt(3.0)
-    # Estimate d(111) interplanar spacing from primitive lattice
-    d_111 = float(np.linalg.norm(prim_lat[0])) / np.sqrt(3.0)
-    if d_111 < 0.5:
-        d_111 = 2.0
-
     spins = []
     for frac, label in zip(new_fracs, new_labels):
         if label != target_species:
             spins.append(0.0)
             continue
 
-        cart = new_lat.T @ frac
-        proj = float(np.dot(cart, n_plane))
-        plane_index = int(round(proj / d_111))
+        # The material lattice vectors are expressed in conventional-rocksalt
+        # crystallographic units.  R_x+R_y+R_z indexes successive (111)
+        # cation planes: the AFM-II wavevector is [111], hence parity is the
+        # phase.  This remains valid for any integer supercell transformation.
+        cart = frac @ new_lat
+        plane_index = int(round(float(np.sum(cart))))
         sign = 1.0 if (plane_index % 2 == 0) else -1.0
         spins.append(sign * moment_magnitude)
 

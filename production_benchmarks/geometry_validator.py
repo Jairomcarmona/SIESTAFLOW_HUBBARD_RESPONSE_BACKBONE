@@ -99,34 +99,33 @@ def verify_afm_ii_ordering(cation_fracs: np.ndarray,
     if abs(total_spin) > tol:
         errors.append(f"Total magnetization {total_spin:.4f} not near zero for AFM")
 
-    # Physical (111)-plane verification
+    # Physical (111)-plane verification.  These material cells use
+    # conventional-rocksalt crystallographic coordinates: R_x+R_y+R_z is the
+    # [111] plane coordinate.  Its integer parity is the AFM-II phase.  Do
+    # not infer a plane from the norm of one (possibly rhombohedral) vector.
     cation_fracs = np.asarray(cation_fracs, dtype=float)
     if lat_vectors is None:
         lat_vectors = np.eye(3) * 4.177
     lat_vectors = np.asarray(lat_vectors, dtype=float)
     cart = cation_fracs @ lat_vectors
-
-    # (111) plane normal vector
-    n_plane = np.array([1.0, 1.0, 1.0]) / np.sqrt(3.0)
-
-    # Calculate interplanar spacing d_111
-    # For cubic rocksalt, d_111 = a / sqrt(3).
-    # For rhombohedral cell, d_111 is distance along [111].
-    a_len = float(np.linalg.norm(lat_vectors[0]))
-    d_111 = a_len / np.sqrt(3.0)
-    if d_111 < 0.5:
-        d_111 = 2.0
+    projections = np.asarray([float(np.sum(position)) for position in cart])
+    unique = np.unique(np.round(projections, decimals=10))
+    separations = np.diff(unique)
+    separations = separations[separations > tol]
+    if len(separations) == 0:
+        errors.append('Could not resolve distinct crystallographic (111) cation planes')
+        planes = [0] * len(projections)
+    else:
+        # This is the conventional-cell scale (a), inferred from actual
+        # cation-plane spacing and therefore valid after an integer supercell
+        # expansion as well as for the parent rhombohedral cell.
+        plane_spacing = float(np.min(separations))
+        planes = [int(round(value / plane_spacing)) for value in projections]
 
     n = len(spins)
     for i in range(n):
         for j in range(i + 1, n):
-            diff = cart[i] - cart[j]
-            frac_diff = np.linalg.solve(lat_vectors.T, diff)
-            frac_diff -= np.round(frac_diff)
-            cart_diff = lat_vectors.T @ frac_diff
-            proj = float(np.dot(cart_diff, n_plane))
-
-            plane_diff = int(round(abs(proj) / d_111))
+            plane_diff = abs(planes[i] - planes[j])
             same_sign = (spins[i] > 0 and spins[j] > 0) or (spins[i] < 0 and spins[j] < 0)
 
             # Even plane difference -> parallel spins expected

@@ -6,13 +6,11 @@
   "cpus_per_task": 1,
   "mem_per_node_gb": 64,
   "walltime_hours": 48,
-  "siesta_binary": "/path/to/siesta-5.4.2/bin/siesta",
-  "mpi_launcher": "srun",
-  "mpi_flags": "--mpi=pmix",
+  "siesta_binary": "siesta",
+  "mpi_launcher": "mpiexec.hydra",
+  "mpi_flags": "",
   "module_loads": [
-    "intel/2023",
-    "intelmpi/2023",
-    "siesta/5.4.2"
+    "siesta/5.4.2-intel-oneapi"
   ],
   "scratch_base": "/scratch/$USER/siestaflow_benchmark",
   "max_concurrent_runs": 5,

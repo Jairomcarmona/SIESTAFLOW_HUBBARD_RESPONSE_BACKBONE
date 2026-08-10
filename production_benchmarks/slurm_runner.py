@@ -36,6 +36,28 @@ from production_benchmarks.supercell_builder import (
     build_supercell, assign_afm_ordering, get_afm_supercell_options
 )
 from production_benchmarks.geometry_validator import verify_rocksalt_afm, verify_afm_ii_ordering
+from siestaflow_hubbard.siesta_backend.event_parser import parse_hubbard_population_events
+
+
+def system_label_from_materialized_fdf(fdf_path: str) -> str:
+    """Return the sole SystemLabel declared by an executable, materialized FDF."""
+    import re
+    with open(fdf_path, encoding='utf-8', errors='strict') as fh:
+        content = fh.read()
+    labels = re.findall(r'^\s*SystemLabel\s+([^\s#]+)', content, re.IGNORECASE | re.MULTILINE)
+    if len(labels) != 1:
+        raise ValueError(f"Expected exactly one SystemLabel in {fdf_path}, found {len(labels)}")
+    return labels[0]
+
+
+def sha256_nonempty_file(path: str) -> str:
+    if not os.path.isfile(path) or os.path.getsize(path) <= 0:
+        raise FileNotFoundError(f"Required non-empty file missing: {path}")
+    h = hashlib.sha256()
+    with open(path, 'rb') as fh:
+        for block in iter(lambda: fh.read(1024 * 1024), b''):
+            h.update(block)
+    return h.hexdigest()
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -380,8 +402,8 @@ def generate_lr_run_specs(
     campaign_dir: str,
     alphas: Optional[List[float]] = None,
     mpi_ranks: int = 20,
-    siesta_binary: str = "/path/to/siesta",
-    mpi_launcher: str = "srun",
+    siesta_binary: str = "siesta",
+    mpi_launcher: str = "mpiexec.hydra",
     mpi_flags: str = "",
     pseudo_dir: Optional[str] = None,
     override_effective_params: Optional[Dict[str, Any]] = None,
@@ -395,7 +417,7 @@ def generate_lr_run_specs(
     - Concrete convergence stage overrides (ENERGY_SHIFT_SCREEN, MESH_SCREEN, KPOINT_SCREEN, etc.).
     """
     material = mat_cfg.get('name', 'FeO')
-    ps_dir   = pseudo_dir or os.path.join(campaign_dir, 'pseudos', material.lower())
+    ps_dir   = pseudo_dir or os.path.join(campaign_dir, 'pseudos')
     pseudos  = mat_cfg.get('pseudopotentials', {})
 
     pseudo_paths = {}
@@ -506,6 +528,34 @@ def generate_lr_run_specs(
                     n_sites=n_sites, identity=identity, mat_cfg=mat_cfg, effective_params=effective_params
                 ))
 
+    return specs
+
+
+def generate_convergence_stage_specs(
+    material_config: Dict[str, Any], stage: str, campaign_dir: str,
+    reference_dm: Optional[str] = None, **kwargs: Any,
+) -> List[RunSpec]:
+    """Single authority for real convergence candidates declared in material.json."""
+    key = stage.upper().replace('_SCREEN', '')
+    aliases = {'ENERGY_SHIFT': 'energy_shift_ry', 'MESH': 'mesh_cutoff_ry',
+               'KPOINT': 'kgrid', 'PROJECTOR_RC': 'projector_rc_bohr',
+               'SUPERCELL': 'supercell', 'ALPHA': 'alpha_ev'}
+    dimension = aliases.get(key, key.lower())
+    step = next((x for x in material_config.get('convergence_sequence', [])
+                 if x.get('dimension') == dimension), None)
+    if step is None:
+        raise ValueError(f"No convergence_sequence entry for {stage} ({dimension})")
+    if reference_dm is not None and os.path.abspath(reference_dm) != os.path.abspath(
+            os.path.join(campaign_dir, 'materials', material_config['name'].lower(), 'reference.DM')):
+        raise ValueError('reference_dm must be the campaign canonical reference.DM')
+    specs: List[RunSpec] = []
+    for value in step['values']:
+        candidate_kwargs = dict(kwargs)
+        if dimension == 'alpha_ev':
+            alpha = float(value)
+            candidate_kwargs['alphas'] = [-alpha, 0.0, alpha]
+        specs.extend(generate_lr_run_specs(material_config, stage, campaign_dir,
+            override_effective_params={dimension: value}, **candidate_kwargs))
     return specs
 
 
@@ -651,19 +701,29 @@ def verify_siesta_run_semantics(
     if 'siesta: Normal completion' not in text:
         return {'passed': False, 'reason': 'SIESTA normal completion banner missing'}
 
-    is_magnetic = ('polarized' in mat_cfg.get('spin_mode', '')) and ('non' not in mat_cfg.get('spin_mode', ''))
-
-    if response_mode.upper() in ('SCREENED', 'REFERENCE'):
+    mode = response_mode.upper()
+    if mode in ('SCREENED', 'REFERENCE'):
         if 'scf: not converged' in text.lower():
-            return {'passed': False, 'reason': 'SCREENED calculation did not converge SCF'}
+            return {'passed': False, 'reason': f'{mode} calculation did not converge SCF'}
 
-        # Correlated occupations check
-        if 'mulliken' not in text.lower() and 'population' not in text.lower() and 'dftu' not in text.lower():
-            return {'passed': False, 'reason': 'Correlated occupation data missing in stdout'}
-
-    elif response_mode.upper() == 'BARE':
-        if 'mulliken' not in text.lower() and 'population' not in text.lower() and 'dftu' not in text.lower():
-            return {'passed': False, 'reason': 'BARE occupation data missing in stdout'}
+    # This is deliberately the validated semantic Hubbard parser, never a word match.
+    try:
+        events = parse_hubbard_population_events(text)
+    except Exception as exc:
+        return {'passed': False, 'reason': f'Hubbard occupation parser failed: {exc}'}
+    if not events:
+        return {'passed': False, 'reason': 'Semantic Hubbard occupations missing in stdout'}
+    event = events[-1]
+    expected = int(mat_cfg.get('n_correlated_sites', 0))
+    if expected <= 0 or len(event.atoms) < expected:
+        return {'passed': False, 'reason': f'Expected occupations for {expected} correlated sites, got {len(event.atoms)}'}
+    if not all(atom.validate_traces() for atom in event.atoms[:expected]):
+        return {'passed': False, 'reason': 'Invalid Hubbard occupation trace'}
+    is_magnetic = ('polarized' in mat_cfg.get('spin_mode', '')) and ('non' not in mat_cfg.get('spin_mode', ''))
+    if is_magnetic:
+        moments = [a.trace_up - a.trace_down for a in event.atoms[:expected] if a.raw_matrix_down is not None]
+        if len(moments) != expected or any(abs(x) < 1e-8 for x in moments) or not (min(moments) < 0 < max(moments)):
+            return {'passed': False, 'reason': 'Magnetic AFM Hubbard branch collapsed or changed'}
 
     return {
         'passed': True,
@@ -696,6 +756,8 @@ def generate_slurm_script(
         #SBATCH --time={profile.walltime}
         #SBATCH --output={campaign_dir}/campaign_logs/slurm_%j.out
         #SBATCH --error={campaign_dir}/campaign_logs/slurm_%j.err
+
+        set -euo pipefail
 
         {module_block}
 
@@ -792,8 +854,8 @@ def _build_parser() -> argparse.ArgumentParser:
     p.add_argument('--dag-node',       required=True)
     p.add_argument('--mpi-ranks',      type=int, default=20)
     p.add_argument('--max-concurrent', type=int, default=5)
-    p.add_argument('--siesta-binary',  default='/path/to/siesta')
-    p.add_argument('--mpi-launcher',   default='srun')
+    p.add_argument('--siesta-binary',  default='siesta')
+    p.add_argument('--mpi-launcher',   default='mpiexec.hydra')
     p.add_argument('--mpi-flags',      default='')
     p.add_argument('--dry-run',        action='store_true')
     p.add_argument('--pseudo-dir',     default=None)
@@ -848,18 +910,16 @@ def cli_main(argv: Optional[List[str]] = None) -> int:
                     v_parsed = v
                 override_params[k] = v_parsed
 
-    run_specs = generate_lr_run_specs(
-        mat_cfg=mat_cfg,
-        dag_node=dag_node,
-        campaign_dir=campaign_dir,
-        alphas=args.alpha,
-        mpi_ranks=mpi_ranks,
-        siesta_binary=siesta,
-        mpi_launcher=launcher,
-        mpi_flags=mpi_flags,
-        pseudo_dir=args.pseudo_dir,
-        override_effective_params=override_params if override_params else None,
-    )
+    common_spec_args = dict(alphas=args.alpha, mpi_ranks=mpi_ranks,
+        siesta_binary=siesta, mpi_launcher=launcher, mpi_flags=mpi_flags,
+        pseudo_dir=args.pseudo_dir)
+    if dag_node.upper().endswith('_SCREEN'):
+        run_specs = generate_convergence_stage_specs(mat_cfg, dag_node, campaign_dir,
+            **common_spec_args)
+    else:
+        run_specs = generate_lr_run_specs(mat_cfg=mat_cfg, dag_node=dag_node,
+            campaign_dir=campaign_dir, override_effective_params=override_params or None,
+            **common_spec_args)
 
     if dry_run:
         print(f"DRY RUN: {len(run_specs)} runs generated for {material}/{dag_node}")
@@ -912,15 +972,24 @@ def cli_main(argv: Optional[List[str]] = None) -> int:
                     'identity_key': s.identity_key,
                     'stdout_sha256': sem_result.get('stdout_sha256', ''),
                 }
-                state.mark_complete(s.identity_key, meta)
                 if s.response_mode == 'REFERENCE':
                     dest_dm = os.path.join(campaign_dir, 'materials', material.lower(), 'reference.DM')
-                    src_dm  = os.path.join(s.work_dir, 'siesta.DM')
-                    if os.path.exists(src_dm):
+                    try:
+                        system_label = system_label_from_materialized_fdf(s.fdf_path)
+                        src_dm = os.path.join(s.work_dir, f'{system_label}.DM')
+                        source_sha = sha256_nonempty_file(src_dm)
                         shutil.copy2(src_dm, dest_dm)
-                        with open(dest_dm, 'rb') as rfh:
-                            r_sha = hashlib.sha256(rfh.read()).hexdigest()
-                        state.set_reference_dm(r_sha)
+                        canonical_sha = sha256_nonempty_file(dest_dm)
+                        if source_sha != canonical_sha:
+                            raise RuntimeError('Canonical reference DM SHA256 mismatch')
+                    except Exception as exc:
+                        state.mark_failed(s.identity_key, f'Reference DM validation failed: {exc}')
+                        return 1
+                    else:
+                        meta.update({'system_label': system_label, 'source_dm_sha256': source_sha,
+                                     'canonical_dm_sha256': canonical_sha})
+                        state.set_reference_dm(canonical_sha)
+                state.mark_complete(s.identity_key, meta)
                 return 0
             else:
                 reason = sem_result.get('reason', f'process rc={rc}')
