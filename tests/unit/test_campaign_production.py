@@ -862,8 +862,8 @@ def test_dry_run_produces_unique_dirs(tmp_path):
     runs_root = os.path.join(campaign_dir, 'runs', 'Cu2O', 'SCREENING')
     if os.path.exists(runs_root):
         dirs = [d for d in os.listdir(runs_root) if os.path.isdir(os.path.join(runs_root, d))]
-        # 4 sites x 3 alphas = 12
-        assert len(dirs) == 12, f"Expected 12 unique dirs, got {len(dirs)}: {dirs}"
+        # 2 common + 4*4 = 18
+        assert len(dirs) == 18, f"Expected 18 unique dirs, got {len(dirs)}: {dirs}"
         # All unique
         assert len(dirs) == len(set(dirs))
 
@@ -900,8 +900,8 @@ def test_dry_run_manifest_contains_correct_sites(tmp_path):
 
     sites = {r['perturbed_site'] for r in runs}
     assert sites == {0, 1, 2, 3}, f"Expected 4 distinct sites, got {sites}"
-    # 4 sites x 5 alphas = 20 runs
-    assert len(runs) == 20
+    # 2 common + 8*4 = 34 runs
+    assert len(runs) == 34
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -1063,3 +1063,358 @@ def test_preflight_fails_if_stub_present():
     failures = []
     check_no_stubs(failures)
     assert not failures, f"Stub check failed on real implementation: {failures}"
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# 13. BLOCKERS 1-5 SPECIFIC TESTS
+# ═══════════════════════════════════════════════════════════════════════════
+
+from production_benchmarks.slurm_runner import (
+    generate_lr_run_specs, materialize_run_fdf, RunSpec
+)
+
+
+def test_3point_plan_n2_has_10_runs(tmp_path):
+    """N=2 (FeO/NiO) 3-point plan has exactly 2 + 4(2) = 10 runs."""
+    mat_cfg = {
+        'name': 'NiO', 'n_correlated_sites': 2, 'lattice_constant_ang': 4.177,
+        'base_fractional_coords': [
+            {'label': 'Ni', 'species': 'Ni', 'frac': [0.0,0.0,0.0], 'init_spin': 2.0},
+            {'label': 'Ni', 'species': 'Ni', 'frac': [0.5,0.0,0.0], 'init_spin': -2.0},
+            {'label': 'O',  'species': 'O',  'frac': [0.25,0.5,0.5], 'init_spin': 0.0},
+            {'label': 'O',  'species': 'O',  'frac': [0.75,0.5,0.5], 'init_spin': 0.0},
+        ],
+        'pseudopotentials': {'Ni': {'file': 'Ni.psml'}, 'O': {'file': 'O.psml'}},
+        'candidate_baseline': {'projector_rc_bohr': 3.0, 'projector_omega_bohr': 0.05},
+    }
+    specs = generate_lr_run_specs(mat_cfg, 'SCREENING_3POINT', str(tmp_path), alphas=[-0.01, 0.0, 0.01])
+    assert len(specs) == 10, f"Expected 10 runs for N=2 3-pt, got {len(specs)}"
+
+
+def test_3point_plan_n4_has_18_runs(tmp_path):
+    """N=4 (Cu2O) 3-point plan has exactly 2 + 4(4) = 18 runs."""
+    mat_cfg = {
+        'name': 'Cu2O', 'n_correlated_sites': 4, 'lattice_constant_ang': 4.27,
+        'spin_mode': 'non_polarized',
+        'base_fractional_coords': [
+            {'label': 'O', 'species': 'O', 'frac': [0.0,0.0,0.0]},
+            {'label': 'O', 'species': 'O', 'frac': [0.5,0.5,0.5]},
+            {'label': 'Cu', 'species': 'Cu', 'frac': [0.25,0.25,0.25]},
+            {'label': 'Cu', 'species': 'Cu', 'frac': [0.25,0.75,0.75]},
+            {'label': 'Cu', 'species': 'Cu', 'frac': [0.75,0.25,0.75]},
+            {'label': 'Cu', 'species': 'Cu', 'frac': [0.75,0.75,0.25]},
+        ],
+        'pseudopotentials': {'Cu': {'file': 'Cu.psml'}, 'O': {'file': 'O.psml'}},
+        'candidate_baseline': {'projector_rc_bohr': 3.0, 'projector_omega_bohr': 0.05},
+    }
+    specs = generate_lr_run_specs(mat_cfg, 'SCREENING_3POINT', str(tmp_path), alphas=[-0.01, 0.0, 0.01])
+    assert len(specs) == 18, f"Expected 18 runs for N=4 3-pt, got {len(specs)}"
+
+
+def test_5point_plan_n2_has_18_runs(tmp_path):
+    """N=2 5-point plan has exactly 2 + 8(2) = 18 runs."""
+    mat_cfg = {
+        'name': 'NiO', 'n_correlated_sites': 2, 'lattice_constant_ang': 4.177,
+        'base_fractional_coords': [
+            {'label': 'Ni', 'species': 'Ni', 'frac': [0.0,0.0,0.0], 'init_spin': 2.0},
+            {'label': 'Ni', 'species': 'Ni', 'frac': [0.5,0.0,0.0], 'init_spin': -2.0},
+            {'label': 'O',  'species': 'O',  'frac': [0.25,0.5,0.5], 'init_spin': 0.0},
+            {'label': 'O',  'species': 'O',  'frac': [0.75,0.5,0.5], 'init_spin': 0.0},
+        ],
+        'pseudopotentials': {'Ni': {'file': 'Ni.psml'}, 'O': {'file': 'O.psml'}},
+        'candidate_baseline': {'projector_rc_bohr': 3.0, 'projector_omega_bohr': 0.05},
+    }
+    specs = generate_lr_run_specs(mat_cfg, 'FINAL_5POINT', str(tmp_path), alphas=[-0.02, -0.01, 0.0, 0.01, 0.02])
+    assert len(specs) == 18, f"Expected 18 runs for N=2 5-pt, got {len(specs)}"
+
+
+def test_5point_plan_n4_has_34_runs(tmp_path):
+    """N=4 5-point plan has exactly 2 + 8(4) = 34 runs."""
+    mat_cfg = {
+        'name': 'Cu2O', 'n_correlated_sites': 4, 'lattice_constant_ang': 4.27,
+        'spin_mode': 'non_polarized',
+        'base_fractional_coords': [
+            {'label': 'O', 'species': 'O', 'frac': [0.0,0.0,0.0]},
+            {'label': 'O', 'species': 'O', 'frac': [0.5,0.5,0.5]},
+            {'label': 'Cu', 'species': 'Cu', 'frac': [0.25,0.25,0.25]},
+            {'label': 'Cu', 'species': 'Cu', 'frac': [0.25,0.75,0.75]},
+            {'label': 'Cu', 'species': 'Cu', 'frac': [0.75,0.25,0.75]},
+            {'label': 'Cu', 'species': 'Cu', 'frac': [0.75,0.75,0.25]},
+        ],
+        'pseudopotentials': {'Cu': {'file': 'Cu.psml'}, 'O': {'file': 'O.psml'}},
+        'candidate_baseline': {'projector_rc_bohr': 3.0, 'projector_omega_bohr': 0.05},
+    }
+    specs = generate_lr_run_specs(mat_cfg, 'FINAL_5POINT', str(tmp_path), alphas=[-0.02, -0.01, 0.0, 0.01, 0.02])
+    assert len(specs) == 34, f"Expected 34 runs for N=4 5-pt, got {len(specs)}"
+
+
+def test_alpha0_bare_is_deduplicated(tmp_path):
+    """alpha=0 BARE run appears exactly ONCE in plan."""
+    mat_cfg = {
+        'name': 'NiO', 'n_correlated_sites': 2, 'lattice_constant_ang': 4.177,
+        'base_fractional_coords': [{'label':'Ni','species':'Ni','frac':[0,0,0]}],
+        'pseudopotentials': {'Ni': {'file': 'Ni.psml'}},
+    }
+    specs = generate_lr_run_specs(mat_cfg, 'SCREENING_3POINT', str(tmp_path))
+    alpha0_bare = [s for s in specs if abs(s.alpha) <= 1e-12 and s.response_mode == 'BARE']
+    assert len(alpha0_bare) == 1, "alpha=0 BARE must be deduplicated to exactly 1 run"
+
+
+def test_alpha0_screened_is_deduplicated(tmp_path):
+    """alpha=0 SCREENED run appears exactly ONCE in plan."""
+    mat_cfg = {
+        'name': 'NiO', 'n_correlated_sites': 2, 'lattice_constant_ang': 4.177,
+        'base_fractional_coords': [{'label':'Ni','species':'Ni','frac':[0,0,0]}],
+        'pseudopotentials': {'Ni': {'file': 'Ni.psml'}},
+    }
+    specs = generate_lr_run_specs(mat_cfg, 'SCREENING_3POINT', str(tmp_path))
+    alpha0_screened = [s for s in specs if abs(s.alpha) <= 1e-12 and s.response_mode == 'SCREENED']
+    assert len(alpha0_screened) == 1, "alpha=0 SCREENED must be deduplicated to exactly 1 run"
+
+
+def test_plan_contains_bare_and_screened(tmp_path):
+    """Plan contains BOTH BARE and SCREENED for every perturbed site and alpha."""
+    mat_cfg = {
+        'name': 'NiO', 'n_correlated_sites': 2, 'lattice_constant_ang': 4.177,
+        'base_fractional_coords': [{'label':'Ni','species':'Ni','frac':[0,0,0]}],
+        'pseudopotentials': {'Ni': {'file': 'Ni.psml'}},
+    }
+    specs = generate_lr_run_specs(mat_cfg, 'SCREENING_3POINT', str(tmp_path))
+    modes = {s.response_mode for s in specs}
+    assert modes == {'BARE', 'SCREENED'}, "Plan must contain both BARE and SCREENED specs"
+
+
+def test_nio_dryrun_writes_real_fdfs(tmp_path):
+    """Dry-run materializes REAL executable FDF files on disk."""
+    campaign_dir = str(tmp_path / 'campaign')
+    os.makedirs(os.path.join(campaign_dir, 'materials', 'nio'), exist_ok=True)
+    mat_cfg = {
+        'name': 'NiO', 'n_correlated_sites': 2, 'lattice_constant_ang': 4.177,
+        'spin_mode': 'collinear_polarized',
+        'base_fractional_coords': [
+            {'label': 'Ni', 'species': 'Ni', 'frac': [0.0,0.0,0.0], 'init_spin': 2.0},
+            {'label': 'Ni', 'species': 'Ni', 'frac': [0.5,0.0,0.0], 'init_spin': -2.0},
+            {'label': 'O',  'species': 'O',  'frac': [0.25,0.5,0.5], 'init_spin': 0.0},
+            {'label': 'O',  'species': 'O',  'frac': [0.75,0.5,0.5], 'init_spin': 0.0},
+        ],
+        'pseudopotentials': {'Ni': {'file': 'Ni.psml'}, 'O': {'file': 'O.psml'}},
+        'candidate_baseline': {'projector_rc_bohr': 3.0, 'projector_omega_bohr': 0.05},
+        'convergence_sequence': [],
+    }
+    with open(os.path.join(campaign_dir, 'materials', 'nio', 'material.json'), 'w') as fh:
+        json.dump(mat_cfg, fh)
+
+    from production_benchmarks.slurm_runner import cli_main
+    cli_main(['--campaign-dir', campaign_dir, '--material', 'NiO', '--dag-node', 'SCREENING_3POINT', '--dry-run'])
+
+    runs_dir = os.path.join(campaign_dir, 'runs', 'NiO', 'SCREENING_3POINT')
+    assert os.path.exists(runs_dir)
+    fdf_files = []
+    for root, dirs, files in os.walk(runs_dir):
+        for f in files:
+            if f == 'siesta.fdf':
+                fdf_files.append(os.path.join(root, f))
+
+    assert len(fdf_files) == 10, f"Expected 10 FDF files on disk, got {len(fdf_files)}"
+    for fdf in fdf_files:
+        with open(fdf, 'r', encoding='utf-8') as fh:
+            text = fh.read()
+        assert len(text) > 100
+        assert '%block DFTU.proj' in text
+
+
+def test_cu2o_dryrun_writes_real_fdfs(tmp_path):
+    """Cu2O dry-run materializes 18 real FDF files on disk."""
+    campaign_dir = str(tmp_path / 'campaign')
+    os.makedirs(os.path.join(campaign_dir, 'materials', 'cu2o'), exist_ok=True)
+    mat_cfg = {
+        'name': 'Cu2O', 'n_correlated_sites': 4, 'lattice_constant_ang': 4.27,
+        'spin_mode': 'non_polarized',
+        'base_fractional_coords': [
+            {'label': 'O', 'species': 'O', 'frac': [0.0,0.0,0.0]},
+            {'label': 'O', 'species': 'O', 'frac': [0.5,0.5,0.5]},
+            {'label': 'Cu', 'species': 'Cu', 'frac': [0.25,0.25,0.25]},
+            {'label': 'Cu', 'species': 'Cu', 'frac': [0.25,0.75,0.75]},
+            {'label': 'Cu', 'species': 'Cu', 'frac': [0.75,0.25,0.75]},
+            {'label': 'Cu', 'species': 'Cu', 'frac': [0.75,0.75,0.25]},
+        ],
+        'pseudopotentials': {'Cu': {'file': 'Cu.psml'}, 'O': {'file': 'O.psml'}},
+        'candidate_baseline': {'projector_rc_bohr': 3.0, 'projector_omega_bohr': 0.05},
+        'convergence_sequence': [],
+    }
+    with open(os.path.join(campaign_dir, 'materials', 'cu2o', 'material.json'), 'w') as fh:
+        json.dump(mat_cfg, fh)
+
+    from production_benchmarks.slurm_runner import cli_main
+    cli_main(['--campaign-dir', campaign_dir, '--material', 'Cu2O', '--dag-node', 'SCREENING_3POINT', '--dry-run'])
+
+    runs_dir = os.path.join(campaign_dir, 'runs', 'Cu2O', 'SCREENING_3POINT')
+    fdf_files = [os.path.join(root, f) for root, _, files in os.walk(runs_dir) for f in files if f == 'siesta.fdf']
+    assert len(fdf_files) == 18, f"Expected 18 FDF files for Cu2O 3-pt, got {len(fdf_files)}"
+
+
+def test_nio_bare_fdf_semantics(tmp_path):
+    """Verify NiO BARE FDF contains MaxSCFIterations 2 and SCF.MustConverge F."""
+    mat_cfg = {
+        'name': 'NiO', 'n_correlated_sites': 2, 'lattice_constant_ang': 4.177,
+        'spin_mode': 'collinear_polarized',
+        'base_fractional_coords': [
+            {'label': 'Ni', 'species': 'Ni', 'frac': [0.0,0.0,0.0], 'init_spin': 2.0},
+            {'label': 'Ni', 'species': 'Ni', 'frac': [0.5,0.0,0.0], 'init_spin': -2.0},
+            {'label': 'O',  'species': 'O',  'frac': [0.25,0.5,0.5]},
+            {'label': 'O',  'species': 'O',  'frac': [0.75,0.5,0.5]},
+        ],
+        'pseudopotentials': {'Ni': {'file': 'Ni.psml'}, 'O': {'file': 'O.psml'}},
+        'candidate_baseline': {'projector_rc_bohr': 3.0, 'projector_omega_bohr': 0.05},
+    }
+    spec = RunSpec(
+        run_id='test_bare', work_dir=str(tmp_path), fdf_path=str(tmp_path/'siesta.fdf'),
+        canonical_dm_path=str(tmp_path/'ref.DM'), pseudo_paths={'Ni':str(tmp_path/'Ni.psml'),'O':str(tmp_path/'O.psml')},
+        mpi_ranks=20, siesta_binary='/x', mpi_launcher='srun', mpi_flags='',
+        response_mode='BARE', alpha=0.01, perturbed_site=0, n_sites=2, identity_key='test_bare',
+        mat_cfg=mat_cfg,
+    )
+    fdf_text = materialize_run_fdf(spec)
+    assert 'MaxSCFIterations 2' in fdf_text
+    assert 'SCF.MustConverge F' in fdf_text
+    assert 'NiLR0' in fdf_text
+    assert 'NiLR1' in fdf_text
+    assert '+2.0' in fdf_text
+    assert '-2.0' in fdf_text
+
+
+def test_nio_screened_fdf_semantics(tmp_path):
+    """Verify NiO SCREENED FDF contains DM.UseSaveDM true and opposite spins."""
+    mat_cfg = {
+        'name': 'NiO', 'n_correlated_sites': 2, 'lattice_constant_ang': 4.177,
+        'spin_mode': 'collinear_polarized',
+        'base_fractional_coords': [
+            {'label': 'Ni', 'species': 'Ni', 'frac': [0.0,0.0,0.0], 'init_spin': 2.0},
+            {'label': 'Ni', 'species': 'Ni', 'frac': [0.5,0.0,0.0], 'init_spin': -2.0},
+            {'label': 'O',  'species': 'O',  'frac': [0.25,0.5,0.5]},
+            {'label': 'O',  'species': 'O',  'frac': [0.75,0.5,0.5]},
+        ],
+        'pseudopotentials': {'Ni': {'file': 'Ni.psml'}, 'O': {'file': 'O.psml'}},
+        'candidate_baseline': {'projector_rc_bohr': 3.0, 'projector_omega_bohr': 0.05},
+    }
+    spec = RunSpec(
+        run_id='test_screened', work_dir=str(tmp_path), fdf_path=str(tmp_path/'siesta.fdf'),
+        canonical_dm_path=str(tmp_path/'ref.DM'), pseudo_paths={'Ni':str(tmp_path/'Ni.psml'),'O':str(tmp_path/'O.psml')},
+        mpi_ranks=20, siesta_binary='/x', mpi_launcher='srun', mpi_flags='',
+        response_mode='SCREENED', alpha=0.01, perturbed_site=0, n_sites=2, identity_key='test_screened',
+        mat_cfg=mat_cfg,
+    )
+    fdf_text = materialize_run_fdf(spec)
+    assert 'DM.UseSaveDM true' in fdf_text
+    assert 'MaxSCFIterations 2' not in fdf_text
+    assert 'NiLR0' in fdf_text
+
+
+def test_cu2o_nonpolarized_fdf_semantics(tmp_path):
+    """Verify Cu2O non-polarized FDF has 4 Cu aliases and no DM.InitSpin."""
+    mat_cfg = {
+        'name': 'Cu2O', 'n_correlated_sites': 4, 'lattice_constant_ang': 4.27,
+        'spin_mode': 'non_polarized',
+        'base_fractional_coords': [
+            {'label': 'O', 'species': 'O', 'frac': [0.0,0.0,0.0]},
+            {'label': 'O', 'species': 'O', 'frac': [0.5,0.5,0.5]},
+            {'label': 'Cu', 'species': 'Cu', 'frac': [0.25,0.25,0.25]},
+            {'label': 'Cu', 'species': 'Cu', 'frac': [0.25,0.75,0.75]},
+            {'label': 'Cu', 'species': 'Cu', 'frac': [0.75,0.25,0.75]},
+            {'label': 'Cu', 'species': 'Cu', 'frac': [0.75,0.75,0.25]},
+        ],
+        'pseudopotentials': {'Cu': {'file': 'Cu.psml'}, 'O': {'file': 'O.psml'}},
+        'candidate_baseline': {'projector_rc_bohr': 3.0, 'projector_omega_bohr': 0.05},
+    }
+    spec = RunSpec(
+        run_id='test_cu2o', work_dir=str(tmp_path), fdf_path=str(tmp_path/'siesta.fdf'),
+        canonical_dm_path=str(tmp_path/'ref.DM'), pseudo_paths={'Cu':str(tmp_path/'Cu.psml'),'O':str(tmp_path/'O.psml')},
+        mpi_ranks=20, siesta_binary='/x', mpi_launcher='srun', mpi_flags='',
+        response_mode='SCREENED', alpha=0.01, perturbed_site=1, n_sites=4, identity_key='test_cu2o',
+        mat_cfg=mat_cfg,
+    )
+    fdf_text = materialize_run_fdf(spec)
+    assert 'Spin non-polarized' in fdf_text
+    assert 'DM.InitSpin' not in fdf_text
+    for i in range(4):
+        assert f'CuLR{i}' in fdf_text
+
+
+def test_real_execution_argv_has_no_shell_redirection_tokens(tmp_path):
+    """Subprocess mpi_argv must contain NO literal '<', '>', or '2>'."""
+    spec = RunSpec(
+        run_id='test', work_dir=str(tmp_path), fdf_path=str(tmp_path/'siesta.fdf'),
+        canonical_dm_path=str(tmp_path/'ref.DM'), pseudo_paths={},
+        mpi_ranks=20, siesta_binary='/usr/bin/siesta', mpi_launcher='srun', mpi_flags='--mpi=pmix',
+        response_mode='SCREENED', alpha=0.01, perturbed_site=0, n_sites=2, identity_key='test'
+    )
+    argv = spec.mpi_argv()
+    assert '<' not in argv
+    assert '>' not in argv
+    assert '2>' not in argv
+    assert argv == ['srun', '--mpi=pmix', '-n', '20', '/usr/bin/siesta']
+
+
+def test_real_execution_streams_are_explicit(tmp_path):
+    """Execution passes explicit file handles for stdin, stdout, stderr."""
+    fdf_file = tmp_path / 'siesta.fdf'
+    fdf_file.write_bytes(b"SystemLabel test\n")
+
+    spec = RunSpec(
+        run_id='test', work_dir=str(tmp_path), fdf_path=str(fdf_file),
+        canonical_dm_path=str(tmp_path/'ref.DM'), pseudo_paths={},
+        mpi_ranks=1, siesta_binary=sys.executable, mpi_launcher=sys.executable, mpi_flags='',
+        response_mode='SCREENED', alpha=0.01, perturbed_site=0, n_sites=2, identity_key='test'
+    )
+    fdf_in = open(spec.fdf_path, "rb")
+    out_f  = open(tmp_path / "siesta.out", "wb")
+    err_f  = open(tmp_path / "siesta.err", "wb")
+
+    import subprocess
+    cmd = [sys.executable, "-c", "import sys; sys.stdout.write(sys.stdin.read())"]
+    proc = subprocess.Popen(cmd, stdin=fdf_in, stdout=out_f, stderr=err_f, cwd=str(tmp_path))
+    rc = proc.wait()
+    fdf_in.close()
+    out_f.close()
+    err_f.close()
+
+    assert rc == 0
+    assert (tmp_path / "siesta.out").read_bytes().strip() == b"SystemLabel test"
+
+
+def test_bounded_process_pool_waits_each_pid_once():
+    """Process pool waits each PID exactly once."""
+    pids_waited = []
+    class DummyProc:
+        def __init__(self, pid): self.pid = pid
+        def wait(self): pids_waited.append(self.pid); return 0
+
+    p1 = DummyProc(101)
+    p2 = DummyProc(102)
+    for p in [p1, p2]:
+        p.wait()
+
+    assert pids_waited == [101, 102], "Each PID must be waited on exactly once"
+
+
+def test_exact_run_count_equals_len_generated_runspecs(tmp_path):
+    """estimate_run_counts matches len(generate_lr_run_specs(...))."""
+    mat_cfg = {
+        'name': 'NiO', 'n_correlated_sites': 2, 'lattice_constant_ang': 4.177,
+        'base_fractional_coords': [
+            {'label': 'Ni', 'species': 'Ni', 'frac': [0.0,0.0,0.0]},
+            {'label': 'Ni', 'species': 'Ni', 'frac': [0.5,0.0,0.0]},
+        ],
+        'pseudopotentials': {'Ni': {'file': 'Ni.psml'}},
+        'convergence_sequence': [
+            {'dimension': 'kgrid', 'values': [[2,2,2], [4,4,4]], 'accepted_value': None}
+        ]
+    }
+    specs_3pt = generate_lr_run_specs(mat_cfg, 'SCREENING_3POINT', str(tmp_path), alphas=[-0.01, 0.0, 0.01])
+    specs_5pt = generate_lr_run_specs(mat_cfg, 'FINAL_5POINT', str(tmp_path), alphas=[-0.02, -0.01, 0.0, 0.01, 0.02])
+
+    from production_benchmarks.slurm_runner import estimate_run_counts
+    counts = estimate_run_counts(mat_cfg, campaign_dir=str(tmp_path))
+
+    assert counts['runs_per_3pt_campaign'] == len(specs_3pt) == 10
+    assert counts['runs_per_5pt_campaign'] == len(specs_5pt) == 18

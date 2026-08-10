@@ -1,0 +1,704 @@
+[
+  {
+    "run_id": "Cu2O_SCREENING_3POINT_alpha0.0000_BARE",
+    "work_dir": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\alpha0.0000_BARE",
+    "fdf_path": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\alpha0.0000_BARE\\siesta.fdf",
+    "canonical_dm": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\materials\\cu2o\\reference.DM",
+    "pseudo_sources": {
+      "CuLR0": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "CuLR1": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "CuLR2": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "CuLR3": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "O": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\O.psml"
+    },
+    "mpi_ranks": 20,
+    "siesta_binary": "/path/to/siesta",
+    "response_mode": "BARE",
+    "alpha": 0.0,
+    "perturbed_site": 0,
+    "n_sites": 4,
+    "identity_key": "Cu2O_SCREENING_3POINT_alpha0.0000_BARE",
+    "mpi_argv": [
+      "srun",
+      "-n",
+      "20",
+      "/path/to/siesta"
+    ],
+    "mpi_command": "srun -n 20 /path/to/siesta < C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\alpha0.0000_BARE\\siesta.fdf > C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\alpha0.0000_BARE/siesta.out 2> C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\alpha0.0000_BARE/siesta.err",
+    "dry_run": true,
+    "materialized": true,
+    "dm_hash_verified": true,
+    "fdf_materialized": true,
+    "pseudo_copies": {
+      "CuLR0": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\alpha0.0000_BARE\\CuLR0.psml",
+      "CuLR1": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\alpha0.0000_BARE\\CuLR1.psml",
+      "CuLR2": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\alpha0.0000_BARE\\CuLR2.psml",
+      "CuLR3": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\alpha0.0000_BARE\\CuLR3.psml",
+      "O": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\alpha0.0000_BARE\\O.psml"
+    },
+    "parent_dm_sha256": "DRY_RUN_NOT_VERIFIED"
+  },
+  {
+    "run_id": "Cu2O_SCREENING_3POINT_alpha0.0000_SCREENED",
+    "work_dir": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\alpha0.0000_SCREENED",
+    "fdf_path": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\alpha0.0000_SCREENED\\siesta.fdf",
+    "canonical_dm": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\materials\\cu2o\\reference.DM",
+    "pseudo_sources": {
+      "CuLR0": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "CuLR1": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "CuLR2": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "CuLR3": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "O": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\O.psml"
+    },
+    "mpi_ranks": 20,
+    "siesta_binary": "/path/to/siesta",
+    "response_mode": "SCREENED",
+    "alpha": 0.0,
+    "perturbed_site": 0,
+    "n_sites": 4,
+    "identity_key": "Cu2O_SCREENING_3POINT_alpha0.0000_SCREENED",
+    "mpi_argv": [
+      "srun",
+      "-n",
+      "20",
+      "/path/to/siesta"
+    ],
+    "mpi_command": "srun -n 20 /path/to/siesta < C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\alpha0.0000_SCREENED\\siesta.fdf > C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\alpha0.0000_SCREENED/siesta.out 2> C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\alpha0.0000_SCREENED/siesta.err",
+    "dry_run": true,
+    "materialized": true,
+    "dm_hash_verified": true,
+    "fdf_materialized": true,
+    "pseudo_copies": {
+      "CuLR0": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\alpha0.0000_SCREENED\\CuLR0.psml",
+      "CuLR1": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\alpha0.0000_SCREENED\\CuLR1.psml",
+      "CuLR2": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\alpha0.0000_SCREENED\\CuLR2.psml",
+      "CuLR3": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\alpha0.0000_SCREENED\\CuLR3.psml",
+      "O": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\alpha0.0000_SCREENED\\O.psml"
+    },
+    "parent_dm_sha256": "DRY_RUN_NOT_VERIFIED"
+  },
+  {
+    "run_id": "Cu2O_SCREENING_3POINT_J0_alpha-0.0100_BARE",
+    "work_dir": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J0_a-0.0100_BARE",
+    "fdf_path": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J0_a-0.0100_BARE\\siesta.fdf",
+    "canonical_dm": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\materials\\cu2o\\reference.DM",
+    "pseudo_sources": {
+      "CuLR0": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "CuLR1": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "CuLR2": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "CuLR3": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "O": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\O.psml"
+    },
+    "mpi_ranks": 20,
+    "siesta_binary": "/path/to/siesta",
+    "response_mode": "BARE",
+    "alpha": -0.01,
+    "perturbed_site": 0,
+    "n_sites": 4,
+    "identity_key": "Cu2O_SCREENING_3POINT_J0_alpha-0.0100_BARE",
+    "mpi_argv": [
+      "srun",
+      "-n",
+      "20",
+      "/path/to/siesta"
+    ],
+    "mpi_command": "srun -n 20 /path/to/siesta < C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J0_a-0.0100_BARE\\siesta.fdf > C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J0_a-0.0100_BARE/siesta.out 2> C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J0_a-0.0100_BARE/siesta.err",
+    "dry_run": true,
+    "materialized": true,
+    "dm_hash_verified": true,
+    "fdf_materialized": true,
+    "pseudo_copies": {
+      "CuLR0": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J0_a-0.0100_BARE\\CuLR0.psml",
+      "CuLR1": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J0_a-0.0100_BARE\\CuLR1.psml",
+      "CuLR2": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J0_a-0.0100_BARE\\CuLR2.psml",
+      "CuLR3": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J0_a-0.0100_BARE\\CuLR3.psml",
+      "O": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J0_a-0.0100_BARE\\O.psml"
+    },
+    "parent_dm_sha256": "DRY_RUN_NOT_VERIFIED"
+  },
+  {
+    "run_id": "Cu2O_SCREENING_3POINT_J0_alpha-0.0100_SCREENED",
+    "work_dir": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J0_a-0.0100_SCREENED",
+    "fdf_path": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J0_a-0.0100_SCREENED\\siesta.fdf",
+    "canonical_dm": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\materials\\cu2o\\reference.DM",
+    "pseudo_sources": {
+      "CuLR0": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "CuLR1": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "CuLR2": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "CuLR3": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "O": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\O.psml"
+    },
+    "mpi_ranks": 20,
+    "siesta_binary": "/path/to/siesta",
+    "response_mode": "SCREENED",
+    "alpha": -0.01,
+    "perturbed_site": 0,
+    "n_sites": 4,
+    "identity_key": "Cu2O_SCREENING_3POINT_J0_alpha-0.0100_SCREENED",
+    "mpi_argv": [
+      "srun",
+      "-n",
+      "20",
+      "/path/to/siesta"
+    ],
+    "mpi_command": "srun -n 20 /path/to/siesta < C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J0_a-0.0100_SCREENED\\siesta.fdf > C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J0_a-0.0100_SCREENED/siesta.out 2> C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J0_a-0.0100_SCREENED/siesta.err",
+    "dry_run": true,
+    "materialized": true,
+    "dm_hash_verified": true,
+    "fdf_materialized": true,
+    "pseudo_copies": {
+      "CuLR0": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J0_a-0.0100_SCREENED\\CuLR0.psml",
+      "CuLR1": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J0_a-0.0100_SCREENED\\CuLR1.psml",
+      "CuLR2": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J0_a-0.0100_SCREENED\\CuLR2.psml",
+      "CuLR3": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J0_a-0.0100_SCREENED\\CuLR3.psml",
+      "O": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J0_a-0.0100_SCREENED\\O.psml"
+    },
+    "parent_dm_sha256": "DRY_RUN_NOT_VERIFIED"
+  },
+  {
+    "run_id": "Cu2O_SCREENING_3POINT_J0_alpha+0.0100_BARE",
+    "work_dir": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J0_a+0.0100_BARE",
+    "fdf_path": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J0_a+0.0100_BARE\\siesta.fdf",
+    "canonical_dm": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\materials\\cu2o\\reference.DM",
+    "pseudo_sources": {
+      "CuLR0": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "CuLR1": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "CuLR2": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "CuLR3": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "O": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\O.psml"
+    },
+    "mpi_ranks": 20,
+    "siesta_binary": "/path/to/siesta",
+    "response_mode": "BARE",
+    "alpha": 0.01,
+    "perturbed_site": 0,
+    "n_sites": 4,
+    "identity_key": "Cu2O_SCREENING_3POINT_J0_alpha+0.0100_BARE",
+    "mpi_argv": [
+      "srun",
+      "-n",
+      "20",
+      "/path/to/siesta"
+    ],
+    "mpi_command": "srun -n 20 /path/to/siesta < C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J0_a+0.0100_BARE\\siesta.fdf > C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J0_a+0.0100_BARE/siesta.out 2> C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J0_a+0.0100_BARE/siesta.err",
+    "dry_run": true,
+    "materialized": true,
+    "dm_hash_verified": true,
+    "fdf_materialized": true,
+    "pseudo_copies": {
+      "CuLR0": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J0_a+0.0100_BARE\\CuLR0.psml",
+      "CuLR1": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J0_a+0.0100_BARE\\CuLR1.psml",
+      "CuLR2": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J0_a+0.0100_BARE\\CuLR2.psml",
+      "CuLR3": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J0_a+0.0100_BARE\\CuLR3.psml",
+      "O": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J0_a+0.0100_BARE\\O.psml"
+    },
+    "parent_dm_sha256": "DRY_RUN_NOT_VERIFIED"
+  },
+  {
+    "run_id": "Cu2O_SCREENING_3POINT_J0_alpha+0.0100_SCREENED",
+    "work_dir": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J0_a+0.0100_SCREENED",
+    "fdf_path": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J0_a+0.0100_SCREENED\\siesta.fdf",
+    "canonical_dm": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\materials\\cu2o\\reference.DM",
+    "pseudo_sources": {
+      "CuLR0": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "CuLR1": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "CuLR2": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "CuLR3": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "O": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\O.psml"
+    },
+    "mpi_ranks": 20,
+    "siesta_binary": "/path/to/siesta",
+    "response_mode": "SCREENED",
+    "alpha": 0.01,
+    "perturbed_site": 0,
+    "n_sites": 4,
+    "identity_key": "Cu2O_SCREENING_3POINT_J0_alpha+0.0100_SCREENED",
+    "mpi_argv": [
+      "srun",
+      "-n",
+      "20",
+      "/path/to/siesta"
+    ],
+    "mpi_command": "srun -n 20 /path/to/siesta < C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J0_a+0.0100_SCREENED\\siesta.fdf > C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J0_a+0.0100_SCREENED/siesta.out 2> C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J0_a+0.0100_SCREENED/siesta.err",
+    "dry_run": true,
+    "materialized": true,
+    "dm_hash_verified": true,
+    "fdf_materialized": true,
+    "pseudo_copies": {
+      "CuLR0": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J0_a+0.0100_SCREENED\\CuLR0.psml",
+      "CuLR1": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J0_a+0.0100_SCREENED\\CuLR1.psml",
+      "CuLR2": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J0_a+0.0100_SCREENED\\CuLR2.psml",
+      "CuLR3": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J0_a+0.0100_SCREENED\\CuLR3.psml",
+      "O": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J0_a+0.0100_SCREENED\\O.psml"
+    },
+    "parent_dm_sha256": "DRY_RUN_NOT_VERIFIED"
+  },
+  {
+    "run_id": "Cu2O_SCREENING_3POINT_J1_alpha-0.0100_BARE",
+    "work_dir": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J1_a-0.0100_BARE",
+    "fdf_path": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J1_a-0.0100_BARE\\siesta.fdf",
+    "canonical_dm": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\materials\\cu2o\\reference.DM",
+    "pseudo_sources": {
+      "CuLR0": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "CuLR1": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "CuLR2": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "CuLR3": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "O": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\O.psml"
+    },
+    "mpi_ranks": 20,
+    "siesta_binary": "/path/to/siesta",
+    "response_mode": "BARE",
+    "alpha": -0.01,
+    "perturbed_site": 1,
+    "n_sites": 4,
+    "identity_key": "Cu2O_SCREENING_3POINT_J1_alpha-0.0100_BARE",
+    "mpi_argv": [
+      "srun",
+      "-n",
+      "20",
+      "/path/to/siesta"
+    ],
+    "mpi_command": "srun -n 20 /path/to/siesta < C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J1_a-0.0100_BARE\\siesta.fdf > C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J1_a-0.0100_BARE/siesta.out 2> C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J1_a-0.0100_BARE/siesta.err",
+    "dry_run": true,
+    "materialized": true,
+    "dm_hash_verified": true,
+    "fdf_materialized": true,
+    "pseudo_copies": {
+      "CuLR0": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J1_a-0.0100_BARE\\CuLR0.psml",
+      "CuLR1": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J1_a-0.0100_BARE\\CuLR1.psml",
+      "CuLR2": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J1_a-0.0100_BARE\\CuLR2.psml",
+      "CuLR3": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J1_a-0.0100_BARE\\CuLR3.psml",
+      "O": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J1_a-0.0100_BARE\\O.psml"
+    },
+    "parent_dm_sha256": "DRY_RUN_NOT_VERIFIED"
+  },
+  {
+    "run_id": "Cu2O_SCREENING_3POINT_J1_alpha-0.0100_SCREENED",
+    "work_dir": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J1_a-0.0100_SCREENED",
+    "fdf_path": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J1_a-0.0100_SCREENED\\siesta.fdf",
+    "canonical_dm": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\materials\\cu2o\\reference.DM",
+    "pseudo_sources": {
+      "CuLR0": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "CuLR1": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "CuLR2": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "CuLR3": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "O": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\O.psml"
+    },
+    "mpi_ranks": 20,
+    "siesta_binary": "/path/to/siesta",
+    "response_mode": "SCREENED",
+    "alpha": -0.01,
+    "perturbed_site": 1,
+    "n_sites": 4,
+    "identity_key": "Cu2O_SCREENING_3POINT_J1_alpha-0.0100_SCREENED",
+    "mpi_argv": [
+      "srun",
+      "-n",
+      "20",
+      "/path/to/siesta"
+    ],
+    "mpi_command": "srun -n 20 /path/to/siesta < C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J1_a-0.0100_SCREENED\\siesta.fdf > C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J1_a-0.0100_SCREENED/siesta.out 2> C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J1_a-0.0100_SCREENED/siesta.err",
+    "dry_run": true,
+    "materialized": true,
+    "dm_hash_verified": true,
+    "fdf_materialized": true,
+    "pseudo_copies": {
+      "CuLR0": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J1_a-0.0100_SCREENED\\CuLR0.psml",
+      "CuLR1": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J1_a-0.0100_SCREENED\\CuLR1.psml",
+      "CuLR2": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J1_a-0.0100_SCREENED\\CuLR2.psml",
+      "CuLR3": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J1_a-0.0100_SCREENED\\CuLR3.psml",
+      "O": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J1_a-0.0100_SCREENED\\O.psml"
+    },
+    "parent_dm_sha256": "DRY_RUN_NOT_VERIFIED"
+  },
+  {
+    "run_id": "Cu2O_SCREENING_3POINT_J1_alpha+0.0100_BARE",
+    "work_dir": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J1_a+0.0100_BARE",
+    "fdf_path": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J1_a+0.0100_BARE\\siesta.fdf",
+    "canonical_dm": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\materials\\cu2o\\reference.DM",
+    "pseudo_sources": {
+      "CuLR0": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "CuLR1": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "CuLR2": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "CuLR3": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "O": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\O.psml"
+    },
+    "mpi_ranks": 20,
+    "siesta_binary": "/path/to/siesta",
+    "response_mode": "BARE",
+    "alpha": 0.01,
+    "perturbed_site": 1,
+    "n_sites": 4,
+    "identity_key": "Cu2O_SCREENING_3POINT_J1_alpha+0.0100_BARE",
+    "mpi_argv": [
+      "srun",
+      "-n",
+      "20",
+      "/path/to/siesta"
+    ],
+    "mpi_command": "srun -n 20 /path/to/siesta < C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J1_a+0.0100_BARE\\siesta.fdf > C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J1_a+0.0100_BARE/siesta.out 2> C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J1_a+0.0100_BARE/siesta.err",
+    "dry_run": true,
+    "materialized": true,
+    "dm_hash_verified": true,
+    "fdf_materialized": true,
+    "pseudo_copies": {
+      "CuLR0": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J1_a+0.0100_BARE\\CuLR0.psml",
+      "CuLR1": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J1_a+0.0100_BARE\\CuLR1.psml",
+      "CuLR2": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J1_a+0.0100_BARE\\CuLR2.psml",
+      "CuLR3": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J1_a+0.0100_BARE\\CuLR3.psml",
+      "O": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J1_a+0.0100_BARE\\O.psml"
+    },
+    "parent_dm_sha256": "DRY_RUN_NOT_VERIFIED"
+  },
+  {
+    "run_id": "Cu2O_SCREENING_3POINT_J1_alpha+0.0100_SCREENED",
+    "work_dir": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J1_a+0.0100_SCREENED",
+    "fdf_path": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J1_a+0.0100_SCREENED\\siesta.fdf",
+    "canonical_dm": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\materials\\cu2o\\reference.DM",
+    "pseudo_sources": {
+      "CuLR0": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "CuLR1": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "CuLR2": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "CuLR3": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "O": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\O.psml"
+    },
+    "mpi_ranks": 20,
+    "siesta_binary": "/path/to/siesta",
+    "response_mode": "SCREENED",
+    "alpha": 0.01,
+    "perturbed_site": 1,
+    "n_sites": 4,
+    "identity_key": "Cu2O_SCREENING_3POINT_J1_alpha+0.0100_SCREENED",
+    "mpi_argv": [
+      "srun",
+      "-n",
+      "20",
+      "/path/to/siesta"
+    ],
+    "mpi_command": "srun -n 20 /path/to/siesta < C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J1_a+0.0100_SCREENED\\siesta.fdf > C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J1_a+0.0100_SCREENED/siesta.out 2> C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J1_a+0.0100_SCREENED/siesta.err",
+    "dry_run": true,
+    "materialized": true,
+    "dm_hash_verified": true,
+    "fdf_materialized": true,
+    "pseudo_copies": {
+      "CuLR0": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J1_a+0.0100_SCREENED\\CuLR0.psml",
+      "CuLR1": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J1_a+0.0100_SCREENED\\CuLR1.psml",
+      "CuLR2": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J1_a+0.0100_SCREENED\\CuLR2.psml",
+      "CuLR3": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J1_a+0.0100_SCREENED\\CuLR3.psml",
+      "O": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J1_a+0.0100_SCREENED\\O.psml"
+    },
+    "parent_dm_sha256": "DRY_RUN_NOT_VERIFIED"
+  },
+  {
+    "run_id": "Cu2O_SCREENING_3POINT_J2_alpha-0.0100_BARE",
+    "work_dir": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J2_a-0.0100_BARE",
+    "fdf_path": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J2_a-0.0100_BARE\\siesta.fdf",
+    "canonical_dm": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\materials\\cu2o\\reference.DM",
+    "pseudo_sources": {
+      "CuLR0": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "CuLR1": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "CuLR2": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "CuLR3": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "O": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\O.psml"
+    },
+    "mpi_ranks": 20,
+    "siesta_binary": "/path/to/siesta",
+    "response_mode": "BARE",
+    "alpha": -0.01,
+    "perturbed_site": 2,
+    "n_sites": 4,
+    "identity_key": "Cu2O_SCREENING_3POINT_J2_alpha-0.0100_BARE",
+    "mpi_argv": [
+      "srun",
+      "-n",
+      "20",
+      "/path/to/siesta"
+    ],
+    "mpi_command": "srun -n 20 /path/to/siesta < C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J2_a-0.0100_BARE\\siesta.fdf > C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J2_a-0.0100_BARE/siesta.out 2> C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J2_a-0.0100_BARE/siesta.err",
+    "dry_run": true,
+    "materialized": true,
+    "dm_hash_verified": true,
+    "fdf_materialized": true,
+    "pseudo_copies": {
+      "CuLR0": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J2_a-0.0100_BARE\\CuLR0.psml",
+      "CuLR1": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J2_a-0.0100_BARE\\CuLR1.psml",
+      "CuLR2": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J2_a-0.0100_BARE\\CuLR2.psml",
+      "CuLR3": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J2_a-0.0100_BARE\\CuLR3.psml",
+      "O": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J2_a-0.0100_BARE\\O.psml"
+    },
+    "parent_dm_sha256": "DRY_RUN_NOT_VERIFIED"
+  },
+  {
+    "run_id": "Cu2O_SCREENING_3POINT_J2_alpha-0.0100_SCREENED",
+    "work_dir": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J2_a-0.0100_SCREENED",
+    "fdf_path": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J2_a-0.0100_SCREENED\\siesta.fdf",
+    "canonical_dm": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\materials\\cu2o\\reference.DM",
+    "pseudo_sources": {
+      "CuLR0": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "CuLR1": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "CuLR2": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "CuLR3": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "O": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\O.psml"
+    },
+    "mpi_ranks": 20,
+    "siesta_binary": "/path/to/siesta",
+    "response_mode": "SCREENED",
+    "alpha": -0.01,
+    "perturbed_site": 2,
+    "n_sites": 4,
+    "identity_key": "Cu2O_SCREENING_3POINT_J2_alpha-0.0100_SCREENED",
+    "mpi_argv": [
+      "srun",
+      "-n",
+      "20",
+      "/path/to/siesta"
+    ],
+    "mpi_command": "srun -n 20 /path/to/siesta < C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J2_a-0.0100_SCREENED\\siesta.fdf > C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J2_a-0.0100_SCREENED/siesta.out 2> C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J2_a-0.0100_SCREENED/siesta.err",
+    "dry_run": true,
+    "materialized": true,
+    "dm_hash_verified": true,
+    "fdf_materialized": true,
+    "pseudo_copies": {
+      "CuLR0": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J2_a-0.0100_SCREENED\\CuLR0.psml",
+      "CuLR1": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J2_a-0.0100_SCREENED\\CuLR1.psml",
+      "CuLR2": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J2_a-0.0100_SCREENED\\CuLR2.psml",
+      "CuLR3": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J2_a-0.0100_SCREENED\\CuLR3.psml",
+      "O": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J2_a-0.0100_SCREENED\\O.psml"
+    },
+    "parent_dm_sha256": "DRY_RUN_NOT_VERIFIED"
+  },
+  {
+    "run_id": "Cu2O_SCREENING_3POINT_J2_alpha+0.0100_BARE",
+    "work_dir": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J2_a+0.0100_BARE",
+    "fdf_path": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J2_a+0.0100_BARE\\siesta.fdf",
+    "canonical_dm": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\materials\\cu2o\\reference.DM",
+    "pseudo_sources": {
+      "CuLR0": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "CuLR1": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "CuLR2": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "CuLR3": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "O": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\O.psml"
+    },
+    "mpi_ranks": 20,
+    "siesta_binary": "/path/to/siesta",
+    "response_mode": "BARE",
+    "alpha": 0.01,
+    "perturbed_site": 2,
+    "n_sites": 4,
+    "identity_key": "Cu2O_SCREENING_3POINT_J2_alpha+0.0100_BARE",
+    "mpi_argv": [
+      "srun",
+      "-n",
+      "20",
+      "/path/to/siesta"
+    ],
+    "mpi_command": "srun -n 20 /path/to/siesta < C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J2_a+0.0100_BARE\\siesta.fdf > C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J2_a+0.0100_BARE/siesta.out 2> C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J2_a+0.0100_BARE/siesta.err",
+    "dry_run": true,
+    "materialized": true,
+    "dm_hash_verified": true,
+    "fdf_materialized": true,
+    "pseudo_copies": {
+      "CuLR0": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J2_a+0.0100_BARE\\CuLR0.psml",
+      "CuLR1": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J2_a+0.0100_BARE\\CuLR1.psml",
+      "CuLR2": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J2_a+0.0100_BARE\\CuLR2.psml",
+      "CuLR3": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J2_a+0.0100_BARE\\CuLR3.psml",
+      "O": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J2_a+0.0100_BARE\\O.psml"
+    },
+    "parent_dm_sha256": "DRY_RUN_NOT_VERIFIED"
+  },
+  {
+    "run_id": "Cu2O_SCREENING_3POINT_J2_alpha+0.0100_SCREENED",
+    "work_dir": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J2_a+0.0100_SCREENED",
+    "fdf_path": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J2_a+0.0100_SCREENED\\siesta.fdf",
+    "canonical_dm": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\materials\\cu2o\\reference.DM",
+    "pseudo_sources": {
+      "CuLR0": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "CuLR1": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "CuLR2": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "CuLR3": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "O": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\O.psml"
+    },
+    "mpi_ranks": 20,
+    "siesta_binary": "/path/to/siesta",
+    "response_mode": "SCREENED",
+    "alpha": 0.01,
+    "perturbed_site": 2,
+    "n_sites": 4,
+    "identity_key": "Cu2O_SCREENING_3POINT_J2_alpha+0.0100_SCREENED",
+    "mpi_argv": [
+      "srun",
+      "-n",
+      "20",
+      "/path/to/siesta"
+    ],
+    "mpi_command": "srun -n 20 /path/to/siesta < C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J2_a+0.0100_SCREENED\\siesta.fdf > C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J2_a+0.0100_SCREENED/siesta.out 2> C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J2_a+0.0100_SCREENED/siesta.err",
+    "dry_run": true,
+    "materialized": true,
+    "dm_hash_verified": true,
+    "fdf_materialized": true,
+    "pseudo_copies": {
+      "CuLR0": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J2_a+0.0100_SCREENED\\CuLR0.psml",
+      "CuLR1": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J2_a+0.0100_SCREENED\\CuLR1.psml",
+      "CuLR2": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J2_a+0.0100_SCREENED\\CuLR2.psml",
+      "CuLR3": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J2_a+0.0100_SCREENED\\CuLR3.psml",
+      "O": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J2_a+0.0100_SCREENED\\O.psml"
+    },
+    "parent_dm_sha256": "DRY_RUN_NOT_VERIFIED"
+  },
+  {
+    "run_id": "Cu2O_SCREENING_3POINT_J3_alpha-0.0100_BARE",
+    "work_dir": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J3_a-0.0100_BARE",
+    "fdf_path": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J3_a-0.0100_BARE\\siesta.fdf",
+    "canonical_dm": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\materials\\cu2o\\reference.DM",
+    "pseudo_sources": {
+      "CuLR0": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "CuLR1": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "CuLR2": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "CuLR3": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "O": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\O.psml"
+    },
+    "mpi_ranks": 20,
+    "siesta_binary": "/path/to/siesta",
+    "response_mode": "BARE",
+    "alpha": -0.01,
+    "perturbed_site": 3,
+    "n_sites": 4,
+    "identity_key": "Cu2O_SCREENING_3POINT_J3_alpha-0.0100_BARE",
+    "mpi_argv": [
+      "srun",
+      "-n",
+      "20",
+      "/path/to/siesta"
+    ],
+    "mpi_command": "srun -n 20 /path/to/siesta < C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J3_a-0.0100_BARE\\siesta.fdf > C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J3_a-0.0100_BARE/siesta.out 2> C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J3_a-0.0100_BARE/siesta.err",
+    "dry_run": true,
+    "materialized": true,
+    "dm_hash_verified": true,
+    "fdf_materialized": true,
+    "pseudo_copies": {
+      "CuLR0": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J3_a-0.0100_BARE\\CuLR0.psml",
+      "CuLR1": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J3_a-0.0100_BARE\\CuLR1.psml",
+      "CuLR2": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J3_a-0.0100_BARE\\CuLR2.psml",
+      "CuLR3": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J3_a-0.0100_BARE\\CuLR3.psml",
+      "O": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J3_a-0.0100_BARE\\O.psml"
+    },
+    "parent_dm_sha256": "DRY_RUN_NOT_VERIFIED"
+  },
+  {
+    "run_id": "Cu2O_SCREENING_3POINT_J3_alpha-0.0100_SCREENED",
+    "work_dir": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J3_a-0.0100_SCREENED",
+    "fdf_path": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J3_a-0.0100_SCREENED\\siesta.fdf",
+    "canonical_dm": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\materials\\cu2o\\reference.DM",
+    "pseudo_sources": {
+      "CuLR0": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "CuLR1": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "CuLR2": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "CuLR3": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "O": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\O.psml"
+    },
+    "mpi_ranks": 20,
+    "siesta_binary": "/path/to/siesta",
+    "response_mode": "SCREENED",
+    "alpha": -0.01,
+    "perturbed_site": 3,
+    "n_sites": 4,
+    "identity_key": "Cu2O_SCREENING_3POINT_J3_alpha-0.0100_SCREENED",
+    "mpi_argv": [
+      "srun",
+      "-n",
+      "20",
+      "/path/to/siesta"
+    ],
+    "mpi_command": "srun -n 20 /path/to/siesta < C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J3_a-0.0100_SCREENED\\siesta.fdf > C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J3_a-0.0100_SCREENED/siesta.out 2> C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J3_a-0.0100_SCREENED/siesta.err",
+    "dry_run": true,
+    "materialized": true,
+    "dm_hash_verified": true,
+    "fdf_materialized": true,
+    "pseudo_copies": {
+      "CuLR0": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J3_a-0.0100_SCREENED\\CuLR0.psml",
+      "CuLR1": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J3_a-0.0100_SCREENED\\CuLR1.psml",
+      "CuLR2": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J3_a-0.0100_SCREENED\\CuLR2.psml",
+      "CuLR3": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J3_a-0.0100_SCREENED\\CuLR3.psml",
+      "O": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J3_a-0.0100_SCREENED\\O.psml"
+    },
+    "parent_dm_sha256": "DRY_RUN_NOT_VERIFIED"
+  },
+  {
+    "run_id": "Cu2O_SCREENING_3POINT_J3_alpha+0.0100_BARE",
+    "work_dir": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J3_a+0.0100_BARE",
+    "fdf_path": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J3_a+0.0100_BARE\\siesta.fdf",
+    "canonical_dm": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\materials\\cu2o\\reference.DM",
+    "pseudo_sources": {
+      "CuLR0": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "CuLR1": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "CuLR2": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "CuLR3": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "O": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\O.psml"
+    },
+    "mpi_ranks": 20,
+    "siesta_binary": "/path/to/siesta",
+    "response_mode": "BARE",
+    "alpha": 0.01,
+    "perturbed_site": 3,
+    "n_sites": 4,
+    "identity_key": "Cu2O_SCREENING_3POINT_J3_alpha+0.0100_BARE",
+    "mpi_argv": [
+      "srun",
+      "-n",
+      "20",
+      "/path/to/siesta"
+    ],
+    "mpi_command": "srun -n 20 /path/to/siesta < C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J3_a+0.0100_BARE\\siesta.fdf > C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J3_a+0.0100_BARE/siesta.out 2> C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J3_a+0.0100_BARE/siesta.err",
+    "dry_run": true,
+    "materialized": true,
+    "dm_hash_verified": true,
+    "fdf_materialized": true,
+    "pseudo_copies": {
+      "CuLR0": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J3_a+0.0100_BARE\\CuLR0.psml",
+      "CuLR1": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J3_a+0.0100_BARE\\CuLR1.psml",
+      "CuLR2": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J3_a+0.0100_BARE\\CuLR2.psml",
+      "CuLR3": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J3_a+0.0100_BARE\\CuLR3.psml",
+      "O": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J3_a+0.0100_BARE\\O.psml"
+    },
+    "parent_dm_sha256": "DRY_RUN_NOT_VERIFIED"
+  },
+  {
+    "run_id": "Cu2O_SCREENING_3POINT_J3_alpha+0.0100_SCREENED",
+    "work_dir": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J3_a+0.0100_SCREENED",
+    "fdf_path": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J3_a+0.0100_SCREENED\\siesta.fdf",
+    "canonical_dm": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\materials\\cu2o\\reference.DM",
+    "pseudo_sources": {
+      "CuLR0": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "CuLR1": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "CuLR2": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "CuLR3": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\Cu.psml",
+      "O": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\cu2o\\O.psml"
+    },
+    "mpi_ranks": 20,
+    "siesta_binary": "/path/to/siesta",
+    "response_mode": "SCREENED",
+    "alpha": 0.01,
+    "perturbed_site": 3,
+    "n_sites": 4,
+    "identity_key": "Cu2O_SCREENING_3POINT_J3_alpha+0.0100_SCREENED",
+    "mpi_argv": [
+      "srun",
+      "-n",
+      "20",
+      "/path/to/siesta"
+    ],
+    "mpi_command": "srun -n 20 /path/to/siesta < C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J3_a+0.0100_SCREENED\\siesta.fdf > C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J3_a+0.0100_SCREENED/siesta.out 2> C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J3_a+0.0100_SCREENED/siesta.err",
+    "dry_run": true,
+    "materialized": true,
+    "dm_hash_verified": true,
+    "fdf_materialized": true,
+    "pseudo_copies": {
+      "CuLR0": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J3_a+0.0100_SCREENED\\CuLR0.psml",
+      "CuLR1": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J3_a+0.0100_SCREENED\\CuLR1.psml",
+      "CuLR2": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J3_a+0.0100_SCREENED\\CuLR2.psml",
+      "CuLR3": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J3_a+0.0100_SCREENED\\CuLR3.psml",
+      "O": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\Cu2O\\SCREENING_3POINT\\J3_a+0.0100_SCREENED\\O.psml"
+    },
+    "parent_dm_sha256": "DRY_RUN_NOT_VERIFIED"
+  }
+]

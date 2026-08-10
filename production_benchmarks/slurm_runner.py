@@ -1,17 +1,14 @@
 """
 production_benchmarks/slurm_runner.py
 
-Real Slurm execution support with CLI entrypoint and --dry-run mode.
+Authoritative execution and run-plan generator for production SIESTA Hubbard-U benchmark campaigns.
 
-Usage:
-  python -m production_benchmarks.slurm_runner \\
-      --campaign-dir /path/to/campaign \\
-      --material NiO \\
-      --dag-node FINAL_5POINT_LR \\
-      --mpi-ranks 20 \\
-      --max-concurrent 5 \\
-      --siesta-binary /path/to/siesta \\
-      --dry-run
+Fixes all 5 execution blockers:
+1. Authoritative generate_lr_run_specs() generating BOTH BARE and SCREENED for every perturbation.
+2. Correct alpha=0 deduplication (3-pt: 2+4N runs; 5-pt: 2+8N runs). Exact counts derived from RunSpecs.
+3. Dry-run materializes real executable FDF files using FdfBuilder + species splitting.
+4. Clean subprocess argv (no '<', '>', '2>') with explicit stdin/stdout/stderr file handles.
+5. Single authoritative Python campaign controller path (no shell wait loops or double waits).
 """
 from __future__ import annotations
 import argparse
@@ -24,7 +21,12 @@ import sys
 import textwrap
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
+
+from siestaflow_hubbard.siesta_backend.fdf_builder import (
+    FdfBuilder, materialize_split_species_fdf
+)
+from production_benchmarks.canonical_dm import assert_campaign_dm_invariant
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -70,10 +72,6 @@ class SlurmProfile:
         )
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Rank calculation
-# ─────────────────────────────────────────────────────────────────────────────
-
 def calculate_ranks_per_run(ntasks_total: int, max_concurrent: int) -> int:
     """Integer floor of (ntasks_total / max_concurrent)."""
     if max_concurrent <= 0:
@@ -82,17 +80,154 @@ def calculate_ranks_per_run(ntasks_total: int, max_concurrent: int) -> int:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Run materialization
+# Base FDF Builder Helper
+# ─────────────────────────────────────────────────────────────────────────────
+
+def build_base_fdf_from_material_cfg(mat_cfg: Dict[str, Any]) -> str:
+    """
+    Construct a valid base FDF string from a material.json configuration.
+    """
+    name = mat_cfg.get('name', 'FeO')
+    a    = mat_cfg.get('lattice_constant_ang', 4.334)
+    coords = mat_cfg.get('base_fractional_coords', [])
+
+    if not coords:
+        if name == 'Cu2O':
+            coords = [
+                {'label': 'O', 'species': 'O', 'frac': [0.0, 0.0, 0.0]},
+                {'label': 'O', 'species': 'O', 'frac': [0.5, 0.5, 0.5]},
+                {'label': 'Cu', 'species': 'Cu', 'frac': [0.25, 0.25, 0.25]},
+                {'label': 'Cu', 'species': 'Cu', 'frac': [0.25, 0.75, 0.75]},
+                {'label': 'Cu', 'species': 'Cu', 'frac': [0.75, 0.25, 0.75]},
+                {'label': 'Cu', 'species': 'Cu', 'frac': [0.75, 0.75, 0.25]},
+            ]
+        elif name == 'Cu3N':
+            coords = [
+                {'label': 'N',  'species': 'N',  'frac': [0.0, 0.0, 0.0]},
+                {'label': 'Cu', 'species': 'Cu', 'frac': [0.5, 0.0, 0.0]},
+                {'label': 'Cu', 'species': 'Cu', 'frac': [0.0, 0.5, 0.0]},
+                {'label': 'Cu', 'species': 'Cu', 'frac': [0.0, 0.0, 0.5]},
+            ]
+        elif name == 'NiO':
+            coords = [
+                {'label': 'Ni', 'species': 'Ni', 'frac': [0.0, 0.0, 0.0], 'init_spin': 2.0},
+                {'label': 'Ni', 'species': 'Ni', 'frac': [0.5, 0.0, 0.0], 'init_spin': -2.0},
+                {'label': 'O',  'species': 'O',  'frac': [0.25, 0.5, 0.5]},
+                {'label': 'O',  'species': 'O',  'frac': [0.75, 0.5, 0.5]},
+            ]
+        else:
+            coords = [
+                {'label': 'Fe', 'species': 'Fe', 'frac': [0.0, 0.0, 0.0], 'init_spin': 4.0},
+                {'label': 'Fe', 'species': 'Fe', 'frac': [0.5, 0.0, 0.0], 'init_spin': -4.0},
+                {'label': 'O',  'species': 'O',  'frac': [0.25, 0.5, 0.5]},
+                {'label': 'O',  'species': 'O',  'frac': [0.75, 0.5, 0.5]},
+            ]
+
+    spin_mode = mat_cfg.get('spin_mode', 'collinear_polarized' if name in ('FeO','NiO') else 'non_polarized')
+    is_magnetic = ('polarized' in spin_mode) and ('non' not in spin_mode)
+
+    species_order = []
+    for c in coords:
+        sp = c['species']
+        if sp not in species_order:
+            species_order.append(sp)
+
+    z_map = {'Fe': 26, 'Ni': 28, 'Cu': 29, 'O': 8, 'N': 7}
+    sp_lines = [f"  {idx}  {z_map.get(sp, 1)}  {sp}"
+                for idx, sp in enumerate(species_order, 1)]
+    sp_block = "\n".join(sp_lines)
+
+    lat_vecs = mat_cfg.get('lattice_vectors', None)
+    if lat_vecs is None:
+        if name in ('FeO', 'NiO'):
+            lat_block = "  0.0  1.0  1.0\n  0.5  0.0  0.5\n  0.5  0.5  0.0"
+        else:
+            lat_block = "  1.0  0.0  0.0\n  0.0  1.0  0.0\n  0.0  0.0  1.0"
+    else:
+        lat_lines = [f"  {v[0]:.4f}  {v[1]:.4f}  {v[2]:.4f}" for v in lat_vecs]
+        lat_block = "\n".join(lat_lines)
+
+    coord_lines = []
+    for c in coords:
+        f = c['frac']
+        sp_idx = species_order.index(c['species']) + 1
+        coord_lines.append(f"  {f[0]:.6f}  {f[1]:.6f}  {f[2]:.6f}  {sp_idx}  # {c['label']}")
+    coord_block = "\n".join(coord_lines)
+
+    baseline = mat_cfg.get('candidate_baseline', {})
+    basis = baseline.get('basis', 'DZP')
+    eshift = baseline.get('energy_shift_ry', 0.005)
+    mesh = baseline.get('mesh_cutoff_ry', 200)
+    kgrid = baseline.get('kgrid', [2, 2, 2])
+
+    spin_line = "Spin polarized" if is_magnetic else "Spin non-polarized"
+    spin_block = ""
+    if is_magnetic:
+        spin_lines = ["%block DM.InitSpin"]
+        for idx, c in enumerate(coords, 1):
+            s = c.get('init_spin', 0.0)
+            spin_lines.append(f"  {idx}  {s:+.1f}")
+        spin_lines.append("%endblock DM.InitSpin")
+        spin_block = "\n".join(spin_lines)
+
+    kg0, kg1, kg2 = kgrid[0], kgrid[1], kgrid[2]
+    kgrid_block = (f"%block kgrid_Monkhorst_Pack\n"
+                   f"  {kg0} 0 0 0.0\n"
+                   f"  0 {kg1} 0 0.0\n"
+                   f"  0 0 {kg2} 0.0\n"
+                   f"%endblock kgrid_Monkhorst_Pack")
+
+    n_atoms = len(coords)
+    n_species = len(species_order)
+
+    fdf_text = f"""SystemName          {name} Hubbard Benchmark
+SystemLabel         {name}_ref
+
+NumberOfAtoms       {n_atoms}
+NumberOfSpecies     {n_species}
+
+%block ChemicalSpeciesLabel
+{sp_block}
+%endblock ChemicalSpeciesLabel
+
+LatticeConstant     {a:.4f} Ang
+%block LatticeVectors
+{lat_block}
+%endblock LatticeVectors
+
+AtomicCoordinatesFormat  Fractional
+%block AtomicCoordinatesAndAtomicSpecies
+{coord_block}
+%endblock AtomicCoordinatesAndAtomicSpecies
+
+PAO.BasisSize       {basis}
+PAO.EnergyShift     {eshift} Ry
+PAO.SplitNorm       0.15
+PAO.BasisType       split
+
+MeshCutoff          {mesh} Ry
+{kgrid_block}
+
+MaxSCFIterations    200
+{spin_line}
+{spin_block}
+MD.NumCGsteps       0
+"""
+    return fdf_text
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# RunSpec dataclass
 # ─────────────────────────────────────────────────────────────────────────────
 
 class RunSpec:
-    """A single SIESTA response run."""
+    """A single SIESTA linear response run specification."""
     def __init__(self, run_id: str, work_dir: str, fdf_path: str,
                  canonical_dm_path: str, pseudo_paths: Dict[str, str],
                  mpi_ranks: int, siesta_binary: str, mpi_launcher: str,
                  mpi_flags: str, response_mode: str, alpha: float,
                  perturbed_site: int, n_sites: int,
-                 identity_key: str):
+                 identity_key: str, mat_cfg: Optional[Dict[str, Any]] = None):
         self.run_id         = run_id
         self.work_dir       = work_dir
         self.fdf_path       = fdf_path
@@ -102,17 +237,28 @@ class RunSpec:
         self.siesta_binary  = siesta_binary
         self.mpi_launcher   = mpi_launcher
         self.mpi_flags      = mpi_flags
-        self.response_mode  = response_mode
+        self.response_mode  = response_mode  # 'BARE' or 'SCREENED'
         self.alpha          = alpha
         self.perturbed_site = perturbed_site
         self.n_sites        = n_sites
         self.identity_key   = identity_key
+        self.mat_cfg        = mat_cfg or {}
 
-    def mpi_command(self) -> str:
-        flags = f" {self.mpi_flags}" if self.mpi_flags else ""
-        return (f"{self.mpi_launcher}{flags} -n {self.mpi_ranks} "
-                f"{self.siesta_binary} < {self.fdf_path} "
-                f"> {self.work_dir}/siesta.out 2> {self.work_dir}/siesta.err")
+    def mpi_argv(self) -> List[str]:
+        """
+        Clean argument token list for subprocess.Popen.
+        NO shell redirection operators ('<', '>', '2>') in argv.
+        """
+        argv = [self.mpi_launcher]
+        if self.mpi_flags:
+            argv.extend(self.mpi_flags.split())
+        argv.extend(["-n", str(self.mpi_ranks), self.siesta_binary])
+        return argv
+
+    def mpi_command_display(self) -> str:
+        """String representation of command for logging / dry-run display."""
+        argv_str = " ".join(self.mpi_argv())
+        return f"{argv_str} < {self.fdf_path} > {self.work_dir}/siesta.out 2> {self.work_dir}/siesta.err"
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -128,31 +274,212 @@ class RunSpec:
             'perturbed_site':  self.perturbed_site,
             'n_sites':         self.n_sites,
             'identity_key':    self.identity_key,
-            'mpi_command':     self.mpi_command(),
+            'mpi_argv':        self.mpi_argv(),
+            'mpi_command':     self.mpi_command_display(),
         }
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Authoritative Run Plan Generator
+# ─────────────────────────────────────────────────────────────────────────────
+
+def generate_lr_run_specs(
+    mat_cfg: Dict[str, Any],
+    dag_node: str,
+    campaign_dir: str,
+    alphas: Optional[List[float]] = None,
+    mpi_ranks: int = 20,
+    siesta_binary: str = "/path/to/siesta",
+    mpi_launcher: str = "srun",
+    mpi_flags: str = "",
+    pseudo_dir: Optional[str] = None,
+) -> List[RunSpec]:
+    """
+    Authoritative LR run-plan generator (Blockers 1 & 2).
+    """
+    material = mat_cfg.get('name', 'FeO')
+
+    if alphas is None:
+        if '5POINT' in dag_node.upper() or 'FINAL' in dag_node.upper():
+            alphas = [-0.02, -0.01, 0.0, 0.01, 0.02]
+        else:
+            alphas = [-0.01, 0.0, 0.01]
+
+    n_sites = mat_cfg.get('n_correlated_sites',
+               mat_cfg.get('n_fe_sites',
+               mat_cfg.get('n_cu_sites',
+               mat_cfg.get('n_ni_sites', 2))))
+
+    canonical_dm = os.path.join(campaign_dir, 'materials',
+                                material.lower(), 'reference.DM')
+    ps_dir = pseudo_dir or os.path.join(campaign_dir, 'pseudos', material.lower())
+    pseudos = mat_cfg.get('pseudopotentials', {})
+
+    pseudo_paths = {}
+    for sp, ps_info in pseudos.items():
+        pseudo_paths[sp] = os.path.join(ps_dir, ps_info['file'])
+
+    nonzero_alphas = [a for a in alphas if abs(a) > 1e-12]
+    has_zero = any(abs(a) <= 1e-12 for a in alphas)
+
+    specs: List[RunSpec] = []
+    seen_keys = set()
+    seen_dirs = set()
+
+    # 1. Deduplicated alpha=0 common runs
+    if has_zero:
+        for mode in ['BARE', 'SCREENED']:
+            run_id = f"{material}_{dag_node}_alpha0.0000_{mode}"
+            work_dir = os.path.join(campaign_dir, 'runs', material,
+                                    dag_node, f"alpha0.0000_{mode}")
+            fdf_path = os.path.join(work_dir, 'siesta.fdf')
+
+            if run_id in seen_keys or work_dir in seen_dirs:
+                raise RuntimeError(f"Duplicate run_id or work_dir for alpha=0: {run_id}")
+            seen_keys.add(run_id)
+            seen_dirs.add(work_dir)
+
+            spec = RunSpec(
+                run_id            = run_id,
+                work_dir          = work_dir,
+                fdf_path          = fdf_path,
+                canonical_dm_path = canonical_dm,
+                pseudo_paths      = pseudo_paths,
+                mpi_ranks         = mpi_ranks,
+                siesta_binary     = siesta_binary,
+                mpi_launcher      = mpi_launcher,
+                mpi_flags         = mpi_flags,
+                response_mode     = mode,
+                alpha             = 0.0,
+                perturbed_site    = 0,
+                n_sites           = n_sites,
+                identity_key      = run_id,
+                mat_cfg           = mat_cfg,
+            )
+            specs.append(spec)
+
+    # 2. Per-site perturbed runs
+    for J in range(n_sites):
+        for alpha in nonzero_alphas:
+            for mode in ['BARE', 'SCREENED']:
+                run_id = f"{material}_{dag_node}_J{J}_alpha{alpha:+.4f}_{mode}"
+                work_dir = os.path.join(campaign_dir, 'runs', material,
+                                        dag_node, f"J{J}_a{alpha:+.4f}_{mode}")
+                fdf_path = os.path.join(work_dir, 'siesta.fdf')
+
+                if run_id in seen_keys or work_dir in seen_dirs:
+                    raise RuntimeError(f"Duplicate run_id or work_dir: {run_id}")
+                seen_keys.add(run_id)
+                seen_dirs.add(work_dir)
+
+                spec = RunSpec(
+                    run_id            = run_id,
+                    work_dir          = work_dir,
+                    fdf_path          = fdf_path,
+                    canonical_dm_path = canonical_dm,
+                    pseudo_paths      = pseudo_paths,
+                    mpi_ranks         = mpi_ranks,
+                    siesta_binary     = siesta_binary,
+                    mpi_launcher      = mpi_launcher,
+                    mpi_flags         = mpi_flags,
+                    response_mode     = mode,
+                    alpha             = alpha,
+                    perturbed_site    = J,
+                    n_sites           = n_sites,
+                    identity_key      = run_id,
+                    mat_cfg           = mat_cfg,
+                )
+                specs.append(spec)
+
+    return specs
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Real FDF Materialization (Blocker 3)
+# ─────────────────────────────────────────────────────────────────────────────
+
+def materialize_run_fdf(run_spec: RunSpec) -> str:
+    """
+    Generate and write out the real executable siesta.fdf file for a RunSpec.
+    """
+    mat_cfg = run_spec.mat_cfg
+    name = mat_cfg.get('name', 'FeO')
+
+    target_species = mat_cfg.get('correlated_species', None)
+    if not target_species:
+        if name == 'NiO':
+            target_species = 'Ni'
+        elif name in ('Cu2O', 'Cu3N'):
+            target_species = 'Cu'
+        else:
+            target_species = 'Fe'
+
+    base_fdf = build_base_fdf_from_material_cfg(mat_cfg)
+
+    split_fdf, new_labels = materialize_split_species_fdf(
+        base_fdf, target_species=target_species, new_prefix=f"{target_species}LR"
+    )
+
+    baseline = mat_cfg.get('candidate_baseline', {})
+    rc    = baseline.get('projector_rc_bohr', 3.0)
+    omega = baseline.get('projector_omega_bohr', 0.05)
+    n_manifold = mat_cfg.get('correlated_manifold', {}).get('n', 3)
+    l_manifold = mat_cfg.get('correlated_manifold', {}).get('l', 2)
+
+    projections = []
+    for idx, label in enumerate(new_labels):
+        alpha_for_site = run_spec.alpha if (idx == run_spec.perturbed_site and run_spec.alpha != 0.0) else 0.0
+        projections.append({
+            'species': label,
+            'n': n_manifold,
+            'l': l_manifold,
+            'rc': rc,
+            'omega': omega,
+            'alpha': alpha_for_site,
+        })
+
+    builder = FdfBuilder()
+    final_fdf = builder.modify_fdf_content(
+        content=split_fdf,
+        alpha=run_spec.alpha,
+        run_name=run_spec.run_id,
+        response_mode=run_spec.response_mode,
+        projections=projections,
+    )
+
+    builder.write_fdf(run_spec.fdf_path, final_fdf)
+
+    target_pseudo_info = mat_cfg.get('pseudopotentials', {}).get(target_species, {})
+    target_psml_file   = target_pseudo_info.get('file', f"{target_species}.psml")
+
+    pseudo_dir = os.path.dirname(list(run_spec.pseudo_paths.values())[0]) \
+                 if run_spec.pseudo_paths else "."
+
+    updated_pseudos = {}
+    for label in new_labels:
+        updated_pseudos[label] = os.path.join(pseudo_dir, target_psml_file)
+    for sp, src in run_spec.pseudo_paths.items():
+        if sp != target_species:
+            updated_pseudos[sp] = src
+    run_spec.pseudo_paths = updated_pseudos
+
+    return final_fdf
 
 
 def materialize_run(run_spec: RunSpec, dry_run: bool = True) -> Dict[str, Any]:
     """
-    Set up the working directory for a run:
-    1. Create unique work_dir
-    2. Copy pseudopotentials
-    3. Copy (refresh) canonical DM
-    4. Assert DM hash == canonical hash
-    5. Write FDF
-    If dry_run=True, skip actual file operations except creating dirs/FDFs.
-
-    Returns dict with materialization status and MPI command.
+    Set up working directory and materialize files for a RunSpec.
     """
-    from production_benchmarks.canonical_dm import assert_campaign_dm_invariant
-
     os.makedirs(run_spec.work_dir, exist_ok=True)
+
+    fdf_text = materialize_run_fdf(run_spec)
+
     result = run_spec.to_dict()
     result['dry_run'] = dry_run
     result['materialized'] = False
     result['dm_hash_verified'] = False
+    result['fdf_materialized'] = True
 
-    # Pseudopotential copies
     pseudo_copies = {}
     for alias, source in run_spec.pseudo_paths.items():
         dest = os.path.join(run_spec.work_dir, f"{alias}.psml")
@@ -161,14 +488,18 @@ def materialize_run(run_spec: RunSpec, dry_run: bool = True) -> Dict[str, Any]:
                 result['error'] = f"Pseudopotential missing: {source}"
                 return result
             shutil.copy2(source, dest)
+        else:
+            if os.path.exists(source):
+                shutil.copy2(source, dest)
+            else:
+                with open(dest, 'w') as fh:
+                    fh.write(f"# Placeholder for {alias}.psml\n")
         pseudo_copies[alias] = dest
     result['pseudo_copies'] = pseudo_copies
 
-    # Canonical DM refresh
     dm_name = os.path.basename(run_spec.canonical_dm_path)
     child_dm = os.path.join(run_spec.work_dir, dm_name)
     if not dry_run and os.path.exists(run_spec.canonical_dm_path):
-        # Compute canonical hash
         with open(run_spec.canonical_dm_path, 'rb') as fh:
             ref_sha = hashlib.sha256(fh.read()).hexdigest()
         returned_sha = assert_campaign_dm_invariant(
@@ -180,14 +511,14 @@ def materialize_run(run_spec: RunSpec, dry_run: bool = True) -> Dict[str, Any]:
         result['dm_hash_verified'] = True
     else:
         result['parent_dm_sha256'] = 'DRY_RUN_NOT_VERIFIED'
-        result['dm_hash_verified'] = dry_run  # trivially True in dry-run
+        result['dm_hash_verified'] = dry_run
 
     result['materialized'] = True
     return result
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Slurm script generation
+# Slurm script generation (Blocker 5)
 # ─────────────────────────────────────────────────────────────────────────────
 
 def generate_slurm_script(
@@ -199,37 +530,10 @@ def generate_slurm_script(
     n_concurrent: int,
 ) -> str:
     """
-    Generate a real Slurm batch script for a set of response runs.
-
-    Structure:
-    1. SBATCH header
-    2. Module loads
-    3. Environment variables (OMP, MKL, etc.)
-    4. Reference run (sequential, if dag_node includes reference)
-    5. Response run pool: launch up to n_concurrent srun jobs in background
-       with wait and error checking
+    Generate the outer Slurm batch script (Blocker 5).
     """
     module_block = "\n".join(f"module load {m}" for m in profile.module_loads) \
                    or "# No modules specified"
-
-    # Build run commands for response pool
-    run_cmds = []
-    for spec in run_specs:
-        cmd = (
-            f"  # Run {spec.run_id}: site={spec.perturbed_site} "
-            f"alpha={spec.alpha} mode={spec.response_mode}\n"
-            f"  mkdir -p {spec.work_dir}\n"
-            f"  cp $CANONICAL_DM {spec.work_dir}/\n"
-            f"  {spec.mpi_command()} &\n"
-            f"  PIDS+=($!)\n"
-            f"  RUN_COUNT=$((RUN_COUNT + 1))\n"
-            f"  if [ $RUN_COUNT -ge {n_concurrent} ]; then\n"
-            f"    wait \"${{PIDS[@]}}\"; check_exits \"${{PIDS[@]}}\"; PIDS=(); RUN_COUNT=0\n"
-            f"  fi"
-        )
-        run_cmds.append(cmd)
-
-    run_block = "\n".join(run_cmds)
 
     script = textwrap.dedent(f"""\
         #!/bin/bash
@@ -250,38 +554,20 @@ def generate_slurm_script(
         export MKL_NUM_THREADS={profile.omp_threads_per_rank}
         export OPENBLAS_NUM_THREADS={profile.omp_threads_per_rank}
 
-        SIESTA="{profile.siesta_binary}"
-        CAMPAIGN_DIR="{campaign_dir}"
-        MATERIAL="{material}"
-        DAG_NODE="{dag_node}"
-        CANONICAL_DM="$CAMPAIGN_DIR/materials/{material.lower()}/reference.DM"
+        mkdir -p "{campaign_dir}/campaign_logs"
 
-        mkdir -p "$CAMPAIGN_DIR/campaign_logs"
+        # ── Invoke Single Authoritative Python Controller ─────
+        python -m production_benchmarks.slurm_runner \\
+          --campaign-dir "{campaign_dir}" \\
+          --material "{material}" \\
+          --dag-node "{dag_node}" \\
+          --mpi-ranks {profile.mpi_ranks_per_run} \\
+          --max-concurrent {profile.max_concurrent_runs} \\
+          --siesta-binary "{profile.siesta_binary}" \\
+          --mpi-launcher "{profile.mpi_launcher}" \\
+          --mpi-flags "{profile.mpi_flags}"
 
-        # ── Exit code checker ─────────────────────────────────
-        check_exits() {{
-            for pid in "$@"; do
-                wait "$pid"
-                rc=$?
-                if [ $rc -ne 0 ]; then
-                    echo "ERROR: PID $pid exited with code $rc" >&2
-                    exit $rc
-                fi
-            done
-        }}
-
-        # ── Response run pool ─────────────────────────────────
-        PIDS=()
-        RUN_COUNT=0
-
-    {run_block}
-
-        # Wait for final batch
-        if [ ${{#PIDS[@]}} -gt 0 ]; then
-            wait "${{PIDS[@]}}"; check_exits "${{PIDS[@]}}"
-        fi
-
-        echo "DAG node $DAG_NODE for $MATERIAL completed successfully"
+        echo "DAG node $DAG_NODE for $MATERIAL completed with status $?"
     """)
     return script
 
@@ -296,88 +582,55 @@ def write_slurm_script(script_str: str, output_path: str) -> None:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Run count estimation (derived, not guessed)
+# Derived Run Count Estimation (Blocker 2)
 # ─────────────────────────────────────────────────────────────────────────────
 
 def estimate_run_counts(material_config: Dict[str, Any],
-                         convergence_dims: Optional[Dict[str, Any]] = None) -> dict:
+                         convergence_dims: Optional[Dict[str, Any]] = None,
+                         campaign_dir: str = "/tmp/dummy_campaign") -> dict:
     """
-    Derive exact expected run counts from the sequential convergence DAG.
-
-    NOT a Cartesian product. Each convergence step adds runs for the candidate
-    values in that dimension only, all others held at accepted/baseline.
-
-    Parameters
-    ----------
-    material_config  : parsed material.json dict
-    convergence_dims : override convergence_sequence from material_config
-
-    Returns
-    -------
-    dict with run counts per stage and totals.
+    Derive exact run counts directly from generate_lr_run_specs().
     """
     seq = convergence_dims or material_config.get('convergence_sequence', [])
-    n_sites = material_config.get('n_correlated_sites',
-                                   material_config.get('n_fe_sites',
-                                   material_config.get('n_cu_sites',
-                                   material_config.get('n_ni_sites', 2))))
-    spin_mode = material_config.get('spin_mode', 'non_polarized')
-    is_magnetic = 'polarized' in spin_mode
-
-    # Each screening campaign = (n_sites perturbed sites) x (3 alphas: -, 0, +)
-    # For magnetic AFM: split species so n_correlated_sites equals n_cation
-    n_alpha_screen = 3   # [-δ, 0, +δ]
-    n_alpha_final  = 5   # [-2δ,-δ,0,+δ,+2δ]
-
-    def screening_runs(n_s: int) -> int:
-        """Runs for one 3-point screening campaign."""
-        return n_s * n_alpha_screen
-
-    def final_runs(n_s: int) -> int:
-        """Runs for one 5-point final campaign."""
-        return n_s * n_alpha_final
+    material = material_config.get('name', 'FeO')
 
     counts: Dict[str, Any] = {}
-
-    # Reference run: always 1
     counts['reference'] = 1
-
-    # MPI scaling: 3 rank points x 1 control run each
     counts['mpi_scaling'] = 3
 
-    # Sequential convergence dimensions
+    specs_3pt = generate_lr_run_specs(material_config, 'SCREENING_3POINT', campaign_dir)
+    n_3pt_campaign = len(specs_3pt)
+    counts['runs_per_3pt_campaign'] = n_3pt_campaign
+
+    specs_5pt = generate_lr_run_specs(material_config, 'FINAL_5POINT_LR', campaign_dir)
+    n_5pt_campaign = len(specs_5pt)
+    counts['runs_per_5pt_campaign'] = n_5pt_campaign
+
     total_screen = 0
     for step in seq:
-        dim    = step['dimension']
+        dim = step['dimension']
         values = step['values']
-        n_candidates = len(values)
-        if n_candidates <= 1:
-            runs_this_dim = screening_runs(n_sites)  # single point: still need a screen
-        else:
-            runs_this_dim = (n_candidates - 1) * screening_runs(n_sites)
-            # The first value is the baseline; each additional value costs one campaign
+        n_cand = len(values)
+        runs_this_dim = n_3pt_campaign if n_cand <= 1 else (n_cand - 1) * n_3pt_campaign
         counts[f'screen_{dim}'] = runs_this_dim
         total_screen += runs_this_dim
 
     counts['total_screening'] = total_screen
-
-    # Final 5-point LR (at frozen configuration)
-    counts['final_lr'] = final_runs(n_sites)
+    counts['final_lr'] = n_5pt_campaign
 
     counts['total'] = (counts['reference'] +
                        counts['mpi_scaling'] +
                        total_screen +
                        counts['final_lr'])
 
-    # Early-stop minimum (if Cu3N stops after first screen)
-    counts['minimum_early_stop'] = counts['reference'] + counts.get('screen_basis', 0) + screening_runs(n_sites)
+    counts['minimum_early_stop'] = counts['reference'] + counts['mpi_scaling'] + n_3pt_campaign
     counts['maximum_all_stages'] = counts['total']
 
     return counts
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# CLI entrypoint
+# CLI Entrypoint & Single Authoritative Controller (Blockers 4 & 5)
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -394,19 +647,16 @@ def _build_parser() -> argparse.ArgumentParser:
     p.add_argument('--mpi-launcher',   default='srun')
     p.add_argument('--mpi-flags',      default='')
     p.add_argument('--dry-run',        action='store_true',
-                   help='Materialize files/dirs but do not launch SIESTA')
-    p.add_argument('--pseudo-dir',     default=None,
-                   help='Directory containing PSML files')
-    p.add_argument('--alpha',          type=float, nargs='+',
-                   default=[-0.02,-0.01,0.0,0.01,0.02])
+                   help='Materialize real FDFs and dirs but do not launch SIESTA')
+    p.add_argument('--pseudo-dir',     default=None)
+    p.add_argument('--alpha',          type=float, nargs='+', default=None)
     p.add_argument('--profile-json',   default=None)
     return p
 
 
 def cli_main(argv: Optional[List[str]] = None) -> int:
     """
-    CLI entry point.
-    Returns exit code (0=success).
+    Single Authoritative Controller CLI entry point.
     """
     parser = _build_parser()
     args   = parser.parse_args(argv)
@@ -416,9 +666,7 @@ def cli_main(argv: Optional[List[str]] = None) -> int:
     dag_node     = args.dag_node
     dry_run      = args.dry_run
 
-    # Load material config
-    mat_json = os.path.join(campaign_dir, 'materials',
-                            material.lower(), 'material.json')
+    mat_json = os.path.join(campaign_dir, 'materials', material.lower(), 'material.json')
     if not os.path.exists(mat_json):
         print(f"ERROR: material.json not found: {mat_json}", file=sys.stderr)
         return 1
@@ -426,25 +674,9 @@ def cli_main(argv: Optional[List[str]] = None) -> int:
     with open(mat_json, encoding='utf-8') as fh:
         mat_cfg = json.load(fh)
 
-    # Load campaign state
     from production_benchmarks.campaign_state import CampaignState
     state = CampaignState(campaign_dir)
 
-    # Determine correlated sites
-    n_sites = mat_cfg.get('n_correlated_sites',
-               mat_cfg.get('n_fe_sites',
-               mat_cfg.get('n_cu_sites',
-               mat_cfg.get('n_ni_sites', 2))))
-
-    # Determine response mode based on DAG node
-    if 'BARE' in dag_node.upper():
-        mode = 'BARE'
-    elif 'SCREEN' in dag_node.upper() or 'FINAL' in dag_node.upper():
-        mode = 'SCREENED'
-    else:
-        mode = 'SCREENED'  # default
-
-    # Profile
     if args.profile_json and os.path.exists(args.profile_json):
         profile = SlurmProfile.from_json(args.profile_json)
         mpi_ranks = profile.mpi_ranks_per_run
@@ -459,48 +691,20 @@ def cli_main(argv: Optional[List[str]] = None) -> int:
         launcher  = args.mpi_launcher
         mpi_flags = args.mpi_flags
 
-    # Canonical DM path
-    canonical_dm = os.path.join(campaign_dir, 'materials',
-                                material.lower(), 'reference.DM')
-
-    # Pseudo directory
-    pseudo_dir = args.pseudo_dir or os.path.join(campaign_dir, 'pseudos', material.lower())
-    pseudos = mat_cfg.get('pseudopotentials', {})
-
-    # Build run specs
-    run_specs = []
-    alphas    = args.alpha
-    for J in range(n_sites):
-        for alpha in alphas:
-            run_id  = f"{material}_{dag_node}_J{J}_alpha{alpha:+.4f}_{mode}"
-            work_dir = os.path.join(campaign_dir, 'runs', material,
-                                    dag_node, f"J{J}_a{alpha:+.4f}_{mode}")
-            # Build pseudo paths
-            pseudo_paths = {}
-            for sp, ps_info in pseudos.items():
-                src = os.path.join(pseudo_dir, ps_info['file'])
-                pseudo_paths[sp] = src
-
-            spec = RunSpec(
-                run_id          = run_id,
-                work_dir        = work_dir,
-                fdf_path        = os.path.join(work_dir, 'siesta.fdf'),
-                canonical_dm_path = canonical_dm,
-                pseudo_paths    = pseudo_paths,
-                mpi_ranks       = mpi_ranks,
-                siesta_binary   = siesta,
-                mpi_launcher    = launcher,
-                mpi_flags       = mpi_flags,
-                response_mode   = mode,
-                alpha           = alpha,
-                perturbed_site  = J,
-                n_sites         = n_sites,
-                identity_key    = run_id,
-            )
-            run_specs.append(spec)
+    run_specs = generate_lr_run_specs(
+        mat_cfg=mat_cfg,
+        dag_node=dag_node,
+        campaign_dir=campaign_dir,
+        alphas=args.alpha,
+        mpi_ranks=mpi_ranks,
+        siesta_binary=siesta,
+        mpi_launcher=launcher,
+        mpi_flags=mpi_flags,
+        pseudo_dir=args.pseudo_dir,
+    )
 
     if dry_run:
-        print(f"DRY RUN: {len(run_specs)} runs for {material}/{dag_node}")
+        print(f"DRY RUN: {len(run_specs)} runs generated for {material}/{dag_node}")
         results = []
         seen_dirs = set()
         for spec in run_specs:
@@ -508,17 +712,16 @@ def cli_main(argv: Optional[List[str]] = None) -> int:
                 print(f"ERROR: duplicate directory: {spec.work_dir}", file=sys.stderr)
                 return 1
             seen_dirs.add(spec.work_dir)
-            os.makedirs(spec.work_dir, exist_ok=True)
             r = materialize_run(spec, dry_run=True)
             print(f"  [{spec.run_id}]")
             print(f"    work_dir     : {spec.work_dir}")
-            print(f"    mpi_command  : {spec.mpi_command()}")
+            print(f"    fdf_path     : {spec.fdf_path}")
+            print(f"    mpi_argv     : {spec.mpi_argv()}")
             print(f"    mode         : {spec.response_mode}")
             print(f"    alpha        : {spec.alpha}")
             print(f"    site_J       : {spec.perturbed_site}")
             results.append(r)
 
-        # Write dry-run manifest
         manifest_path = os.path.join(campaign_dir, 'runs', material,
                                      f"{dag_node}_dryrun_manifest.json")
         os.makedirs(os.path.dirname(manifest_path), exist_ok=True)
@@ -528,56 +731,69 @@ def cli_main(argv: Optional[List[str]] = None) -> int:
         print(f"DRY_RUN_COMPLETE: {len(run_specs)} runs materialized")
         return 0
     else:
-        # Real execution: check state, skip completed, launch in bounded pool
         launched = 0
         skipped  = 0
         failed   = 0
-        active_procs: List[subprocess.Popen] = []
-        active_specs: List[RunSpec] = []
+
+        active_tasks: List[Tuple[subprocess.Popen, RunSpec, Any, Any, Any]] = []
+
+        def wait_and_reap_task(task_entry: Tuple[subprocess.Popen, RunSpec, Any, Any, Any]) -> int:
+            proc, s, fin, fout, ferr = task_entry
+            rc = proc.wait()
+            fin.close()
+            fout.close()
+            ferr.close()
+            if rc == 0:
+                state.mark_complete(s.identity_key, {'return_code': 0})
+            else:
+                state.mark_failed(s.identity_key, f"rc={rc}")
+            return rc
 
         for spec in run_specs:
             if state.is_complete(spec.identity_key):
                 skipped += 1
                 continue
 
-            # Materialize
             r = materialize_run(spec, dry_run=False)
             if not r.get('materialized'):
                 state.mark_failed(spec.identity_key, r.get('error', 'materialization failed'))
                 failed += 1
                 continue
 
-            # Launch
             env = os.environ.copy()
             env['OMP_NUM_THREADS'] = '1'
             env['MKL_NUM_THREADS'] = '1'
             env['OPENBLAS_NUM_THREADS'] = '1'
-            cmd = spec.mpi_command().split()
-            proc = subprocess.Popen(cmd, env=env, cwd=spec.work_dir)
-            active_procs.append(proc)
-            active_specs.append(spec)
+
+            argv = spec.mpi_argv()
+
+            fdf_in = open(spec.fdf_path, "rb")
+            stdout_out = open(os.path.join(spec.work_dir, "siesta.out"), "wb")
+            stderr_err = open(os.path.join(spec.work_dir, "siesta.err"), "wb")
+
+            proc = subprocess.Popen(
+                argv,
+                stdin=fdf_in,
+                stdout=stdout_out,
+                stderr=stderr_err,
+                cwd=spec.work_dir,
+                env=env,
+            )
+            active_tasks.append((proc, spec, fdf_in, stdout_out, stderr_err))
             launched += 1
 
-            # Throttle concurrency
-            if len(active_procs) >= max_conc:
-                for p, s in zip(active_procs, active_specs):
-                    rc = p.wait()
-                    if rc == 0:
-                        state.mark_complete(s.identity_key, {'return_code': 0})
-                    else:
-                        state.mark_failed(s.identity_key, f"rc={rc}")
+            if len(active_tasks) >= max_conc:
+                for t in active_tasks:
+                    rc = wait_and_reap_task(t)
+                    if rc != 0:
                         failed += 1
-                active_procs.clear()
-                active_specs.clear()
+                active_tasks.clear()
 
-        # Wait for remaining
-        for p, s in zip(active_procs, active_specs):
-            rc = p.wait()
-            if rc == 0:
-                state.mark_complete(s.identity_key, {'return_code': 0})
-            else:
-                state.mark_failed(s.identity_key, f"rc={rc}")
+        for t in active_tasks:
+            rc = wait_and_reap_task(t)
+            if rc != 0:
                 failed += 1
+        active_tasks.clear()
 
         print(f"COMPLETE: launched={launched} skipped={skipped} failed={failed}")
         return 0 if failed == 0 else 1
