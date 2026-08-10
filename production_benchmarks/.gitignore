@@ -1,0 +1,5 @@
+# Ignore benchmark run output directories
+runs/
+*.pyc
+__pycache__/
+.pytest_cache/

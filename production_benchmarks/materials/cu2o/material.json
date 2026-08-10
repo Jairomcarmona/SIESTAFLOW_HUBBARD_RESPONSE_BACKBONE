@@ -4,6 +4,12 @@
   "structure_type": "cuprite",
   "space_group": "Pn-3m",
   "lattice_constant_ang": 4.27,
+  "lattice_vectors": [
+    [1.0, 0.0, 0.0],
+    [0.0, 1.0, 0.0],
+    [0.0, 0.0, 1.0]
+  ],
+  "magnetic_ordering": "nonmagnetic",
   "spin_mode": "non_polarized",
   "correlated_species": "Cu",
   "correlated_manifold": {
@@ -26,139 +32,90 @@
     {
       "label": "O",
       "species": "O",
-      "frac": [
-        0.0,
-        0.0,
-        0.0
-      ]
+      "frac": [0.0, 0.0, 0.0],
+      "init_spin": 0.0
     },
     {
       "label": "O",
       "species": "O",
-      "frac": [
-        0.5,
-        0.5,
-        0.5
-      ]
+      "frac": [0.5, 0.5, 0.5],
+      "init_spin": 0.0
     },
     {
       "label": "Cu",
       "species": "Cu",
-      "frac": [
-        0.25,
-        0.25,
-        0.25
-      ]
+      "frac": [0.25, 0.25, 0.25],
+      "init_spin": 0.0
     },
     {
       "label": "Cu",
       "species": "Cu",
-      "frac": [
-        0.25,
-        0.75,
-        0.75
-      ]
+      "frac": [0.25, 0.75, 0.75],
+      "init_spin": 0.0
     },
     {
       "label": "Cu",
       "species": "Cu",
-      "frac": [
-        0.75,
-        0.25,
-        0.75
-      ]
+      "frac": [0.75, 0.25, 0.75],
+      "init_spin": 0.0
     },
     {
       "label": "Cu",
       "species": "Cu",
-      "frac": [
-        0.75,
-        0.75,
-        0.25
-      ]
+      "frac": [0.75, 0.75, 0.25],
+      "init_spin": 0.0
     }
   ],
   "n_atoms": 6,
-  "software_validation_reference": {
-    "U_II_ev": 11.8094,
-    "U_uniform_ev": 8.914,
-    "U_transverse_ev": 12.775,
-    "note": "validated in phase4_cu2o_4x4 campaign"
-  },
-  "literature_context": {
-    "reference": "Timrov+2018 PRB98 085127",
-    "reported_U_ev": 11.3,
-    "method": "DFPT linear response",
-    "code": "Quantum ESPRESSO",
-    "xc": "PBE",
-    "note": ""
-  },
-  "SCIENTIFIC_STATUS": "PENDING",
   "n_correlated_sites": 4,
+  "n_cu_sites": 4,
+  "n_o_sites": 2,
   "convergence_sequence": [
     {
       "dimension": "basis",
-      "values": [
-        "DZP"
-      ],
+      "values": ["DZP"],
       "accepted_value": null
     },
     {
       "dimension": "energy_shift_ry",
-      "values": [
-        0.02,
-        0.01,
-        0.005
-      ],
+      "values": [0.02, 0.01, 0.005],
       "accepted_value": null
     },
     {
       "dimension": "mesh_cutoff_ry",
-      "values": [
-        200,
-        250
-      ],
+      "values": [200, 250],
       "accepted_value": null
     },
     {
       "dimension": "kgrid",
-      "values": [
-        [
-          2,
-          2,
-          2
-        ],
-        [
-          4,
-          4,
-          4
-        ]
-      ],
+      "values": [[2, 2, 2], [4, 4, 4]],
       "accepted_value": null
     },
     {
       "dimension": "projector_rc_bohr",
-      "values": [
-        2.5,
-        3.0,
-        3.5
-      ],
+      "values": [2.5, 3.0, 3.5],
       "accepted_value": null
     },
     {
       "dimension": "projector_omega_bohr",
-      "values": [
-        0.05
-      ],
+      "values": [0.05],
       "accepted_value": null
     },
     {
       "dimension": "alpha_ev",
-      "values": [
-        0.01,
-        0.02
-      ],
+      "values": [0.01, 0.02],
       "accepted_value": null
     }
-  ]
+  ],
+  "SCIENTIFIC_STATUS": "PENDING",
+  "candidate_baseline": {
+    "basis": "DZP",
+    "energy_shift_ry": 0.005,
+    "mesh_cutoff_ry": 200,
+    "kgrid": [4, 4, 4],
+    "projector_rc_bohr": 3.0,
+    "projector_omega_bohr": 0.05,
+    "alpha_ev": 0.01,
+    "lr_mode": "FINAL_5POINT"
+  }
 }

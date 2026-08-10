@@ -2,8 +2,14 @@
   "name": "FeO",
   "formula": "FeO",
   "structure_type": "rocksalt_afm_ii",
-  "space_group": "Fm-3m",
+  "space_group": "R-3m",
   "lattice_constant_ang": 4.334,
+  "lattice_vectors": [
+    [0.0, 1.0, 1.0],
+    [0.5, 0.0, 0.5],
+    [0.5, 0.5, 0.0]
+  ],
+  "magnetic_ordering": "AFM-II",
   "spin_mode": "collinear_polarized",
   "correlated_species": "Fe",
   "correlated_manifold": {
@@ -28,185 +34,90 @@
     {
       "label": "Fe",
       "species": "Fe",
-      "frac": [
-        0.0,
-        0.0,
-        0.0
-      ],
+      "frac": [0.0, 0.0, 0.0],
       "init_spin": 4.0
     },
     {
       "label": "Fe",
       "species": "Fe",
-      "frac": [
-        0.5,
-        0.5,
-        0.0
-      ],
-      "init_spin": -4.0
-    },
-    {
-      "label": "Fe",
-      "species": "Fe",
-      "frac": [
-        0.5,
-        0.0,
-        0.5
-      ],
-      "init_spin": 4.0
-    },
-    {
-      "label": "Fe",
-      "species": "Fe",
-      "frac": [
-        0.0,
-        0.5,
-        0.5
-      ],
+      "frac": [0.5, 0.0, 0.0],
       "init_spin": -4.0
     },
     {
       "label": "O",
       "species": "O",
-      "frac": [
-        0.5,
-        0.0,
-        0.0
-      ],
+      "frac": [0.25, 0.5, 0.5],
       "init_spin": 0.0
     },
     {
       "label": "O",
       "species": "O",
-      "frac": [
-        0.0,
-        0.5,
-        0.0
-      ],
-      "init_spin": 0.0
-    },
-    {
-      "label": "O",
-      "species": "O",
-      "frac": [
-        0.0,
-        0.0,
-        0.5
-      ],
-      "init_spin": 0.0
-    },
-    {
-      "label": "O",
-      "species": "O",
-      "frac": [
-        0.5,
-        0.5,
-        0.5
-      ],
+      "frac": [0.75, 0.5, 0.5],
       "init_spin": 0.0
     }
   ],
-  "n_atoms": 8,
-  "n_fe_sites": 4,
-  "n_o_sites": 4,
+  "n_atoms": 4,
+  "n_correlated_sites": 2,
+  "n_fe_sites": 2,
+  "n_o_sites": 2,
   "literature_context": {
     "reference": "Cococcioni & de Gironcoli, PRB 71 035105 (2005)",
     "reported_U_ev": 4.3,
-    "method": "DFPT linear response, one-shot",
+    "method": "DFPT linear response",
     "code": "Quantum ESPRESSO",
-    "xc": "LDA",
-    "note": "LDA reference; PBE + different projector definition will give different U. Literature value is scale context only."
+    "xc": "LDA"
   },
   "convergence_sequence": [
     {
       "dimension": "basis",
-      "values": [
-        "DZP"
-      ],
+      "values": ["DZP"],
       "accepted_value": null
     },
     {
       "dimension": "energy_shift_ry",
-      "values": [
-        0.02,
-        0.01,
-        0.005
-      ],
+      "values": [0.02, 0.01, 0.005],
       "accepted_value": null
     },
     {
       "dimension": "mesh_cutoff_ry",
-      "values": [
-        200,
-        250
-      ],
+      "values": [200, 250],
       "accepted_value": null
     },
     {
       "dimension": "kgrid",
-      "values": [
-        [
-          2,
-          2,
-          2
-        ],
-        [
-          4,
-          4,
-          4
-        ]
-      ],
+      "values": [[2, 2, 2], [4, 4, 4]],
       "accepted_value": null
     },
     {
       "dimension": "supercell",
-      "values": [
-        "small",
-        "medium",
-        "large"
-      ],
+      "values": ["small", "medium", "large"],
       "accepted_value": null
     },
     {
       "dimension": "projector_rc_bohr",
-      "values": [
-        2.5,
-        3.0,
-        3.5
-      ],
+      "values": [2.5, 3.0, 3.5],
       "accepted_value": null
     },
     {
       "dimension": "projector_omega_bohr",
-      "values": [
-        0.05
-      ],
+      "values": [0.05],
       "accepted_value": null
     },
     {
       "dimension": "alpha_ev",
-      "values": [
-        0.01,
-        0.02
-      ],
+      "values": [0.01, 0.02],
       "accepted_value": null
     }
   ],
-  "n_correlated_sites": 4,
   "SCIENTIFIC_STATUS": "PENDING",
   "candidate_baseline": {
     "basis": "DZP",
     "energy_shift_ry": 0.005,
     "mesh_cutoff_ry": 200,
-    "kgrid": [
-      4,
-      4,
-      4
-    ],
+    "kgrid": [4, 4, 4],
     "projector_rc_bohr": 3.0,
     "projector_omega_bohr": 0.05,
     "alpha_ev": 0.01,
-    "lr_mode": "FINAL_5POINT",
-    "note": "CANDIDATE ONLY \u2014 accepted values start null, populated after convergence evidence"
+    "lr_mode": "FINAL_5POINT"
   }
 }

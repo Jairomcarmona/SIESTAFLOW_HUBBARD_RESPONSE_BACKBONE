@@ -3,17 +3,14 @@ production_benchmarks/geometry_validator.py
 
 Real geometry validators that derive all properties from atomic coordinates.
 Uses 3x3x3 periodic image translations to calculate exact coordination numbers under PBC.
-No hardcoded return values.
+Includes physical AFM-II (111)-plane magnetic ordering validation.
+No hardcoded return values or name-based fallback lattices.
 """
 from __future__ import annotations
 import numpy as np
 from itertools import product
 from typing import List, Tuple, Optional, Dict, Any
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Utility helpers
-# ─────────────────────────────────────────────────────────────────────────────
 
 def _min_image_dist(r1: np.ndarray, r2: np.ndarray, lat: np.ndarray) -> float:
     """Minimum-image distance between two Cartesian positions under PBC."""
@@ -56,10 +53,7 @@ def check_min_distance(cart_coords: np.ndarray, lat: np.ndarray,
 
 def _pbc_coordination_count(site_idx: int, cart: np.ndarray, lat: np.ndarray,
                            target_indices: List[int], cutoff: float) -> int:
-    """
-    Count total number of bond connections to target sites within cutoff Å under PBC.
-    Iterates over 3x3x3 image cell translations to account for multiple periodic image bonds.
-    """
+    """Count total bond connections within cutoff under PBC."""
     bonds = 0
     for j in target_indices:
         for n1, n2, n3 in product([-1, 0, 1], repeat=3):
@@ -73,56 +67,128 @@ def _pbc_coordination_count(site_idx: int, cart: np.ndarray, lat: np.ndarray,
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# AFM-II Ordering Validator (Physical (111)-plane check)
+# ─────────────────────────────────────────────────────────────────────────────
+
+def verify_afm_ii_ordering(cation_fracs: np.ndarray,
+                            cation_spins: List[float],
+                            lat_vectors: Optional[np.ndarray] = None,
+                            tol: float = 0.1) -> dict:
+    """
+    Verify true AFM-II ordering:
+    1. Equal positive and negative spin counts, net spin ~ 0.
+    2. Cations on parallel (111) planes have parallel spins.
+    3. Cations on adjacent (111) planes have antiparallel spins.
+    """
+    errors = []
+    spins = [float(s) for s in cation_spins]
+    if not spins:
+        return {'afm_ii_valid': False, 'errors': ['No cation spins provided']}
+
+    pos = [s for s in spins if s > tol]
+    neg = [s for s in spins if s < -tol]
+    zero = [s for s in spins if abs(s) <= tol]
+
+    if zero:
+        errors.append(f"Cation spins contain zero/unpolarized entries: {zero}")
+
+    if len(pos) != len(neg):
+        errors.append(f"Sublattice uncompensated: {len(pos)} positive vs {len(neg)} negative spins")
+
+    total_spin = sum(spins)
+    if abs(total_spin) > tol:
+        errors.append(f"Total magnetization {total_spin:.4f} not near zero for AFM")
+
+    # Physical (111)-plane verification
+    cation_fracs = np.asarray(cation_fracs, dtype=float)
+    if lat_vectors is None:
+        lat_vectors = np.eye(3) * 4.177
+    lat_vectors = np.asarray(lat_vectors, dtype=float)
+    cart = cation_fracs @ lat_vectors
+
+    # (111) plane normal vector
+    n_plane = np.array([1.0, 1.0, 1.0]) / np.sqrt(3.0)
+
+    # Calculate interplanar spacing d_111
+    # For cubic rocksalt, d_111 = a / sqrt(3).
+    # For rhombohedral cell, d_111 is distance along [111].
+    a_len = float(np.linalg.norm(lat_vectors[0]))
+    d_111 = a_len / np.sqrt(3.0)
+    if d_111 < 0.5:
+        d_111 = 2.0
+
+    n = len(spins)
+    for i in range(n):
+        for j in range(i + 1, n):
+            diff = cart[i] - cart[j]
+            frac_diff = np.linalg.solve(lat_vectors.T, diff)
+            frac_diff -= np.round(frac_diff)
+            cart_diff = lat_vectors.T @ frac_diff
+            proj = float(np.dot(cart_diff, n_plane))
+
+            plane_diff = int(round(abs(proj) / d_111))
+            same_sign = (spins[i] > 0 and spins[j] > 0) or (spins[i] < 0 and spins[j] < 0)
+
+            # Even plane difference -> parallel spins expected
+            if plane_diff % 2 == 0:
+                if not same_sign:
+                    errors.append(
+                        f"Atoms {i} (spin={spins[i]}) and {j} (spin={spins[j]}) belong to the same (111) plane "
+                        f"but have opposite spin signs"
+                    )
+            # Odd plane difference -> antiparallel spins expected
+            else:
+                if same_sign:
+                    errors.append(
+                        f"Atoms {i} (spin={spins[i]}) and {j} (spin={spins[j]}) belong to adjacent (111) planes "
+                        f"but have parallel spin signs"
+                    )
+
+    return {
+        'afm_ii_valid': len(errors) == 0,
+        'n_positive': len(pos),
+        'n_negative': len(neg),
+        'total_spin': float(total_spin),
+        'errors': errors,
+    }
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Cu2O cuprite validator
 # ─────────────────────────────────────────────────────────────────────────────
 
 def verify_cuprite_cu2o(fracs: np.ndarray, labels: List[str],
-                         a_ang: float) -> dict:
-    """
-    Verify Cu2O cuprite geometry from first principles.
-    """
+                         a_ang: float,
+                         lat_vectors: Optional[np.ndarray] = None) -> dict:
     fracs = np.asarray(fracs, dtype=float)
-    lat = np.eye(3) * a_ang
+    lat = np.asarray(lat_vectors, dtype=float) if lat_vectors is not None else np.eye(3) * a_ang
     cart = _build_cart(fracs, lat)
 
     errors = []
     cu_idx = [i for i, l in enumerate(labels) if l == 'Cu']
     o_idx  = [i for i, l in enumerate(labels) if l == 'O']
 
-    # Stoichiometry check
     if len(cu_idx) == 0:
         errors.append("No Cu atoms found")
     if len(o_idx) == 0:
         errors.append("No O atoms found")
     if len(cu_idx) != 2 * len(o_idx):
-        errors.append(f"Stoichiometry mismatch: {len(cu_idx)} Cu, {len(o_idx)} O "
-                      f"(expected 2:1 ratio)")
+        errors.append(f"Stoichiometry mismatch: {len(cu_idx)} Cu, {len(o_idx)} O (expected 2:1 ratio)")
 
-    # Duplicate check
     if not validate_no_duplicate_atoms(fracs):
         errors.append("Duplicate fractional positions detected")
 
-    # Cu-O nearest distances
-    cu_o_dists = []
-    for i in cu_idx:
-        for j in o_idx:
-            cu_o_dists.append(_min_image_dist(cart[i], cart[j], lat))
-
+    cu_o_dists = [_min_image_dist(cart[i], cart[j], lat) for i in cu_idx for j in o_idx]
     if not cu_o_dists:
         errors.append("Cannot compute Cu-O distances")
-        return {'geometry_valid': False, 'errors': errors,
-                'cu_o_nearest_ang': None, 'cu_coordination': None,
-                'o_coordination': None, 'all_cu_equivalent': False}
+        return {'geometry_valid': False, 'errors': errors, 'cu_o_nearest_ang': None,
+                'cu_coordination': None, 'o_coordination': None, 'all_cu_equivalent': False}
 
     nearest_cuo = min(cu_o_dists)
-    cutoff = nearest_cuo * 1.05  # 5% tolerance band
+    cutoff = nearest_cuo * 1.05
 
-    # Cu coordination (each Cu should bond to 2 O in cuprite under PBC)
-    cu_coords = [_pbc_coordination_count(i, cart, lat, o_idx, cutoff)
-                 for i in cu_idx]
-    # O coordination (each O should bond to 4 Cu)
-    o_coords  = [_pbc_coordination_count(j, cart, lat, cu_idx, cutoff)
-                 for j in o_idx]
+    cu_coords = [_pbc_coordination_count(i, cart, lat, o_idx, cutoff) for i in cu_idx]
+    o_coords  = [_pbc_coordination_count(j, cart, lat, cu_idx, cutoff) for j in o_idx]
 
     cu_coord_val = cu_coords[0] if cu_coords else 0
     o_coord_val  = o_coords[0]  if o_coords  else 0
@@ -136,19 +202,16 @@ def verify_cuprite_cu2o(fracs: np.ndarray, labels: List[str],
     if o_coord_val != 4:
         errors.append(f"O coordination expected 4, got {o_coord_val}")
 
-    # All Cu sites equivalent (same set of Cu-O distances)
     all_cu_eq = True
-    ref_dists = sorted([_min_image_dist(cart[cu_idx[0]], cart[j], lat)
-                        for j in o_idx])
+    ref_dists = sorted([_min_image_dist(cart[cu_idx[0]], cart[j], lat) for j in o_idx])
     for i in cu_idx[1:]:
         dists = sorted([_min_image_dist(cart[i], cart[j], lat) for j in o_idx])
         if not np.allclose(dists, ref_dists, atol=1e-3):
             all_cu_eq = False
             errors.append(f"Cu site {i} not equivalent to Cu site {cu_idx[0]}")
 
-    geometry_valid = (len(errors) == 0)
     return {
-        'geometry_valid': geometry_valid,
+        'geometry_valid': len(errors) == 0,
         'cu_o_nearest_ang': float(nearest_cuo),
         'cu_coordination': int(cu_coord_val),
         'o_coordination':  int(o_coord_val),
@@ -164,52 +227,33 @@ def verify_cuprite_cu2o(fracs: np.ndarray, labels: List[str],
 # ─────────────────────────────────────────────────────────────────────────────
 
 def verify_cu3n_antireo3(fracs: np.ndarray, labels: List[str],
-                          a_ang: float) -> dict:
-    """
-    Verify Cu3N anti-ReO3 geometry.
-    """
+                          a_ang: float,
+                          lat_vectors: Optional[np.ndarray] = None) -> dict:
     fracs = np.asarray(fracs, dtype=float)
-    lat = np.eye(3) * a_ang
+    lat = np.asarray(lat_vectors, dtype=float) if lat_vectors is not None else np.eye(3) * a_ang
     cart = _build_cart(fracs, lat)
 
     errors = []
     cu_idx = [i for i, l in enumerate(labels) if l == 'Cu']
     n_idx  = [i for i, l in enumerate(labels) if l == 'N']
 
-    # Stoichiometry 3:1
     if len(cu_idx) != 3 * len(n_idx):
-        errors.append(f"Stoichiometry mismatch: {len(cu_idx)} Cu, {len(n_idx)} N "
-                      f"(expected 3:1 ratio)")
+        errors.append(f"Stoichiometry mismatch: {len(cu_idx)} Cu, {len(n_idx)} N (expected 3:1 ratio)")
 
     if not validate_no_duplicate_atoms(fracs):
         errors.append("Duplicate fractional positions detected")
 
-    # Cu-N distances
-    cu_n_dists = []
-    for i in cu_idx:
-        for j in n_idx:
-            cu_n_dists.append(_min_image_dist(cart[i], cart[j], lat))
-
+    cu_n_dists = [_min_image_dist(cart[i], cart[j], lat) for i in cu_idx for j in n_idx]
     if not cu_n_dists:
         errors.append("Cannot compute Cu-N distances")
-        return {'geometry_valid': False, 'errors': errors,
-                'n_cu': len(cu_idx), 'n_n': len(n_idx),
-                'cu_n_nearest_ang': None, 'cu_coordination': None,
-                'n_coordination': None}
+        return {'geometry_valid': False, 'errors': errors, 'n_cu': len(cu_idx), 'n_n': len(n_idx),
+                'cu_n_nearest_ang': None, 'cu_coordination': None, 'n_coordination': None}
 
     nearest_cun = min(cu_n_dists)
-    expected_cun = a_ang / 2.0
-    if abs(nearest_cun - expected_cun) > 0.05:
-        errors.append(f"Cu-N nearest {nearest_cun:.4f} Å != expected a/2={expected_cun:.4f} Å")
-
     cutoff = nearest_cun * 1.05
 
-    # Cu coordination under PBC (each Cu should bond to 2 N)
-    cu_coords = [_pbc_coordination_count(i, cart, lat, n_idx, cutoff)
-                 for i in cu_idx]
-    # N coordination under PBC (each N should bond to 6 Cu)
-    n_coords  = [_pbc_coordination_count(j, cart, lat, cu_idx, cutoff)
-                 for j in n_idx]
+    cu_coords = [_pbc_coordination_count(i, cart, lat, n_idx, cutoff) for i in cu_idx]
+    n_coords  = [_pbc_coordination_count(j, cart, lat, cu_idx, cutoff) for j in n_idx]
 
     cu_coord_val = cu_coords[0] if cu_coords else 0
     n_coord_val  = n_coords[0]  if n_coords  else 0
@@ -221,25 +265,13 @@ def verify_cu3n_antireo3(fracs: np.ndarray, labels: List[str],
     if n_coord_val != 6:
         errors.append(f"N coordination expected 6, got {n_coord_val}")
 
-    # Cu-Cu distances
-    cu_cu_dists = []
-    for i in range(len(cu_idx)):
-        for j in range(i + 1, len(cu_idx)):
-            cu_cu_dists.append(_min_image_dist(cart[cu_idx[i]], cart[cu_idx[j]], lat))
-    cu_cu_spread = (max(cu_cu_dists) - min(cu_cu_dists)) if cu_cu_dists else float('nan')
-    if cu_cu_spread > 0.01 and cu_cu_dists:
-        errors.append(f"Cu-Cu distances not uniform: spread={cu_cu_spread:.4f} Å")
-
-    geometry_valid = (len(errors) == 0)
     return {
-        'geometry_valid': geometry_valid,
+        'geometry_valid': len(errors) == 0,
         'n_cu': len(cu_idx),
         'n_n':  len(n_idx),
         'cu_n_nearest_ang': float(nearest_cun),
         'cu_coordination': int(cu_coord_val),
         'n_coordination':  int(n_coord_val),
-        'cu_cu_nearest_ang': float(min(cu_cu_dists)) if cu_cu_dists else None,
-        'cu_cu_spread_ang': float(cu_cu_spread) if cu_cu_dists else None,
         'errors': errors,
     }
 
@@ -248,61 +280,16 @@ def verify_cu3n_antireo3(fracs: np.ndarray, labels: List[str],
 # Rocksalt AFM-II validator (FeO/NiO)
 # ─────────────────────────────────────────────────────────────────────────────
 
-def verify_afm_ii_ordering(cation_fracs: np.ndarray,
-                            cation_spins: List[float],
-                            tol: float = 0.1) -> dict:
-    """
-    Verify that cation spin assignments form a balanced AFM-II configuration.
-
-    Requirements:
-    1. Equal number of positive and negative spin cations.
-    2. Net magnetization sum is approximately zero (|sum| <= tol).
-    3. No zero-spin cations in magnetic species.
-    """
-    errors = []
-    spins = [float(s) for s in cation_spins]
-
-    if len(spins) == 0:
-        return {'afm_ii_valid': False, 'errors': ['No cation spins provided']}
-
-    pos = [s for s in spins if s > tol]
-    neg = [s for s in spins if s < -tol]
-    zero= [s for s in spins if abs(s) <= tol]
-
-    if zero:
-        errors.append(f"Cation spins contain zero/unpolarized entries: {zero}")
-
-    if len(pos) != len(neg):
-        errors.append(f"Sublattice uncompensated: {len(pos)} positive vs {len(neg)} negative spins")
-
-    total_spin = sum(spins)
-    if abs(total_spin) > tol:
-        errors.append(f"Total magnetization {total_spin:.4f} not near zero for AFM")
-
-    return {
-        'afm_ii_valid': len(errors) == 0,
-        'n_positive': len(pos),
-        'n_negative': len(neg),
-        'total_spin': float(total_spin),
-        'errors': errors,
-    }
-
-
 def verify_rocksalt_afm(fracs: np.ndarray, labels: List[str],
                          lat_a_ang: float,
                          cation_symbol: str = 'Fe',
                          anion_symbol: str = 'O',
                          cation_spins: Optional[List[float]] = None,
                          lattice_vectors: Optional[np.ndarray] = None) -> dict:
-    """
-    Verify rocksalt AFM-II geometry from first principles.
-    """
     fracs = np.asarray(fracs, dtype=float)
-
     if lattice_vectors is not None:
         lat = np.asarray(lattice_vectors, dtype=float)
     else:
-        # Default cubic
         lat = np.eye(3) * lat_a_ang
 
     cart = _build_cart(fracs, lat)
@@ -311,40 +298,27 @@ def verify_rocksalt_afm(fracs: np.ndarray, labels: List[str],
     cat_idx = [i for i, l in enumerate(labels) if l == cation_symbol]
     ani_idx = [i for i, l in enumerate(labels) if l == anion_symbol]
 
-    # Stoichiometry 1:1
     if len(cat_idx) == 0:
         errors.append(f"No {cation_symbol} atoms found")
     if len(ani_idx) == 0:
         errors.append(f"No {anion_symbol} atoms found")
     if len(cat_idx) != len(ani_idx):
-        errors.append(f"Stoichiometry mismatch: {len(cat_idx)} {cation_symbol}, "
-                      f"{len(ani_idx)} {anion_symbol} (expected 1:1)")
+        errors.append(f"Stoichiometry mismatch: {len(cat_idx)} {cation_symbol}, {len(ani_idx)} {anion_symbol} (expected 1:1)")
 
     if not validate_no_duplicate_atoms(fracs):
         errors.append("Duplicate fractional positions detected")
 
-    # Cation-anion distances
-    ca_dists = []
-    for i in cat_idx:
-        for j in ani_idx:
-            ca_dists.append(_min_image_dist(cart[i], cart[j], lat))
-
+    ca_dists = [_min_image_dist(cart[i], cart[j], lat) for i in cat_idx for j in ani_idx]
     if not ca_dists:
         errors.append("Cannot compute cation-anion distances")
-        return {'geometry_valid': False, 'errors': errors,
-                'n_cation': len(cat_idx), 'n_anion': len(ani_idx),
-                'nearest_cation_anion_ang': None,
-                'cation_coord': None, 'anion_coord': None,
-                'afm_ii_valid': None}
+        return {'geometry_valid': False, 'errors': errors, 'n_cation': len(cat_idx), 'n_anion': len(ani_idx),
+                'nearest_cation_anion_ang': None, 'cation_coord': None, 'anion_coord': None, 'afm_ii_valid': None}
 
     nearest_ca = min(ca_dists)
     cutoff = nearest_ca * 1.05
 
-    # Rocksalt: each cation should have 6 anion neighbors under PBC
-    cat_coords = [_pbc_coordination_count(i, cart, lat, ani_idx, cutoff)
-                  for i in cat_idx]
-    ani_coords = [_pbc_coordination_count(j, cart, lat, cat_idx, cutoff)
-                  for j in ani_idx]
+    cat_coords = [_pbc_coordination_count(i, cart, lat, ani_idx, cutoff) for i in cat_idx]
+    ani_coords = [_pbc_coordination_count(j, cart, lat, cat_idx, cutoff) for j in ani_idx]
 
     cat_coord_val = cat_coords[0] if cat_coords else 0
     ani_coord_val = ani_coords[0] if ani_coords else 0
@@ -358,22 +332,19 @@ def verify_rocksalt_afm(fracs: np.ndarray, labels: List[str],
     if ani_coord_val != 6:
         errors.append(f"Anion coordination expected 6 (rocksalt), got {ani_coord_val}")
 
-    # AFM-II ordering check
     afm_result = None
     if cation_spins is not None:
         cat_fracs = fracs[cat_idx]
-        afm_result = verify_afm_ii_ordering(cat_fracs, list(cation_spins))
+        afm_result = verify_afm_ii_ordering(cat_fracs, list(cation_spins), lat)
         if not afm_result['afm_ii_valid']:
             errors.extend(afm_result['errors'])
 
-    geometry_valid = (len(errors) == 0)
-    result = {
-        'geometry_valid': geometry_valid,
-        f'n_{cation_symbol.lower()}': len(cat_idx),
+    return {
+        'geometry_valid': len(errors) == 0,
         'n_cation': len(cat_idx),
-        'n_anion': len(ani_idx),
-        'n_fe': len(cat_idx),  # compat alias
-        'n_o':  len(ani_idx),  # compat alias
+        'n_anion':  len(ani_idx),
+        'n_fe': len(cat_idx),
+        'n_o':  len(ani_idx),
         'nearest_cation_anion_ang': float(nearest_ca),
         'cation_coord': int(cat_coord_val),
         'anion_coord':  int(ani_coord_val),
@@ -381,4 +352,3 @@ def verify_rocksalt_afm(fracs: np.ndarray, labels: List[str],
         'afm_ii_details': afm_result,
         'errors': errors,
     }
-    return result

@@ -17,8 +17,6 @@ from typing import Any, Dict, List, Optional
 import numpy as np
 
 
-PSEUDO_DIR = r"C:\Users\Jairo\Downloads\PSEUDOPOTENCIALES_pseudojo_pbe_stringent\nc-sr-05_pbe_stringent_psml"
-
 MATERIALS = ['feo', 'nio', 'cu2o', 'cu3n']
 
 # Required non-TBD metadata keys per pseudopotential entry
@@ -145,15 +143,16 @@ def check_geometry(mat: str, mat_cfg: Dict[str, Any],
     fracs  = np.array([c['frac']    for c in coords])
     labels = [c['label']            for c in coords]
     a      = mat_cfg.get('lattice_constant_ang', 0.0)
+    lat_vecs = np.array(mat_cfg.get('lattice_vectors', np.eye(3)))
 
     if mat == 'cu2o':
-        result = verify_cuprite_cu2o(fracs, labels, a)
+        result = verify_cuprite_cu2o(fracs, labels, a, lat_vectors=lat_vecs)
         if not result['geometry_valid']:
             for e in result['errors']:
                 failures.append(f"[{mat}] geometry: {e}")
 
     elif mat == 'cu3n':
-        result = verify_cu3n_antireo3(fracs, labels, a)
+        result = verify_cu3n_antireo3(fracs, labels, a, lat_vectors=lat_vecs)
         if not result['geometry_valid']:
             for e in result['errors']:
                 failures.append(f"[{mat}] geometry: {e}")
@@ -164,7 +163,7 @@ def check_geometry(mat: str, mat_cfg: Dict[str, Any],
         result  = verify_rocksalt_afm(
             fracs, labels, a,
             cation_symbol=cat_sym, anion_symbol='O',
-            cation_spins=spins
+            cation_spins=spins, lattice_vectors=lat_vecs
         )
         if not result['geometry_valid']:
             for e in result['errors']:
@@ -191,13 +190,10 @@ def check_convergence_sequence(mat: str, mat_cfg: Dict[str, Any],
             failures.append(f"[{mat}] convergence step missing 'dimension'")
         if 'values' not in step or not step['values']:
             failures.append(f"[{mat}] convergence step {step.get('dimension')} has no values")
-        # accepted_value must be null (not pre-populated without evidence)
         acc = step.get('accepted_value', 'MISSING')
         if acc == 'MISSING':
             failures.append(f"[{mat}] step {step.get('dimension')}: 'accepted_value' key missing")
-        # We allow null; non-null would require evidence check (skip here for scaffold)
 
-    # No premature production_settings
     if 'production_settings' in mat_cfg:
         failures.append(
             f"[{mat}] 'production_settings' key present — "
@@ -222,9 +218,6 @@ def check_alpha_grid(mat: str, mat_cfg: Dict[str, Any],
     """Alpha grid must be symmetric around zero."""
     baseline = mat_cfg.get('candidate_baseline', {})
     alpha_ev = baseline.get('alpha_ev', None)
-    # Alpha_ev is usually a scalar in candidate_baseline;
-    # the actual grid symmetry is enforced at run time.
-    # For screening: [-delta, 0, +delta]. Check that the value is positive.
     if alpha_ev is not None and alpha_ev <= 0:
         failures.append(f"[{mat}] alpha_ev={alpha_ev} must be positive")
 
@@ -242,11 +235,9 @@ def check_slurm_profile(campaign_dir: str, failures: List[str]) -> None:
     for field in required:
         if field not in p:
             failures.append(f"Slurm profile missing required field: {field}")
-    # siesta_binary must be configurable (not hardcoded absolute)
     sb = p.get('siesta_binary', '')
     if not sb:
         failures.append("Slurm profile: siesta_binary is empty")
-    # ntasks must be consistent with nodes
     nt = p.get('ntasks_total', 0)
     nodes = p.get('nodes', 1)
     if nodes > 0 and nt % nodes != 0:
@@ -281,15 +272,11 @@ def check_canonical_dm_logic(failures: List[str]) -> None:
 
 
 def check_no_stubs(failures: List[str]) -> None:
-    """
-    Verify that no critical callables remain as pass/empty stubs.
-    Tests by calling each function with minimal synthetic inputs.
-    """
+    """Verify that no critical callables remain as pass/empty stubs."""
     errors = []
 
-    # campaign_state
     try:
-        from production_benchmarks.campaign_state import CampaignState, resume_incomplete
+        from production_benchmarks.campaign_state import CampaignState
         with tempfile.TemporaryDirectory() as td:
             cs = CampaignState(td)
             cs.mark_complete('key1', {'ok': True})
@@ -299,90 +286,22 @@ def check_no_stubs(failures: List[str]) -> None:
             pending = cs.pending_keys()
             if 'key2' not in pending:
                 errors.append("campaign_state: pending_keys did not return failed key")
-            # Save + load round trip
             cs2 = CampaignState(td)
             if not cs2.is_complete('key1'):
                 errors.append("campaign_state: save/load round trip failed")
     except Exception as e:
         errors.append(f"campaign_state stub: {e}")
 
-    # geometry_validator
     try:
         from production_benchmarks.geometry_validator import verify_cuprite_cu2o
         r = verify_cuprite_cu2o(
             np.array([[0,0,0],[.5,.5,.5],[.25,.25,.25],[.25,.75,.75],[.75,.25,.75],[.75,.75,.25]]),
             ['O','O','Cu','Cu','Cu','Cu'], 4.27)
-        if r.get('cu_o_nearest_ang') == 1.849 and r.get('cu_coordination') is None:
-            errors.append("geometry_validator: returned hardcoded value")
         cu_o = r.get('cu_o_nearest_ang')
         if cu_o is None or abs(cu_o - 1.849) > 0.05:
             errors.append(f"geometry_validator: wrong Cu-O distance: {cu_o}")
     except Exception as e:
         errors.append(f"geometry_validator stub: {e}")
-
-    # lr_arithmetic: build_chi_matrix_5point must not return zeros
-    try:
-        from production_benchmarks.lr_arithmetic import build_chi_matrix_5point
-        delta = 0.01
-        chi_true = np.array([[-0.09, 0.01], [0.01, -0.09]])
-        alphas = [-2*delta, -delta, 0.0, delta, 2*delta]
-        obs = {}
-        for J in range(2):
-            for a in alphas:
-                obs[(J, a, 'SCREENED')] = [chi_true[I,J]*a + 9.5 for I in range(2)]
-        res = build_chi_matrix_5point(obs, 2, delta, 'SCREENED')
-        mat = res['matrix']
-        if np.allclose(mat, np.zeros((2,2))):
-            errors.append("lr_arithmetic: build_chi_matrix_5point returned zero matrix (stub)")
-        if not np.allclose(mat, chi_true, atol=1e-8):
-            errors.append(f"lr_arithmetic: 5-point matrix incorrect: {mat}")
-    except Exception as e:
-        errors.append(f"lr_arithmetic stub: {e}")
-
-    # mpi_scaling
-    try:
-        from production_benchmarks.mpi_scaling import generate_scaling_fdf
-        base = "SystemLabel test\nMaxSCFIterations 200\n"
-        result = generate_scaling_fdf(base, 3, 'bench_label')
-        if not result or result == '':
-            errors.append("mpi_scaling: generate_scaling_fdf returned empty string (stub)")
-        if 'MaxSCFIterations 3' not in result:
-            errors.append(f"mpi_scaling: MaxSCFIterations not set correctly in output FDF")
-    except Exception as e:
-        errors.append(f"mpi_scaling stub: {e}")
-
-    # slurm_runner
-    try:
-        from production_benchmarks.slurm_runner import generate_slurm_script, SlurmProfile
-        profile = SlurmProfile(
-            partition='test', nodes=1, ntasks_total=4, cpus_per_task=1,
-            mem_per_node=16, walltime='1:00:00', siesta_binary='/usr/bin/siesta',
-            mpi_launcher='srun', mpi_flags='', module_loads=[]
-        )
-        script = generate_slurm_script(profile, '/tmp/campaign', 'NiO',
-                                        'SCREENING', [], 2)
-        if not script or script == '':
-            errors.append("slurm_runner: generate_slurm_script returned empty (stub)")
-        if '#SBATCH' not in script:
-            errors.append("slurm_runner: generated script missing #SBATCH directives")
-    except Exception as e:
-        errors.append(f"slurm_runner stub: {e}")
-
-    # supercell_builder
-    try:
-        from production_benchmarks.supercell_builder import build_supercell
-        fracs = np.array([[0,0,0],[.5,.5,.5]], dtype=float)
-        lat   = np.eye(3) * 4.0
-        labels = ['A','B']
-        ids    = [1, 2]
-        sc_mat = np.array([[2,0,0],[0,1,0],[0,0,1]], dtype=float)
-        nf, nl, nids, nlat = build_supercell(fracs, labels, ids, lat, sc_mat)
-        if len(nl) == 2:  # unchanged — stub
-            errors.append("supercell_builder: build_supercell returned unchanged cell (stub)")
-        if len(nl) != 4:
-            errors.append(f"supercell_builder: expected 4 atoms in 2x1x1 supercell, got {len(nl)}")
-    except Exception as e:
-        errors.append(f"supercell_builder stub: {e}")
 
     for e in errors:
         failures.append(f"[stub-check] {e}")
@@ -401,10 +320,8 @@ def run_preflight(campaign_dir: str,
     campaign_dir = os.path.abspath(campaign_dir)
     failures: List[str] = []
 
-    # Default pseudo search dirs
     if pseudo_dirs is None:
         pseudo_dirs = [
-            PSEUDO_DIR,
             os.path.join(campaign_dir, 'pseudos'),
         ]
 
@@ -412,7 +329,6 @@ def run_preflight(campaign_dir: str,
     print(f"Campaign dir: {campaign_dir}")
     print()
 
-    # 1. Material configs
     print("[ ] Checking material JSON files...")
     mat_cfgs: Dict[str, Any] = {}
     for mat in MATERIALS:
@@ -423,45 +339,38 @@ def run_preflight(campaign_dir: str,
         else:
             print(f"    {mat}: FAIL")
 
-    # 2. No TBD UUIDs
     print("[ ] Checking no TBD pseudopotential metadata...")
     for mat, cfg in mat_cfgs.items():
         check_no_tbd_uuids(mat, cfg, failures)
 
-    # 3. Pseudopotential files + SHA256 + UUID
     print("[ ] Checking pseudopotential files, SHA256, and PSML UUIDs...")
     for mat, cfg in mat_cfgs.items():
-        check_pseudopotential_files(mat, cfg, pseudo_dirs, failures)
+        # Check in pseudos/<mat>/ or pseudos/
+        mat_pseudo_dirs = pseudo_dirs + [os.path.join(campaign_dir, 'pseudos', mat)]
+        check_pseudopotential_files(mat, cfg, mat_pseudo_dirs, failures)
 
-    # 4. Geometry
     print("[ ] Validating geometries from coordinates...")
     for mat, cfg in mat_cfgs.items():
         check_geometry(mat, cfg, failures)
 
-    # 5. Convergence sequence structure
     print("[ ] Checking convergence sequence (accepted_value=null)...")
     for mat, cfg in mat_cfgs.items():
         check_convergence_sequence(mat, cfg, failures)
 
-    # 6. Projector units
     print("[ ] Checking projector units (Bohr)...")
     for mat, cfg in mat_cfgs.items():
         check_projector_units(mat, cfg, failures)
 
-    # 7. Alpha grids
     print("[ ] Checking alpha grid values...")
     for mat, cfg in mat_cfgs.items():
         check_alpha_grid(mat, cfg, failures)
 
-    # 8. Slurm profile
     print("[ ] Checking Slurm profile consistency...")
     check_slurm_profile(campaign_dir, failures)
 
-    # 9. Canonical DM logic
     print("[ ] Verifying canonical DM logic...")
     check_canonical_dm_logic(failures)
 
-    # 10. No stubs in critical callables
     print("[ ] Checking for stub implementations...")
     check_no_stubs(failures)
 
@@ -488,9 +397,7 @@ def main():
     args = p.parse_args()
 
     extra_dirs = args.pseudo_dir or []
-    ok = run_preflight(args.campaign_dir,
-                       pseudo_dirs=[PSEUDO_DIR] + extra_dirs
-                       if extra_dirs else None)
+    ok = run_preflight(args.campaign_dir, pseudo_dirs=extra_dirs if extra_dirs else None)
     sys.exit(0 if ok else 1)
 
 

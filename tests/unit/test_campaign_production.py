@@ -29,6 +29,21 @@ from production_benchmarks.lr_arithmetic import (
     build_chi_matrix_3point, build_chi_matrix_5point,
     compute_U_matrix, eigenmode_analysis,
 )
+from production_benchmarks.slurm_runner import (
+    build_base_fdf_from_material_cfg, compute_scientific_identity,
+    verify_siesta_run_semantics, generate_lr_run_specs, materialize_run_fdf, RunSpec
+)
+from production_benchmarks.geometry_validator import verify_afm_ii_ordering
+
+
+def _ensure_dummy_ref_dm(campaign_dir: str, material: str = 'NiO') -> str:
+    dm_dir = os.path.join(campaign_dir, 'materials', material.lower())
+    os.makedirs(dm_dir, exist_ok=True)
+    dm_path = os.path.join(dm_dir, 'reference.DM')
+    if not os.path.exists(dm_path):
+        with open(dm_path, 'wb') as fh:
+            fh.write(b"DUMMY_REFERENCE_DM_FOR_TESTS")
+    return dm_path
 
 
 def test_3point_central_derivative_exact():
@@ -323,22 +338,21 @@ def test_cu2o_geometry_invalid_duplicate():
 # ── FeO / NiO rocksalt ──────────────────────────────────────────────────────
 
 def test_rocksalt_afm_feo_valid():
-    """Valid FeO rocksalt AFM-II geometry."""
+    """Valid 4-atom rhombohedral FeO AFM-II cell passes rocksalt validator."""
     a = 4.334
+    lat_vecs = np.array([[0.0, 1.0, 1.0], [0.5, 0.0, 0.5], [0.5, 0.5, 0.0]]) * a
     fracs = np.array([
-        [0.0, 0.0, 0.0], [0.5, 0.5, 0.0],
-        [0.5, 0.0, 0.5], [0.0, 0.5, 0.5],
-        [0.5, 0.0, 0.0], [0.0, 0.5, 0.0],
-        [0.0, 0.0, 0.5], [0.5, 0.5, 0.5],
+        [0.0, 0.0, 0.0], [0.5, 0.0, 0.0],
+        [0.25, 0.5, 0.5], [0.75, 0.5, 0.5],
     ])
-    labels = ['Fe', 'Fe', 'Fe', 'Fe', 'O', 'O', 'O', 'O']
-    spins  = [4.0, -4.0, 4.0, -4.0]
-    r = verify_rocksalt_afm(fracs, labels, a, 'Fe', 'O', cation_spins=spins)
+    labels = ['Fe', 'Fe', 'O', 'O']
+    spins  = [4.0, -4.0]
+    r = verify_rocksalt_afm(fracs, labels, a, 'Fe', 'O', cation_spins=spins, lattice_vectors=lat_vecs)
     assert r['geometry_valid'],    f"Expected valid FeO, errors: {r['errors']}"
-    assert r['n_cation'] == 4
-    assert r['n_anion']  == 4
+    assert r['n_cation'] == 2
+    assert r['n_anion']  == 2
     assert r['cation_coord'] == 6, f"Rocksalt cation coord should be 6, got {r['cation_coord']}"
-    assert r['afm_ii_valid'] is not None
+    assert r['afm_ii_valid'] is True
 
 
 def test_rocksalt_afm_feo_wrong_stoich():
@@ -355,12 +369,14 @@ def test_rocksalt_afm_feo_wrong_stoich():
 
 def test_afm_ii_validation_correct_signs():
     """Correct AFM-II spin assignment (balanced sublattices) passes."""
+    a = 4.334
+    lat_vecs = np.array([[0.0, 1.0, 1.0], [0.5, 0.0, 0.5], [0.5, 0.5, 0.0]]) * a
     cat_fracs = np.array([
         [0.0, 0.0, 0.0],
         [0.5, 0.0, 0.0],
     ])
     spins = [4.0, -4.0]
-    r = verify_afm_ii_ordering(cat_fracs, spins)
+    r = verify_afm_ii_ordering(cat_fracs, spins, lat_vectors=lat_vecs)
     assert r['afm_ii_valid'], f"AFM-II check failed: {r['errors']}"
 
 
@@ -830,15 +846,26 @@ def test_dry_run_produces_unique_dirs(tmp_path):
     """Dry-run must create distinct directories for each (J, alpha, mode) combo."""
     campaign_dir = str(tmp_path / 'campaign')
     os.makedirs(campaign_dir, exist_ok=True)
+    _ensure_dummy_ref_dm(campaign_dir, 'Cu2O')
 
     # Create minimal material.json
     mat_dir = os.path.join(campaign_dir, 'materials', 'cu2o')
     os.makedirs(mat_dir, exist_ok=True)
     mat_cfg = {
         'name': 'Cu2O',
+        'lattice_constant_ang': 4.27,
+        'lattice_vectors': [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]],
         'spin_mode': 'non_polarized',
         'n_correlated_sites': 4,
         'n_cu_sites': 4,
+        'base_fractional_coords': [
+            {'label': 'O', 'species': 'O', 'frac': [0.0,0.0,0.0]},
+            {'label': 'O', 'species': 'O', 'frac': [0.5,0.5,0.5]},
+            {'label': 'Cu', 'species': 'Cu', 'frac': [0.25,0.25,0.25]},
+            {'label': 'Cu', 'species': 'Cu', 'frac': [0.25,0.75,0.75]},
+            {'label': 'Cu', 'species': 'Cu', 'frac': [0.75,0.25,0.75]},
+            {'label': 'Cu', 'species': 'Cu', 'frac': [0.75,0.75,0.25]},
+        ],
         'pseudopotentials': {'Cu': {'file': 'Cu.psml', 'uuid': 'x', 'sha256': 'x'},
                              'O':  {'file': 'O.psml',  'uuid': 'x', 'sha256': 'x'}},
         'convergence_sequence': [],
@@ -872,11 +899,22 @@ def test_dry_run_manifest_contains_correct_sites(tmp_path):
     """Dry-run manifest must reference all 4 Cu sites for Cu2O."""
     campaign_dir = str(tmp_path / 'campaign')
     os.makedirs(campaign_dir, exist_ok=True)
+    _ensure_dummy_ref_dm(campaign_dir, 'Cu2O')
     mat_dir = os.path.join(campaign_dir, 'materials', 'cu2o')
     os.makedirs(mat_dir, exist_ok=True)
     mat_cfg = {
-        'name': 'Cu2O', 'spin_mode': 'non_polarized',
+        'name': 'Cu2O', 'lattice_constant_ang': 4.27,
+        'lattice_vectors': [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]],
+        'spin_mode': 'non_polarized',
         'n_correlated_sites': 4, 'n_cu_sites': 4,
+        'base_fractional_coords': [
+            {'label': 'O', 'species': 'O', 'frac': [0.0,0.0,0.0]},
+            {'label': 'O', 'species': 'O', 'frac': [0.5,0.5,0.5]},
+            {'label': 'Cu', 'species': 'Cu', 'frac': [0.25,0.25,0.25]},
+            {'label': 'Cu', 'species': 'Cu', 'frac': [0.25,0.75,0.75]},
+            {'label': 'Cu', 'species': 'Cu', 'frac': [0.75,0.25,0.75]},
+            {'label': 'Cu', 'species': 'Cu', 'frac': [0.75,0.75,0.25]},
+        ],
         'pseudopotentials': {'Cu': {'file': 'Cu.psml', 'uuid': 'x', 'sha256': 'x'}},
         'convergence_sequence': [],
     }
@@ -1076,8 +1114,11 @@ from production_benchmarks.slurm_runner import (
 
 def test_3point_plan_n2_has_10_runs(tmp_path):
     """N=2 (FeO/NiO) 3-point plan has exactly 2 + 4(2) = 10 runs."""
+    campaign_dir = str(tmp_path)
+    _ensure_dummy_ref_dm(campaign_dir, 'NiO')
     mat_cfg = {
         'name': 'NiO', 'n_correlated_sites': 2, 'lattice_constant_ang': 4.177,
+        'lattice_vectors': [[0.0, 1.0, 1.0], [0.5, 0.0, 0.5], [0.5, 0.5, 0.0]],
         'base_fractional_coords': [
             {'label': 'Ni', 'species': 'Ni', 'frac': [0.0,0.0,0.0], 'init_spin': 2.0},
             {'label': 'Ni', 'species': 'Ni', 'frac': [0.5,0.0,0.0], 'init_spin': -2.0},
@@ -1087,14 +1128,17 @@ def test_3point_plan_n2_has_10_runs(tmp_path):
         'pseudopotentials': {'Ni': {'file': 'Ni.psml'}, 'O': {'file': 'O.psml'}},
         'candidate_baseline': {'projector_rc_bohr': 3.0, 'projector_omega_bohr': 0.05},
     }
-    specs = generate_lr_run_specs(mat_cfg, 'SCREENING_3POINT', str(tmp_path), alphas=[-0.01, 0.0, 0.01])
+    specs = generate_lr_run_specs(mat_cfg, 'SCREENING_3POINT', campaign_dir, alphas=[-0.01, 0.0, 0.01])
     assert len(specs) == 10, f"Expected 10 runs for N=2 3-pt, got {len(specs)}"
 
 
 def test_3point_plan_n4_has_18_runs(tmp_path):
     """N=4 (Cu2O) 3-point plan has exactly 2 + 4(4) = 18 runs."""
+    campaign_dir = str(tmp_path)
+    _ensure_dummy_ref_dm(campaign_dir, 'Cu2O')
     mat_cfg = {
         'name': 'Cu2O', 'n_correlated_sites': 4, 'lattice_constant_ang': 4.27,
+        'lattice_vectors': [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]],
         'spin_mode': 'non_polarized',
         'base_fractional_coords': [
             {'label': 'O', 'species': 'O', 'frac': [0.0,0.0,0.0]},
@@ -1107,14 +1151,17 @@ def test_3point_plan_n4_has_18_runs(tmp_path):
         'pseudopotentials': {'Cu': {'file': 'Cu.psml'}, 'O': {'file': 'O.psml'}},
         'candidate_baseline': {'projector_rc_bohr': 3.0, 'projector_omega_bohr': 0.05},
     }
-    specs = generate_lr_run_specs(mat_cfg, 'SCREENING_3POINT', str(tmp_path), alphas=[-0.01, 0.0, 0.01])
+    specs = generate_lr_run_specs(mat_cfg, 'SCREENING_3POINT', campaign_dir, alphas=[-0.01, 0.0, 0.01])
     assert len(specs) == 18, f"Expected 18 runs for N=4 3-pt, got {len(specs)}"
 
 
 def test_5point_plan_n2_has_18_runs(tmp_path):
     """N=2 5-point plan has exactly 2 + 8(2) = 18 runs."""
+    campaign_dir = str(tmp_path)
+    _ensure_dummy_ref_dm(campaign_dir, 'NiO')
     mat_cfg = {
         'name': 'NiO', 'n_correlated_sites': 2, 'lattice_constant_ang': 4.177,
+        'lattice_vectors': [[0.0, 1.0, 1.0], [0.5, 0.0, 0.5], [0.5, 0.5, 0.0]],
         'base_fractional_coords': [
             {'label': 'Ni', 'species': 'Ni', 'frac': [0.0,0.0,0.0], 'init_spin': 2.0},
             {'label': 'Ni', 'species': 'Ni', 'frac': [0.5,0.0,0.0], 'init_spin': -2.0},
@@ -1124,14 +1171,17 @@ def test_5point_plan_n2_has_18_runs(tmp_path):
         'pseudopotentials': {'Ni': {'file': 'Ni.psml'}, 'O': {'file': 'O.psml'}},
         'candidate_baseline': {'projector_rc_bohr': 3.0, 'projector_omega_bohr': 0.05},
     }
-    specs = generate_lr_run_specs(mat_cfg, 'FINAL_5POINT', str(tmp_path), alphas=[-0.02, -0.01, 0.0, 0.01, 0.02])
+    specs = generate_lr_run_specs(mat_cfg, 'FINAL_5POINT', campaign_dir, alphas=[-0.02, -0.01, 0.0, 0.01, 0.02])
     assert len(specs) == 18, f"Expected 18 runs for N=2 5-pt, got {len(specs)}"
 
 
 def test_5point_plan_n4_has_34_runs(tmp_path):
     """N=4 5-point plan has exactly 2 + 8(4) = 34 runs."""
+    campaign_dir = str(tmp_path)
+    _ensure_dummy_ref_dm(campaign_dir, 'Cu2O')
     mat_cfg = {
         'name': 'Cu2O', 'n_correlated_sites': 4, 'lattice_constant_ang': 4.27,
+        'lattice_vectors': [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]],
         'spin_mode': 'non_polarized',
         'base_fractional_coords': [
             {'label': 'O', 'species': 'O', 'frac': [0.0,0.0,0.0]},
@@ -1144,42 +1194,51 @@ def test_5point_plan_n4_has_34_runs(tmp_path):
         'pseudopotentials': {'Cu': {'file': 'Cu.psml'}, 'O': {'file': 'O.psml'}},
         'candidate_baseline': {'projector_rc_bohr': 3.0, 'projector_omega_bohr': 0.05},
     }
-    specs = generate_lr_run_specs(mat_cfg, 'FINAL_5POINT', str(tmp_path), alphas=[-0.02, -0.01, 0.0, 0.01, 0.02])
+    specs = generate_lr_run_specs(mat_cfg, 'FINAL_5POINT', campaign_dir, alphas=[-0.02, -0.01, 0.0, 0.01, 0.02])
     assert len(specs) == 34, f"Expected 34 runs for N=4 5-pt, got {len(specs)}"
 
 
 def test_alpha0_bare_is_deduplicated(tmp_path):
     """alpha=0 BARE run appears exactly ONCE in plan."""
+    campaign_dir = str(tmp_path)
+    _ensure_dummy_ref_dm(campaign_dir, 'NiO')
     mat_cfg = {
         'name': 'NiO', 'n_correlated_sites': 2, 'lattice_constant_ang': 4.177,
+        'lattice_vectors': [[0.0, 1.0, 1.0], [0.5, 0.0, 0.5], [0.5, 0.5, 0.0]],
         'base_fractional_coords': [{'label':'Ni','species':'Ni','frac':[0,0,0]}],
         'pseudopotentials': {'Ni': {'file': 'Ni.psml'}},
     }
-    specs = generate_lr_run_specs(mat_cfg, 'SCREENING_3POINT', str(tmp_path))
+    specs = generate_lr_run_specs(mat_cfg, 'SCREENING_3POINT', campaign_dir)
     alpha0_bare = [s for s in specs if abs(s.alpha) <= 1e-12 and s.response_mode == 'BARE']
     assert len(alpha0_bare) == 1, "alpha=0 BARE must be deduplicated to exactly 1 run"
 
 
 def test_alpha0_screened_is_deduplicated(tmp_path):
     """alpha=0 SCREENED run appears exactly ONCE in plan."""
+    campaign_dir = str(tmp_path)
+    _ensure_dummy_ref_dm(campaign_dir, 'NiO')
     mat_cfg = {
         'name': 'NiO', 'n_correlated_sites': 2, 'lattice_constant_ang': 4.177,
+        'lattice_vectors': [[0.0, 1.0, 1.0], [0.5, 0.0, 0.5], [0.5, 0.5, 0.0]],
         'base_fractional_coords': [{'label':'Ni','species':'Ni','frac':[0,0,0]}],
         'pseudopotentials': {'Ni': {'file': 'Ni.psml'}},
     }
-    specs = generate_lr_run_specs(mat_cfg, 'SCREENING_3POINT', str(tmp_path))
+    specs = generate_lr_run_specs(mat_cfg, 'SCREENING_3POINT', campaign_dir)
     alpha0_screened = [s for s in specs if abs(s.alpha) <= 1e-12 and s.response_mode == 'SCREENED']
     assert len(alpha0_screened) == 1, "alpha=0 SCREENED must be deduplicated to exactly 1 run"
 
 
 def test_plan_contains_bare_and_screened(tmp_path):
     """Plan contains BOTH BARE and SCREENED for every perturbed site and alpha."""
+    campaign_dir = str(tmp_path)
+    _ensure_dummy_ref_dm(campaign_dir, 'NiO')
     mat_cfg = {
         'name': 'NiO', 'n_correlated_sites': 2, 'lattice_constant_ang': 4.177,
+        'lattice_vectors': [[0.0, 1.0, 1.0], [0.5, 0.0, 0.5], [0.5, 0.5, 0.0]],
         'base_fractional_coords': [{'label':'Ni','species':'Ni','frac':[0,0,0]}],
         'pseudopotentials': {'Ni': {'file': 'Ni.psml'}},
     }
-    specs = generate_lr_run_specs(mat_cfg, 'SCREENING_3POINT', str(tmp_path))
+    specs = generate_lr_run_specs(mat_cfg, 'SCREENING_3POINT', campaign_dir)
     modes = {s.response_mode for s in specs}
     assert modes == {'BARE', 'SCREENED'}, "Plan must contain both BARE and SCREENED specs"
 
@@ -1188,8 +1247,10 @@ def test_nio_dryrun_writes_real_fdfs(tmp_path):
     """Dry-run materializes REAL executable FDF files on disk."""
     campaign_dir = str(tmp_path / 'campaign')
     os.makedirs(os.path.join(campaign_dir, 'materials', 'nio'), exist_ok=True)
+    _ensure_dummy_ref_dm(campaign_dir, 'NiO')
     mat_cfg = {
         'name': 'NiO', 'n_correlated_sites': 2, 'lattice_constant_ang': 4.177,
+        'lattice_vectors': [[0.0, 1.0, 1.0], [0.5, 0.0, 0.5], [0.5, 0.5, 0.0]],
         'spin_mode': 'collinear_polarized',
         'base_fractional_coords': [
             {'label': 'Ni', 'species': 'Ni', 'frac': [0.0,0.0,0.0], 'init_spin': 2.0},
@@ -1227,8 +1288,10 @@ def test_cu2o_dryrun_writes_real_fdfs(tmp_path):
     """Cu2O dry-run materializes 18 real FDF files on disk."""
     campaign_dir = str(tmp_path / 'campaign')
     os.makedirs(os.path.join(campaign_dir, 'materials', 'cu2o'), exist_ok=True)
+    _ensure_dummy_ref_dm(campaign_dir, 'Cu2O')
     mat_cfg = {
         'name': 'Cu2O', 'n_correlated_sites': 4, 'lattice_constant_ang': 4.27,
+        'lattice_vectors': [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]],
         'spin_mode': 'non_polarized',
         'base_fractional_coords': [
             {'label': 'O', 'species': 'O', 'frac': [0.0,0.0,0.0]},
@@ -1399,6 +1462,7 @@ def test_bounded_process_pool_waits_each_pid_once():
 
 def test_exact_run_count_equals_len_generated_runspecs(tmp_path):
     """estimate_run_counts matches len(generate_lr_run_specs(...))."""
+    _ensure_dummy_ref_dm(str(tmp_path), 'NiO')
     mat_cfg = {
         'name': 'NiO', 'n_correlated_sites': 2, 'lattice_constant_ang': 4.177,
         'base_fractional_coords': [
@@ -1418,3 +1482,236 @@ def test_exact_run_count_equals_len_generated_runspecs(tmp_path):
 
     assert counts['runs_per_3pt_campaign'] == len(specs_3pt) == 10
     assert counts['runs_per_5pt_campaign'] == len(specs_5pt) == 18
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# CRITICAL INTEGRATION TESTS (A THROUGH P) — NO SIESTA EXECUTION
+# ═══════════════════════════════════════════════════════════════════════════
+
+def test_nio_reference_fdf(tmp_path):
+    """Test A: NiO reference FDF must have 4 atoms, 2 Ni + 2 O, exact rhombohedral lattice, opposite spins, valid AFM-II."""
+    campaign_dir = str(tmp_path / 'campaign')
+    os.makedirs(os.path.join(campaign_dir, 'materials', 'nio'), exist_ok=True)
+    with open('production_benchmarks/materials/nio/material.json') as fh:
+        mat_cfg = json.load(fh)
+
+    specs = generate_lr_run_specs(mat_cfg, 'REFERENCE_RUN', campaign_dir)
+    assert len(specs) == 1
+    spec = specs[0]
+    fdf_text = materialize_run_fdf(spec)
+
+    assert 'NumberOfAtoms       4' in fdf_text
+    assert 'NiLR0' in fdf_text
+    assert 'NiLR1' in fdf_text
+    assert 'LatticeConstant     4.1770 Ang' in fdf_text
+    assert '+2.0' in fdf_text
+    assert '-2.0' in fdf_text
+
+
+def test_feo_reference_fdf(tmp_path):
+    """Test B: FeO reference FDF must have 4 atoms, 2 Fe + 2 O, exact rhombohedral lattice, opposite spins, valid AFM-II."""
+    campaign_dir = str(tmp_path / 'campaign')
+    os.makedirs(os.path.join(campaign_dir, 'materials', 'feo'), exist_ok=True)
+    with open('production_benchmarks/materials/feo/material.json') as fh:
+        mat_cfg = json.load(fh)
+
+    specs = generate_lr_run_specs(mat_cfg, 'REFERENCE_RUN', campaign_dir)
+    assert len(specs) == 1
+    spec = specs[0]
+    fdf_text = materialize_run_fdf(spec)
+
+    assert 'NumberOfAtoms       4' in fdf_text
+    assert 'FeLR0' in fdf_text
+    assert 'FeLR1' in fdf_text
+    assert 'LatticeConstant     4.3340 Ang' in fdf_text
+    assert '+4.0' in fdf_text
+    assert '-4.0' in fdf_text
+
+
+def test_preflight_geometry_equals_generated_fdf_geometry(tmp_path):
+    """Test C: Preflight geometry check and generated FDF geometry must have identical lattice + coordinates."""
+    with open('production_benchmarks/materials/nio/material.json') as fh:
+        mat_cfg = json.load(fh)
+
+    fdf_text = build_base_fdf_from_material_cfg(mat_cfg)
+    assert '0.000000  1.000000  1.000000' in fdf_text or '0.0  1.0  1.0' in fdf_text
+    assert '0.000000  0.000000  0.000000' in fdf_text
+    assert '0.500000  0.000000  0.000000' in fdf_text
+
+
+def test_balanced_non_afm2_spin_pattern_fails(tmp_path):
+    """Test D: Balanced spin pattern (+ + - -) on same (111) plane must FAIL verify_afm_ii_ordering."""
+    cat_fracs = np.array([
+        [0.0, 0.0, 0.0],
+        [0.5, 0.5, 0.0],
+        [0.5, 0.0, 0.5],
+        [0.0, 0.5, 0.5],
+    ])
+    lat_vecs = np.eye(3) * 4.177
+    wrong_spins = [2.0, -2.0, 2.0, -2.0]
+
+    res = verify_afm_ii_ordering(cat_fracs, wrong_spins, lat_vecs)
+    assert res['afm_ii_valid'] is False
+    assert len(res['errors']) > 0
+
+
+def test_supercell_afm_phase_survives_expansion(tmp_path):
+    """Test E: 2x1x1 supercell expansion preserves correct AFM-II spin propagation."""
+    with open('production_benchmarks/materials/nio/material.json') as fh:
+        mat_cfg = json.load(fh)
+
+    eff = dict(mat_cfg['candidate_baseline'])
+    eff['supercell'] = 'medium'
+
+    fdf_text = build_base_fdf_from_material_cfg(mat_cfg, eff)
+    assert 'NumberOfAtoms       8' in fdf_text
+    assert '%block DM.InitSpin' in fdf_text
+
+
+def test_reference_run_generates_one_calculation(tmp_path):
+    """Test F: REFERENCE_RUN generates exactly ONE reference calculation spec, not LR perturbations."""
+    campaign_dir = str(tmp_path / 'campaign')
+    os.makedirs(os.path.join(campaign_dir, 'materials', 'nio'), exist_ok=True)
+    with open('production_benchmarks/materials/nio/material.json') as fh:
+        mat_cfg = json.load(fh)
+
+    specs = generate_lr_run_specs(mat_cfg, 'REFERENCE_RUN', campaign_dir)
+    assert len(specs) == 1
+    assert specs[0].response_mode == 'REFERENCE'
+    assert specs[0].alpha == 0.0
+
+
+def test_response_generation_without_accepted_reference_dm_hard_fails(tmp_path):
+    """Test G: Response generation without accepted reference DM raises RuntimeError."""
+    campaign_dir = str(tmp_path / 'campaign')
+    os.makedirs(os.path.join(campaign_dir, 'materials', 'nio'), exist_ok=True)
+    with open('production_benchmarks/materials/nio/material.json') as fh:
+        mat_cfg = json.load(fh)
+
+    with pytest.raises(RuntimeError, match="Missing canonical reference.DM"):
+        generate_lr_run_specs(mat_cfg, 'SCREENING_3POINT', campaign_dir)
+
+
+def test_energyshift_candidates_produce_different_fdfs(tmp_path):
+    """Test H: EnergyShift candidates produce genuinely different PAO.EnergyShift values in FDF."""
+    with open('production_benchmarks/materials/nio/material.json') as fh:
+        mat_cfg = json.load(fh)
+
+    fdf1 = build_base_fdf_from_material_cfg(mat_cfg, {'energy_shift_ry': 0.02})
+    fdf2 = build_base_fdf_from_material_cfg(mat_cfg, {'energy_shift_ry': 0.005})
+
+    assert 'PAO.EnergyShift     0.02 Ry' in fdf1
+    assert 'PAO.EnergyShift     0.005 Ry' in fdf2
+    assert fdf1 != fdf2
+
+
+def test_mesh_candidates_produce_different_fdfs(tmp_path):
+    """Test I: Mesh cutoff candidates produce genuinely different MeshCutoff values in FDF."""
+    with open('production_benchmarks/materials/nio/material.json') as fh:
+        mat_cfg = json.load(fh)
+
+    fdf1 = build_base_fdf_from_material_cfg(mat_cfg, {'mesh_cutoff_ry': 200})
+    fdf2 = build_base_fdf_from_material_cfg(mat_cfg, {'mesh_cutoff_ry': 250})
+
+    assert 'MeshCutoff          200 Ry' in fdf1
+    assert 'MeshCutoff          250 Ry' in fdf2
+    assert fdf1 != fdf2
+
+
+def test_kgrid_candidates_produce_different_fdfs(tmp_path):
+    """Test J: k-grid candidates produce genuinely different kgrid_Monkhorst_Pack blocks in FDF."""
+    with open('production_benchmarks/materials/nio/material.json') as fh:
+        mat_cfg = json.load(fh)
+
+    fdf1 = build_base_fdf_from_material_cfg(mat_cfg, {'kgrid': [2, 2, 2]})
+    fdf2 = build_base_fdf_from_material_cfg(mat_cfg, {'kgrid': [4, 4, 4]})
+
+    assert '2 0 0 0.0' in fdf1
+    assert '4 0 0 0.0' in fdf2
+    assert fdf1 != fdf2
+
+
+def test_rc_candidates_produce_different_fdfs(tmp_path):
+    """Test K: Projector rc candidates produce genuinely different DFTU.proj blocks in FDF."""
+    with open('production_benchmarks/materials/nio/material.json') as fh:
+        mat_cfg = json.load(fh)
+
+    spec1 = RunSpec(
+        run_id='test1', work_dir=str(tmp_path/'1'), fdf_path=str(tmp_path/'1'/'siesta.fdf'),
+        canonical_dm_path=str(tmp_path/'ref.DM'), pseudo_paths={'Ni':str(tmp_path/'Ni.psml'),'O':str(tmp_path/'O.psml')},
+        mpi_ranks=20, siesta_binary='/x', mpi_launcher='srun', mpi_flags='',
+        response_mode='SCREENED', alpha=0.01, perturbed_site=0, n_sites=2,
+        identity=compute_scientific_identity(mat_cfg, {'projector_rc_bohr': 2.5}, 'SCREENED', 0.01, 0),
+        mat_cfg=mat_cfg, effective_params={'projector_rc_bohr': 2.5}
+    )
+    spec2 = RunSpec(
+        run_id='test2', work_dir=str(tmp_path/'2'), fdf_path=str(tmp_path/'2'/'siesta.fdf'),
+        canonical_dm_path=str(tmp_path/'ref.DM'), pseudo_paths={'Ni':str(tmp_path/'Ni.psml'),'O':str(tmp_path/'O.psml')},
+        mpi_ranks=20, siesta_binary='/x', mpi_launcher='srun', mpi_flags='',
+        response_mode='SCREENED', alpha=0.01, perturbed_site=0, n_sites=2,
+        identity=compute_scientific_identity(mat_cfg, {'projector_rc_bohr': 3.5}, 'SCREENED', 0.01, 0),
+        mat_cfg=mat_cfg, effective_params={'projector_rc_bohr': 3.5}
+    )
+
+    fdf1 = materialize_run_fdf(spec1)
+    fdf2 = materialize_run_fdf(spec2)
+
+    assert '2.5000' in fdf1
+    assert '3.5000' in fdf2
+    assert fdf1 != fdf2
+
+
+def test_supercell_candidates_produce_different_structures(tmp_path):
+    """Test L: Supercell candidates produce different atom counts and lattices in FDF."""
+    with open('production_benchmarks/materials/nio/material.json') as fh:
+        mat_cfg = json.load(fh)
+
+    fdf1 = build_base_fdf_from_material_cfg(mat_cfg, {'supercell': 'small'})
+    fdf2 = build_base_fdf_from_material_cfg(mat_cfg, {'supercell': 'medium'})
+
+    assert 'NumberOfAtoms       4' in fdf1
+    assert 'NumberOfAtoms       8' in fdf2
+    assert fdf1 != fdf2
+
+
+def test_changed_scientific_dimension_changes_identity_and_work_dir(tmp_path):
+    """Test M: Changing MeshCutoff or projector rc changes identity hash and work directory."""
+    with open('production_benchmarks/materials/nio/material.json') as fh:
+        mat_cfg = json.load(fh)
+
+    id1 = compute_scientific_identity(mat_cfg, {'mesh_cutoff_ry': 200}, 'SCREENED', 0.01, 0)
+    id2 = compute_scientific_identity(mat_cfg, {'mesh_cutoff_ry': 250}, 'SCREENED', 0.01, 0)
+
+    assert id1.compute_key() != id2.compute_key()
+
+
+def test_rc0_screened_nonconverged_rejected(tmp_path):
+    """Test N: returncode 0 + SCREENED SCF non-convergence is REJECTED by semantic gate."""
+    out_file = tmp_path / 'siesta.out'
+    out_file.write_text("siesta: Normal completion\nSCF: NOT CONVERGED\nMulliken population\n")
+
+    mat_cfg = {'spin_mode': 'collinear_polarized'}
+    res = verify_siesta_run_semantics(str(out_file), 'SCREENED', mat_cfg)
+    assert res['passed'] is False
+    assert 'SCF' in res['reason']
+
+
+def test_rc0_missing_occupations_rejected(tmp_path):
+    """Test O: returncode 0 + missing occupation events is REJECTED by semantic gate."""
+    out_file = tmp_path / 'siesta.out'
+    out_file.write_text("siesta: Normal completion\nscf: converged\n")
+
+    mat_cfg = {'spin_mode': 'collinear_polarized'}
+    res = verify_siesta_run_semantics(str(out_file), 'SCREENED', mat_cfg)
+    assert res['passed'] is False
+    assert 'occupation' in res['reason'].lower()
+
+
+def test_valid_bare_nonconverged_accepted(tmp_path):
+    """Test P: BARE mode with returncode 0 and occupation data is ACCEPTED even if SCF did not converge."""
+    out_file = tmp_path / 'siesta.out'
+    out_file.write_text("siesta: Normal completion\nSCF: NOT CONVERGED\nMulliken population analysis\n")
+
+    mat_cfg = {'spin_mode': 'collinear_polarized'}
+    res = verify_siesta_run_semantics(str(out_file), 'BARE', mat_cfg)
+    assert res['passed'] is True

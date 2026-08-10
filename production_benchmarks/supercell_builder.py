@@ -2,7 +2,7 @@
 production_benchmarks/supercell_builder.py
 
 Real supercell builder with actual integer-matrix expansion,
-AFM-II spin propagation, and stoichiometry verification.
+physical AFM-II (111)-plane spin propagation, and stoichiometry verification.
 """
 from __future__ import annotations
 import numpy as np
@@ -95,7 +95,7 @@ def build_supercell(
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# AFM-II spin assignment
+# AFM-II spin assignment (propagated from physical (111) interplanar phase)
 # ─────────────────────────────────────────────────────────────────────────────
 
 def assign_afm_ordering(
@@ -107,25 +107,30 @@ def assign_afm_ordering(
     prim_lat: np.ndarray,
 ) -> List[float]:
     """
-    Assign AFM-II spin moments to target species atoms in the supercell.
+    Assign AFM-II spin moments by propagating the physical (111) interplanar phase.
+
+    No index-based parity assumption.
     """
     new_fracs = np.asarray(new_fracs, dtype=float)
     new_lat   = np.asarray(new_lat,   dtype=float)
     prim_lat  = np.asarray(prim_lat,  dtype=float)
 
-    prim_lat_inv = np.linalg.inv(prim_lat.T)
-    spins = []
+    n_plane = np.array([1.0, 1.0, 1.0]) / np.sqrt(3.0)
+    # Estimate d(111) interplanar spacing from primitive lattice
+    d_111 = float(np.linalg.norm(prim_lat[0])) / np.sqrt(3.0)
+    if d_111 < 0.5:
+        d_111 = 2.0
 
-    for i, (frac, label) in enumerate(zip(new_fracs, new_labels)):
+    spins = []
+    for frac, label in zip(new_fracs, new_labels):
         if label != target_species:
             spins.append(0.0)
             continue
-        cart      = new_lat.T @ frac
-        prim_frac = prim_lat_inv @ cart
-        prim_frac = prim_frac % 1.0
 
-        # Sublattice sign: alternating cations get alternating signs
-        sign = 1.0 if (i % 2 == 0) else -1.0
+        cart = new_lat.T @ frac
+        proj = float(np.dot(cart, n_plane))
+        plane_index = int(round(proj / d_111))
+        sign = 1.0 if (plane_index % 2 == 0) else -1.0
         spins.append(sign * moment_magnitude)
 
     return spins
@@ -176,10 +181,6 @@ def get_afm_supercell_options(material_name: str) -> List[Dict[str, Any]]:
     ]
     return options
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Stoichiometry verification
-# ─────────────────────────────────────────────────────────────────────────────
 
 def verify_stoichiometry(new_labels: List[str],
                           original_stoich: Dict[str, int]) -> bool:
