@@ -122,7 +122,8 @@
       "dimension": "basis",
       "values": [
         "DZP"
-      ]
+      ],
+      "accepted_value": null
     },
     {
       "dimension": "energy_shift_ry",
@@ -130,14 +131,16 @@
         0.02,
         0.01,
         0.005
-      ]
+      ],
+      "accepted_value": null
     },
     {
       "dimension": "mesh_cutoff_ry",
       "values": [
         200,
         250
-      ]
+      ],
+      "accepted_value": null
     },
     {
       "dimension": "kgrid",
@@ -152,7 +155,8 @@
           4,
           4
         ]
-      ]
+      ],
+      "accepted_value": null
     },
     {
       "dimension": "supercell",
@@ -160,7 +164,8 @@
         "small",
         "medium",
         "large"
-      ]
+      ],
+      "accepted_value": null
     },
     {
       "dimension": "projector_rc_bohr",
@@ -168,23 +173,29 @@
         2.5,
         3.0,
         3.5
-      ]
+      ],
+      "accepted_value": null
     },
     {
       "dimension": "projector_omega_bohr",
       "values": [
         0.05
-      ]
+      ],
+      "accepted_value": null
     },
     {
       "dimension": "alpha_ev",
       "values": [
         0.01,
         0.02
-      ]
+      ],
+      "accepted_value": null
     }
   ],
-  "production_settings": {
+  "n_ni_sites": 4,
+  "SCIENTIFIC_STATUS": "PENDING",
+  "n_correlated_sites": 4,
+  "candidate_baseline": {
     "basis": "DZP",
     "energy_shift_ry": 0.005,
     "mesh_cutoff_ry": 200,
@@ -196,7 +207,7 @@
     "projector_rc_bohr": 3.0,
     "projector_omega_bohr": 0.05,
     "alpha_ev": 0.01,
-    "lr_mode": "FINAL_5POINT"
-  },
-  "n_ni_sites": 4
+    "lr_mode": "FINAL_5POINT",
+    "note": "CANDIDATE ONLY \u2014 accepted values start null, populated after convergence evidence"
+  }
 }

@@ -92,5 +92,73 @@
     "code": "Quantum ESPRESSO",
     "xc": "PBE",
     "note": ""
-  }
+  },
+  "SCIENTIFIC_STATUS": "PENDING",
+  "n_correlated_sites": 4,
+  "convergence_sequence": [
+    {
+      "dimension": "basis",
+      "values": [
+        "DZP"
+      ],
+      "accepted_value": null
+    },
+    {
+      "dimension": "energy_shift_ry",
+      "values": [
+        0.02,
+        0.01,
+        0.005
+      ],
+      "accepted_value": null
+    },
+    {
+      "dimension": "mesh_cutoff_ry",
+      "values": [
+        200,
+        250
+      ],
+      "accepted_value": null
+    },
+    {
+      "dimension": "kgrid",
+      "values": [
+        [
+          2,
+          2,
+          2
+        ],
+        [
+          4,
+          4,
+          4
+        ]
+      ],
+      "accepted_value": null
+    },
+    {
+      "dimension": "projector_rc_bohr",
+      "values": [
+        2.5,
+        3.0,
+        3.5
+      ],
+      "accepted_value": null
+    },
+    {
+      "dimension": "projector_omega_bohr",
+      "values": [
+        0.05
+      ],
+      "accepted_value": null
+    },
+    {
+      "dimension": "alpha_ev",
+      "values": [
+        0.01,
+        0.02
+      ],
+      "accepted_value": null
+    }
+  ]
 }

@@ -1,0 +1,314 @@
+[
+  {
+    "run_id": "NiO_SCREENING_J0_alpha-0.0100_SCREENED",
+    "work_dir": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J0_a-0.0100_SCREENED",
+    "fdf_path": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J0_a-0.0100_SCREENED\\siesta.fdf",
+    "canonical_dm": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\materials\\nio\\reference.DM",
+    "pseudo_sources": {
+      "Ni": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\nio\\Ni.psml",
+      "O": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\nio\\O.psml"
+    },
+    "mpi_ranks": 20,
+    "siesta_binary": "/path/to/siesta",
+    "response_mode": "SCREENED",
+    "alpha": -0.01,
+    "perturbed_site": 0,
+    "n_sites": 4,
+    "identity_key": "NiO_SCREENING_J0_alpha-0.0100_SCREENED",
+    "mpi_command": "srun -n 20 /path/to/siesta < C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J0_a-0.0100_SCREENED\\siesta.fdf > C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J0_a-0.0100_SCREENED/siesta.out 2> C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J0_a-0.0100_SCREENED/siesta.err",
+    "dry_run": true,
+    "materialized": true,
+    "dm_hash_verified": true,
+    "pseudo_copies": {
+      "Ni": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J0_a-0.0100_SCREENED\\Ni.psml",
+      "O": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J0_a-0.0100_SCREENED\\O.psml"
+    },
+    "parent_dm_sha256": "DRY_RUN_NOT_VERIFIED"
+  },
+  {
+    "run_id": "NiO_SCREENING_J0_alpha+0.0000_SCREENED",
+    "work_dir": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J0_a+0.0000_SCREENED",
+    "fdf_path": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J0_a+0.0000_SCREENED\\siesta.fdf",
+    "canonical_dm": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\materials\\nio\\reference.DM",
+    "pseudo_sources": {
+      "Ni": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\nio\\Ni.psml",
+      "O": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\nio\\O.psml"
+    },
+    "mpi_ranks": 20,
+    "siesta_binary": "/path/to/siesta",
+    "response_mode": "SCREENED",
+    "alpha": 0.0,
+    "perturbed_site": 0,
+    "n_sites": 4,
+    "identity_key": "NiO_SCREENING_J0_alpha+0.0000_SCREENED",
+    "mpi_command": "srun -n 20 /path/to/siesta < C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J0_a+0.0000_SCREENED\\siesta.fdf > C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J0_a+0.0000_SCREENED/siesta.out 2> C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J0_a+0.0000_SCREENED/siesta.err",
+    "dry_run": true,
+    "materialized": true,
+    "dm_hash_verified": true,
+    "pseudo_copies": {
+      "Ni": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J0_a+0.0000_SCREENED\\Ni.psml",
+      "O": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J0_a+0.0000_SCREENED\\O.psml"
+    },
+    "parent_dm_sha256": "DRY_RUN_NOT_VERIFIED"
+  },
+  {
+    "run_id": "NiO_SCREENING_J0_alpha+0.0100_SCREENED",
+    "work_dir": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J0_a+0.0100_SCREENED",
+    "fdf_path": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J0_a+0.0100_SCREENED\\siesta.fdf",
+    "canonical_dm": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\materials\\nio\\reference.DM",
+    "pseudo_sources": {
+      "Ni": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\nio\\Ni.psml",
+      "O": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\nio\\O.psml"
+    },
+    "mpi_ranks": 20,
+    "siesta_binary": "/path/to/siesta",
+    "response_mode": "SCREENED",
+    "alpha": 0.01,
+    "perturbed_site": 0,
+    "n_sites": 4,
+    "identity_key": "NiO_SCREENING_J0_alpha+0.0100_SCREENED",
+    "mpi_command": "srun -n 20 /path/to/siesta < C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J0_a+0.0100_SCREENED\\siesta.fdf > C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J0_a+0.0100_SCREENED/siesta.out 2> C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J0_a+0.0100_SCREENED/siesta.err",
+    "dry_run": true,
+    "materialized": true,
+    "dm_hash_verified": true,
+    "pseudo_copies": {
+      "Ni": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J0_a+0.0100_SCREENED\\Ni.psml",
+      "O": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J0_a+0.0100_SCREENED\\O.psml"
+    },
+    "parent_dm_sha256": "DRY_RUN_NOT_VERIFIED"
+  },
+  {
+    "run_id": "NiO_SCREENING_J1_alpha-0.0100_SCREENED",
+    "work_dir": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J1_a-0.0100_SCREENED",
+    "fdf_path": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J1_a-0.0100_SCREENED\\siesta.fdf",
+    "canonical_dm": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\materials\\nio\\reference.DM",
+    "pseudo_sources": {
+      "Ni": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\nio\\Ni.psml",
+      "O": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\nio\\O.psml"
+    },
+    "mpi_ranks": 20,
+    "siesta_binary": "/path/to/siesta",
+    "response_mode": "SCREENED",
+    "alpha": -0.01,
+    "perturbed_site": 1,
+    "n_sites": 4,
+    "identity_key": "NiO_SCREENING_J1_alpha-0.0100_SCREENED",
+    "mpi_command": "srun -n 20 /path/to/siesta < C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J1_a-0.0100_SCREENED\\siesta.fdf > C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J1_a-0.0100_SCREENED/siesta.out 2> C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J1_a-0.0100_SCREENED/siesta.err",
+    "dry_run": true,
+    "materialized": true,
+    "dm_hash_verified": true,
+    "pseudo_copies": {
+      "Ni": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J1_a-0.0100_SCREENED\\Ni.psml",
+      "O": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J1_a-0.0100_SCREENED\\O.psml"
+    },
+    "parent_dm_sha256": "DRY_RUN_NOT_VERIFIED"
+  },
+  {
+    "run_id": "NiO_SCREENING_J1_alpha+0.0000_SCREENED",
+    "work_dir": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J1_a+0.0000_SCREENED",
+    "fdf_path": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J1_a+0.0000_SCREENED\\siesta.fdf",
+    "canonical_dm": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\materials\\nio\\reference.DM",
+    "pseudo_sources": {
+      "Ni": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\nio\\Ni.psml",
+      "O": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\nio\\O.psml"
+    },
+    "mpi_ranks": 20,
+    "siesta_binary": "/path/to/siesta",
+    "response_mode": "SCREENED",
+    "alpha": 0.0,
+    "perturbed_site": 1,
+    "n_sites": 4,
+    "identity_key": "NiO_SCREENING_J1_alpha+0.0000_SCREENED",
+    "mpi_command": "srun -n 20 /path/to/siesta < C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J1_a+0.0000_SCREENED\\siesta.fdf > C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J1_a+0.0000_SCREENED/siesta.out 2> C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J1_a+0.0000_SCREENED/siesta.err",
+    "dry_run": true,
+    "materialized": true,
+    "dm_hash_verified": true,
+    "pseudo_copies": {
+      "Ni": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J1_a+0.0000_SCREENED\\Ni.psml",
+      "O": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J1_a+0.0000_SCREENED\\O.psml"
+    },
+    "parent_dm_sha256": "DRY_RUN_NOT_VERIFIED"
+  },
+  {
+    "run_id": "NiO_SCREENING_J1_alpha+0.0100_SCREENED",
+    "work_dir": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J1_a+0.0100_SCREENED",
+    "fdf_path": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J1_a+0.0100_SCREENED\\siesta.fdf",
+    "canonical_dm": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\materials\\nio\\reference.DM",
+    "pseudo_sources": {
+      "Ni": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\nio\\Ni.psml",
+      "O": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\nio\\O.psml"
+    },
+    "mpi_ranks": 20,
+    "siesta_binary": "/path/to/siesta",
+    "response_mode": "SCREENED",
+    "alpha": 0.01,
+    "perturbed_site": 1,
+    "n_sites": 4,
+    "identity_key": "NiO_SCREENING_J1_alpha+0.0100_SCREENED",
+    "mpi_command": "srun -n 20 /path/to/siesta < C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J1_a+0.0100_SCREENED\\siesta.fdf > C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J1_a+0.0100_SCREENED/siesta.out 2> C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J1_a+0.0100_SCREENED/siesta.err",
+    "dry_run": true,
+    "materialized": true,
+    "dm_hash_verified": true,
+    "pseudo_copies": {
+      "Ni": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J1_a+0.0100_SCREENED\\Ni.psml",
+      "O": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J1_a+0.0100_SCREENED\\O.psml"
+    },
+    "parent_dm_sha256": "DRY_RUN_NOT_VERIFIED"
+  },
+  {
+    "run_id": "NiO_SCREENING_J2_alpha-0.0100_SCREENED",
+    "work_dir": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J2_a-0.0100_SCREENED",
+    "fdf_path": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J2_a-0.0100_SCREENED\\siesta.fdf",
+    "canonical_dm": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\materials\\nio\\reference.DM",
+    "pseudo_sources": {
+      "Ni": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\nio\\Ni.psml",
+      "O": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\nio\\O.psml"
+    },
+    "mpi_ranks": 20,
+    "siesta_binary": "/path/to/siesta",
+    "response_mode": "SCREENED",
+    "alpha": -0.01,
+    "perturbed_site": 2,
+    "n_sites": 4,
+    "identity_key": "NiO_SCREENING_J2_alpha-0.0100_SCREENED",
+    "mpi_command": "srun -n 20 /path/to/siesta < C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J2_a-0.0100_SCREENED\\siesta.fdf > C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J2_a-0.0100_SCREENED/siesta.out 2> C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J2_a-0.0100_SCREENED/siesta.err",
+    "dry_run": true,
+    "materialized": true,
+    "dm_hash_verified": true,
+    "pseudo_copies": {
+      "Ni": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J2_a-0.0100_SCREENED\\Ni.psml",
+      "O": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J2_a-0.0100_SCREENED\\O.psml"
+    },
+    "parent_dm_sha256": "DRY_RUN_NOT_VERIFIED"
+  },
+  {
+    "run_id": "NiO_SCREENING_J2_alpha+0.0000_SCREENED",
+    "work_dir": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J2_a+0.0000_SCREENED",
+    "fdf_path": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J2_a+0.0000_SCREENED\\siesta.fdf",
+    "canonical_dm": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\materials\\nio\\reference.DM",
+    "pseudo_sources": {
+      "Ni": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\nio\\Ni.psml",
+      "O": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\nio\\O.psml"
+    },
+    "mpi_ranks": 20,
+    "siesta_binary": "/path/to/siesta",
+    "response_mode": "SCREENED",
+    "alpha": 0.0,
+    "perturbed_site": 2,
+    "n_sites": 4,
+    "identity_key": "NiO_SCREENING_J2_alpha+0.0000_SCREENED",
+    "mpi_command": "srun -n 20 /path/to/siesta < C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J2_a+0.0000_SCREENED\\siesta.fdf > C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J2_a+0.0000_SCREENED/siesta.out 2> C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J2_a+0.0000_SCREENED/siesta.err",
+    "dry_run": true,
+    "materialized": true,
+    "dm_hash_verified": true,
+    "pseudo_copies": {
+      "Ni": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J2_a+0.0000_SCREENED\\Ni.psml",
+      "O": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J2_a+0.0000_SCREENED\\O.psml"
+    },
+    "parent_dm_sha256": "DRY_RUN_NOT_VERIFIED"
+  },
+  {
+    "run_id": "NiO_SCREENING_J2_alpha+0.0100_SCREENED",
+    "work_dir": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J2_a+0.0100_SCREENED",
+    "fdf_path": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J2_a+0.0100_SCREENED\\siesta.fdf",
+    "canonical_dm": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\materials\\nio\\reference.DM",
+    "pseudo_sources": {
+      "Ni": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\nio\\Ni.psml",
+      "O": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\nio\\O.psml"
+    },
+    "mpi_ranks": 20,
+    "siesta_binary": "/path/to/siesta",
+    "response_mode": "SCREENED",
+    "alpha": 0.01,
+    "perturbed_site": 2,
+    "n_sites": 4,
+    "identity_key": "NiO_SCREENING_J2_alpha+0.0100_SCREENED",
+    "mpi_command": "srun -n 20 /path/to/siesta < C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J2_a+0.0100_SCREENED\\siesta.fdf > C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J2_a+0.0100_SCREENED/siesta.out 2> C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J2_a+0.0100_SCREENED/siesta.err",
+    "dry_run": true,
+    "materialized": true,
+    "dm_hash_verified": true,
+    "pseudo_copies": {
+      "Ni": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J2_a+0.0100_SCREENED\\Ni.psml",
+      "O": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J2_a+0.0100_SCREENED\\O.psml"
+    },
+    "parent_dm_sha256": "DRY_RUN_NOT_VERIFIED"
+  },
+  {
+    "run_id": "NiO_SCREENING_J3_alpha-0.0100_SCREENED",
+    "work_dir": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J3_a-0.0100_SCREENED",
+    "fdf_path": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J3_a-0.0100_SCREENED\\siesta.fdf",
+    "canonical_dm": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\materials\\nio\\reference.DM",
+    "pseudo_sources": {
+      "Ni": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\nio\\Ni.psml",
+      "O": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\nio\\O.psml"
+    },
+    "mpi_ranks": 20,
+    "siesta_binary": "/path/to/siesta",
+    "response_mode": "SCREENED",
+    "alpha": -0.01,
+    "perturbed_site": 3,
+    "n_sites": 4,
+    "identity_key": "NiO_SCREENING_J3_alpha-0.0100_SCREENED",
+    "mpi_command": "srun -n 20 /path/to/siesta < C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J3_a-0.0100_SCREENED\\siesta.fdf > C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J3_a-0.0100_SCREENED/siesta.out 2> C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J3_a-0.0100_SCREENED/siesta.err",
+    "dry_run": true,
+    "materialized": true,
+    "dm_hash_verified": true,
+    "pseudo_copies": {
+      "Ni": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J3_a-0.0100_SCREENED\\Ni.psml",
+      "O": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J3_a-0.0100_SCREENED\\O.psml"
+    },
+    "parent_dm_sha256": "DRY_RUN_NOT_VERIFIED"
+  },
+  {
+    "run_id": "NiO_SCREENING_J3_alpha+0.0000_SCREENED",
+    "work_dir": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J3_a+0.0000_SCREENED",
+    "fdf_path": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J3_a+0.0000_SCREENED\\siesta.fdf",
+    "canonical_dm": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\materials\\nio\\reference.DM",
+    "pseudo_sources": {
+      "Ni": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\nio\\Ni.psml",
+      "O": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\nio\\O.psml"
+    },
+    "mpi_ranks": 20,
+    "siesta_binary": "/path/to/siesta",
+    "response_mode": "SCREENED",
+    "alpha": 0.0,
+    "perturbed_site": 3,
+    "n_sites": 4,
+    "identity_key": "NiO_SCREENING_J3_alpha+0.0000_SCREENED",
+    "mpi_command": "srun -n 20 /path/to/siesta < C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J3_a+0.0000_SCREENED\\siesta.fdf > C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J3_a+0.0000_SCREENED/siesta.out 2> C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J3_a+0.0000_SCREENED/siesta.err",
+    "dry_run": true,
+    "materialized": true,
+    "dm_hash_verified": true,
+    "pseudo_copies": {
+      "Ni": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J3_a+0.0000_SCREENED\\Ni.psml",
+      "O": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J3_a+0.0000_SCREENED\\O.psml"
+    },
+    "parent_dm_sha256": "DRY_RUN_NOT_VERIFIED"
+  },
+  {
+    "run_id": "NiO_SCREENING_J3_alpha+0.0100_SCREENED",
+    "work_dir": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J3_a+0.0100_SCREENED",
+    "fdf_path": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J3_a+0.0100_SCREENED\\siesta.fdf",
+    "canonical_dm": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\materials\\nio\\reference.DM",
+    "pseudo_sources": {
+      "Ni": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\nio\\Ni.psml",
+      "O": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\pseudos\\nio\\O.psml"
+    },
+    "mpi_ranks": 20,
+    "siesta_binary": "/path/to/siesta",
+    "response_mode": "SCREENED",
+    "alpha": 0.01,
+    "perturbed_site": 3,
+    "n_sites": 4,
+    "identity_key": "NiO_SCREENING_J3_alpha+0.0100_SCREENED",
+    "mpi_command": "srun -n 20 /path/to/siesta < C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J3_a+0.0100_SCREENED\\siesta.fdf > C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J3_a+0.0100_SCREENED/siesta.out 2> C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J3_a+0.0100_SCREENED/siesta.err",
+    "dry_run": true,
+    "materialized": true,
+    "dm_hash_verified": true,
+    "pseudo_copies": {
+      "Ni": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J3_a+0.0100_SCREENED\\Ni.psml",
+      "O": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\production_benchmarks\\runs\\NiO\\SCREENING\\J3_a+0.0100_SCREENED\\O.psml"
+    },
+    "parent_dm_sha256": "DRY_RUN_NOT_VERIFIED"
+  }
+]

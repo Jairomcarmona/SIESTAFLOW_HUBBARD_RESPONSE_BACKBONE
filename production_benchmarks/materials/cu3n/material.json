@@ -3,13 +3,15 @@
   "formula": "Cu3N",
   "structure_type": "anti-ReO3",
   "space_group": "Pm-3m",
+  "structure_source": "Experimental: cubic Cu3N, a~3.84 Ang. See Gupta et al., J. Phys. Chem. Solids 58, 1995; and standard DFT-PBE relaxed values in literature.",
   "lattice_constant_ang": 3.84,
   "spin_mode": "non_polarized",
   "correlated_species": "Cu",
-  "correlated_manifold": {
-    "n": 3,
-    "l": 2
-  },
+  "correlated_manifold": {"n": 3, "l": 2},
+  "n_correlated_sites": 3,
+  "n_atoms": 4,
+  "n_cu_sites": 3,
+  "n_n_sites": 1,
   "pseudopotentials": {
     "Cu": {
       "file": "Cu.psml",
@@ -18,49 +20,35 @@
     },
     "N": {
       "file": "N.psml",
-      "uuid": "TBD",
+      "uuid": "5b050ea0-be62-11e7-4c5c-ffa8bf2b9f25",
       "sha256": "f2ed77995cd0bedd479ce33a47dbde5c6ba0802913535ae5c1b337cd909d3028"
     }
   },
   "base_fractional_coords": [
-    {
-      "label": "N",
-      "species": "N",
-      "frac": [
-        0.0,
-        0.0,
-        0.0
-      ]
-    },
-    {
-      "label": "Cu",
-      "species": "Cu",
-      "frac": [
-        0.5,
-        0.0,
-        0.0
-      ]
-    },
-    {
-      "label": "Cu",
-      "species": "Cu",
-      "frac": [
-        0.0,
-        0.5,
-        0.0
-      ]
-    },
-    {
-      "label": "Cu",
-      "species": "Cu",
-      "frac": [
-        0.0,
-        0.0,
-        0.5
-      ]
-    }
+    {"label": "N",  "species": "N",  "frac": [0.0, 0.0, 0.0], "init_spin": 0.0},
+    {"label": "Cu", "species": "Cu", "frac": [0.5, 0.0, 0.0], "init_spin": 0.0},
+    {"label": "Cu", "species": "Cu", "frac": [0.0, 0.5, 0.0], "init_spin": 0.0},
+    {"label": "Cu", "species": "Cu", "frac": [0.0, 0.0, 0.5], "init_spin": 0.0}
   ],
-  "n_atoms": 4,
-  "adversarial_notes": "strong Cu-3d/N-2p hybridization, nearly filled d shell, expect weak response",
-  "SCIENTIFIC_STATUS": "RESPONSE_NOT_RESOLVED"
+  "adversarial_notes": "Strong Cu-3d/N-2p hybridization; nearly filled d shell (d10); expect weak or nonlinear response. RESPONSE_NOT_RESOLVED is a scientifically valid outcome.",
+  "SCIENTIFIC_STATUS": "PENDING",
+  "convergence_sequence": [
+    {"dimension": "basis",           "values": ["DZP"], "accepted_value": null},
+    {"dimension": "energy_shift_ry", "values": [0.02, 0.01], "accepted_value": null},
+    {"dimension": "mesh_cutoff_ry",  "values": [200, 250], "accepted_value": null},
+    {"dimension": "kgrid",           "values": [[2,2,2]], "accepted_value": null},
+    {"dimension": "projector_rc_bohr",   "values": [3.0], "accepted_value": null},
+    {"dimension": "projector_omega_bohr","values": [0.05], "accepted_value": null},
+    {"dimension": "alpha_ev",        "values": [0.01], "accepted_value": null}
+  ],
+  "candidate_baseline": {
+    "basis": "DZP",
+    "energy_shift_ry": 0.02,
+    "mesh_cutoff_ry": 200,
+    "kgrid": [2, 2, 2],
+    "projector_rc_bohr": 3.0,
+    "projector_omega_bohr": 0.05,
+    "alpha_ev": 0.01,
+    "note": "CANDIDATE ONLY — accepted values start null, populated after convergence evidence"
+  }
 }
