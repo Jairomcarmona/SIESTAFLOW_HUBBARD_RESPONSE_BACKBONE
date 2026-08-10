@@ -1712,6 +1712,7 @@ def test_valid_bare_nonconverged_accepted(tmp_path):
     out_file = tmp_path / 'siesta.out'
     out_file.write_text("""siesta: Normal completion
 SCF: NOT CONVERGED
+scf: 1
 hubbard_term: recalculating local occupations 1
   hubbard_term: atom, species:    1    1
     1    1    0.6000   0.2000

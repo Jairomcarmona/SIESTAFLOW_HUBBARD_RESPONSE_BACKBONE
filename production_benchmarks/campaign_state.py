@@ -39,6 +39,7 @@ class CampaignState:
         self.reference_dm_sha256: Optional[str] = None
         self.current_dag_node:   str = ""
         self.material_statuses:  Dict[str, str] = {}
+        self.current_accepted_configuration: Dict[str, Dict[str, Any]] = {}
 
         # Load existing state if present
         if os.path.exists(self._state_path):
@@ -72,6 +73,7 @@ class CampaignState:
             "reference_dm_sha256": self.reference_dm_sha256,
             "current_dag_node":    self.current_dag_node,
             "material_statuses":   self.material_statuses,
+            "current_accepted_configuration": self.current_accepted_configuration,
         }
         data = json.dumps(payload, indent=2, sort_keys=True)
 
@@ -104,6 +106,7 @@ class CampaignState:
         self.reference_dm_sha256  = payload.get("reference_dm_sha256", None)
         self.current_dag_node     = payload.get("current_dag_node", "")
         self.material_statuses    = payload.get("material_statuses", {})
+        self.current_accepted_configuration = payload.get("current_accepted_configuration", {})
 
     def set_reference_dm(self, sha256: str) -> None:
         """Record the canonical reference DM hash after the reference run."""
@@ -131,6 +134,7 @@ class CampaignState:
             "reference_dm_sha256": self.reference_dm_sha256,
             "current_dag_node":    self.current_dag_node,
             "material_statuses":   self.material_statuses,
+            "current_accepted_configuration": self.current_accepted_configuration,
         }
 
 

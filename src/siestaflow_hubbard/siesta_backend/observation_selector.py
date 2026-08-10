@@ -69,9 +69,6 @@ class Siesta542BarePolicyV1:
 
     @staticmethod
     def get_bare_observation(events: List[HubbardPopulationEvent], context: ObservationContext) -> ObservationSelection:
-        if len(events) < 2:
-            raise ObservationPolicyError("Insufficient events to extract BARE observation. Need at least 2.")
-            
         candidates = [e for e in events if e.scf_iteration == 2]
         if not candidates:
             raise ObservationPolicyError("No BARE observation found (requires scf_iteration == 2).")

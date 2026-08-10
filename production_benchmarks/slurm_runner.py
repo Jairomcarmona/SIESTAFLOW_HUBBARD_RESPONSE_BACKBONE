@@ -37,6 +37,8 @@ from production_benchmarks.supercell_builder import (
 )
 from production_benchmarks.geometry_validator import verify_rocksalt_afm, verify_afm_ii_ordering
 from siestaflow_hubbard.siesta_backend.event_parser import parse_hubbard_population_events
+from siestaflow_hubbard.siesta_backend.observation_selector import Siesta542BarePolicyV1
+from siestaflow_hubbard.siesta_backend.parser_models import ObservationContext
 
 
 def system_label_from_materialized_fdf(fdf_path: str) -> str:
@@ -58,6 +60,39 @@ def sha256_nonempty_file(path: str) -> str:
         for block in iter(lambda: fh.read(1024 * 1024), b''):
             h.update(block)
     return h.hexdigest()
+
+
+GROUND_STATE_DIMENSIONS = ('basis', 'energy_shift_ry', 'mesh_cutoff_ry', 'kgrid', 'supercell')
+
+
+def candidate_ground_state_id(mat_cfg: Dict[str, Any], effective_params: Dict[str, Any]) -> str:
+    """Stable identity for the electronic ground state which owns a reference DM."""
+    payload = {key: effective_params.get(key, mat_cfg.get('candidate_baseline', {}).get(key))
+               for key in GROUND_STATE_DIMENSIONS}
+    payload['material'] = mat_cfg.get('name', 'FeO')
+    return hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()[:16]
+
+
+def actual_correlated_site_count(mat_cfg: Dict[str, Any], effective_params: Dict[str, Any]) -> int:
+    """Count correlated atoms in the concrete candidate structure, never base metadata."""
+    if not mat_cfg.get('base_fractional_coords'):
+        return int(mat_cfg.get('n_correlated_sites', 0))
+    target = mat_cfg.get('correlated_species', {
+        'FeO': 'Fe', 'NiO': 'Ni', 'Cu2O': 'Cu', 'Cu3N': 'Cu',
+    }.get(mat_cfg.get('name', ''), ''))
+    if not target:
+        return int(mat_cfg.get('n_correlated_sites', 0))
+    supercell = str(effective_params.get('supercell', 'small')).lower()
+    if supercell == 'small':
+        return sum(c['label'] == target
+                   for c in mat_cfg.get('base_fractional_coords', []))
+    option = next((o for o in get_afm_supercell_options(mat_cfg['name'])
+                   if o['label'] == supercell), None)
+    if option is None:
+        raise ValueError(f"Unknown supercell {supercell!r}")
+    base_count = sum(c['label'] == target
+                     for c in mat_cfg.get('base_fractional_coords', []))
+    return base_count * int(option['det'])
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -431,11 +466,24 @@ def generate_lr_run_specs(
     if override_effective_params:
         effective_params.update(override_effective_params)
 
-    canonical_dm = os.path.join(campaign_dir, 'materials', material.lower(), 'reference.DM')
+    candidate_id = candidate_ground_state_id(mat_cfg, effective_params)
+    canonical_dm = os.path.join(campaign_dir, 'materials', material.lower(), 'candidates',
+                                candidate_id, 'reference.DM')
+
+    # Compatibility migration: an existing baseline reference is only reused
+    # for the byte-identical baseline ground state, and is immediately placed
+    # under its candidate-specific canonical path.  Numerical candidates never
+    # fall back to this file.
+    legacy_dm = os.path.join(campaign_dir, 'materials', material.lower(), 'reference.DM')
+    baseline_id = candidate_ground_state_id(mat_cfg, mat_cfg.get('candidate_baseline', {}))
+    if (not os.path.exists(canonical_dm) and candidate_id == baseline_id and
+            os.path.isfile(legacy_dm) and os.path.getsize(legacy_dm) > 0):
+        os.makedirs(os.path.dirname(canonical_dm), exist_ok=True)
+        shutil.copy2(legacy_dm, canonical_dm)
 
     # Handle REFERENCE_RUN
-    if dag_node.upper() == 'REFERENCE_RUN':
-        run_id   = f"{material}_REFERENCE_RUN"
+    if dag_node.upper() in ('REFERENCE_RUN', 'CANDIDATE_REFERENCE'):
+        run_id   = f"{material}_{dag_node}_{candidate_id}"
         identity = compute_scientific_identity(
             mat_cfg, effective_params, response_mode='REFERENCE',
             alpha=0.0, perturbed_site=0, ref_dm_sha="NONE", pseudo_shas=pseudo_shas
@@ -450,7 +498,7 @@ def generate_lr_run_specs(
                 mpi_ranks=mpi_ranks, siesta_binary=siesta_binary,
                 mpi_launcher=mpi_launcher, mpi_flags=mpi_flags,
                 response_mode='REFERENCE', alpha=0.0, perturbed_site=0,
-                n_sites=mat_cfg.get('n_correlated_sites', 2),
+                n_sites=actual_correlated_site_count(mat_cfg, effective_params),
                 identity=identity, mat_cfg=mat_cfg, effective_params=effective_params
             )
         ]
@@ -471,7 +519,7 @@ def generate_lr_run_specs(
         else:
             alphas = [-0.01, 0.0, 0.01]
 
-    n_sites = mat_cfg.get('n_correlated_sites', 2)
+    n_sites = actual_correlated_site_count(mat_cfg, effective_params)
 
     nonzero_alphas = [a for a in alphas if abs(a) > 1e-12]
     has_zero       = any(abs(a) <= 1e-12 for a in alphas)
@@ -533,7 +581,9 @@ def generate_lr_run_specs(
 
 def generate_convergence_stage_specs(
     material_config: Dict[str, Any], stage: str, campaign_dir: str,
-    reference_dm: Optional[str] = None, **kwargs: Any,
+    reference_dm: Optional[str] = None,
+    current_accepted_configuration: Optional[Dict[str, Any]] = None,
+    **kwargs: Any,
 ) -> List[RunSpec]:
     """Single authority for real convergence candidates declared in material.json."""
     key = stage.upper().replace('_SCREEN', '')
@@ -549,13 +599,23 @@ def generate_convergence_stage_specs(
             os.path.join(campaign_dir, 'materials', material_config['name'].lower(), 'reference.DM')):
         raise ValueError('reference_dm must be the campaign canonical reference.DM')
     specs: List[RunSpec] = []
+    baseline = dict(material_config.get('candidate_baseline', {}))
+    baseline.update(current_accepted_configuration or {})
     for value in step['values']:
         candidate_kwargs = dict(kwargs)
         if dimension == 'alpha_ev':
             alpha = float(value)
             candidate_kwargs['alphas'] = [-alpha, 0.0, alpha]
-        specs.extend(generate_lr_run_specs(material_config, stage, campaign_dir,
-            override_effective_params={dimension: value}, **candidate_kwargs))
+        effective = dict(baseline)
+        effective[dimension] = value
+        # A changed electronic ground state must establish its own DM before
+        # any response calculation can be planned or launched.
+        if dimension in GROUND_STATE_DIMENSIONS:
+            specs.extend(generate_lr_run_specs(material_config, 'CANDIDATE_REFERENCE', campaign_dir,
+                override_effective_params=effective, **candidate_kwargs))
+        else:
+            specs.extend(generate_lr_run_specs(material_config, stage, campaign_dir,
+                override_effective_params=effective, **candidate_kwargs))
     return specs
 
 
@@ -713,7 +773,35 @@ def verify_siesta_run_semantics(
         return {'passed': False, 'reason': f'Hubbard occupation parser failed: {exc}'}
     if not events:
         return {'passed': False, 'reason': 'Semantic Hubbard occupations missing in stdout'}
-    event = events[-1]
+    if mode == 'BARE':
+        context = ObservationContext(
+            siesta_version='5.4.2', calculation_mode='BARE', reference_dm_sha256='validated',
+            projector_fingerprint='materialized', scf_mix_target='density',
+            scf_mixer_method='Linear', scf_mixer_weight=1.0, max_scf_iterations=200,
+            convergence_confirmed=False, final_scf_iteration=None,
+            post_scf_population_occurrence=None,
+        )
+        try:
+            selection = Siesta542BarePolicyV1.get_bare_observation(events, context)
+            event = selection.event
+        except Exception as exc:
+            return {'passed': False, 'reason': f'BARE semantic selection failed: {exc}'}
+    elif mode == 'SCREENED':
+        final_iscf = max(e.scf_iteration or 0 for e in events)
+        context = ObservationContext(
+            siesta_version='5.4.2', calculation_mode='SCREENED', reference_dm_sha256='validated',
+            projector_fingerprint='materialized', scf_mix_target=None, scf_mixer_method=None,
+            scf_mixer_weight=None, max_scf_iterations=200, convergence_confirmed=True,
+            final_scf_iteration=final_iscf, post_scf_population_occurrence=None,
+        )
+        try:
+            selection = Siesta542BarePolicyV1.get_screened_observation(events, context)
+            event = selection.event
+        except Exception as exc:
+            return {'passed': False, 'reason': f'SCREENED semantic selection failed: {exc}'}
+    else:
+        selection = None
+        event = events[-1]
     expected = int(mat_cfg.get('n_correlated_sites', 0))
     if expected <= 0 or len(event.atoms) < expected:
         return {'passed': False, 'reason': f'Expected occupations for {expected} correlated sites, got {len(event.atoms)}'}
@@ -729,6 +817,12 @@ def verify_siesta_run_semantics(
         'passed': True,
         'reason': 'Semantic validation passed',
         'stdout_sha256': hashlib.sha256(text.encode()).hexdigest(),
+        'selected_occurrence_index': event.occurrence_index,
+        'selected_scf_iteration': event.scf_iteration,
+        'occupation_vector': [atom.trace_total for atom in event.atoms],
+        'atom_indices': [atom.atom_index for atom in event.atoms],
+        'selection_role': selection.role.value if selection else 'REFERENCE',
+        'selection_evidence': selection.evidence if selection else 'Reference semantic gate',
     }
 
 
@@ -973,7 +1067,7 @@ def cli_main(argv: Optional[List[str]] = None) -> int:
                     'stdout_sha256': sem_result.get('stdout_sha256', ''),
                 }
                 if s.response_mode == 'REFERENCE':
-                    dest_dm = os.path.join(campaign_dir, 'materials', material.lower(), 'reference.DM')
+                    dest_dm = s.canonical_dm_path
                     try:
                         system_label = system_label_from_materialized_fdf(s.fdf_path)
                         src_dm = os.path.join(s.work_dir, f'{system_label}.DM')
@@ -989,6 +1083,22 @@ def cli_main(argv: Optional[List[str]] = None) -> int:
                         meta.update({'system_label': system_label, 'source_dm_sha256': source_sha,
                                      'canonical_dm_sha256': canonical_sha})
                         state.set_reference_dm(canonical_sha)
+                else:
+                    from production_benchmarks.campaign_controller import persist_observation
+                    persist_observation(campaign_dir, {
+                        'material': material,
+                        'candidate_id': candidate_ground_state_id(s.mat_cfg, s.effective_params),
+                        'mode': s.response_mode,
+                        'perturbed_site': s.perturbed_site,
+                        'alpha': s.alpha,
+                        'parent_dm_sha256': hashlib.sha256(open(s.canonical_dm_path, 'rb').read()).hexdigest(),
+                        'selected_occurrence_index': sem_result['selected_occurrence_index'],
+                        'selected_scf_iteration': sem_result['selected_scf_iteration'],
+                        'atom_indices': sem_result['atom_indices'],
+                        'occupation_vector': sem_result['occupation_vector'],
+                        'selection_role': sem_result['selection_role'],
+                        'selection_evidence': sem_result['selection_evidence'],
+                    })
                 state.mark_complete(s.identity_key, meta)
                 return 0
             else:
