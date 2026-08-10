@@ -1,0 +1,25 @@
+{
+  "benchmark_version": "1.0",
+  "materials": {
+    "FeO": {
+      "scientific_status": null,
+      "U_II_ev": null,
+      "convergence_status": null
+    },
+    "NiO": {
+      "scientific_status": null,
+      "U_II_ev": null,
+      "convergence_status": null
+    },
+    "Cu2O": {
+      "scientific_status": "PASS_SOFTWARE_VALIDATION",
+      "U_II_ev": 11.8094,
+      "convergence_status": "PENDING_PRODUCTION"
+    },
+    "Cu3N": {
+      "scientific_status": null,
+      "U_II_ev": null,
+      "convergence_status": null
+    }
+  }
+}

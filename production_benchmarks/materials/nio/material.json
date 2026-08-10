@@ -1,0 +1,202 @@
+{
+  "name": "NiO",
+  "formula": "NiO",
+  "structure_type": "rocksalt_afm_ii",
+  "space_group": "Fm-3m",
+  "lattice_constant_ang": 4.177,
+  "spin_mode": "collinear_polarized",
+  "correlated_species": "Ni",
+  "correlated_manifold": {
+    "n": 3,
+    "l": 2
+  },
+  "initial_moment_up": 2.0,
+  "initial_moment_dn": -2.0,
+  "pseudopotentials": {
+    "Ni": {
+      "file": "Ni.psml",
+      "uuid": "2e63c660-be63-11e7-4f57-6a7697ffcf75",
+      "sha256": "192eb05ffb64671715e570e2ca9a99a551cf15544984592082d43004f8554e06"
+    },
+    "O": {
+      "file": "O.psml",
+      "uuid": "66518360-be62-11e7-6a04-293bfbad3b21",
+      "sha256": "224ded5c59176d9bcb76d19b7a4a68a48d5dffabf8b262f64d5760250e87c35e"
+    }
+  },
+  "base_fractional_coords": [
+    {
+      "label": "Ni",
+      "species": "Ni",
+      "frac": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "init_spin": 2.0
+    },
+    {
+      "label": "Ni",
+      "species": "Ni",
+      "frac": [
+        0.5,
+        0.5,
+        0.0
+      ],
+      "init_spin": -2.0
+    },
+    {
+      "label": "Ni",
+      "species": "Ni",
+      "frac": [
+        0.5,
+        0.0,
+        0.5
+      ],
+      "init_spin": 2.0
+    },
+    {
+      "label": "Ni",
+      "species": "Ni",
+      "frac": [
+        0.0,
+        0.5,
+        0.5
+      ],
+      "init_spin": -2.0
+    },
+    {
+      "label": "O",
+      "species": "O",
+      "frac": [
+        0.5,
+        0.0,
+        0.0
+      ],
+      "init_spin": 0.0
+    },
+    {
+      "label": "O",
+      "species": "O",
+      "frac": [
+        0.0,
+        0.5,
+        0.0
+      ],
+      "init_spin": 0.0
+    },
+    {
+      "label": "O",
+      "species": "O",
+      "frac": [
+        0.0,
+        0.0,
+        0.5
+      ],
+      "init_spin": 0.0
+    },
+    {
+      "label": "O",
+      "species": "O",
+      "frac": [
+        0.5,
+        0.5,
+        0.5
+      ],
+      "init_spin": 0.0
+    }
+  ],
+  "n_atoms": 8,
+  "n_fe_sites": 0,
+  "n_o_sites": 4,
+  "literature_context": {
+    "reference": "Timrov+2022 PRB 105 085119",
+    "reported_U_ev": 6.5,
+    "method": "DFPT linear response",
+    "code": "Quantum ESPRESSO",
+    "xc": "PBE",
+    "note": "reported U ~ 6-7 eV depending on method"
+  },
+  "convergence_sequence": [
+    {
+      "dimension": "basis",
+      "values": [
+        "DZP"
+      ]
+    },
+    {
+      "dimension": "energy_shift_ry",
+      "values": [
+        0.02,
+        0.01,
+        0.005
+      ]
+    },
+    {
+      "dimension": "mesh_cutoff_ry",
+      "values": [
+        200,
+        250
+      ]
+    },
+    {
+      "dimension": "kgrid",
+      "values": [
+        [
+          2,
+          2,
+          2
+        ],
+        [
+          4,
+          4,
+          4
+        ]
+      ]
+    },
+    {
+      "dimension": "supercell",
+      "values": [
+        "small",
+        "medium",
+        "large"
+      ]
+    },
+    {
+      "dimension": "projector_rc_bohr",
+      "values": [
+        2.5,
+        3.0,
+        3.5
+      ]
+    },
+    {
+      "dimension": "projector_omega_bohr",
+      "values": [
+        0.05
+      ]
+    },
+    {
+      "dimension": "alpha_ev",
+      "values": [
+        0.01,
+        0.02
+      ]
+    }
+  ],
+  "production_settings": {
+    "basis": "DZP",
+    "energy_shift_ry": 0.005,
+    "mesh_cutoff_ry": 200,
+    "kgrid": [
+      4,
+      4,
+      4
+    ],
+    "projector_rc_bohr": 3.0,
+    "projector_omega_bohr": 0.05,
+    "alpha_ev": 0.01,
+    "lr_mode": "FINAL_5POINT"
+  },
+  "n_ni_sites": 4
+}

@@ -1,0 +1,201 @@
+{
+  "name": "FeO",
+  "formula": "FeO",
+  "structure_type": "rocksalt_afm_ii",
+  "space_group": "Fm-3m",
+  "lattice_constant_ang": 4.334,
+  "spin_mode": "collinear_polarized",
+  "correlated_species": "Fe",
+  "correlated_manifold": {
+    "n": 3,
+    "l": 2
+  },
+  "initial_moment_up": 4.0,
+  "initial_moment_dn": -4.0,
+  "pseudopotentials": {
+    "Fe": {
+      "file": "Fe.psml",
+      "uuid": "TBD",
+      "sha256": "6b540d480fbdf34ef2058028ed6a6d47fc818f9ead7ea31e496720420ab44e12"
+    },
+    "O": {
+      "file": "O.psml",
+      "uuid": "66518360-be62-11e7-6a04-293bfbad3b21",
+      "sha256": "224ded5c59176d9bcb76d19b7a4a68a48d5dffabf8b262f64d5760250e87c35e"
+    }
+  },
+  "base_fractional_coords": [
+    {
+      "label": "Fe",
+      "species": "Fe",
+      "frac": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "init_spin": 4.0
+    },
+    {
+      "label": "Fe",
+      "species": "Fe",
+      "frac": [
+        0.5,
+        0.5,
+        0.0
+      ],
+      "init_spin": -4.0
+    },
+    {
+      "label": "Fe",
+      "species": "Fe",
+      "frac": [
+        0.5,
+        0.0,
+        0.5
+      ],
+      "init_spin": 4.0
+    },
+    {
+      "label": "Fe",
+      "species": "Fe",
+      "frac": [
+        0.0,
+        0.5,
+        0.5
+      ],
+      "init_spin": -4.0
+    },
+    {
+      "label": "O",
+      "species": "O",
+      "frac": [
+        0.5,
+        0.0,
+        0.0
+      ],
+      "init_spin": 0.0
+    },
+    {
+      "label": "O",
+      "species": "O",
+      "frac": [
+        0.0,
+        0.5,
+        0.0
+      ],
+      "init_spin": 0.0
+    },
+    {
+      "label": "O",
+      "species": "O",
+      "frac": [
+        0.0,
+        0.0,
+        0.5
+      ],
+      "init_spin": 0.0
+    },
+    {
+      "label": "O",
+      "species": "O",
+      "frac": [
+        0.5,
+        0.5,
+        0.5
+      ],
+      "init_spin": 0.0
+    }
+  ],
+  "n_atoms": 8,
+  "n_fe_sites": 4,
+  "n_o_sites": 4,
+  "literature_context": {
+    "reference": "Cococcioni & de Gironcoli, PRB 71 035105 (2005)",
+    "reported_U_ev": 4.3,
+    "method": "DFPT linear response, one-shot",
+    "code": "Quantum ESPRESSO",
+    "xc": "LDA",
+    "note": "LDA reference; PBE + different projector definition will give different U. Literature value is scale context only."
+  },
+  "convergence_sequence": [
+    {
+      "dimension": "basis",
+      "values": [
+        "DZP"
+      ]
+    },
+    {
+      "dimension": "energy_shift_ry",
+      "values": [
+        0.02,
+        0.01,
+        0.005
+      ]
+    },
+    {
+      "dimension": "mesh_cutoff_ry",
+      "values": [
+        200,
+        250
+      ]
+    },
+    {
+      "dimension": "kgrid",
+      "values": [
+        [
+          2,
+          2,
+          2
+        ],
+        [
+          4,
+          4,
+          4
+        ]
+      ]
+    },
+    {
+      "dimension": "supercell",
+      "values": [
+        "small",
+        "medium",
+        "large"
+      ]
+    },
+    {
+      "dimension": "projector_rc_bohr",
+      "values": [
+        2.5,
+        3.0,
+        3.5
+      ]
+    },
+    {
+      "dimension": "projector_omega_bohr",
+      "values": [
+        0.05
+      ]
+    },
+    {
+      "dimension": "alpha_ev",
+      "values": [
+        0.01,
+        0.02
+      ]
+    }
+  ],
+  "production_settings": {
+    "basis": "DZP",
+    "energy_shift_ry": 0.005,
+    "mesh_cutoff_ry": 200,
+    "kgrid": [
+      4,
+      4,
+      4
+    ],
+    "projector_rc_bohr": 3.0,
+    "projector_omega_bohr": 0.05,
+    "alpha_ev": 0.01,
+    "lr_mode": "FINAL_5POINT"
+  }
+}

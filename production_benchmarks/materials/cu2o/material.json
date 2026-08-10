@@ -1,0 +1,96 @@
+{
+  "name": "Cu2O",
+  "formula": "Cu2O",
+  "structure_type": "cuprite",
+  "space_group": "Pn-3m",
+  "lattice_constant_ang": 4.27,
+  "spin_mode": "non_polarized",
+  "correlated_species": "Cu",
+  "correlated_manifold": {
+    "n": 3,
+    "l": 2
+  },
+  "pseudopotentials": {
+    "Cu": {
+      "file": "Cu.psml",
+      "uuid": "37906860-be63-11e7-67a1-1447fd7f0c8e",
+      "sha256": "7bfaec0d9a98a9ca167a7f486ba99a3dacd557317dede740478780a80f21f738"
+    },
+    "O": {
+      "file": "O.psml",
+      "uuid": "66518360-be62-11e7-6a04-293bfbad3b21",
+      "sha256": "224ded5c59176d9bcb76d19b7a4a68a48d5dffabf8b262f64d5760250e87c35e"
+    }
+  },
+  "base_fractional_coords": [
+    {
+      "label": "O",
+      "species": "O",
+      "frac": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "label": "O",
+      "species": "O",
+      "frac": [
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "label": "Cu",
+      "species": "Cu",
+      "frac": [
+        0.25,
+        0.25,
+        0.25
+      ]
+    },
+    {
+      "label": "Cu",
+      "species": "Cu",
+      "frac": [
+        0.25,
+        0.75,
+        0.75
+      ]
+    },
+    {
+      "label": "Cu",
+      "species": "Cu",
+      "frac": [
+        0.75,
+        0.25,
+        0.75
+      ]
+    },
+    {
+      "label": "Cu",
+      "species": "Cu",
+      "frac": [
+        0.75,
+        0.75,
+        0.25
+      ]
+    }
+  ],
+  "n_atoms": 6,
+  "software_validation_reference": {
+    "U_II_ev": 11.8094,
+    "U_uniform_ev": 8.914,
+    "U_transverse_ev": 12.775,
+    "note": "validated in phase4_cu2o_4x4 campaign"
+  },
+  "literature_context": {
+    "reference": "Timrov+2018 PRB98 085127",
+    "reported_U_ev": 11.3,
+    "method": "DFPT linear response",
+    "code": "Quantum ESPRESSO",
+    "xc": "PBE",
+    "note": ""
+  }
+}

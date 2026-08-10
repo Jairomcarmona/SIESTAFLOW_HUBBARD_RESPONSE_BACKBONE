@@ -1,0 +1,30 @@
+{
+  "cluster": "Yoltla",
+  "partition": "tt2d-100p",
+  "nodes": 5,
+  "ntasks_total": 100,
+  "cpus_per_task": 1,
+  "mem_per_node_gb": 64,
+  "walltime_hours": 48,
+  "siesta_binary": "/path/to/siesta-5.4.2/bin/siesta",
+  "mpi_launcher": "srun",
+  "mpi_flags": "--mpi=pmix",
+  "module_loads": [
+    "intel/2023",
+    "intelmpi/2023",
+    "siesta/5.4.2"
+  ],
+  "scratch_base": "/scratch/$USER/siestaflow_benchmark",
+  "max_concurrent_runs": 5,
+  "mpi_ranks_per_run": 20,
+  "omp_threads_per_rank": 1,
+  "configurable_fields": [
+    "partition",
+    "nodes",
+    "ntasks_total",
+    "siesta_binary",
+    "scratch_base",
+    "max_concurrent_runs",
+    "mpi_ranks_per_run"
+  ]
+}

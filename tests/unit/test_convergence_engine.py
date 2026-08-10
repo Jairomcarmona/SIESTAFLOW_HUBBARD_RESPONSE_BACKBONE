@@ -44,8 +44,8 @@ def base_config_2site():
         mesh_cutoff_ry=150.0,
         kgrid=(1, 1, 1),
         supercell=(2, 1, 1),
-        projector_rc=3.0,
-        projector_omega=0.05,
+        projector_rc_bohr=3.0,
+        projector_omega_bohr=0.05,
         alpha_grid=[-0.02, -0.01, 0.00, 0.01, 0.02],
         spin_configuration="polarized",
     )
@@ -76,8 +76,8 @@ def test_physical_identity_hash_excludes_alpha_grid(base_config_2site):
         mesh_cutoff_ry=150.0,
         kgrid=(1, 1, 1),
         supercell=(2, 1, 1),
-        projector_rc=3.0,
-        projector_omega=0.05,
+        projector_rc_bohr=3.0,
+        projector_omega_bohr=0.05,
         alpha_grid=[-0.01, 0.00, 0.01],  # different alpha grid
         spin_configuration="polarized",
     )
@@ -110,7 +110,7 @@ def test_incompatible_reuse_rejection_projector_rc(base_config_2site):
     """Changing projector rc must reject computational reuse."""
     cfg1 = base_config_2site
     cfg2 = LRScientificConfiguration(
-        **{**base_config_2site.__dict__, "projector_rc": 3.5}
+        **{**base_config_2site.__dict__, "projector_rc_bohr": 3.5}
     )
     assert can_reuse_calculations(cfg1, cfg2) is False
 
@@ -230,8 +230,8 @@ def test_arbitrary_n_compatibility_3site():
         mesh_cutoff_ry=150.0,
         kgrid=(1, 1, 1),
         supercell=(1, 1, 1),
-        projector_rc=3.0,
-        projector_omega=0.05,
+        projector_rc_bohr=3.0,
+        projector_omega_bohr=0.05,
         alpha_grid=[-0.02, -0.01, 0.00, 0.01, 0.02],
         spin_configuration="polarized",
     )
