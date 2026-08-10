@@ -1,0 +1,79 @@
+[
+  {
+    "directory": "reference",
+    "mode": "REFERENCE",
+    "J": 0,
+    "alpha": 0.0,
+    "n_sites": 2
+  },
+  {
+    "directory": "bare_J0_a+0.00",
+    "mode": "BARE",
+    "J": 0,
+    "alpha": 0.0,
+    "n_sites": 2
+  },
+  {
+    "directory": "screened_J0_a+0.00",
+    "mode": "SCREENED",
+    "J": 0,
+    "alpha": 0.0,
+    "n_sites": 2
+  },
+  {
+    "directory": "bare_J0_a-0.01",
+    "mode": "BARE",
+    "J": 0,
+    "alpha": -0.01,
+    "n_sites": 2
+  },
+  {
+    "directory": "screened_J0_a-0.01",
+    "mode": "SCREENED",
+    "J": 0,
+    "alpha": -0.01,
+    "n_sites": 2
+  },
+  {
+    "directory": "bare_J0_a+0.01",
+    "mode": "BARE",
+    "J": 0,
+    "alpha": 0.01,
+    "n_sites": 2
+  },
+  {
+    "directory": "screened_J0_a+0.01",
+    "mode": "SCREENED",
+    "J": 0,
+    "alpha": 0.01,
+    "n_sites": 2
+  },
+  {
+    "directory": "bare_J1_a-0.01",
+    "mode": "BARE",
+    "J": 1,
+    "alpha": -0.01,
+    "n_sites": 2
+  },
+  {
+    "directory": "screened_J1_a-0.01",
+    "mode": "SCREENED",
+    "J": 1,
+    "alpha": -0.01,
+    "n_sites": 2
+  },
+  {
+    "directory": "bare_J1_a+0.01",
+    "mode": "BARE",
+    "J": 1,
+    "alpha": 0.01,
+    "n_sites": 2
+  },
+  {
+    "directory": "screened_J1_a+0.01",
+    "mode": "SCREENED",
+    "J": 1,
+    "alpha": 0.01,
+    "n_sites": 2
+  }
+]
