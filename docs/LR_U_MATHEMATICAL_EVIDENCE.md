@@ -1,8 +1,8 @@
 # Mathematical evidence for the finite-difference LR-U campaigns
 
-This document records the mathematical path actually used by the NiO and MnO
-SC(2x2x2) campaigns. It is a derivation of the production arithmetic, not an
-alternate implementation.
+This document records the mathematical path actually used by the NiO, MnO,
+and FeO SC(2x2x2) campaigns. It is a derivation of the production arithmetic,
+not an alternate implementation.
 
 ## 1. Observables and perturbations
 
@@ -137,22 +137,22 @@ The campaigns also preserve the raw-to-symmetric antisymmetry diagnostic
 This distinguishes a small numerical asymmetry from a rank or inversion
 failure.
 
-## 6. Results from the two real campaigns
+## 6. Results from the real campaigns
 
 The values below are read from the final JSON and matrix artifacts generated
 by the completed DAGs.
 
-| quantity | NiO PBE SC(2x2x2) | MnO PBE SC(2x2x2) |
-|---|---:|---:|
-| response dimension | 16 | 16 |
-| rank(chi0) | 16 | 16 |
-| rank(chi) | 16 | 16 |
-| condition(chi0) | 2.3138723545 | 2.0038379871 |
-| condition(chi) | 1.1265515672 | 1.2525384701 |
-| antisymmetry chi0 | 5.9398e-5 | 1.4685e-13 |
-| antisymmetry chi | 0 | 2.6096e-4 |
-| direct inversion residual scale | 8.8e-16 to 9.1e-16 | 1.2e-15 to 1.2e-15 |
-| reported U | 7.1597589375 eV | 11.5318177262 eV |
+| quantity | NiO PBE SC(2x2x2) | MnO PBE SC(2x2x2) | FeO PBE SC(2x2x2) |
+|---|---:|---:|---:|
+| response dimension | 16 | 16 | 16 |
+| rank(chi0) | 16 | 16 | 16 |
+| rank(chi) | 16 | 16 | 16 |
+| condition(chi0) | 2.3138723545 | 2.0038379871 | 20.5437317610 |
+| condition(chi) | 1.1265515672 | 1.2525384701 | 1.8959902361 |
+| antisymmetry chi0 | 5.9398e-5 | 1.4685e-13 | 6.8133e-6 |
+| antisymmetry chi | 0 | 2.6096e-4 | 1.2068e-4 |
+| direct inversion residual scale | 8.8e-16 to 9.1e-16 | 1.2e-15 to 1.2e-15 | 7.8e-16 to 3.5e-15 |
+| reported U | 7.1597589375 eV | 11.5318177262 eV | 6.4101888795 eV |
 
 The site-resolved results are translationally repeated. NiO gives
 
@@ -166,6 +166,13 @@ and MnO gives
 \[
 U_A=11.5298714570\;\mathrm{eV},\qquad
 U_B=11.5337639953\;\mathrm{eV}.
+\]
+
+FeO gives
+
+\[
+U_A=6.4102398331\;\mathrm{eV},\qquad
+U_B=6.4101379259\;\mathrm{eV}.
 \]
 
 The scalar reported for each material is the mean over all 16 diagonal
@@ -202,6 +209,7 @@ matrix routine, and it does not need to materialize the full archive.
 |---|---|---|
 | NiO | `docs/evidence_audit_nio_20260812.json` | `nio_pbe_lru_sc222_evidence_20260812T073108Z.tar.gz` |
 | MnO | `docs/evidence_audit_mno_20260812.json` | `mno_pbe_lru_sc222_evidence_20260812T074252Z.tar.gz` |
+| FeO | `docs/evidence_audit_feo_20260812.json` and `docs/evidence/feo_mathematical_20260812/` | `feo_pbe_lru_sc222_mathematical_evidence_20260812T224709Z.tar.gz` |
 
 Each supplement records, for every final run: source member paths, normal
 completion status, convergence gate, number of complete Hubbard-occupation

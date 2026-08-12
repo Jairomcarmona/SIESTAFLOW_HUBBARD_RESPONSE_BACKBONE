@@ -75,12 +75,25 @@ def text_member(archive: tarfile.TarFile, name: str) -> str:
 
 def audit(path: Path) -> dict:
     with tarfile.open(path, "r:gz") as archive:
+        members = {member.name for member in archive.getmembers() if member.isfile()}
+        if "runs/00_REFERENCE/siesta.out" in members:
+            prefix = ""
+        else:
+            candidates = sorted(
+                name[: -len("/runs/00_REFERENCE/siesta.out")]
+                for name in members
+                if name.endswith("/runs/00_REFERENCE/siesta.out")
+            )
+            if len(candidates) != 1:
+                raise ValueError("archive must contain one runs/00_REFERENCE/siesta.out path")
+            prefix = candidates[0] + "/"
+
         output: dict[str, np.ndarray] = {}
         audit_runs: dict[str, dict] = {}
         for run in RUNS:
-            out = text_member(archive, f"runs/{run}/siesta.out")
-            err = text_member(archive, f"runs/{run}/siesta.err")
-            marker = text_member(archive, f"runs/{run}/0_NORMAL_EXIT")
+            out = text_member(archive, f"{prefix}runs/{run}/siesta.out")
+            err = text_member(archive, f"{prefix}runs/{run}/siesta.err")
+            marker = text_member(archive, f"{prefix}runs/{run}/0_NORMAL_EXIT")
             mode = "BARE" if "BARE" in run else "SCREENED"
             occupation_events = events(out)
             status = out + "\n" + err
@@ -95,9 +108,9 @@ def audit(path: Path) -> dict:
             audit_runs[run] = {
                 "mode": "REFERENCE" if run == "00_REFERENCE" else mode,
                 "source": {
-                    "stdout": f"runs/{run}/siesta.out",
-                    "stderr": f"runs/{run}/siesta.err",
-                    "normal_exit_marker": f"runs/{run}/0_NORMAL_EXIT",
+                    "stdout": f"{prefix}runs/{run}/siesta.out",
+                    "stderr": f"{prefix}runs/{run}/siesta.err",
+                    "normal_exit_marker": f"{prefix}runs/{run}/0_NORMAL_EXIT",
                 },
                 "complete_events": len(occupation_events),
                 "selected_event": "second" if mode == "BARE" else "last",
@@ -115,6 +128,7 @@ def audit(path: Path) -> dict:
     diagonal = np.diag(kernel)
     return {
         "archive": path.name,
+        "archive_member_prefix": prefix,
         "audit": "independent_streaming_parser",
         "analysis_protocol": {
             "n_hubbard_sites": 16,
