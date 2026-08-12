@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Public scheduler execution profile",
+  "type": "object",
+  "required": ["target", "slurm", "allocation", "runtime", "task_policy"],
+  "properties": {
+    "target": {"const": "slurm"},
+    "evidence": {"enum": ["VALIDATED_RUNTIME", "OBSERVED", "RENDERED_ONLY", "FAILED", "UNKNOWN"]},
+    "slurm": {"type": "object", "required": ["partition"], "properties": {"partition": {"type": "string", "minLength": 1}, "account": {"type": ["string", "null"]}, "qos": {"type": ["string", "null"]}}},
+    "allocation": {"type": "object", "required": ["nodes", "total_cpus", "memory", "walltime", "max_parallel_steps", "shutdown_margin_seconds", "termination_grace_seconds"]},
+    "runtime": {"type": "object", "required": ["module_commands", "siesta_executable", "exclusive", "environment", "launcher"]},
+    "task_policy": {"type": "object", "required": ["max_attempts", "require_scf_converged"]}
+  }
+}
