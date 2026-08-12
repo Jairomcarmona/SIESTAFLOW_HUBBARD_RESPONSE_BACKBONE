@@ -1,6 +1,6 @@
 # FeO LR-U complete numerical appendix
 
-This is the human-readable numerical supplement to [`FEO_LR_U_MATHEMATICAL_EVIDENCE.md`](FEO_LR_U_MATHEMATICAL_EVIDENCE.md). It is rendered directly from [`../../evidence_audit_feo_20260812.json`](../../evidence_audit_feo_20260812.json), whose values were independently parsed from the native SIESTA archive.
+This is the human-readable numerical supplement to the accompanying mathematical evidence report. It is rendered directly from [`../../evidence_audit_feo_20260812.json`](../../evidence_audit_feo_20260812.json), whose values were independently parsed from the native SIESTA archive.
 
 ## Conventions
 
@@ -202,4 +202,4 @@ columns:          0           1           2           3           4           5 
 
 - rank(chi0): 16; cond(chi0): 20.54373176099; residual: 3.4672433416864e-15
 - rank(chi): 16; cond(chi): 1.8959902361022; residual: 7.751666313481e-16
-- mean $U_\mathrm{Fe}$: **6.4101888795262 eV**
+- mean on-site $U$: **6.4101888795262 eV**
