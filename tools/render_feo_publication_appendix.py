@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import argparse
 from pathlib import Path
 
 import numpy as np
@@ -26,20 +27,20 @@ def matrix(name: str, values: list[list[float]], unit: str) -> str:
     return f"### {name}\n\nUnits: {unit}. Rows and columns follow FeLR00, FeLR01, ..., FeLR15.\n\n```text\n" + "\n".join(rows) + "\n```\n"
 
 
-def main() -> None:
-    data = json.loads(SOURCE.read_text(encoding="utf-8"))
+def main(source: Path = SOURCE, target: Path = TARGET, material: str = "FeO", site_prefix: str = "FeLR") -> None:
+    data = json.loads(source.read_text(encoding="utf-8"))
     lines = [
-        "# FeO LR-U complete numerical appendix",
+        f"# {material} LR-U complete numerical appendix",
         "",
         "This is the human-readable numerical supplement to "
-        "[`FEO_LR_U_MATHEMATICAL_EVIDENCE.md`](FEO_LR_U_MATHEMATICAL_EVIDENCE.md). "
+        "the accompanying mathematical evidence report. "
         "It is rendered directly from "
         "[`../../evidence_audit_feo_20260812.json`](../../evidence_audit_feo_20260812.json), "
         "whose values were independently parsed from the native SIESTA archive.",
         "",
         "## Conventions",
         "",
-        "Site index 0--15 means FeLR00--FeLR15.  `BARE` uses the second "
+        f"Site index 0--15 means {site_prefix}00--{site_prefix}15.  `BARE` uses the second "
         "complete semantic occupation event; REFERENCE and SCREENED use the last. "
         "The finite-difference denominator is 0.10 eV.  The displayed response "
         "matrices are symmetrized as `(M_raw + M_raw.T)/2`; the raw arrays are in "
@@ -80,12 +81,19 @@ def main() -> None:
         f"residual: {data['inversion_residual_chi0']:.14g}",
         f"- rank(chi): {data['rank_chi']}; cond(chi): {data['condition_chi']:.14g}; "
         f"residual: {data['inversion_residual_chi']:.14g}",
-        f"- mean $U_\\mathrm{{Fe}}$: **{data['U_mean_eV']:.13f} eV**",
+        f"- mean on-site $U$: **{data['U_mean_eV']:.13f} eV**",
         "",
     ]
-    TARGET.write_text("\n".join(lines), encoding="utf-8")
-    print(TARGET)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text("\n".join(lines), encoding="utf-8")
+    print(target)
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--source", type=Path, default=SOURCE)
+    parser.add_argument("--target", type=Path, default=TARGET)
+    parser.add_argument("--material", default="FeO")
+    parser.add_argument("--site-prefix", default="FeLR")
+    args = parser.parse_args()
+    main(args.source, args.target, args.material, args.site_prefix)
