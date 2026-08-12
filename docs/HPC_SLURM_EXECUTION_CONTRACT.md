@@ -61,6 +61,12 @@ The rendered wrapper uses strict shell mode, resolves the package root from the 
 
 The controller creates isolated workspaces per attempt, retains durable state, validates parents before descendants, and records all terminal states. A site plugin may implement a single controller allocation, predeclared scheduler dependencies, or a persistent validated follow-up controller. It must never create a retrospective dependency after the parent has finished.
 
+For the concrete single-allocation, resumable execution pattern used by
+linear-response campaigns, see the [resumable DAG execution
+playbook](RESUMABLE_DAG_EXECUTION_PLAYBOOK.md). It defines placement probing,
+sequential work grouping, parent-artifact staging and resume evidence rules
+without exposing any private site profile.
+
 ## Exact MPI placement contract
 
 The site plugin resolves hosts from the granted allocation and validates unique-host count against the scheduler's granted node count. For a Hydra launcher, ranks must exactly equal:
