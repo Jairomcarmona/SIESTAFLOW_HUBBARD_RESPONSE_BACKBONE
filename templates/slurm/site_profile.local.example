@@ -1,0 +1,14 @@
+# Copy this file to slurm/site_profile.local inside a campaign. The local
+# filename is ignored by Git: do not commit account names, filesystem paths,
+# node names or scheduler policies.
+#
+# The public DAG retains its tested placement logic (one full MPI FDF at a
+# time); this profile only tells it how to find the locally validated backend.
+
+# export SIESTAFLOW_SIESTA_MODULE="siesta/<site-version>"
+# export SIESTAFLOW_PYTHON_MODULE="python/<site-version>"
+# export SIESTAFLOW_SIESTA_BIN="/site/path/to/siesta"       # optional
+# export SIESTAFLOW_MPI_BIN="/site/path/to/mpiexec.hydra"   # optional
+
+# Used by the documented submission command, not by #SBATCH directives.
+# export SIESTAFLOW_PARTITION="<site-validated-partition>"
