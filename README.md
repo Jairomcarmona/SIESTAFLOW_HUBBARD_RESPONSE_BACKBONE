@@ -5,12 +5,13 @@
 ---
 
 ## 📖 User Manual & Documentation
-For a complete guide on physics foundations, CLI commands, and technical transparency, see the [Technical User Manual](file:///docs/USER_MANUAL.md).
+For a complete guide on physics foundations, CLI commands, and technical transparency, see the [Technical User Manual](docs/USER_MANUAL.md).
 
-* **User Manual:** [docs/USER_MANUAL.md](file:///docs/USER_MANUAL.md)
-* **Scope:** [docs/00_governance/SCOPE.md](file:///docs/00_governance/SCOPE.md)
-* **Physical Contracts:** [docs/01_science/PHYSICAL_CONTRACTS.md](file:///docs/01_science/PHYSICAL_CONTRACTS.md)
-* **Architecture Spec:** [docs/02_architecture/ARCHITECTURE.md](file:///docs/02_architecture/ARCHITECTURE.md)
+* **User Manual:** [docs/USER_MANUAL.md](docs/USER_MANUAL.md)
+* **Scope:** [docs/00_governance/SCOPE.md](docs/00_governance/SCOPE.md)
+* **Physical Contracts:** [docs/01_science/PHYSICAL_CONTRACTS.md](docs/01_science/PHYSICAL_CONTRACTS.md)
+* **Architecture Spec:** [docs/02_architecture/ARCHITECTURE.md](docs/02_architecture/ARCHITECTURE.md)
+* **Publication boundary:** [docs/PUBLICATION_LAYOUT.md](docs/PUBLICATION_LAYOUT.md)
 
 ---
 
@@ -26,6 +27,14 @@ python -m pytest tests/ -v
 ```bash
 siestaflow audit-fdf Cu3N.fdf --verbose
 ```
+
+### 1b. Mandatory scientific-DAG preflight for a production LR-U campaign
+
+Before submitting a production DAG, materialize and audit the real SIESTA
+Method-2 projector, then let the resumable protocol validate the reference,
+responses, algebra and evidence gates. See
+[Scientific DAG Protocol](docs/SCIENTIFIC_DAG_PROTOCOL.md) and
+[Method-2 Projector Preflight](docs/METHOD2_PROJECTOR_PREFLIGHT.md).
 
 ### 2. Initialize a Campaign
 ```bash

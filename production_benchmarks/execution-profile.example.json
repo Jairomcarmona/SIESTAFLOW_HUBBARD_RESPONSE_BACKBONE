@@ -1,0 +1,34 @@
+{
+  "target": "slurm",
+  "evidence": "UNKNOWN",
+  "slurm": {
+    "partition": "<site-defined>",
+    "account": "<optional-site-defined>",
+    "qos": "<optional-site-defined>"
+  },
+  "allocation": {
+    "nodes": 1,
+    "total_cpus": 1,
+    "memory": "<site-defined>",
+    "walltime": "<site-defined>",
+    "max_parallel_steps": 1,
+    "shutdown_margin_seconds": 1,
+    "termination_grace_seconds": 1
+  },
+  "runtime": {
+    "module_commands": ["<site-defined>"],
+    "siesta_executable": "<site-defined>",
+    "exclusive": true,
+    "environment": {"<site-defined>": "<site-defined>"},
+    "launcher": {
+      "kind": "hydra",
+      "command": ["mpiexec.hydra"],
+      "bootstrap": "ssh",
+      "processes_per_node": 1
+    }
+  },
+  "task_policy": {
+    "max_attempts": 1,
+    "require_scf_converged": true
+  }
+}
