@@ -7,6 +7,7 @@ class ObservationRole(Enum):
     UNCLASSIFIED = "UNCLASSIFIED"
     REFERENCE = "REFERENCE"
     CANDIDATE_BARE = "CANDIDATE_BARE"
+    VERIFIED_BARE = "VERIFIED_BARE"
     CANDIDATE_SCREENED = "CANDIDATE_SCREENED"
 
 @dataclass(frozen=True)
@@ -24,6 +25,14 @@ class ObservationContext:
     convergence_confirmed: bool
     final_scf_iteration: Optional[int]
     post_scf_population_occurrence: Optional[int]
+
+    # A two-iteration run alone does not demonstrate the Cococcioni BARE
+    # time ordering.  These fields record an external, version-specific
+    # semantic trace showing that Hxc was not rebuilt before the selected
+    # population event.  They intentionally default to unverified so a
+    # campaign cannot silently promote a candidate observation to chi0.
+    bare_hxc_rebuild_excluded: bool = False
+    bare_semantics_evidence_ref: Optional[str] = None
 
 @dataclass
 class HubbardAtomPopulation:

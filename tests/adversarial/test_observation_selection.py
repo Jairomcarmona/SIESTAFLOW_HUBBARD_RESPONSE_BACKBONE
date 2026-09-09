@@ -102,3 +102,23 @@ def test_reject_ambiguous_bare(base_context):
     with pytest.raises(ObservationPolicyError, match="AMBIGUOUS"):
         Siesta542BarePolicyV1.get_bare_observation(events, base_context)
 
+
+def test_bare_cannot_be_promoted_without_native_semantic_evidence(base_context):
+    """Two SCF iterations are not a physical proof of the frozen-Hxc response."""
+    events = [create_mock_event(0, 1), create_mock_event(1, 2)]
+    with pytest.raises(ObservationPolicyError, match="semantics are unverified"):
+        Siesta542BarePolicyV1.get_verified_bare_observation(events, base_context)
+
+
+def test_bare_promotion_requires_trace_and_explicit_hxc_exclusion(base_context):
+    from dataclasses import replace
+
+    events = [create_mock_event(0, 1), create_mock_event(1, 2)]
+    verified = replace(
+        base_context,
+        bare_hxc_rebuild_excluded=True,
+        bare_semantics_evidence_ref="docs/audits/siesta_542_bare_trace.md",
+    )
+    selection = Siesta542BarePolicyV1.get_verified_bare_observation(events, verified)
+    assert selection.role == ObservationRole.VERIFIED_BARE
+    assert "VERIFIED_BARE" in selection.evidence
