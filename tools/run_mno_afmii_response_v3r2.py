@@ -170,6 +170,7 @@ def worker() -> dict[str, object]:
 
 def analyze() -> dict[str, object]:
     from siestaflow_hubbard.domain.alpha_selection import AlphaSelectionPolicy, select_common_alpha_window
+    from siestaflow_hubbard.domain.matrix_response_acceptance import MatrixResponseAcceptancePolicy, accept_response_matrices
     core, config = _load_core(), _load("source-material.json")
     _require((RESULTS / "response-receipt.json").is_file(), "response receipt missing")
     receipt = json.loads((RESULTS / "response-receipt.json").read_text())
@@ -188,22 +189,33 @@ def analyze() -> dict[str, object]:
             row.extend(record["occupations_e"]); moment_row.append(record["moment_signature"])
         occupations.append(row); moments.append(moment_row)
     noise = float(json.loads((CAMPAIGN / "results/calibration-result.json").read_text())["occupation_noise_e"])
-    report = select_common_alpha_window(ALPHAS, occupations, moments, 0.05, AlphaSelectionPolicy(occupation_noise=noise))
+    policy_payload = _load("locks/matrix-response-acceptance-policy-v1.json")
+    alpha_policy = policy_payload["alpha_selection"]
+    report = select_common_alpha_window(ALPHAS, occupations, moments, 0.05, AlphaSelectionPolicy(
+        occupation_noise=noise, require_channel_signal=alpha_policy["require_channel_signal"],
+        residual_relative=alpha_policy["residual_relative"], slope_relative=alpha_policy["slope_relative"],
+        magnetic_tolerance=alpha_policy["magnetic_tolerance"],
+    ))
     result: dict[str, object] = {"schema": "siestaflow-mno-response-analysis-v1", "status": "FAIL", "common_alpha_window": report,
                                   "response_receipt_sha256": _sha(RESULTS / "response-receipt.json"), "U_Mn_eV": None}
     if report["status"] != "proposed":
         result["reason"] = "SCIENTIFIC_ANALYSIS_FAILED: NO_COMMON_LINEAR_ALPHA_WINDOW"; _write(RESULTS / "analysis-result.json", result); return result
-    slopes = np.asarray(report["windows"][[w["alpha_ev"] for w in report["windows"]].index(report["recommended_alpha_ev"])]["slope"], dtype=float)
+    window = report["windows"][[w["alpha_ev"] for w in report["windows"]].index(report["recommended_alpha_ev"])]
+    slopes = np.asarray(window["slope"], dtype=float)
+    slope_uncertainty = np.asarray(window["slope_uncertainty"], dtype=float)
     columns = {key: slopes[index * 16:(index + 1) * 16] for index, key in enumerate(ordered)}
+    uncertainty_columns = {key: slope_uncertainty[index * 16:(index + 1) * 16] for index, key in enumerate(ordered)}
     site_map = core.build_atoms(config)[1]
     chi0_raw = core.reconstruct(columns[("A", "BARE")], columns[("B", "BARE")], site_map)
     chi_raw = core.reconstruct(columns[("A", "SCREENED")], columns[("B", "SCREENED")], site_map)
-    chi0, chi = (chi0_raw + chi0_raw.T) / 2, (chi_raw + chi_raw.T) / 2
-    rank0, rank = int(np.linalg.matrix_rank(chi0)), int(np.linalg.matrix_rank(chi))
-    result.update(rank_chi0=rank0, rank_chi=rank, condition_chi0=float(np.linalg.cond(chi0)), condition_chi=float(np.linalg.cond(chi),
-    ))
-    if rank0 != 16 or rank != 16:
-        result["reason"] = "SCIENTIFIC_ANALYSIS_FAILED: SINGULAR_RESPONSE_MATRIX"; _write(RESULTS / "analysis-result.json", result); return result
+    chi0_uncertainty = core.reconstruct(uncertainty_columns[("A", "BARE")], uncertainty_columns[("B", "BARE")], site_map)
+    chi_uncertainty = core.reconstruct(uncertainty_columns[("A", "SCREENED")], uncertainty_columns[("B", "SCREENED")], site_map)
+    matrix_policy = MatrixResponseAcceptancePolicy(**policy_payload["matrix_acceptance"])
+    matrix_report = accept_response_matrices(chi0_raw, chi_raw, chi0_uncertainty, chi_uncertainty, matrix_policy)
+    result["matrix_acceptance"] = {key: value for key, value in matrix_report.items() if key not in {"chi0_matrix", "chi_matrix"}}
+    if not matrix_report["accepted"]:
+        result["reason"] = "SCIENTIFIC_ANALYSIS_FAILED: MATRIX_STABILITY"; _write(RESULTS / "analysis-result.json", result); return result
+    chi0, chi = matrix_report["chi0_matrix"], matrix_report["chi_matrix"]
     kernel = core.direct_kernel(chi0, chi); site_u = np.diag(kernel)
     np.savetxt(RESULTS / "chi0.csv", chi0, delimiter=","); np.savetxt(RESULTS / "chi.csv", chi, delimiter=",")
     np.savetxt(RESULTS / "K_hubbard.csv", kernel, delimiter=",")

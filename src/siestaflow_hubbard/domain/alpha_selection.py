@@ -28,11 +28,15 @@ class AlphaSelectionPolicy:
     slope_relative: float = 0.05
     min_signal_to_noise: float = 10.0
     magnetic_tolerance: float = 0.05
+    require_channel_signal: bool = True
 
     def validate(self) -> None:
-        values = np.asarray(list(asdict(self).values()), dtype=float)
+        values = np.asarray([self.occupation_noise, self.residual_relative, self.slope_relative,
+                             self.min_signal_to_noise, self.magnetic_tolerance], dtype=float)
         if not np.all(np.isfinite(values)) or np.any(values <= 0.0):
             raise ValueError("alpha selection policy requires positive finite thresholds")
+        if not isinstance(self.require_channel_signal, bool):
+            raise ValueError("require_channel_signal must be boolean")
 
 
 def _require_centered_grid(alphas_ev: Sequence[float], initial_alpha_ev: float) -> np.ndarray:
@@ -126,7 +130,7 @@ def select_common_alpha_window(
         reasons: list[str] = []
         if magnetic_changed:
             reasons.append("magnetic_state_changed")
-        if np.any(signal < policy.min_signal_to_noise * policy.occupation_noise):
+        if policy.require_channel_signal and np.any(signal < policy.min_signal_to_noise * policy.occupation_noise):
             reasons.append("signal_unresolved")
         if np.any(np.max(np.abs(residuals), axis=0) > 3.0 * policy.occupation_noise + policy.residual_relative * signal):
             reasons.append("nonlinear_residual")
