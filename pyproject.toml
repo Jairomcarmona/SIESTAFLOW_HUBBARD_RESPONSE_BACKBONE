@@ -14,3 +14,10 @@ dependencies = [
 test = [
     "pytest>=7.0.0"
 ]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+py-modules = ["symmetry_reduction_proposal"]
+
+[tool.setuptools.packages.find]
+where = ["src"]

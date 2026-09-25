@@ -128,8 +128,9 @@ current `pyproject.toml`. These failures are unresolved in this handoff; they
 must be triaged rather than silently rebaselined. No SIESTA calculation was
 launched as part of this GitHub update.
 
-Two focused WSL checks passed: 81 backend-admission and runtime tests (the
-GitHub workflow selection) and 54 response-math, parameter-semantics,
+Two focused WSL checks passed: 91 backend-admission, symmetry, and runtime
+tests against a built wheel (the GitHub workflow selection) and 54
+response-math, parameter-semantics,
 precision, alpha-selection, and projector tests. All 54 staged native
 `siesta.out` files and the five staged calibration receipts match the SHA-256
 values in their parent receipts byte for byte. The historical source lock

@@ -10,6 +10,8 @@ on:
       - "src/siestaflow_hubbard/siesta_backend/output_validator.py"
       - "src/siestaflow_hubbard/siesta_backend/production_runtime.py"
       - "src/siestaflow_hubbard/siesta_backend/symmetry_materializer.py"
+      - "src/symmetry_reduction_proposal.py"
+      - "pyproject.toml"
       - "tests/unit/test_backend_*.py"
       - "tests/unit/test_lr_campaign_contract.py"
       - "tests/unit/test_siesta542_bare_profile.py"
@@ -18,6 +20,7 @@ on:
       - "tests/unit/test_siesta_production_runtime.py"
       - "tests/unit/test_local_lr_gate_smoke.py"
       - "tests/unit/test_symmetry_materializer.py"
+      - "tests/test_symmetry_reduction_proposal.py"
       - ".github/workflows/backend-contracts.yml"
   pull_request:
     paths:
@@ -28,6 +31,8 @@ on:
       - "src/siestaflow_hubbard/siesta_backend/output_validator.py"
       - "src/siestaflow_hubbard/siesta_backend/production_runtime.py"
       - "src/siestaflow_hubbard/siesta_backend/symmetry_materializer.py"
+      - "src/symmetry_reduction_proposal.py"
+      - "pyproject.toml"
       - "tests/unit/test_backend_*.py"
       - "tests/unit/test_lr_campaign_contract.py"
       - "tests/unit/test_siesta542_bare_profile.py"
@@ -36,6 +41,7 @@ on:
       - "tests/unit/test_siesta_production_runtime.py"
       - "tests/unit/test_local_lr_gate_smoke.py"
       - "tests/unit/test_symmetry_materializer.py"
+      - "tests/test_symmetry_reduction_proposal.py"
       - ".github/workflows/backend-contracts.yml"
 
 jobs:
@@ -60,4 +66,5 @@ jobs:
           tests/unit/test_siesta_production_runtime.py
           tests/unit/test_local_lr_gate_smoke.py
           tests/unit/test_symmetry_materializer.py
+          tests/test_symmetry_reduction_proposal.py
           -q -p no:cacheprovider
