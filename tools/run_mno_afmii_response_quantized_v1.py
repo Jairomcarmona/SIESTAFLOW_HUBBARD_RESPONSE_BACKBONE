@@ -141,10 +141,21 @@ def _occupations(output: Path, mode: str, correlated_atom_indices: list[int]) ->
     from siestaflow_hubbard.siesta_backend.event_parser import parse_hubbard_population_events
     from siestaflow_hubbard.siesta_backend.occupation_precision import read_printed_occupation_precision
     from siestaflow_hubbard.siesta_backend.siesta542_bare_profile import Siesta542PotentialShiftHamiltonianProfile
+    from siestaflow_hubbard.siesta_backend.siesta542_screened_selection import (
+        ScreenedSelectionError, select_converged_screened_event,
+    )
     text = output.read_text(encoding="utf-8", errors="replace")
     events = parse_hubbard_population_events(text)
     _require(bool(events), f"no Hubbard projected populations: {output}")
-    event = Siesta542PotentialShiftHamiltonianProfile().select_response(text).response_event if mode == "BARE" else events[-1]
+    if mode == "BARE":
+        event = Siesta542PotentialShiftHamiltonianProfile().select_response(text).response_event
+    else:
+        # Re-analysis must prove convergence itself; the last printed block of
+        # an interrupted SCF is an intermediate iterate, not a response.
+        try:
+            event = select_converged_screened_event(text)
+        except ScreenedSelectionError as exc:
+            raise RuntimeError(f"SCREENED observation rejected for {output}: {exc}") from exc
     by_index = {atom.atom_index: atom for atom in event.atoms}
     _require(set(correlated_atom_indices) <= set(by_index), f"incomplete correlated-site occupations: {output}")
     selected = [by_index[index] for index in correlated_atom_indices]
@@ -372,6 +383,17 @@ def analyze(output_path: Path | None = None) -> dict[str, object]:
         "response_receipt_sha256": _sha(receipt_path),
         "analysis_code_sha256": _sha(Path(__file__)),
         "occupation_observable": "SIESTA Occupations total field",
+        # The same alpha shifts both spin channels and only spin-summed totals
+        # enter chi, so the number is a scalar charge-response U.  The
+        # magnetization-magnetization response was never measured, so the
+        # spin-resolved kernel used by SIESTA's Dudarev branch is not
+        # identified (docs/audits/MNO_INDEPENDENT_ROOT_CAUSE_AUDIT_20260925.md).
+        "parameter_kind": "U_scalar_charge",
+        "dftu_functional_parameter": {
+            "kind": "Ueff_Dudarev",
+            "status": "NOT_IDENTIFIED_BY_THIS_DATA",
+            "missing_response": "dM_I/d(beta_J): magnetization response to a spin-antisymmetric projector shift, BARE and SCREENED",
+        },
         "occupation_uncertainty": "per-record decimal half-step propagated through OLS and matrix inversion",
         "interval_scope": "printed-occupation rounding only; excludes SCF, discretization, basis, cell, projector, and model uncertainty",
         "accepted_alpha_windows_eV": [row["alpha_ev"] for row in windows if row["eligible"]],

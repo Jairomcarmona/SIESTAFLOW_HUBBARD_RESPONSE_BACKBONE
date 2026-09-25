@@ -180,8 +180,13 @@ class FdfBuilder:
                 }
             ]
 
+        # When every caller-supplied projector carries its own alpha/U, those
+        # values define the perturbed site; the ``species`` default ("Mn")
+        # must not become a target that matches none of them.  The single
+        # non-zero shift is still enforced by construct_dftu_proj_block.
+        explicit_shifts = all("alpha" in item or "U" in item for item in projections)
         proj_block_str = self.construct_dftu_proj_block(
-            projections, alpha, target_species=species
+            projections, alpha, target_species=None if explicit_shifts else species
         )
 
         # Remove pre-existing DFTU.proj block if present (both LDAU and DFTU)

@@ -14,11 +14,16 @@ class HubbardParameterSemanticsError(ValueError):
     """A response result cannot be used as the requested DFT+U parameter."""
 
 
+def _kind_key(value: Any) -> str:
+    """Spelling-insensitive key used only to recognise a forbidden kind."""
+    return str(value).strip().casefold() if isinstance(value, str) else ""
+
+
 def require_dudarev_evidence(evidence: Mapping[str, Any]) -> tuple[float, tuple[float, float] | None]:
     """Admit an explicitly sourced Ueff; never infer it from a scalar U."""
     if evidence.get("parameter_kind") != DUDAREV_UEFF:
         raise HubbardParameterSemanticsError("physical DFT+U requires parameter_kind=Ueff_Dudarev")
-    if evidence.get("source_parameter_kind") == SCALAR_CHARGE:
+    if _kind_key(evidence.get("source_parameter_kind")) == _kind_key(SCALAR_CHARGE):
         raise HubbardParameterSemanticsError(
             "U_scalar_charge cannot be promoted automatically to Ueff_Dudarev"
         )
