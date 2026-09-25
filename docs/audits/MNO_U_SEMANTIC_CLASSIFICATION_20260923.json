@@ -1,0 +1,12 @@
+{
+  "schema": "siestaflow-hubbard-parameter-classification-v1",
+  "source_result": "campaigns/mno_afmii_strict_lr_v3r2/results/response-matrix-foreground-recovery-v4/analysis-result-corrected-v1.json",
+  "source_result_sha256": "bd0e5691178d7c73216b3bcc6afa16467bdc1a761c752416c8b324b78da955dd",
+  "source_status": "REPORTABLE_NUMERICAL_U_INTERVAL",
+  "parameter_kind": "U_scalar_charge",
+  "value_eV": 11.5320556664251,
+  "interval_eV": [11.4720889145817, 11.5920224182686],
+  "occupation_observable": "SIESTA Occupations total field (spin summed)",
+  "physical_fdf_parameter_status": "NOT_DERIVED_AS_Ueff_Dudarev",
+  "reason": "The saved campaign applies the same shift to both spins and identifies a scalar charge response, not an independently validated Dudarev Ueff."
+}

@@ -1,0 +1,32 @@
+{
+  "schema": "siestaflow-mno-strict-lr-v3r2",
+  "campaign_id": "mno-afmii-strict-lr-v3r2",
+  "material": "MnO",
+  "status": "PRE_EXECUTION",
+  "source_input": "runs/00_REFERENCE/siesta.fdf",
+  "correlated_sites": {
+    "representatives": ["MnLR00", "MnLR01"],
+    "full_matrix_dimension": 16,
+    "reconstruction": "translation_symmetry_from_A_and_B_representatives"
+  },
+  "calibration": {
+    "replicas": 5,
+    "controls": ["REFERENCE", "BARE_ZERO", "SCREENED_ZERO"],
+    "noise_estimator": "intramode_repeatability_only",
+    "interrole_offsets": "diagnostic_only"
+  },
+  "response": {
+    "alpha_ev": [-0.1, -0.05, -0.025, 0.0, 0.025, 0.05, 0.1],
+    "modes": ["BARE", "SCREENED"],
+    "zero_semantics": "own_mode_control_from_same_parent_reference_dm",
+    "inversion": "direct_only"
+  },
+  "prohibitions": [
+    "No reuse of v3 or v3r1 calibration observations or partial receipts",
+    "No reuse of Cu observations",
+    "No reuse of MnO smoke observations",
+    "No response-derived noise calibration",
+    "No pseudoinverse or regularization",
+    "No U when any gate rejects"
+  ]
+}

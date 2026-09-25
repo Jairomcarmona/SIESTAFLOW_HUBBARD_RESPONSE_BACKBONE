@@ -3,6 +3,10 @@ import hashlib
 import json
 from typing import List, Dict, Any, Optional
 
+
+class CheckpointScientificAcceptanceDisabledError(RuntimeError):
+    """Integrity sidecars cannot certify a scientific execution step."""
+
 class CheckpointManager:
     def __init__(self, work_dir: str):
         self.work_dir = work_dir
@@ -29,6 +33,8 @@ class CheckpointManager:
 
     def verify_checkpoint(self, filepaths: List[str]) -> bool:
         """Verifies if the given files exist and match their recorded SHA256 sidecars."""
+        if not filepaths:
+            return False
         for filepath in filepaths:
             full_path = os.path.join(self.work_dir, filepath)
             sidecar = self._sidecar_path(full_path)
@@ -46,9 +52,15 @@ class CheckpointManager:
         return True
 
     def is_step_completed(self, step_name: str, expected_outputs: List[str]) -> bool:
-        """Checks if a specific execution step has been successfully completed and outputs are valid."""
-        return self.verify_checkpoint(expected_outputs)
+        """Removed: use a validated node receipt, not integrity sidecars."""
+        del step_name, expected_outputs
+        raise CheckpointScientificAcceptanceDisabledError(
+            "checkpoint hashes are integrity evidence, not scientific completion"
+        )
 
     def mark_step_completed(self, step_name: str, outputs: List[str]):
-        """Marks a step as completed by recording the checkpoints of its outputs."""
-        self.record_checkpoint(outputs)
+        """Removed: recording hashes cannot mark a scientific step complete."""
+        del step_name, outputs
+        raise CheckpointScientificAcceptanceDisabledError(
+            "checkpoint hashes cannot mark a scientific step complete"
+        )

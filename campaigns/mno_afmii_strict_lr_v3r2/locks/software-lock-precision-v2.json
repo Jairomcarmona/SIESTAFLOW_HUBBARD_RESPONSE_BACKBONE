@@ -1,0 +1,28 @@
+{
+  "analysis_method": "siestaflow-mno-response-analysis-quantized-v1",
+  "campaign_id": "mno-afmii-strict-lr-v3r2",
+  "files": {
+    "campaigns/mno_afmii_strict_lr_v3r2/locks/matrix-response-acceptance-policy-v1.json": "db76346cfc17d549e4559600d64b70b7fa66fdcfe15a7d5d1b2e065fd848de81",
+    "campaigns/mno_afmii_strict_lr_v3r2/locks/response-methodology-lock.json": "77618200601d8b8b0dec2e1fcae8d1b12f3b12744bdf82b422b4009fe56a0732",
+    "campaigns/mno_afmii_strict_lr_v3r2/scripts/lru_core.py": "92e8324679352847912cc30e73027b1a1d44444067c6393b982ebc78e13c6f72",
+    "campaigns/mno_afmii_strict_lr_v3r2/source-material.json": "d1bb9ce77ab1d43825abe092ad63d62df9cdf78605e45473e37af1fc89390d81",
+    "pyproject.toml": "3058de74946a0eb0e6320eebc8e0f5a1bc88108047fd0dbbfa35a939c8d194bc",
+    "src/siestaflow_hubbard/domain/quantized_response.py": "568afb607f286aad6426d25957129480161dfb22ce13e9c144a6cac708dae303",
+    "src/siestaflow_hubbard/execution/slurm_foreground.py": "57f94ca97f033549afd3b5856c3293ae00915b01908d6a0cc82f5f1282f4281c",
+    "src/siestaflow_hubbard/siesta_backend/event_parser.py": "fa7b3a19d245bbf4c0b4ce1283e64c16efae2cf5e0592585f0a8aa5cc1eced6e",
+    "src/siestaflow_hubbard/siesta_backend/occupation_precision.py": "fe9461cfec5cae7e9785d258a433fb5d6f902506994e367dcce941eb23b85f9f",
+    "src/siestaflow_hubbard/siesta_backend/parser_models.py": "0151dc8ef029996cfe386f92e36c07d7381373fc04c82f5e07f3f45105d8313e",
+    "src/siestaflow_hubbard/siesta_backend/siesta542_bare_profile.py": "7c68b796101d25e816087cf9dc9983dacfbb4605528869e561ab615053b5456a",
+    "tools/build_precision_wheel.py": "55364ab8727aa5ae16c07e59af40362e6890cfccb2c04b200be072cb6ca23f2b",
+    "tools/run_mno_afmii_response_quantized_v1.py": "638cfc52900cd3a8ada4598e8b00ccb77828a6683fb237a99179b0ca35769b34",
+    "tools/run_mno_afmii_strict_v3r2.py": "d9d0310658b1d80f879e2a79a71e2ef062dbd5e8f3a7a1158b5d4d10585ecc18"
+  },
+  "purpose": "versioned printed-total precision correction; original v3r2 software lock remains historical",
+  "schema": "siestaflow-campaign-software-lock-v1",
+  "wheel": {
+    "distribution": "siestaflow-hubbard",
+    "path": "software/siestaflow_hubbard-0.1.2-py3-none-any.whl",
+    "sha256": "7dc00af9610150b0e96aa854b1accea2d37448d364e7e43819012aaccb010bdf",
+    "version": "0.1.2"
+  }
+}

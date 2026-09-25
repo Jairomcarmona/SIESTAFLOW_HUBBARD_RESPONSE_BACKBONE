@@ -1,0 +1,258 @@
+[
+  {
+    "index": 0,
+    "label": "MnLR00",
+    "parent_sublattice": "A",
+    "parent_site": "Mn_A",
+    "translation": [
+      0,
+      0,
+      0
+    ],
+    "fractional_supercell": [
+      0.0,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "index": 1,
+    "label": "MnLR01",
+    "parent_sublattice": "B",
+    "parent_site": "Mn_B",
+    "translation": [
+      0,
+      0,
+      0
+    ],
+    "fractional_supercell": [
+      0.25,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "index": 2,
+    "label": "MnLR02",
+    "parent_sublattice": "A",
+    "parent_site": "Mn_A",
+    "translation": [
+      0,
+      0,
+      1
+    ],
+    "fractional_supercell": [
+      0.0,
+      0.0,
+      0.5
+    ]
+  },
+  {
+    "index": 3,
+    "label": "MnLR03",
+    "parent_sublattice": "B",
+    "parent_site": "Mn_B",
+    "translation": [
+      0,
+      0,
+      1
+    ],
+    "fractional_supercell": [
+      0.25,
+      0.0,
+      0.5
+    ]
+  },
+  {
+    "index": 4,
+    "label": "MnLR04",
+    "parent_sublattice": "A",
+    "parent_site": "Mn_A",
+    "translation": [
+      0,
+      1,
+      0
+    ],
+    "fractional_supercell": [
+      0.0,
+      0.5,
+      0.0
+    ]
+  },
+  {
+    "index": 5,
+    "label": "MnLR05",
+    "parent_sublattice": "B",
+    "parent_site": "Mn_B",
+    "translation": [
+      0,
+      1,
+      0
+    ],
+    "fractional_supercell": [
+      0.25,
+      0.5,
+      0.0
+    ]
+  },
+  {
+    "index": 6,
+    "label": "MnLR06",
+    "parent_sublattice": "A",
+    "parent_site": "Mn_A",
+    "translation": [
+      0,
+      1,
+      1
+    ],
+    "fractional_supercell": [
+      0.0,
+      0.5,
+      0.5
+    ]
+  },
+  {
+    "index": 7,
+    "label": "MnLR07",
+    "parent_sublattice": "B",
+    "parent_site": "Mn_B",
+    "translation": [
+      0,
+      1,
+      1
+    ],
+    "fractional_supercell": [
+      0.25,
+      0.5,
+      0.5
+    ]
+  },
+  {
+    "index": 8,
+    "label": "MnLR08",
+    "parent_sublattice": "A",
+    "parent_site": "Mn_A",
+    "translation": [
+      1,
+      0,
+      0
+    ],
+    "fractional_supercell": [
+      0.5,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "index": 9,
+    "label": "MnLR09",
+    "parent_sublattice": "B",
+    "parent_site": "Mn_B",
+    "translation": [
+      1,
+      0,
+      0
+    ],
+    "fractional_supercell": [
+      0.75,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "index": 10,
+    "label": "MnLR10",
+    "parent_sublattice": "A",
+    "parent_site": "Mn_A",
+    "translation": [
+      1,
+      0,
+      1
+    ],
+    "fractional_supercell": [
+      0.5,
+      0.0,
+      0.5
+    ]
+  },
+  {
+    "index": 11,
+    "label": "MnLR11",
+    "parent_sublattice": "B",
+    "parent_site": "Mn_B",
+    "translation": [
+      1,
+      0,
+      1
+    ],
+    "fractional_supercell": [
+      0.75,
+      0.0,
+      0.5
+    ]
+  },
+  {
+    "index": 12,
+    "label": "MnLR12",
+    "parent_sublattice": "A",
+    "parent_site": "Mn_A",
+    "translation": [
+      1,
+      1,
+      0
+    ],
+    "fractional_supercell": [
+      0.5,
+      0.5,
+      0.0
+    ]
+  },
+  {
+    "index": 13,
+    "label": "MnLR13",
+    "parent_sublattice": "B",
+    "parent_site": "Mn_B",
+    "translation": [
+      1,
+      1,
+      0
+    ],
+    "fractional_supercell": [
+      0.75,
+      0.5,
+      0.0
+    ]
+  },
+  {
+    "index": 14,
+    "label": "MnLR14",
+    "parent_sublattice": "A",
+    "parent_site": "Mn_A",
+    "translation": [
+      1,
+      1,
+      1
+    ],
+    "fractional_supercell": [
+      0.5,
+      0.5,
+      0.5
+    ]
+  },
+  {
+    "index": 15,
+    "label": "MnLR15",
+    "parent_sublattice": "B",
+    "parent_site": "Mn_B",
+    "translation": [
+      1,
+      1,
+      1
+    ],
+    "fractional_supercell": [
+      0.75,
+      0.5,
+      0.5
+    ]
+  }
+]

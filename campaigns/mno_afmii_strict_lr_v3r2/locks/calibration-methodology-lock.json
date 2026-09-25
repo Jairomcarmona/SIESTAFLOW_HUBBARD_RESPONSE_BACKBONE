@@ -1,0 +1,22 @@
+{
+  "schema": "siestaflow-mno-mode-centred-calibration-v1",
+  "campaign_id": "mno-afmii-strict-lr-v3r2",
+  "immutable": true,
+  "replica_count": 5,
+  "controls_per_replica": ["REFERENCE", "A_BARE_ZERO", "A_SCREENED_ZERO", "B_BARE_ZERO", "B_SCREENED_ZERO"],
+  "observable": "target_Mn_3d_projected_trace_total",
+  "noise_rule": "max(2*max_within_mode_spread,5e-5_e)",
+  "interrole_offsets": "diagnostic_only",
+  "runtime": {
+    "siesta_path": "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta",
+    "siesta_sha256": "aaa9a2e45a41b12f3aad52ca4fca7c25b1cc6afd3aff2a0c7fe145b1bd9f18ce",
+    "mpi_path": "/usr/bin/orterun",
+    "mpi_sha256": "e3a009cd4ab8b41ef23019df3a1388944294b330b7c51ad17be18a0120b36daa",
+    "slurm": {"nodes": 1, "tasks": 4, "cpus_per_task": 1, "retries": "forbidden"}
+  },
+  "inputs": {
+    "reference_fdf_sha256": "fe88daac4b5280d1516d948f0741e3aed5c85b88fd12dbefc57a18b3bdbfee56",
+    "mn_psml_sha256": "0b97ccd71456e4a7b28316f78ddb30bb1f6a82d9aba386c7fde78090d31c0dc6",
+    "o_psml_sha256": "5ca5d753a995bd054279007ba76be71d622b60460c6f9a0d9bb37d81bdf185fe"
+  }
+}

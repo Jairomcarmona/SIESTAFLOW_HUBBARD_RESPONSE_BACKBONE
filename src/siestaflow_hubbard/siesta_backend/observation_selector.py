@@ -1,3 +1,5 @@
+from dataclasses import replace
+from pathlib import Path
 from typing import List, Optional
 import hashlib
 import json
@@ -13,8 +15,12 @@ class ObservationPolicyError(Exception):
 
 class Siesta542BarePolicyV1:
     """
-    Implements the 'siesta-5.4.2-lr-bare-v1' policy.
-    Maps raw Hubbard population events to their scientific roles in a Linear Response calculation.
+    Legacy event selector retained for reading old records only.
+
+    Its historical mapping from ``scf_iteration == 2`` and density mixing is
+    incompatible with the source-audited SIESTA 5.4.2 Hamiltonian profile.
+    Production BARE observations must be selected from the native output by
+    ``Siesta542PotentialShiftHamiltonianProfile`` after backend admission.
     """
     POLICY_ID = "siesta-5.4.2-lr-bare-v1"
     
@@ -69,31 +75,68 @@ class Siesta542BarePolicyV1:
 
     @staticmethod
     def get_bare_observation(events: List[HubbardPopulationEvent], context: ObservationContext) -> ObservationSelection:
-        candidates = [e for e in events if e.scf_iteration == 2]
-        if not candidates:
-            raise ObservationPolicyError("No BARE observation found (requires scf_iteration == 2).")
-        if len(candidates) > 1:
-            raise ObservationPolicyError("AMBIGUOUS: Multiple events found for scf_iteration == 2.")
-            
-        candidate = candidates[0]
-        
-        # Validation
-        if context.calculation_mode != "BARE":
-            raise ObservationPolicyError("BARE extraction requires calculation_mode == BARE.")
-        if context.scf_mix_target != "density":
-            raise ObservationPolicyError("BARE extraction requires SCF.Mix == density.")
-        if context.scf_mixer_method != "Linear":
-            raise ObservationPolicyError("BARE extraction requires SCF.Mixer.Method == Linear.")
-        if context.scf_mixer_weight != 1.0:
-            raise ObservationPolicyError("BARE extraction requires SCF.Mixer.Weight == 1.0.")
-        if not context.reference_dm_sha256:
-            raise ObservationPolicyError("BARE extraction requires same reference DM context.")
-            
-        return ObservationSelection(
-            role=ObservationRole.CANDIDATE_BARE,
-            policy_id=Siesta542BarePolicyV1.POLICY_ID,
-            evidence="Matched scf_iteration == 2 under strictly validated BARE calculation mode",
-            event=candidate
+        raise ObservationPolicyError(
+            "legacy ordinal BARE selection is disabled: scf_iteration==2 and density-mixing "
+            "are not the audited SIESTA 5.4.2 response contract; use the admitted "
+            "Siesta542PotentialShiftHamiltonianProfile on the native output"
+        )
+
+    @staticmethod
+    def get_verified_bare_observation(
+        events: List[HubbardPopulationEvent], context: ObservationContext
+    ) -> ObservationSelection:
+        """Reject legacy context-only promotion; use the admitted validator."""
+        raise ObservationPolicyError(
+            "legacy context-only BARE promotion is disabled: verified BARE selection "
+            "must bind the admitted SIESTA 5.4.2 executable, FDF, parent DM and native "
+            "output through SiestaOutputValidator"
+        )
+
+    @staticmethod
+    def context_from_verified_bare_sidecar(
+        context: ObservationContext,
+        *,
+        sidecar_path: str | Path,
+        executable_path: str | Path,
+        reference_dm_path: str | Path,
+        input_fdf_path: str | Path,
+        output_path: str | Path,
+        selected_event_lines: tuple[int, int],
+        bare_trace_expectation: "BareTraceExpectation",
+    ) -> ObservationContext:
+        """Build a promotable BARE context only after artifact verification.
+
+        This is the required bridge from a version-specific diagnostic trace
+        to the selector.  Production orchestration must use this bridge;
+        Python data objects alone are not a security boundary against code
+        that intentionally fabricates a context.
+        """
+        from siestaflow_hubbard.siesta_backend.bare_semantics_evidence import (
+            BareTraceExpectation,
+            verify_bare_semantics_evidence,
+        )
+
+        if not isinstance(bare_trace_expectation, BareTraceExpectation):
+            raise ObservationPolicyError("BARE semantic evidence requires an audited native trace expectation")
+
+        evidence = verify_bare_semantics_evidence(
+            sidecar_path,
+            siesta_version=context.siesta_version,
+            executable_path=executable_path,
+            reference_dm_path=reference_dm_path,
+            input_fdf_path=input_fdf_path,
+            output_path=output_path,
+            selected_event_lines=selected_event_lines,
+            expectation=bare_trace_expectation,
+        )
+        if context.reference_dm_sha256 is None:
+            raise ObservationPolicyError("BARE semantic evidence requires a reference-DM context hash")
+        if context.reference_dm_sha256 != hashlib.sha256(Path(reference_dm_path).read_bytes()).hexdigest():
+            raise ObservationPolicyError("BARE semantic evidence parent DM differs from the planned context")
+        return replace(
+            context,
+            bare_hxc_rebuild_excluded=True,
+            bare_semantics_evidence_ref=evidence.evidence_reference,
         )
 
     @staticmethod

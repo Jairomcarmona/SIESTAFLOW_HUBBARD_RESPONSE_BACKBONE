@@ -27,7 +27,8 @@ class EvidenceExporter:
             md += f"| {row.get('alpha')} | {row.get('n_alpha')} | {row.get('r2')} | {row.get('chi0')} | {row.get('chi')} |\n"
         md += "\n"
         
-        md += "## Susceptibility Inversion Matrix & U_eff\n"
+        md += "## Susceptibility Inversion Matrix & U_scalar_charge\n"
+        md += "This scalar charge-response U is not an automatically validated Dudarev Ueff.\n"
         md += "```json\n"
         md += json.dumps(data.get("susceptibility_inversion", {}), indent=2)
         md += "\n```\n\n"
@@ -61,7 +62,8 @@ class EvidenceExporter:
             html += f"<tr><td>{row.get('alpha')}</td><td>{row.get('n_alpha')}</td><td>{row.get('r2')}</td><td>{row.get('chi0')}</td><td>{row.get('chi')}</td></tr>\n"
         html += "</table>\n"
         
-        html += "<h2>Susceptibility Inversion Matrix & U_eff</h2>\n<pre>"
+        html += "<h2>Susceptibility Inversion Matrix &amp; U_scalar_charge</h2>\n"
+        html += "<p>This scalar charge-response U is not an automatically validated Dudarev Ueff.</p>\n<pre>"
         html += json.dumps(data.get("susceptibility_inversion", {}), indent=2)
         html += "</pre>\n"
         

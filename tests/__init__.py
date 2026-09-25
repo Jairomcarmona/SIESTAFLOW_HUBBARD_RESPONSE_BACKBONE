@@ -1,1 +1,1 @@
-def test_placeholder(): pass
+"""Pruebas exclusivamente sintéticas de las propuestas ASTRA."""

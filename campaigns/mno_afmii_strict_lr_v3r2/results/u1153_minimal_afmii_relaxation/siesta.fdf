@@ -1,0 +1,82 @@
+SystemName              MnO AFM-II PBE+U validation (minimal cell)
+SystemLabel             mno_u11p53_afmii
+
+NumberOfAtoms           4
+NumberOfSpecies         2
+%block ChemicalSpeciesLabel
+  1 25 Mn
+  2  8 O
+%endblock ChemicalSpeciesLabel
+
+LatticeConstant         4.4300 Ang
+%block LatticeVectors
+  0.000000 1.000000 1.000000
+  0.500000 0.000000 0.500000
+  0.500000 0.500000 0.000000
+%endblock LatticeVectors
+AtomicCoordinatesFormat Fractional
+%block AtomicCoordinatesAndAtomicSpecies
+  0.00000000 0.00000000 0.00000000 1 # Mn sublattice A
+  0.50000000 0.00000000 0.00000000 1 # Mn sublattice B
+  0.25000000 0.50000000 0.50000000 2 # O
+  0.75000000 0.50000000 0.50000000 2 # O
+%endblock AtomicCoordinatesAndAtomicSpecies
+
+XC.Functional           GGA
+XC.Authors              PBE
+Spin                    polarized
+PAO.BasisSize           DZP
+PAO.EnergyShift         0.005 Ry
+PAO.SplitNorm           0.15
+PAO.BasisType           split
+MeshCutoff              200 Ry
+%block kgrid_Monkhorst_Pack
+  6 0 0 0.0
+  0 6 0 0.0
+  0 0 6 0.0
+%endblock kgrid_Monkhorst_Pack
+OccupationFunction      FD
+ElectronicTemperature   300 K
+
+%block DM.InitSpin
+  1 +5.0
+  2 -5.0
+  3  0.0
+  4  0.0
+%endblock DM.InitSpin
+
+# Physical DFT+U: use the linear-response value as U, not as an alpha shift.
+DFTU.ProjectorGenerationMethod 2
+DFTU.CutoffNorm         0.90
+DFTU.PotentialShift     false
+DFTU.FirstIteration     true
+%block DFTU.Proj
+  Mn 1
+  3 2
+  11.53 0.00
+  0.0000 0.0500
+%endblock DFTU.Proj
+
+SCF.MustConverge        true
+SCF.Mix                 Hamiltonian
+SCF.Mixer.Method        Pulay
+SCF.Mixer.Weight        0.05
+SCF.Mixer.History       8
+SCF.DM.Converge         true
+SCF.H.Converge          true
+SCF.DM.Tolerance        1.0e-5
+SCF.H.Tolerance         1.0e-4 eV
+MaxSCFIterations        200
+DM.UseSaveDM            false
+Write.DM                true
+WriteMullikenPop        1
+WriteForces             true
+WriteMDHistory          true
+
+# Relax ions and the AFM-II rhombohedral cell against zero external pressure.
+MD.TypeOfRun            CG
+MD.NumCGsteps           100
+MD.VariableCell         true
+MD.TargetPressure       0.0 GPa
+MD.MaxForceTol          0.04 eV/Ang
+MD.MaxStressTol         0.10 GPa

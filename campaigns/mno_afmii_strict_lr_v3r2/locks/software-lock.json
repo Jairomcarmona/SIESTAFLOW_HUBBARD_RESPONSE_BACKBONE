@@ -1,0 +1,21 @@
+{
+  "schema": "siestaflow-campaign-software-lock-v1",
+  "campaign_id": "mno-afmii-strict-lr-v3r2",
+  "wheel": {
+    "path": "software/siestaflow_hubbard-0.1.0-py3-none-any.whl",
+    "sha256": "4fe6900c9ef29dbe88762ef2613393c834784dd8631453183da66c9c034cc47d",
+    "distribution": "siestaflow-hubbard",
+    "version": "0.1.0"
+  },
+  "files": {
+    "tools/run_mno_afmii_strict_v3r2.py": "7fe22cc524cf17eea64ecf10e7324af40900c6d49bf88dc865e7cfa9b2ed57a7",
+    "src/siestaflow_hubbard/execution/slurm_foreground.py": "57f94ca97f033549afd3b5856c3293ae00915b01908d6a0cc82f5f1282f4281c",
+    "campaigns/mno_afmii_strict_lr_v3r2/scripts/lru_core.py": "92e8324679352847912cc30e73027b1a1d44444067c6393b982ebc78e13c6f72",
+    "campaigns/mno_afmii_strict_lr_v3r2/campaign-manifest.json": "f51236d46f9b1c1ba3d80136344d0e7de271369862df6460d9a5215c06862aeb",
+    "campaigns/mno_afmii_strict_lr_v3r2/README.md": "69a97a08556ecb204e59aed8ed6a5f5a8f845c25cf946dabd77fb27c72892550",
+    "campaigns/mno_afmii_strict_lr_v3r2/plans/calibration-plan.json": "d36d24c04c2aff566b4aec1f9dae1c5943a540ff514e23674817ff9dfc4df88c",
+    "campaigns/mno_afmii_strict_lr_v3r2/plans/response-plan.json": "2d4c37d15ba732358362ec66b34100ba9ff6ba2f34c2689e4a33386afd9fd3af",
+    "campaigns/mno_afmii_strict_lr_v3r2/locks/calibration-methodology-lock.json": "7a60e5ff38eecd69e7e55c3afa9bb703c21334967f2c77e8c78379d0ba702d23",
+    "campaigns/mno_afmii_strict_lr_v3r2/locks/response-methodology-lock.json": "77618200601d8b8b0dec2e1fcae8d1b12f3b12744bdf82b422b4009fe56a0732"
+  }
+}

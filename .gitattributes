@@ -1,0 +1,3 @@
+# Preserve the exact bytes of the frozen MnO campaign. Its manifests and
+# receipts contain SHA-256 hashes of the native SIESTA inputs and outputs.
+campaigns/mno_afmii_strict_lr_v3r2/** -text

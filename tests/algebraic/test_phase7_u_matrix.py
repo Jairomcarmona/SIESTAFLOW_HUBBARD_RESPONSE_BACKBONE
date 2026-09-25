@@ -79,9 +79,8 @@ def test_U7E_ill_conditioned_response():
     with pytest.raises(InversionError, match="exceeds allowed"):
         compute_u_matrix(chi0, chi, policy, methodology_lock_hash="mock_lock")
         
-    policy_fallback = NumericalPolicy(max_condition_number=100, allow_pinv_fallback=True)
-    u_mat = compute_u_matrix(chi0, chi, policy_fallback, methodology_lock_hash="mock_lock")
-    assert u_mat.rank_diagnostics == GaugeRankStatus.ILL_CONDITIONED
+    with pytest.raises(ValueError, match="prohibited"):
+        NumericalPolicy(max_condition_number=100, allow_pinv_fallback=True)
 
 def test_U7F_chi0_chi_swap():
     """U7-F: chi0/chi swap"""

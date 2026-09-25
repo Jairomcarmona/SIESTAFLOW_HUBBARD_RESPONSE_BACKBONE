@@ -5,6 +5,56 @@ __pycache__/
 *.egg-info/
 dist/
 build/
+.venv/
+.codex_*/
+
+# Local development and generated campaign workspaces. Campaign inputs intended
+# for publication belong in examples/ or a separately reviewed fixture.
+scratch/
+/*_PBE_LRU_*/
+/*_VALIDATION_V*/
+/*_core_*/
+/CU3N_PBE_LRU_SC222_LINEARITY_PATCH_STAGING/
+
+# Archives and checksums are transferred or deposited outside the source tree.
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.tar.zst
+*.sha256
+*.manifest
+
+# Site-private execution configuration. Commit the .example template only.
+**/site_profile.local
+private/
+
+# Native SIESTA / Slurm run artefacts. Preserve them in an evidence archive,
+# never in the Git working tree used for source publication.
+**/siesta.out
+**/siesta.err
+**/0_NORMAL_EXIT
+**/*.DM
+**/*.HSX
+**/*.ORB_INDX
+**/*.ion
+**/*.ion.nc
+**/*.ion.xml
+**/*.alloc
+**/INPUT_TMP.*
+**/fdf.*.log
+**/PARALLEL_DIST
+**/NON_TRIMMED_KP_LIST
+**/OUTVARS.yml
+**/MESSAGES
+**/CLOCK
+**/TIMES
+**/FORCE_STRESS
+**/BASIS_ENTHALPY
+**/BASIS_HARRIS_ENTHALPY
+**/slurm/*.out
+**/slurm/*.err
+**/slurm/interrupted_attempts/
 
 # SIESTA heavy binary density matrices & temporary scratch logs
 examples/**/*.DM

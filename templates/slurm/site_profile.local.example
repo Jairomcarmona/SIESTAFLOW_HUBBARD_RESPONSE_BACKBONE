@@ -1,0 +1,19 @@
+# Copy this file to slurm/site_profile.local inside a campaign. The local
+# filename is ignored by Git: do not commit account names, filesystem paths,
+# node names or scheduler policies.
+#
+# Pick the backend that matches the resources requested with sbatch.
+#   local_openmpi      => -N1 -n4 --ntasks-per-node=4 -c1, Open MPI/orterun
+#   slurm_hydra_5x20   => -N5 -n100 --ntasks-per-node=20 -c1, Hydra
+# The DAG refuses an unset or unknown profile.
+# export SIESTAFLOW_EXECUTION_PROFILE="local_openmpi"
+# export SIESTAFLOW_EXECUTION_PROFILE="slurm_hydra_5x20"
+
+# export SIESTAFLOW_SIESTA_MODULE="siesta/<site-version>"
+# export SIESTAFLOW_PYTHON_MODULE="python/<site-version>"
+# export SIESTAFLOW_SIESTA_BIN="/site/path/to/siesta"       # optional
+# export SIESTAFLOW_MPI_BIN="/usr/bin/orterun"                # local Open MPI
+# export SIESTAFLOW_MPI_BIN="/site/path/to/mpiexec.hydra"   # Hydra cluster
+
+# Set this to the site-validated partition name; local WSL uses "local".
+# export SIESTAFLOW_PARTITION="local"

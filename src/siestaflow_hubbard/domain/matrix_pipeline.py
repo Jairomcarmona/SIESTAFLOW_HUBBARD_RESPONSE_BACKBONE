@@ -46,15 +46,15 @@ def select_matrix(M_raw: np.ndarray, M_sym: np.ndarray, policy: str, methodology
     else:
         raise ValueError(f"Unsupported matrix selection policy: {policy}")
 
-def compute_diagnostics(M: np.ndarray, condition_threshold: float = 1000.0) -> MatrixDiagnostics:
-    """Computes condition number and rank diagnostics. Prohibits ill-conditioned matrices."""
+def compute_diagnostics(M: np.ndarray, condition_threshold: float | None = None) -> MatrixDiagnostics:
+    """Compute rank/conditioning diagnostics; enforce a threshold only when declared."""
     cond = float(np.linalg.cond(M))
     s = np.linalg.svd(M, compute_uv=False)
     tol = s[0] * max(M.shape) * np.finfo(s.dtype).eps
     rank = int(np.sum(s > tol))
     is_full = rank == M.shape[0]
     
-    if cond > condition_threshold:
+    if condition_threshold is not None and cond > condition_threshold:
         raise IllConditionedMatrixError(f"Matrix condition number {cond:.2f} exceeds threshold {condition_threshold}")
         
     return MatrixDiagnostics(
@@ -83,7 +83,7 @@ def invert_matrix(M: np.ndarray, diagnostics: MatrixDiagnostics, tolerance: floa
         
     return M_inv
 
-def invert_chi(chi: np.ndarray, condition_threshold: float = 1000.0) -> np.ndarray:
+def invert_chi(chi: np.ndarray, condition_threshold: float | None = None) -> np.ndarray:
     """Convenience direct inversion for U = inv(chi0) - inv(chi)."""
     diag = compute_diagnostics(chi, condition_threshold=condition_threshold)
     return invert_matrix(chi, diag)

@@ -1,16 +1,19 @@
-# SIESTAFLOW Hubbard Response Backbone v0.1.0
+# SIESTAFLOW Hubbard Response Backbone
 
-**SIESTAFLOW** is a cryptographically audited, physically validated, and modular framework for determining ab-initio Hubbard $U$ (and inter-site $V$) parameters for SIESTA 5.4.2 via Linear Response Density Functional Theory (DFT+U).
+**SIESTAFLOW** is a research framework for finite-difference linear-response calculations coupled to SIESTA. It includes execution, provenance, response-matrix analysis, and scientific acceptance gates. Its current MnO result is not a validated DFT+U parameter for production calculations.
+
+**Current status (2026-09-25):** The archived MnO AFM-II campaign yields a numerical scalar charge-response estimate of 11.5320557 eV. Its strict signal gate reports `FAIL`, and the available perturbations do not establish equivalence with the spin-dependent `U-J` parameter applied by SIESTA. See the [Opus handoff and reproducibility guide](docs/OPUS_MNO_HANDOFF_20260925.md) before using or changing that number.
 
 ---
 
 ## 📖 User Manual & Documentation
-For a complete guide on physics foundations, CLI commands, and technical transparency, see the [Technical User Manual](file:///docs/USER_MANUAL.md).
+For a complete guide on physics foundations, CLI commands, and technical transparency, see the [Technical User Manual](docs/USER_MANUAL.md).
 
-* **User Manual:** [docs/USER_MANUAL.md](file:///docs/USER_MANUAL.md)
-* **Scope:** [docs/00_governance/SCOPE.md](file:///docs/00_governance/SCOPE.md)
-* **Physical Contracts:** [docs/01_science/PHYSICAL_CONTRACTS.md](file:///docs/01_science/PHYSICAL_CONTRACTS.md)
-* **Architecture Spec:** [docs/02_architecture/ARCHITECTURE.md](file:///docs/02_architecture/ARCHITECTURE.md)
+* **User Manual:** [docs/USER_MANUAL.md](docs/USER_MANUAL.md)
+* **Scope:** [docs/00_governance/SCOPE.md](docs/00_governance/SCOPE.md)
+* **Physical Contracts:** [docs/01_science/PHYSICAL_CONTRACTS.md](docs/01_science/PHYSICAL_CONTRACTS.md)
+* **Architecture Spec:** [docs/02_architecture/ARCHITECTURE.md](docs/02_architecture/ARCHITECTURE.md)
+* **Publication boundary:** [docs/PUBLICATION_LAYOUT.md](docs/PUBLICATION_LAYOUT.md)
 
 ---
 
@@ -18,14 +21,24 @@ For a complete guide on physics foundations, CLI commands, and technical transpa
 
 ### Installation & Verification
 ```bash
-python -m pytest tests/ -v
-# 79 passed in 0.47s
+python -m pip install -e ".[test]"
+python -m pytest tests/ -q
 ```
+
+The full suite currently has known failures; the [MnO handoff](docs/OPUS_MNO_HANDOFF_20260925.md) records the verified subsets and open failures.
 
 ### 1. Audit an FDF File (Pre-flight Check)
 ```bash
 siestaflow audit-fdf Cu3N.fdf --verbose
 ```
+
+### 1b. Mandatory scientific-DAG preflight for a production LR-U campaign
+
+Before submitting a production DAG, materialize and audit the real SIESTA
+Method-2 projector, then let the resumable protocol validate the reference,
+responses, algebra and evidence gates. See
+[Scientific DAG Protocol](docs/SCIENTIFIC_DAG_PROTOCOL.md) and
+[Method-2 Projector Preflight](docs/METHOD2_PROJECTOR_PREFLIGHT.md).
 
 ### 2. Initialize a Campaign
 ```bash

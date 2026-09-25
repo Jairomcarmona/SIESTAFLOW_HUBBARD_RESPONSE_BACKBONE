@@ -5,7 +5,7 @@ import pytest
 from unittest.mock import patch, MagicMock
 
 from siestaflow_hubbard.domain.campaign_manifest import CampaignManifest, CampaignState
-from siestaflow_hubbard.execution.checkpoint_manager import CheckpointManager
+from siestaflow_hubbard.execution.checkpoint_manager import CheckpointManager, CheckpointScientificAcceptanceDisabledError
 from siestaflow_hubbard.reporting.evidence_exporter import EvidenceExporter
 import siestaflow_hubbard.cli as cli
 
@@ -57,7 +57,8 @@ def test_checkpoint_manager(tmp_path):
         f.write("modified")
         
     assert manager.verify_checkpoint([file1_path, file2_path]) is False
-    assert manager.is_step_completed("step1", [file1_path, file2_path]) is False
+    with pytest.raises(CheckpointScientificAcceptanceDisabledError):
+        manager.is_step_completed("step1", [file1_path, file2_path])
 
 def test_evidence_exporter(tmp_path):
     out_dir = str(tmp_path)

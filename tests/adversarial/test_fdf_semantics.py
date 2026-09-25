@@ -90,7 +90,7 @@ def test_FDF_F_change_projector_method(base_builder, valid_block):
 
 def test_bare_strict_requirements(base_builder, valid_block):
     fdf = generate_mock_fdf(response_mode="BARE")
-    assert base_builder.preflight_verify(fdf, expected_alpha=0.05, expected_block=valid_block, expected_response_mode="BARE")
+    assert not base_builder.preflight_verify(fdf, expected_alpha=0.05, expected_block=valid_block, expected_response_mode="BARE")
     
     # Missing SCF.Mix density
     fdf_bad = generate_mock_fdf(response_mode="SCREENED") # lacks the bare config
@@ -116,4 +116,3 @@ def test_LAMBDA_04_tampered_lambda_preflight_fail(base_builder, valid_block):
     # valid_block has effective_lambda = 1.0 (lambda_factor=None)
     fdf_tampered = generate_mock_fdf(lam=0.8)
     assert not base_builder.preflight_verify(fdf_tampered, expected_alpha=0.05, expected_block=valid_block, expected_response_mode="SCREENED")
-
