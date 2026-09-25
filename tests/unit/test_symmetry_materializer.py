@@ -15,7 +15,7 @@ from siestaflow_hubbard.siesta_backend.siesta542_bare_profile import (
 
 
 ROOT = Path(__file__).resolve().parents[2]
-REFERENCE = ROOT / "CU3N_PBE_LRU_SC222_RC3p0_V1/runs/00_REFERENCE/siesta.fdf"
+REFERENCE = ROOT / "tests/fixtures/cu3n_reference_siesta.fdf"
 
 
 def _spec(mode=ResponseMode.BARE, site="CuLR03", alpha=-0.05):

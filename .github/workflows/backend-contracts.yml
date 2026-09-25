@@ -21,6 +21,7 @@ on:
       - "tests/unit/test_local_lr_gate_smoke.py"
       - "tests/unit/test_symmetry_materializer.py"
       - "tests/test_symmetry_reduction_proposal.py"
+      - "tests/fixtures/cu3n_reference_siesta.fdf"
       - ".github/workflows/backend-contracts.yml"
   pull_request:
     paths:
@@ -42,6 +43,7 @@ on:
       - "tests/unit/test_local_lr_gate_smoke.py"
       - "tests/unit/test_symmetry_materializer.py"
       - "tests/test_symmetry_reduction_proposal.py"
+      - "tests/fixtures/cu3n_reference_siesta.fdf"
       - ".github/workflows/backend-contracts.yml"
 
 jobs:
