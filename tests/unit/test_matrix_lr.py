@@ -339,6 +339,31 @@ def test_raw_vs_symmetrized_distinguishable():
     assert result.chi0_asymmetry_norm > 0.01
 
 
+def test_selected_symmetrized_representation_controls_diagnostics_and_inverse():
+    """A symmetrized-policy campaign must never diagnose/invert raw matrices."""
+    obs = _make_synthetic_2x2()
+    result = analyze_matrix_response_campaign(obs, matrix_for_inversion="symmetrized")
+
+    assert result.matrix_for_inversion == "symmetrized"
+    np.testing.assert_allclose(result.chi0_selected, result.chi0_sym, atol=1e-15)
+    np.testing.assert_allclose(result.chi_selected, result.chi_sym, atol=1e-15)
+    np.testing.assert_allclose(
+        result.inversion_chi0.inverse,
+        np.linalg.inv(result.chi0_sym),
+        atol=1e-12,
+    )
+    np.testing.assert_allclose(
+        result.U_matrix,
+        np.linalg.inv(result.chi0_sym) - np.linalg.inv(result.chi_sym),
+        atol=1e-12,
+    )
+
+
+def test_invalid_matrix_selection_fails_closed():
+    with pytest.raises(ValueError, match="matrix_for_inversion"):
+        analyze_matrix_response_campaign(_make_synthetic_2x2(), matrix_for_inversion="average")
+
+
 def test_chi0_raw_asymmetry_norm_correct():
     """||chi0_raw - chi0_raw.T||_F must equal expected value."""
     obs = _make_synthetic_2x2()

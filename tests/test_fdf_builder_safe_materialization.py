@@ -1,5 +1,5 @@
 import pytest
-from siestaflow_hubbard.siesta_backend.fdf_builder import FdfBuilder
+from siestaflow_hubbard.siesta_backend.fdf_builder import FdfBuilder, LegacyBareMaterializationDisabledError
 from siestaflow_hubbard.siesta_backend.dftu_models import DftuProjector, DftuProjectorBlock
 
 @pytest.fixture
@@ -85,16 +85,11 @@ DFTU.FirstIteration true
     # but finds 3.0 0.05 instead.
     assert builder.preflight_verify(old_broken_format, expected_alpha=0.01, expected_block=expected_block) == False
 
-def test_bare_mode_overrides(dummy_base_fdf, tmp_path):
-    """Tests that BARE mode correctly limits SCF iterations."""
+def test_bare_mode_alias_is_disabled(dummy_base_fdf, tmp_path):
     builder = FdfBuilder()
     target_fdf = str(tmp_path / "bare.fdf")
     
-    content = builder.prepare_fdf_bare(
-        base_fdf_path=dummy_base_fdf,
-        target_fdf_path=target_fdf,
-        alpha=0.05
-    )
-    
-    assert "MaxSCFIterations 2" in content
-    assert "SCF.Mixer.Weight 1.0" in content
+    with pytest.raises(LegacyBareMaterializationDisabledError):
+        builder.prepare_fdf_bare(
+            base_fdf_path=dummy_base_fdf, target_fdf_path=target_fdf, alpha=0.05
+        )

@@ -18,6 +18,8 @@ from typing import Any
 
 import numpy as np
 
+from siesta_dftu_fdf import projector_specs_from_text
+
 BOHR_TO_ANG = 0.529177210903
 
 
@@ -83,25 +85,19 @@ def parse_fdf(path: Path, central_label: str) -> dict[str, Any]:
 
 
 def parse_method2_parameters(fdf_text: str, central_label: str) -> dict[str, float | int] | None:
-    lines = _block(fdf_text, "DFTU.Proj")
-    for i, line in enumerate(lines):
-        fields = line.split()
-        if fields and fields[0] == central_label and i + 3 < len(lines):
-            n_l = lines[i + 1].split()
-            cutoff = lines[i + 3].split()
-            try:
-                rc = float(cutoff[0])
-                parameters: dict[str, float | int | str] = {"n": int(n_l[0]), "l": int(n_l[1]), "rc_bohr": rc, "omega_bohr": float(cutoff[1])}
-                if rc > 0.0:
-                    parameters["cutoff_mode"] = "explicit_rc"
-                else:
-                    norm = re.search(r"^\s*DFTU\.CutoffNorm\s+([\d.eEdD+-]+)", fdf_text, re.I | re.M)
-                    parameters["cutoff_mode"] = "cutoff_norm"
-                    parameters["cutoff_norm"] = float(norm.group(1).replace("D", "E")) if norm else None
-                return parameters
-            except (IndexError, ValueError) as exc:
-                raise ValueError(f"cannot parse DFTU.Proj entry for {central_label}") from exc
-    return None
+    specs = projector_specs_from_text(fdf_text)
+    spec = specs.get(central_label)
+    if spec is None:
+        return None
+    return {
+        "n": spec["n"],
+        "l": spec["l"],
+        "rc_bohr": spec["rc_bohr"],
+        "omega_bohr": spec["omega_bohr"],
+        "cutoff_mode": spec["cutoff_mode"],
+        "cutoff_norm": spec["cutoff_norm"],
+        "lambda": spec["lambda"],
+    }
 
 
 def parse_psml(path: Path) -> dict[str, Any]:
@@ -116,7 +112,7 @@ def parse_psml(path: Path) -> dict[str, Any]:
     return result
 
 
-def parse_projector(path: Path) -> tuple[np.ndarray, np.ndarray, float]:
+def parse_projector(path: Path) -> tuple[int, int, np.ndarray, np.ndarray, float]:
     rows = [line.split() for line in path.read_text(encoding="utf-8").splitlines() if line.strip() and not line.lstrip().startswith("#")]
     def is_grid_header(row: list[str]) -> bool:
         try:
@@ -127,17 +123,38 @@ def parse_projector(path: Path) -> tuple[np.ndarray, np.ndarray, float]:
     header_index = next((i for i, row in enumerate(rows) if is_grid_header(row)), None)
     if header_index is None:
         raise ValueError("cannot find dftu_proj grid header")
-    npts, _, cutoff = int(rows[header_index][0]), float(rows[header_index][1]), float(rows[header_index][2])
-    data = np.array([[float(x) for x in row[:2]] for row in rows[header_index + 1 : header_index + 1 + npts]])
-    if len(data) != npts:
-        raise ValueError(f"projector declares {npts} points but contains {len(data)}")
-    return data[:, 0], data[:, 1], cutoff
+    if header_index == 0:
+        raise ValueError("dftu_proj is missing its l,n header")
+    quantum = rows[header_index - 1]
+    if len(quantum) < 2:
+        raise ValueError("invalid dftu_proj l,n header")
+    l_value, n_value = int(quantum[0]), int(quantum[1])
+    if l_value < 0:
+        raise ValueError("dftu_proj angular momentum l must be non-negative")
+    npts, delta, cutoff = int(rows[header_index][0]), float(rows[header_index][1]), float(rows[header_index][2])
+    if npts < 2 or header_index + 1 + npts > len(rows):
+        raise ValueError("dftu_proj contains an incomplete radial grid")
+    if header_index + 1 + npts < len(rows):
+        raise ValueError("dftu_proj contains multiple projector blocks or trailing data; audit all shells explicitly")
+    grid_rows = rows[header_index + 1 : header_index + 1 + npts]
+    if any(len(row) < 2 for row in grid_rows):
+        raise ValueError("dftu_proj contains a malformed radial row")
+    data = np.array([[float(x) for x in row[:2]] for row in grid_rows])
+    if len(data) != npts or not np.all(np.isfinite(data)):
+        raise ValueError(f"projector declares {npts} points but has incomplete/non-finite data ({len(data)} rows)")
+    if not np.isfinite(delta) or delta <= 0 or not np.isfinite(cutoff) or cutoff <= 0:
+        raise ValueError("projector grid spacing/cutoff must be finite and positive")
+    if data[0, 0] < 0 or np.any(np.diff(data[:, 0]) <= 0):
+        raise ValueError("projector grid/cutoff is invalid")
+    return l_value, n_value, data[:, 0], data[:, 1], cutoff
 
 
-def cumulative_norm(r: np.ndarray, radial_value: np.ndarray) -> np.ndarray:
-    # Method-2 output is a radial R_l(r); its three-dimensional norm is r²|R|²dr.
-    density = r * r * radial_value * radial_value
+def cumulative_norm(r: np.ndarray, radial_value: np.ndarray, l_value: int) -> np.ndarray:
+    # SIESTA writes f_l=R_l/r^l; the 3-D radial measure is r^(2l+2)|f_l|² dr.
+    density = np.power(r, 2 * l_value + 2) * np.square(radial_value)
     cumulative = np.concatenate(([0.0], np.cumsum((density[1:] + density[:-1]) * np.diff(r) / 2.0)))
+    if not np.all(np.isfinite(cumulative)) or cumulative[-1] <= 0:
+        raise ValueError("projector radial norm must be finite and positive")
     return cumulative / cumulative[-1]
 
 
@@ -174,7 +191,7 @@ def recommendation(method2: dict[str, Any] | None, cutoff: float, nearest_bohr: 
             "soft_projector_cutoff_bohr": cutoff,
             "nearest_neighbour_bohr": nearest_bohr,
             "locality_ratio_cutoff_to_neighbour": cutoff / nearest_bohr,
-            "rule": "The FDF delegates the radius to DFTU.CutoffNorm. Review nearby retained-norm values rather than an explicit rc.",
+            "rule": "The FDF delegates the radius to the effective LDAU/DFTU.CutoffNorm (DFTU overrides LDAU). Review nearby retained-norm values rather than an explicit rc.",
             "review_cutoff_norm_candidates": [0.85, 0.90, 0.95],
             "status": "LOCALITY_WINDOW_AVAILABLE" if cutoff <= 0.85 * nearest_bohr else "REVIEW_REQUIRED",
             "warning": "This is a physical locality screen, not a convergence claim and not an automatic U selection.",
@@ -234,8 +251,10 @@ def main() -> None:
 
     fdf = parse_fdf(args.fdf, args.central_label)
     method2 = parse_method2_parameters(fdf["text"], args.central_label)
-    r, values, cutoff = parse_projector(args.projector)
-    cumulative = cumulative_norm(r, values)
+    l_value, n_value, r, values, cutoff = parse_projector(args.projector)
+    cumulative = cumulative_norm(r, values, l_value)
+    if method2 is None or method2["l"] != l_value:
+        raise ValueError(f"projector l={l_value} does not match FDF DFTU.Proj l={method2.get('l') if method2 else 'missing'}")
     geometry = neighbour_distances(fdf, args.central_label)
     central_atomic_number = fdf["atomic_numbers"][fdf["labels"].index(args.central_label)]
     psml = parse_psml(args.psml) if args.psml else None
@@ -248,7 +267,8 @@ def main() -> None:
         "psml_identity": psml,
         "psml_atomic_number_matches_fdf": psml_matches,
         "radial_projector": {
-            "radial_measure": "integral r^2 |R_l(r)|^2 dr",
+            "radial_measure": f"integral r^(2l+2) |f_l(r)|^2 dr; f_l=R_l/r^l; l={l_value}",
+            "l": l_value, "n": n_value,
             "n_points": len(r), "grid_delta_bohr": float(r[1] - r[0]), "cutoff_bohr": cutoff, "cutoff_A": cutoff * BOHR_TO_ANG,
             "quantile_bohr": {str(q): float(np.interp(q, cumulative, r)) for q in (0.85, 0.90, 0.95, 0.99)},
             "norm_inside_rc": float(np.interp(rc, r, cumulative)) if rc else None,

@@ -1,6 +1,8 @@
-# SIESTAFLOW Hubbard Response Backbone v0.1.0
+# SIESTAFLOW Hubbard Response Backbone
 
-**SIESTAFLOW** is a cryptographically audited, physically validated, and modular framework for determining ab-initio Hubbard $U$ (and inter-site $V$) parameters for SIESTA 5.4.2 via Linear Response Density Functional Theory (DFT+U).
+**SIESTAFLOW** is a research framework for finite-difference linear-response calculations coupled to SIESTA. It includes execution, provenance, response-matrix analysis, and scientific acceptance gates. Its current MnO result is not a validated DFT+U parameter for production calculations.
+
+**Current status (2026-09-25):** The archived MnO AFM-II campaign yields a numerical scalar charge-response estimate of 11.5320557 eV. Its strict signal gate reports `FAIL`, and the available perturbations do not establish equivalence with the spin-dependent `U-J` parameter applied by SIESTA. See the [Opus handoff and reproducibility guide](docs/OPUS_MNO_HANDOFF_20260925.md) before using or changing that number.
 
 ---
 
@@ -19,9 +21,11 @@ For a complete guide on physics foundations, CLI commands, and technical transpa
 
 ### Installation & Verification
 ```bash
-python -m pytest tests/ -v
-# 79 passed in 0.47s
+python -m pip install -e ".[test]"
+python -m pytest tests/ -q
 ```
+
+The full suite currently has known failures; the [MnO handoff](docs/OPUS_MNO_HANDOFF_20260925.md) records the verified subsets and open failures.
 
 ### 1. Audit an FDF File (Pre-flight Check)
 ```bash

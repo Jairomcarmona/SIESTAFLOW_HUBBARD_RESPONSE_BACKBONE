@@ -1,0 +1,5691 @@
+{
+  "schema": "siestaflow-siesta-output-trace-reconstruction-v1",
+  "scope": {
+    "campaign": "MnO AFM-II strict LR",
+    "result_set": "campaigns\\mno_afmii_strict_lr_v3r2\\results\\response-matrix-foreground-recovery-v4",
+    "method": "read-only reconstruction from retained native .out/.fdf, .DM and JSON receipts; no SIESTA/Slurm calculation launched; no SIESTA source changed"
+  },
+  "provenance": {
+    "response_receipt_path": "response-receipt.json",
+    "response_receipt_sha256": "da0363ebeaa4705063917dfb32c53db8501b02c743ce11167849bac63431b7c6",
+    "slurm_job_id": "333",
+    "runtime": {
+      "mpi_sha256": "e3a009cd4ab8b41ef23019df3a1388944294b330b7c51ad17be18a0120b36daa",
+      "siesta_sha256": "aaa9a2e45a41b12f3aad52ca4fca7c25b1cc6afd3aff2a0c7fe145b1bd9f18ce"
+    },
+    "upstream_source_audit": "docs/audits/SIESTA_542_BARE_SOURCE_AUDIT_20260909.md",
+    "siesta_source_revision_from_audit": "e486d12067b96ff688179f0496d0ec21b6fae0ab"
+  },
+  "statistics": {
+    "runs_total": 29,
+    "reference_runs": 1,
+    "response_runs": 28,
+    "bare_runs": 14,
+    "screened_runs": 14,
+    "all_have_job_completed_and_normal_marker": true,
+    "all_response_output_hashes_match_receipt": true,
+    "all_receipt_parent_DM_hashes_match_reference": true,
+    "all_response_outputs_report_DM_read_success": true,
+    "bare_first_response_bracketed_by_stepf_and_scf1": 14,
+    "bare_events_have_16_Hubbard_atoms": true,
+    "screened_converged_and_final_population_after_convergence": 14,
+    "screened_SCF_iteration_range": [
+      3,
+      12
+    ],
+    "reference_converged_iterations": 15,
+    "unique_projector_signatures": 1,
+    "reference_DM_sha256": "65d418d1a21b4b4052d41d68554639fc4bc4682566bb780c0d072fd4cfe5eb47",
+    "all_response_FDF_mode_contracts_match": true,
+    "all_nonzero_alpha_FDFs_perturb_only_declared_target_with_correct_signed_alpha": true,
+    "all_native_population_events_have_16_sites_and_summaries": true
+  },
+  "analysis_status": {
+    "analysis_result_status": "FAIL",
+    "U_Mn_eV": null,
+    "analysis_reason": "SCIENTIFIC_ANALYSIS_FAILED: MATRIX_STABILITY",
+    "signal_gate_status": "FAIL",
+    "signal_gate_windows": [
+      {
+        "alpha_ev": 0.025,
+        "eligible": false,
+        "reasons": [
+          "signal_unresolved"
+        ]
+      },
+      {
+        "alpha_ev": 0.05,
+        "eligible": false,
+        "reasons": [
+          "signal_unresolved"
+        ]
+      },
+      {
+        "alpha_ev": 0.1,
+        "eligible": false,
+        "reasons": [
+          "signal_unresolved"
+        ]
+      }
+    ]
+  },
+  "interpretation_and_limits": [
+    "For all 14 BARE inputs the native log contains the ordered pattern: reference-DM read success; initial 16-site population block; Hamiltonian rebuild; stepf; second complete 16-site population block; Hamiltonian rebuild; scf: 1. This identifies the first-diagonalization response candidate in the 5.4.2 Hamiltonian-mixing profile.",
+    "For all 14 SCREENED outputs the log contains the same initial/first-response sequence, then SCF population events, a convergence statement after 3–12 iterations, and a final complete 16-site population block after convergence / DM_out. The screened extraction must use this final block, not the early candidate.",
+    "The raw output records SIESTA 5.4.2, executable path, architecture, compiler, effective Hamiltonian mixing and all event line positions. The response receipt records SIESTA and MPI SHA-256 values. The raw output does not literally print an internal Hxc-frozen Boolean; the semantic interpretation depends on the source-audited 5.4.2 call order and the admitted executable identity.",
+    "All 28 response receipts bind parent_dm_sha256 to the retained reference DM SHA-256, and each child log says reading a DM succeeded. However, the staged per-run input DM is not retained as a separate pre-run file; the per-run SystemLabel.DM present now is the post-run artifact. Thus the receipt supports common-parent identity, but the exact bytes read by each process cannot be independently recomputed from the final run directories alone.",
+    "The existing arithmetic result is not an accepted U: analysis-result.json has status FAIL and U_Mn_eV null; the signal gate rejects all tested alpha windows as signal_unresolved. This trace reconstruction establishes event/control provenance only; it does not promote a physical U."
+  ],
+  "runs": [
+    {
+      "run_id": "00_REFERENCE",
+      "mode": "REFERENCE",
+      "target_from_receipt": null,
+      "alpha_eV_from_receipt": null,
+      "input_fdf": {
+        "path": "00_REFERENCE\\siesta.fdf",
+        "sha256": "3c86abab6daf4c0c00a10da6a7e060470e54bcc5364f70a0e2932285c24941e6",
+        "settings": {
+          "SystemLabel": "00_REFERENCE",
+          "DFTU.PotentialShift": "true",
+          "DFTU.FirstIteration": "false",
+          "DFTU.ProjectorGenerationMethod": "2",
+          "DFTU.CutoffNorm": "0.90",
+          "SCF.Mix": "Hamiltonian",
+          "SCF.Mixer.Method": "Pulay",
+          "SCF.Mixer.Weight": "0.05",
+          "SCF.MustConverge": "T",
+          "SCF.DM.Converge": "T",
+          "SCF.H.Converge": "T",
+          "SCF.DM.Tolerance": "1.0e-5",
+          "SCF.H.Tolerance": "1.0e-4 eV",
+          "MaxSCFIterations": "300",
+          "DM.UseSaveDM": "false"
+        },
+        "projector_count": 16,
+        "projector_signature_unique": [
+          [
+            3,
+            2,
+            0.0,
+            0.05
+          ]
+        ],
+        "nonzero_UJ_entries": []
+      },
+      "native_output": {
+        "path": "00_REFERENCE\\siesta.out",
+        "sha256": "0bb4f72658fd1b72a668949b71c532e82d00862f7b63271b7d07533f935dd10c",
+        "version": "5.4.2",
+        "executable": "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta",
+        "architecture": "x86_64",
+        "compiler": "GNU-13.3.0",
+        "redata_hamiltonian_mixing_lines": [
+          4764
+        ],
+        "dftu_hamiltonian_recalculation_lines": [
+          5364,
+          5833,
+          6329,
+          6798,
+          7267,
+          7736,
+          8205,
+          12898
+        ],
+        "stepf_lines": [
+          5366
+        ],
+        "scf_iteration_summaries": [
+          {
+            "line": 5860,
+            "iteration": 1
+          },
+          {
+            "line": 6330,
+            "iteration": 2
+          },
+          {
+            "line": 6799,
+            "iteration": 3
+          },
+          {
+            "line": 7268,
+            "iteration": 4
+          },
+          {
+            "line": 7737,
+            "iteration": 5
+          },
+          {
+            "line": 8206,
+            "iteration": 6
+          },
+          {
+            "line": 8674,
+            "iteration": 7
+          },
+          {
+            "line": 9143,
+            "iteration": 8
+          },
+          {
+            "line": 9611,
+            "iteration": 9
+          },
+          {
+            "line": 10080,
+            "iteration": 10
+          },
+          {
+            "line": 10548,
+            "iteration": 11
+          },
+          {
+            "line": 11016,
+            "iteration": 12
+          },
+          {
+            "line": 11484,
+            "iteration": 13
+          },
+          {
+            "line": 11952,
+            "iteration": 14
+          },
+          {
+            "line": 12420,
+            "iteration": 15
+          }
+        ],
+        "scf_convergence": [
+          {
+            "line": 12428,
+            "text": "SCF cycle converged after 15 iterations",
+            "iterations": 15
+          }
+        ],
+        "scf_nonconvergence_lines": [],
+        "dm_read_markers": [],
+        "using_DM_out_lines": [
+          12430
+        ],
+        "end_of_run_lines": [
+          13891
+        ],
+        "job_completed": true,
+        "normal_exit_marker_exists": true,
+        "normal_exit_marker_text": "SIESTA completed, MPI exit: 0",
+        "events": [
+          {
+            "start_line": 4898,
+            "dftu_counter": 1,
+            "end_line": 5363,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "before first stepf (initial/reference-DM population block)"
+          },
+          {
+            "start_line": 5367,
+            "dftu_counter": 1,
+            "end_line": 5832,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "after first stepf and before scf: 1 (first-diagonalization response candidate)"
+          },
+          {
+            "start_line": 5863,
+            "dftu_counter": 2,
+            "end_line": 6328,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 6332,
+            "dftu_counter": 3,
+            "end_line": 6797,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 6801,
+            "dftu_counter": 4,
+            "end_line": 7266,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 7270,
+            "dftu_counter": 5,
+            "end_line": 7735,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 7739,
+            "dftu_counter": 6,
+            "end_line": 8204,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 8208,
+            "dftu_counter": 7,
+            "end_line": 8673,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 8677,
+            "dftu_counter": 8,
+            "end_line": 9142,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 9145,
+            "dftu_counter": 9,
+            "end_line": 9610,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 9614,
+            "dftu_counter": 10,
+            "end_line": 10079,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 10082,
+            "dftu_counter": 11,
+            "end_line": 10547,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 10550,
+            "dftu_counter": 12,
+            "end_line": 11015,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 11018,
+            "dftu_counter": 13,
+            "end_line": 11483,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 11486,
+            "dftu_counter": 14,
+            "end_line": 11951,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 11954,
+            "dftu_counter": 15,
+            "end_line": 12419,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 12432,
+            "dftu_counter": 16,
+            "end_line": 12897,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "post-convergence population block"
+          }
+        ],
+        "postconvergence_population_event_index_1based": 17,
+        "first_diagonalization_event_index_1based": 2,
+        "bare_selection_event_index_1based": null,
+        "all_population_events_complete_for_16_sites": true
+      },
+      "parent_DM_evidence": {
+        "reference_file_sha256": "65d418d1a21b4b4052d41d68554639fc4bc4682566bb780c0d072fd4cfe5eb47",
+        "receipt_parent_dm_sha256": null,
+        "receipt_matches_reference": null,
+        "output_says_DM_read_succeeded": false,
+        "pre_run_staged_DM_snapshot_retained_separately": false,
+        "post_run_DM_sha256": "65d418d1a21b4b4052d41d68554639fc4bc4682566bb780c0d072fd4cfe5eb47"
+      },
+      "receipt_binding": {
+        "response_receipt_output_sha256": null,
+        "matches_raw_output": null,
+        "role": null,
+        "target": null,
+        "alpha_eV": null
+      }
+    },
+    {
+      "run_id": "A_BARE_m0d025",
+      "mode": "BARE",
+      "target_from_receipt": "MnLR00",
+      "alpha_eV_from_receipt": -0.025,
+      "input_fdf": {
+        "path": "A_BARE_m0d025\\siesta.fdf",
+        "sha256": "f93217061b79e72e7a05f1abf9b8f90c65c13773d56d593bbbf35876c47cb502",
+        "settings": {
+          "SystemLabel": "A_BARE_m0d025",
+          "DFTU.PotentialShift": "true",
+          "DFTU.FirstIteration": "true",
+          "DFTU.ProjectorGenerationMethod": "2",
+          "DFTU.CutoffNorm": "0.90",
+          "SCF.Mix": "Hamiltonian",
+          "SCF.Mixer.Method": "Pulay",
+          "SCF.Mixer.Weight": "0.05",
+          "SCF.MustConverge": "F",
+          "SCF.DM.Converge": null,
+          "SCF.H.Converge": null,
+          "SCF.DM.Tolerance": null,
+          "SCF.H.Tolerance": null,
+          "MaxSCFIterations": "1",
+          "DM.UseSaveDM": "true"
+        },
+        "projector_count": 16,
+        "projector_signature_unique": [
+          [
+            3,
+            2,
+            0.0,
+            0.05
+          ]
+        ],
+        "nonzero_UJ_entries": [
+          {
+            "site": "MnLR00",
+            "n": 3,
+            "l": 2,
+            "U_eV": -0.025,
+            "J_eV": 0.0,
+            "rc_input_bohr": 0.0,
+            "omega_bohr": 0.05
+          }
+        ],
+        "matches_mode_contract": true
+      },
+      "native_output": {
+        "path": "A_BARE_m0d025\\siesta.out",
+        "sha256": "7e9ccce22cb9854f9751ee5b41651dca6bce6c9f75d2ee94a24409fa79fb83c2",
+        "version": "5.4.2",
+        "executable": "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta",
+        "architecture": "x86_64",
+        "compiler": "GNU-13.3.0",
+        "redata_hamiltonian_mixing_lines": [
+          4759
+        ],
+        "dftu_hamiltonian_recalculation_lines": [
+          5367,
+          5836,
+          6337
+        ],
+        "stepf_lines": [
+          5369
+        ],
+        "scf_iteration_summaries": [
+          {
+            "line": 5863,
+            "iteration": 1
+          }
+        ],
+        "scf_convergence": [],
+        "scf_nonconvergence_lines": [
+          5866
+        ],
+        "dm_read_markers": [
+          {
+            "line": 4880,
+            "text": "Attempting to read DM from file... Succeeded...",
+            "succeeded": true
+          }
+        ],
+        "using_DM_out_lines": [
+          5869
+        ],
+        "end_of_run_lines": [
+          7330
+        ],
+        "job_completed": true,
+        "normal_exit_marker_exists": true,
+        "normal_exit_marker_text": "SIESTA completed, MPI exit: 0",
+        "events": [
+          {
+            "start_line": 4901,
+            "dftu_counter": 1,
+            "end_line": 5366,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "before first stepf (initial/reference-DM population block)"
+          },
+          {
+            "start_line": 5370,
+            "dftu_counter": 1,
+            "end_line": 5835,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "after first stepf and before scf: 1 (first-diagonalization response candidate)"
+          },
+          {
+            "start_line": 5871,
+            "dftu_counter": 1,
+            "end_line": 6336,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "post-one-step nonconverged BARE energy/force population block"
+          }
+        ],
+        "postconvergence_population_event_index_1based": null,
+        "first_diagonalization_event_index_1based": 2,
+        "bare_selection_event_index_1based": 2,
+        "all_population_events_complete_for_16_sites": true
+      },
+      "parent_DM_evidence": {
+        "reference_file_sha256": "65d418d1a21b4b4052d41d68554639fc4bc4682566bb780c0d072fd4cfe5eb47",
+        "receipt_parent_dm_sha256": "65d418d1a21b4b4052d41d68554639fc4bc4682566bb780c0d072fd4cfe5eb47",
+        "receipt_matches_reference": true,
+        "output_says_DM_read_succeeded": true,
+        "pre_run_staged_DM_snapshot_retained_separately": false,
+        "post_run_DM_sha256": "3152b27fce71e58a7e82478c602e927b15a08d0d48ae6d17b1c7f5e08418a91d"
+      },
+      "receipt_binding": {
+        "response_receipt_output_sha256": "7e9ccce22cb9854f9751ee5b41651dca6bce6c9f75d2ee94a24409fa79fb83c2",
+        "matches_raw_output": true,
+        "role": "A",
+        "target": "MnLR00",
+        "alpha_eV": -0.025,
+        "parent_DM_equals_reference_DM": true
+      }
+    },
+    {
+      "run_id": "A_BARE_m0d050",
+      "mode": "BARE",
+      "target_from_receipt": "MnLR00",
+      "alpha_eV_from_receipt": -0.05,
+      "input_fdf": {
+        "path": "A_BARE_m0d050\\siesta.fdf",
+        "sha256": "15368835934013606285150846582b82e9fe1deaa041ffb3655ec5329caf8370",
+        "settings": {
+          "SystemLabel": "A_BARE_m0d050",
+          "DFTU.PotentialShift": "true",
+          "DFTU.FirstIteration": "true",
+          "DFTU.ProjectorGenerationMethod": "2",
+          "DFTU.CutoffNorm": "0.90",
+          "SCF.Mix": "Hamiltonian",
+          "SCF.Mixer.Method": "Pulay",
+          "SCF.Mixer.Weight": "0.05",
+          "SCF.MustConverge": "F",
+          "SCF.DM.Converge": null,
+          "SCF.H.Converge": null,
+          "SCF.DM.Tolerance": null,
+          "SCF.H.Tolerance": null,
+          "MaxSCFIterations": "1",
+          "DM.UseSaveDM": "true"
+        },
+        "projector_count": 16,
+        "projector_signature_unique": [
+          [
+            3,
+            2,
+            0.0,
+            0.05
+          ]
+        ],
+        "nonzero_UJ_entries": [
+          {
+            "site": "MnLR00",
+            "n": 3,
+            "l": 2,
+            "U_eV": -0.05,
+            "J_eV": 0.0,
+            "rc_input_bohr": 0.0,
+            "omega_bohr": 0.05
+          }
+        ],
+        "matches_mode_contract": true
+      },
+      "native_output": {
+        "path": "A_BARE_m0d050\\siesta.out",
+        "sha256": "1456799dc9fe0bbc54123c550d07113c1ded43d2e89c3ad09c2f938732dec18e",
+        "version": "5.4.2",
+        "executable": "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta",
+        "architecture": "x86_64",
+        "compiler": "GNU-13.3.0",
+        "redata_hamiltonian_mixing_lines": [
+          4759
+        ],
+        "dftu_hamiltonian_recalculation_lines": [
+          5367,
+          5836,
+          6337
+        ],
+        "stepf_lines": [
+          5369
+        ],
+        "scf_iteration_summaries": [
+          {
+            "line": 5863,
+            "iteration": 1
+          }
+        ],
+        "scf_convergence": [],
+        "scf_nonconvergence_lines": [
+          5866
+        ],
+        "dm_read_markers": [
+          {
+            "line": 4880,
+            "text": "Attempting to read DM from file... Succeeded...",
+            "succeeded": true
+          }
+        ],
+        "using_DM_out_lines": [
+          5869
+        ],
+        "end_of_run_lines": [
+          7330
+        ],
+        "job_completed": true,
+        "normal_exit_marker_exists": true,
+        "normal_exit_marker_text": "SIESTA completed, MPI exit: 0",
+        "events": [
+          {
+            "start_line": 4901,
+            "dftu_counter": 1,
+            "end_line": 5366,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "before first stepf (initial/reference-DM population block)"
+          },
+          {
+            "start_line": 5370,
+            "dftu_counter": 1,
+            "end_line": 5835,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "after first stepf and before scf: 1 (first-diagonalization response candidate)"
+          },
+          {
+            "start_line": 5871,
+            "dftu_counter": 1,
+            "end_line": 6336,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "post-one-step nonconverged BARE energy/force population block"
+          }
+        ],
+        "postconvergence_population_event_index_1based": null,
+        "first_diagonalization_event_index_1based": 2,
+        "bare_selection_event_index_1based": 2,
+        "all_population_events_complete_for_16_sites": true
+      },
+      "parent_DM_evidence": {
+        "reference_file_sha256": "65d418d1a21b4b4052d41d68554639fc4bc4682566bb780c0d072fd4cfe5eb47",
+        "receipt_parent_dm_sha256": "65d418d1a21b4b4052d41d68554639fc4bc4682566bb780c0d072fd4cfe5eb47",
+        "receipt_matches_reference": true,
+        "output_says_DM_read_succeeded": true,
+        "pre_run_staged_DM_snapshot_retained_separately": false,
+        "post_run_DM_sha256": "df77a705cb5ddae9a6a2827e8e334f190f0632afe80594b145fcad0fce8408c4"
+      },
+      "receipt_binding": {
+        "response_receipt_output_sha256": "1456799dc9fe0bbc54123c550d07113c1ded43d2e89c3ad09c2f938732dec18e",
+        "matches_raw_output": true,
+        "role": "A",
+        "target": "MnLR00",
+        "alpha_eV": -0.05,
+        "parent_DM_equals_reference_DM": true
+      }
+    },
+    {
+      "run_id": "A_BARE_m0d100",
+      "mode": "BARE",
+      "target_from_receipt": "MnLR00",
+      "alpha_eV_from_receipt": -0.1,
+      "input_fdf": {
+        "path": "A_BARE_m0d100\\siesta.fdf",
+        "sha256": "ee92d32e788f209f05f9ae1930370287a3dc272b83e860c3e0b75a8bfc7a7144",
+        "settings": {
+          "SystemLabel": "A_BARE_m0d100",
+          "DFTU.PotentialShift": "true",
+          "DFTU.FirstIteration": "true",
+          "DFTU.ProjectorGenerationMethod": "2",
+          "DFTU.CutoffNorm": "0.90",
+          "SCF.Mix": "Hamiltonian",
+          "SCF.Mixer.Method": "Pulay",
+          "SCF.Mixer.Weight": "0.05",
+          "SCF.MustConverge": "F",
+          "SCF.DM.Converge": null,
+          "SCF.H.Converge": null,
+          "SCF.DM.Tolerance": null,
+          "SCF.H.Tolerance": null,
+          "MaxSCFIterations": "1",
+          "DM.UseSaveDM": "true"
+        },
+        "projector_count": 16,
+        "projector_signature_unique": [
+          [
+            3,
+            2,
+            0.0,
+            0.05
+          ]
+        ],
+        "nonzero_UJ_entries": [
+          {
+            "site": "MnLR00",
+            "n": 3,
+            "l": 2,
+            "U_eV": -0.1,
+            "J_eV": 0.0,
+            "rc_input_bohr": 0.0,
+            "omega_bohr": 0.05
+          }
+        ],
+        "matches_mode_contract": true
+      },
+      "native_output": {
+        "path": "A_BARE_m0d100\\siesta.out",
+        "sha256": "9b54e7038033ac3056f7749a29124ae8da62006f2218aa75c8dd195f74c59ed8",
+        "version": "5.4.2",
+        "executable": "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta",
+        "architecture": "x86_64",
+        "compiler": "GNU-13.3.0",
+        "redata_hamiltonian_mixing_lines": [
+          4759
+        ],
+        "dftu_hamiltonian_recalculation_lines": [
+          5367,
+          5836,
+          6337
+        ],
+        "stepf_lines": [
+          5369
+        ],
+        "scf_iteration_summaries": [
+          {
+            "line": 5863,
+            "iteration": 1
+          }
+        ],
+        "scf_convergence": [],
+        "scf_nonconvergence_lines": [
+          5866
+        ],
+        "dm_read_markers": [
+          {
+            "line": 4880,
+            "text": "Attempting to read DM from file... Succeeded...",
+            "succeeded": true
+          }
+        ],
+        "using_DM_out_lines": [
+          5869
+        ],
+        "end_of_run_lines": [
+          7330
+        ],
+        "job_completed": true,
+        "normal_exit_marker_exists": true,
+        "normal_exit_marker_text": "SIESTA completed, MPI exit: 0",
+        "events": [
+          {
+            "start_line": 4901,
+            "dftu_counter": 1,
+            "end_line": 5366,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "before first stepf (initial/reference-DM population block)"
+          },
+          {
+            "start_line": 5370,
+            "dftu_counter": 1,
+            "end_line": 5835,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "after first stepf and before scf: 1 (first-diagonalization response candidate)"
+          },
+          {
+            "start_line": 5871,
+            "dftu_counter": 1,
+            "end_line": 6336,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "post-one-step nonconverged BARE energy/force population block"
+          }
+        ],
+        "postconvergence_population_event_index_1based": null,
+        "first_diagonalization_event_index_1based": 2,
+        "bare_selection_event_index_1based": 2,
+        "all_population_events_complete_for_16_sites": true
+      },
+      "parent_DM_evidence": {
+        "reference_file_sha256": "65d418d1a21b4b4052d41d68554639fc4bc4682566bb780c0d072fd4cfe5eb47",
+        "receipt_parent_dm_sha256": "65d418d1a21b4b4052d41d68554639fc4bc4682566bb780c0d072fd4cfe5eb47",
+        "receipt_matches_reference": true,
+        "output_says_DM_read_succeeded": true,
+        "pre_run_staged_DM_snapshot_retained_separately": false,
+        "post_run_DM_sha256": "518298f099382078731cb3e6cfcef5e522c917e812ca8562177fb42daeb108aa"
+      },
+      "receipt_binding": {
+        "response_receipt_output_sha256": "9b54e7038033ac3056f7749a29124ae8da62006f2218aa75c8dd195f74c59ed8",
+        "matches_raw_output": true,
+        "role": "A",
+        "target": "MnLR00",
+        "alpha_eV": -0.1,
+        "parent_DM_equals_reference_DM": true
+      }
+    },
+    {
+      "run_id": "A_BARE_p0d000",
+      "mode": "BARE",
+      "target_from_receipt": "MnLR00",
+      "alpha_eV_from_receipt": 0.0,
+      "input_fdf": {
+        "path": "A_BARE_p0d000\\siesta.fdf",
+        "sha256": "414fb71edef1dd0cdba20ec551a90feaa2d31900da359cecf57f6842cf176cb6",
+        "settings": {
+          "SystemLabel": "A_BARE_p0d000",
+          "DFTU.PotentialShift": "true",
+          "DFTU.FirstIteration": "true",
+          "DFTU.ProjectorGenerationMethod": "2",
+          "DFTU.CutoffNorm": "0.90",
+          "SCF.Mix": "Hamiltonian",
+          "SCF.Mixer.Method": "Pulay",
+          "SCF.Mixer.Weight": "0.05",
+          "SCF.MustConverge": "F",
+          "SCF.DM.Converge": null,
+          "SCF.H.Converge": null,
+          "SCF.DM.Tolerance": null,
+          "SCF.H.Tolerance": null,
+          "MaxSCFIterations": "1",
+          "DM.UseSaveDM": "true"
+        },
+        "projector_count": 16,
+        "projector_signature_unique": [
+          [
+            3,
+            2,
+            0.0,
+            0.05
+          ]
+        ],
+        "nonzero_UJ_entries": [],
+        "matches_mode_contract": true
+      },
+      "native_output": {
+        "path": "A_BARE_p0d000\\siesta.out",
+        "sha256": "bd41c498a1adf992b99d59a194732f389622c79206d719266a9ccf71685d6048",
+        "version": "5.4.2",
+        "executable": "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta",
+        "architecture": "x86_64",
+        "compiler": "GNU-13.3.0",
+        "redata_hamiltonian_mixing_lines": [
+          4759
+        ],
+        "dftu_hamiltonian_recalculation_lines": [
+          5367,
+          5836,
+          6342
+        ],
+        "stepf_lines": [
+          5369
+        ],
+        "scf_iteration_summaries": [
+          {
+            "line": 5863,
+            "iteration": 1
+          }
+        ],
+        "scf_convergence": [
+          {
+            "line": 5871,
+            "text": "SCF cycle converged after 1 iterations",
+            "iterations": 1
+          }
+        ],
+        "scf_nonconvergence_lines": [],
+        "dm_read_markers": [
+          {
+            "line": 4880,
+            "text": "Attempting to read DM from file... Succeeded...",
+            "succeeded": true
+          }
+        ],
+        "using_DM_out_lines": [
+          5874
+        ],
+        "end_of_run_lines": [
+          7335
+        ],
+        "job_completed": true,
+        "normal_exit_marker_exists": true,
+        "normal_exit_marker_text": "SIESTA completed, MPI exit: 0",
+        "events": [
+          {
+            "start_line": 4901,
+            "dftu_counter": 1,
+            "end_line": 5366,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "before first stepf (initial/reference-DM population block)"
+          },
+          {
+            "start_line": 5370,
+            "dftu_counter": 1,
+            "end_line": 5835,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "after first stepf and before scf: 1 (first-diagonalization response candidate)"
+          },
+          {
+            "start_line": 5876,
+            "dftu_counter": 1,
+            "end_line": 6341,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "post-convergence population block"
+          }
+        ],
+        "postconvergence_population_event_index_1based": 3,
+        "first_diagonalization_event_index_1based": 2,
+        "bare_selection_event_index_1based": 2,
+        "all_population_events_complete_for_16_sites": true
+      },
+      "parent_DM_evidence": {
+        "reference_file_sha256": "65d418d1a21b4b4052d41d68554639fc4bc4682566bb780c0d072fd4cfe5eb47",
+        "receipt_parent_dm_sha256": "65d418d1a21b4b4052d41d68554639fc4bc4682566bb780c0d072fd4cfe5eb47",
+        "receipt_matches_reference": true,
+        "output_says_DM_read_succeeded": true,
+        "pre_run_staged_DM_snapshot_retained_separately": false,
+        "post_run_DM_sha256": "65d418d1a21b4b4052d41d68554639fc4bc4682566bb780c0d072fd4cfe5eb47"
+      },
+      "receipt_binding": {
+        "response_receipt_output_sha256": "bd41c498a1adf992b99d59a194732f389622c79206d719266a9ccf71685d6048",
+        "matches_raw_output": true,
+        "role": "A",
+        "target": "MnLR00",
+        "alpha_eV": 0.0,
+        "parent_DM_equals_reference_DM": true
+      }
+    },
+    {
+      "run_id": "A_BARE_p0d025",
+      "mode": "BARE",
+      "target_from_receipt": "MnLR00",
+      "alpha_eV_from_receipt": 0.025,
+      "input_fdf": {
+        "path": "A_BARE_p0d025\\siesta.fdf",
+        "sha256": "321c2ac5a296479ba17739ce5b9b6f19af51540a4f1f38ee94775bf8e679e493",
+        "settings": {
+          "SystemLabel": "A_BARE_p0d025",
+          "DFTU.PotentialShift": "true",
+          "DFTU.FirstIteration": "true",
+          "DFTU.ProjectorGenerationMethod": "2",
+          "DFTU.CutoffNorm": "0.90",
+          "SCF.Mix": "Hamiltonian",
+          "SCF.Mixer.Method": "Pulay",
+          "SCF.Mixer.Weight": "0.05",
+          "SCF.MustConverge": "F",
+          "SCF.DM.Converge": null,
+          "SCF.H.Converge": null,
+          "SCF.DM.Tolerance": null,
+          "SCF.H.Tolerance": null,
+          "MaxSCFIterations": "1",
+          "DM.UseSaveDM": "true"
+        },
+        "projector_count": 16,
+        "projector_signature_unique": [
+          [
+            3,
+            2,
+            0.0,
+            0.05
+          ]
+        ],
+        "nonzero_UJ_entries": [
+          {
+            "site": "MnLR00",
+            "n": 3,
+            "l": 2,
+            "U_eV": 0.025,
+            "J_eV": 0.0,
+            "rc_input_bohr": 0.0,
+            "omega_bohr": 0.05
+          }
+        ],
+        "matches_mode_contract": true
+      },
+      "native_output": {
+        "path": "A_BARE_p0d025\\siesta.out",
+        "sha256": "f468d487b33581140ea4b037cbcd31e97e75a5dfde17a44f4fb6cf0509b30c32",
+        "version": "5.4.2",
+        "executable": "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta",
+        "architecture": "x86_64",
+        "compiler": "GNU-13.3.0",
+        "redata_hamiltonian_mixing_lines": [
+          4759
+        ],
+        "dftu_hamiltonian_recalculation_lines": [
+          5367,
+          5836,
+          6337
+        ],
+        "stepf_lines": [
+          5369
+        ],
+        "scf_iteration_summaries": [
+          {
+            "line": 5863,
+            "iteration": 1
+          }
+        ],
+        "scf_convergence": [],
+        "scf_nonconvergence_lines": [
+          5866
+        ],
+        "dm_read_markers": [
+          {
+            "line": 4880,
+            "text": "Attempting to read DM from file... Succeeded...",
+            "succeeded": true
+          }
+        ],
+        "using_DM_out_lines": [
+          5869
+        ],
+        "end_of_run_lines": [
+          7330
+        ],
+        "job_completed": true,
+        "normal_exit_marker_exists": true,
+        "normal_exit_marker_text": "SIESTA completed, MPI exit: 0",
+        "events": [
+          {
+            "start_line": 4901,
+            "dftu_counter": 1,
+            "end_line": 5366,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "before first stepf (initial/reference-DM population block)"
+          },
+          {
+            "start_line": 5370,
+            "dftu_counter": 1,
+            "end_line": 5835,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "after first stepf and before scf: 1 (first-diagonalization response candidate)"
+          },
+          {
+            "start_line": 5871,
+            "dftu_counter": 1,
+            "end_line": 6336,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "post-one-step nonconverged BARE energy/force population block"
+          }
+        ],
+        "postconvergence_population_event_index_1based": null,
+        "first_diagonalization_event_index_1based": 2,
+        "bare_selection_event_index_1based": 2,
+        "all_population_events_complete_for_16_sites": true
+      },
+      "parent_DM_evidence": {
+        "reference_file_sha256": "65d418d1a21b4b4052d41d68554639fc4bc4682566bb780c0d072fd4cfe5eb47",
+        "receipt_parent_dm_sha256": "65d418d1a21b4b4052d41d68554639fc4bc4682566bb780c0d072fd4cfe5eb47",
+        "receipt_matches_reference": true,
+        "output_says_DM_read_succeeded": true,
+        "pre_run_staged_DM_snapshot_retained_separately": false,
+        "post_run_DM_sha256": "cc191bb405c0b5cfa1c51c1b3c6aa8d26b5a3289a668fb50057dc880dd904e10"
+      },
+      "receipt_binding": {
+        "response_receipt_output_sha256": "f468d487b33581140ea4b037cbcd31e97e75a5dfde17a44f4fb6cf0509b30c32",
+        "matches_raw_output": true,
+        "role": "A",
+        "target": "MnLR00",
+        "alpha_eV": 0.025,
+        "parent_DM_equals_reference_DM": true
+      }
+    },
+    {
+      "run_id": "A_BARE_p0d050",
+      "mode": "BARE",
+      "target_from_receipt": "MnLR00",
+      "alpha_eV_from_receipt": 0.05,
+      "input_fdf": {
+        "path": "A_BARE_p0d050\\siesta.fdf",
+        "sha256": "a54eaf13a6388d7b02d3ee8afd13f60d438ccaed638b15a353cc8292a931c749",
+        "settings": {
+          "SystemLabel": "A_BARE_p0d050",
+          "DFTU.PotentialShift": "true",
+          "DFTU.FirstIteration": "true",
+          "DFTU.ProjectorGenerationMethod": "2",
+          "DFTU.CutoffNorm": "0.90",
+          "SCF.Mix": "Hamiltonian",
+          "SCF.Mixer.Method": "Pulay",
+          "SCF.Mixer.Weight": "0.05",
+          "SCF.MustConverge": "F",
+          "SCF.DM.Converge": null,
+          "SCF.H.Converge": null,
+          "SCF.DM.Tolerance": null,
+          "SCF.H.Tolerance": null,
+          "MaxSCFIterations": "1",
+          "DM.UseSaveDM": "true"
+        },
+        "projector_count": 16,
+        "projector_signature_unique": [
+          [
+            3,
+            2,
+            0.0,
+            0.05
+          ]
+        ],
+        "nonzero_UJ_entries": [
+          {
+            "site": "MnLR00",
+            "n": 3,
+            "l": 2,
+            "U_eV": 0.05,
+            "J_eV": 0.0,
+            "rc_input_bohr": 0.0,
+            "omega_bohr": 0.05
+          }
+        ],
+        "matches_mode_contract": true
+      },
+      "native_output": {
+        "path": "A_BARE_p0d050\\siesta.out",
+        "sha256": "06273d9b645116c74c7a8e4941c5984d04c61b14d5435eb829075dfd264e038b",
+        "version": "5.4.2",
+        "executable": "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta",
+        "architecture": "x86_64",
+        "compiler": "GNU-13.3.0",
+        "redata_hamiltonian_mixing_lines": [
+          4759
+        ],
+        "dftu_hamiltonian_recalculation_lines": [
+          5367,
+          5836,
+          6337
+        ],
+        "stepf_lines": [
+          5369
+        ],
+        "scf_iteration_summaries": [
+          {
+            "line": 5863,
+            "iteration": 1
+          }
+        ],
+        "scf_convergence": [],
+        "scf_nonconvergence_lines": [
+          5866
+        ],
+        "dm_read_markers": [
+          {
+            "line": 4880,
+            "text": "Attempting to read DM from file... Succeeded...",
+            "succeeded": true
+          }
+        ],
+        "using_DM_out_lines": [
+          5869
+        ],
+        "end_of_run_lines": [
+          7330
+        ],
+        "job_completed": true,
+        "normal_exit_marker_exists": true,
+        "normal_exit_marker_text": "SIESTA completed, MPI exit: 0",
+        "events": [
+          {
+            "start_line": 4901,
+            "dftu_counter": 1,
+            "end_line": 5366,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "before first stepf (initial/reference-DM population block)"
+          },
+          {
+            "start_line": 5370,
+            "dftu_counter": 1,
+            "end_line": 5835,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "after first stepf and before scf: 1 (first-diagonalization response candidate)"
+          },
+          {
+            "start_line": 5871,
+            "dftu_counter": 1,
+            "end_line": 6336,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "post-one-step nonconverged BARE energy/force population block"
+          }
+        ],
+        "postconvergence_population_event_index_1based": null,
+        "first_diagonalization_event_index_1based": 2,
+        "bare_selection_event_index_1based": 2,
+        "all_population_events_complete_for_16_sites": true
+      },
+      "parent_DM_evidence": {
+        "reference_file_sha256": "65d418d1a21b4b4052d41d68554639fc4bc4682566bb780c0d072fd4cfe5eb47",
+        "receipt_parent_dm_sha256": "65d418d1a21b4b4052d41d68554639fc4bc4682566bb780c0d072fd4cfe5eb47",
+        "receipt_matches_reference": true,
+        "output_says_DM_read_succeeded": true,
+        "pre_run_staged_DM_snapshot_retained_separately": false,
+        "post_run_DM_sha256": "fccc16f599af85d691e496ff68e884ac2e3b4a8345139e0f43e8a7a302d085af"
+      },
+      "receipt_binding": {
+        "response_receipt_output_sha256": "06273d9b645116c74c7a8e4941c5984d04c61b14d5435eb829075dfd264e038b",
+        "matches_raw_output": true,
+        "role": "A",
+        "target": "MnLR00",
+        "alpha_eV": 0.05,
+        "parent_DM_equals_reference_DM": true
+      }
+    },
+    {
+      "run_id": "A_BARE_p0d100",
+      "mode": "BARE",
+      "target_from_receipt": "MnLR00",
+      "alpha_eV_from_receipt": 0.1,
+      "input_fdf": {
+        "path": "A_BARE_p0d100\\siesta.fdf",
+        "sha256": "19d47409c048f0089b507263c3958f3901fca8a993d0b5b24bb717a287e762f4",
+        "settings": {
+          "SystemLabel": "A_BARE_p0d100",
+          "DFTU.PotentialShift": "true",
+          "DFTU.FirstIteration": "true",
+          "DFTU.ProjectorGenerationMethod": "2",
+          "DFTU.CutoffNorm": "0.90",
+          "SCF.Mix": "Hamiltonian",
+          "SCF.Mixer.Method": "Pulay",
+          "SCF.Mixer.Weight": "0.05",
+          "SCF.MustConverge": "F",
+          "SCF.DM.Converge": null,
+          "SCF.H.Converge": null,
+          "SCF.DM.Tolerance": null,
+          "SCF.H.Tolerance": null,
+          "MaxSCFIterations": "1",
+          "DM.UseSaveDM": "true"
+        },
+        "projector_count": 16,
+        "projector_signature_unique": [
+          [
+            3,
+            2,
+            0.0,
+            0.05
+          ]
+        ],
+        "nonzero_UJ_entries": [
+          {
+            "site": "MnLR00",
+            "n": 3,
+            "l": 2,
+            "U_eV": 0.1,
+            "J_eV": 0.0,
+            "rc_input_bohr": 0.0,
+            "omega_bohr": 0.05
+          }
+        ],
+        "matches_mode_contract": true
+      },
+      "native_output": {
+        "path": "A_BARE_p0d100\\siesta.out",
+        "sha256": "7c22245a868167002fe424a0027969afc163f727f240f7816087249b946687e5",
+        "version": "5.4.2",
+        "executable": "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta",
+        "architecture": "x86_64",
+        "compiler": "GNU-13.3.0",
+        "redata_hamiltonian_mixing_lines": [
+          4759
+        ],
+        "dftu_hamiltonian_recalculation_lines": [
+          5367,
+          5836,
+          6337
+        ],
+        "stepf_lines": [
+          5369
+        ],
+        "scf_iteration_summaries": [
+          {
+            "line": 5863,
+            "iteration": 1
+          }
+        ],
+        "scf_convergence": [],
+        "scf_nonconvergence_lines": [
+          5866
+        ],
+        "dm_read_markers": [
+          {
+            "line": 4880,
+            "text": "Attempting to read DM from file... Succeeded...",
+            "succeeded": true
+          }
+        ],
+        "using_DM_out_lines": [
+          5869
+        ],
+        "end_of_run_lines": [
+          7330
+        ],
+        "job_completed": true,
+        "normal_exit_marker_exists": true,
+        "normal_exit_marker_text": "SIESTA completed, MPI exit: 0",
+        "events": [
+          {
+            "start_line": 4901,
+            "dftu_counter": 1,
+            "end_line": 5366,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "before first stepf (initial/reference-DM population block)"
+          },
+          {
+            "start_line": 5370,
+            "dftu_counter": 1,
+            "end_line": 5835,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "after first stepf and before scf: 1 (first-diagonalization response candidate)"
+          },
+          {
+            "start_line": 5871,
+            "dftu_counter": 1,
+            "end_line": 6336,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "post-one-step nonconverged BARE energy/force population block"
+          }
+        ],
+        "postconvergence_population_event_index_1based": null,
+        "first_diagonalization_event_index_1based": 2,
+        "bare_selection_event_index_1based": 2,
+        "all_population_events_complete_for_16_sites": true
+      },
+      "parent_DM_evidence": {
+        "reference_file_sha256": "65d418d1a21b4b4052d41d68554639fc4bc4682566bb780c0d072fd4cfe5eb47",
+        "receipt_parent_dm_sha256": "65d418d1a21b4b4052d41d68554639fc4bc4682566bb780c0d072fd4cfe5eb47",
+        "receipt_matches_reference": true,
+        "output_says_DM_read_succeeded": true,
+        "pre_run_staged_DM_snapshot_retained_separately": false,
+        "post_run_DM_sha256": "3ee0557e72d73b6435a4e7babfeb807ffc1c9acca9e94cba58e2777320707c62"
+      },
+      "receipt_binding": {
+        "response_receipt_output_sha256": "7c22245a868167002fe424a0027969afc163f727f240f7816087249b946687e5",
+        "matches_raw_output": true,
+        "role": "A",
+        "target": "MnLR00",
+        "alpha_eV": 0.1,
+        "parent_DM_equals_reference_DM": true
+      }
+    },
+    {
+      "run_id": "A_SCREENED_m0d025",
+      "mode": "SCREENED",
+      "target_from_receipt": "MnLR00",
+      "alpha_eV_from_receipt": -0.025,
+      "input_fdf": {
+        "path": "A_SCREENED_m0d025\\siesta.fdf",
+        "sha256": "f826fe3aa42eec4df0302dac62b0c4c61609214c356bdb34bba9e031532d12b7",
+        "settings": {
+          "SystemLabel": "A_SCREENED_m0d025",
+          "DFTU.PotentialShift": "true",
+          "DFTU.FirstIteration": "true",
+          "DFTU.ProjectorGenerationMethod": "2",
+          "DFTU.CutoffNorm": "0.90",
+          "SCF.Mix": "Hamiltonian",
+          "SCF.Mixer.Method": "Pulay",
+          "SCF.Mixer.Weight": "0.05",
+          "SCF.MustConverge": "T",
+          "SCF.DM.Converge": "T",
+          "SCF.H.Converge": "T",
+          "SCF.DM.Tolerance": "1.0e-5",
+          "SCF.H.Tolerance": "1.0e-4 eV",
+          "MaxSCFIterations": "300",
+          "DM.UseSaveDM": "true"
+        },
+        "projector_count": 16,
+        "projector_signature_unique": [
+          [
+            3,
+            2,
+            0.0,
+            0.05
+          ]
+        ],
+        "nonzero_UJ_entries": [
+          {
+            "site": "MnLR00",
+            "n": 3,
+            "l": 2,
+            "U_eV": -0.025,
+            "J_eV": 0.0,
+            "rc_input_bohr": 0.0,
+            "omega_bohr": 0.05
+          }
+        ],
+        "matches_mode_contract": true
+      },
+      "native_output": {
+        "path": "A_SCREENED_m0d025\\siesta.out",
+        "sha256": "ab64d98d4d6d27b8f2feb56b3ad82cfbbe8ccc4b6507c2dde6bbb05f1abb4cf6",
+        "version": "5.4.2",
+        "executable": "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta",
+        "architecture": "x86_64",
+        "compiler": "GNU-13.3.0",
+        "redata_hamiltonian_mixing_lines": [
+          4764
+        ],
+        "dftu_hamiltonian_recalculation_lines": [
+          5372,
+          5841,
+          10091
+        ],
+        "stepf_lines": [
+          5374
+        ],
+        "scf_iteration_summaries": [
+          {
+            "line": 5868,
+            "iteration": 1
+          },
+          {
+            "line": 6337,
+            "iteration": 2
+          },
+          {
+            "line": 6805,
+            "iteration": 3
+          },
+          {
+            "line": 7273,
+            "iteration": 4
+          },
+          {
+            "line": 7741,
+            "iteration": 5
+          },
+          {
+            "line": 8209,
+            "iteration": 6
+          },
+          {
+            "line": 8677,
+            "iteration": 7
+          },
+          {
+            "line": 9145,
+            "iteration": 8
+          },
+          {
+            "line": 9613,
+            "iteration": 9
+          }
+        ],
+        "scf_convergence": [
+          {
+            "line": 9621,
+            "text": "SCF cycle converged after 9 iterations",
+            "iterations": 9
+          }
+        ],
+        "scf_nonconvergence_lines": [],
+        "dm_read_markers": [
+          {
+            "line": 4885,
+            "text": "Attempting to read DM from file... Succeeded...",
+            "succeeded": true
+          }
+        ],
+        "using_DM_out_lines": [
+          9623
+        ],
+        "end_of_run_lines": [
+          11084
+        ],
+        "job_completed": true,
+        "normal_exit_marker_exists": true,
+        "normal_exit_marker_text": "SIESTA completed, MPI exit: 0",
+        "events": [
+          {
+            "start_line": 4906,
+            "dftu_counter": 1,
+            "end_line": 5371,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "before first stepf (initial/reference-DM population block)"
+          },
+          {
+            "start_line": 5375,
+            "dftu_counter": 1,
+            "end_line": 5840,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "after first stepf and before scf: 1 (first-diagonalization response candidate)"
+          },
+          {
+            "start_line": 5871,
+            "dftu_counter": 2,
+            "end_line": 6336,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 6339,
+            "dftu_counter": 3,
+            "end_line": 6804,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 6807,
+            "dftu_counter": 4,
+            "end_line": 7272,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 7275,
+            "dftu_counter": 5,
+            "end_line": 7740,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 7743,
+            "dftu_counter": 6,
+            "end_line": 8208,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 8211,
+            "dftu_counter": 7,
+            "end_line": 8676,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 8679,
+            "dftu_counter": 8,
+            "end_line": 9144,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 9147,
+            "dftu_counter": 9,
+            "end_line": 9612,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 9625,
+            "dftu_counter": 10,
+            "end_line": 10090,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "post-convergence population block"
+          }
+        ],
+        "postconvergence_population_event_index_1based": 11,
+        "first_diagonalization_event_index_1based": 2,
+        "bare_selection_event_index_1based": null,
+        "all_population_events_complete_for_16_sites": true
+      },
+      "parent_DM_evidence": {
+        "reference_file_sha256": "65d418d1a21b4b4052d41d68554639fc4bc4682566bb780c0d072fd4cfe5eb47",
+        "receipt_parent_dm_sha256": "65d418d1a21b4b4052d41d68554639fc4bc4682566bb780c0d072fd4cfe5eb47",
+        "receipt_matches_reference": true,
+        "output_says_DM_read_succeeded": true,
+        "pre_run_staged_DM_snapshot_retained_separately": false,
+        "post_run_DM_sha256": "c204ee6204f2f7a5d697131d84e5a5ad0b6dcbd04949ab33cfd7bf7dfc41af7c"
+      },
+      "receipt_binding": {
+        "response_receipt_output_sha256": "ab64d98d4d6d27b8f2feb56b3ad82cfbbe8ccc4b6507c2dde6bbb05f1abb4cf6",
+        "matches_raw_output": true,
+        "role": "A",
+        "target": "MnLR00",
+        "alpha_eV": -0.025,
+        "parent_DM_equals_reference_DM": true
+      }
+    },
+    {
+      "run_id": "A_SCREENED_m0d050",
+      "mode": "SCREENED",
+      "target_from_receipt": "MnLR00",
+      "alpha_eV_from_receipt": -0.05,
+      "input_fdf": {
+        "path": "A_SCREENED_m0d050\\siesta.fdf",
+        "sha256": "675160b61c512016ad7d005ca88dae5bbb4391fa18d152824ebb11db9fb79319",
+        "settings": {
+          "SystemLabel": "A_SCREENED_m0d050",
+          "DFTU.PotentialShift": "true",
+          "DFTU.FirstIteration": "true",
+          "DFTU.ProjectorGenerationMethod": "2",
+          "DFTU.CutoffNorm": "0.90",
+          "SCF.Mix": "Hamiltonian",
+          "SCF.Mixer.Method": "Pulay",
+          "SCF.Mixer.Weight": "0.05",
+          "SCF.MustConverge": "T",
+          "SCF.DM.Converge": "T",
+          "SCF.H.Converge": "T",
+          "SCF.DM.Tolerance": "1.0e-5",
+          "SCF.H.Tolerance": "1.0e-4 eV",
+          "MaxSCFIterations": "300",
+          "DM.UseSaveDM": "true"
+        },
+        "projector_count": 16,
+        "projector_signature_unique": [
+          [
+            3,
+            2,
+            0.0,
+            0.05
+          ]
+        ],
+        "nonzero_UJ_entries": [
+          {
+            "site": "MnLR00",
+            "n": 3,
+            "l": 2,
+            "U_eV": -0.05,
+            "J_eV": 0.0,
+            "rc_input_bohr": 0.0,
+            "omega_bohr": 0.05
+          }
+        ],
+        "matches_mode_contract": true
+      },
+      "native_output": {
+        "path": "A_SCREENED_m0d050\\siesta.out",
+        "sha256": "f69501b312f87e17beb4fae453e87fc8ae3675f743cb4570a363d4870c2d6cc4",
+        "version": "5.4.2",
+        "executable": "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta",
+        "architecture": "x86_64",
+        "compiler": "GNU-13.3.0",
+        "redata_hamiltonian_mixing_lines": [
+          4764
+        ],
+        "dftu_hamiltonian_recalculation_lines": [
+          5372,
+          5841,
+          11495
+        ],
+        "stepf_lines": [
+          5374
+        ],
+        "scf_iteration_summaries": [
+          {
+            "line": 5868,
+            "iteration": 1
+          },
+          {
+            "line": 6337,
+            "iteration": 2
+          },
+          {
+            "line": 6805,
+            "iteration": 3
+          },
+          {
+            "line": 7273,
+            "iteration": 4
+          },
+          {
+            "line": 7741,
+            "iteration": 5
+          },
+          {
+            "line": 8209,
+            "iteration": 6
+          },
+          {
+            "line": 8677,
+            "iteration": 7
+          },
+          {
+            "line": 9145,
+            "iteration": 8
+          },
+          {
+            "line": 9613,
+            "iteration": 9
+          },
+          {
+            "line": 10081,
+            "iteration": 10
+          },
+          {
+            "line": 10549,
+            "iteration": 11
+          },
+          {
+            "line": 11017,
+            "iteration": 12
+          }
+        ],
+        "scf_convergence": [
+          {
+            "line": 11025,
+            "text": "SCF cycle converged after 12 iterations",
+            "iterations": 12
+          }
+        ],
+        "scf_nonconvergence_lines": [],
+        "dm_read_markers": [
+          {
+            "line": 4885,
+            "text": "Attempting to read DM from file... Succeeded...",
+            "succeeded": true
+          }
+        ],
+        "using_DM_out_lines": [
+          11027
+        ],
+        "end_of_run_lines": [
+          12488
+        ],
+        "job_completed": true,
+        "normal_exit_marker_exists": true,
+        "normal_exit_marker_text": "SIESTA completed, MPI exit: 0",
+        "events": [
+          {
+            "start_line": 4906,
+            "dftu_counter": 1,
+            "end_line": 5371,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "before first stepf (initial/reference-DM population block)"
+          },
+          {
+            "start_line": 5375,
+            "dftu_counter": 1,
+            "end_line": 5840,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "after first stepf and before scf: 1 (first-diagonalization response candidate)"
+          },
+          {
+            "start_line": 5871,
+            "dftu_counter": 2,
+            "end_line": 6336,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 6339,
+            "dftu_counter": 3,
+            "end_line": 6804,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 6807,
+            "dftu_counter": 4,
+            "end_line": 7272,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 7275,
+            "dftu_counter": 5,
+            "end_line": 7740,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 7743,
+            "dftu_counter": 6,
+            "end_line": 8208,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 8211,
+            "dftu_counter": 7,
+            "end_line": 8676,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 8679,
+            "dftu_counter": 8,
+            "end_line": 9144,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 9147,
+            "dftu_counter": 9,
+            "end_line": 9612,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 9615,
+            "dftu_counter": 10,
+            "end_line": 10080,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 10083,
+            "dftu_counter": 11,
+            "end_line": 10548,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 10551,
+            "dftu_counter": 12,
+            "end_line": 11016,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 11029,
+            "dftu_counter": 13,
+            "end_line": 11494,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "post-convergence population block"
+          }
+        ],
+        "postconvergence_population_event_index_1based": 14,
+        "first_diagonalization_event_index_1based": 2,
+        "bare_selection_event_index_1based": null,
+        "all_population_events_complete_for_16_sites": true
+      },
+      "parent_DM_evidence": {
+        "reference_file_sha256": "65d418d1a21b4b4052d41d68554639fc4bc4682566bb780c0d072fd4cfe5eb47",
+        "receipt_parent_dm_sha256": "65d418d1a21b4b4052d41d68554639fc4bc4682566bb780c0d072fd4cfe5eb47",
+        "receipt_matches_reference": true,
+        "output_says_DM_read_succeeded": true,
+        "pre_run_staged_DM_snapshot_retained_separately": false,
+        "post_run_DM_sha256": "da2819f4ff0d1c075662822c4612028e611187282660a882a92f537394107322"
+      },
+      "receipt_binding": {
+        "response_receipt_output_sha256": "f69501b312f87e17beb4fae453e87fc8ae3675f743cb4570a363d4870c2d6cc4",
+        "matches_raw_output": true,
+        "role": "A",
+        "target": "MnLR00",
+        "alpha_eV": -0.05,
+        "parent_DM_equals_reference_DM": true
+      }
+    },
+    {
+      "run_id": "A_SCREENED_m0d100",
+      "mode": "SCREENED",
+      "target_from_receipt": "MnLR00",
+      "alpha_eV_from_receipt": -0.1,
+      "input_fdf": {
+        "path": "A_SCREENED_m0d100\\siesta.fdf",
+        "sha256": "26930cc1a9083ccc5b579239516e8cdce5142d457abb94f49adc0723237f78cb",
+        "settings": {
+          "SystemLabel": "A_SCREENED_m0d100",
+          "DFTU.PotentialShift": "true",
+          "DFTU.FirstIteration": "true",
+          "DFTU.ProjectorGenerationMethod": "2",
+          "DFTU.CutoffNorm": "0.90",
+          "SCF.Mix": "Hamiltonian",
+          "SCF.Mixer.Method": "Pulay",
+          "SCF.Mixer.Weight": "0.05",
+          "SCF.MustConverge": "T",
+          "SCF.DM.Converge": "T",
+          "SCF.H.Converge": "T",
+          "SCF.DM.Tolerance": "1.0e-5",
+          "SCF.H.Tolerance": "1.0e-4 eV",
+          "MaxSCFIterations": "300",
+          "DM.UseSaveDM": "true"
+        },
+        "projector_count": 16,
+        "projector_signature_unique": [
+          [
+            3,
+            2,
+            0.0,
+            0.05
+          ]
+        ],
+        "nonzero_UJ_entries": [
+          {
+            "site": "MnLR00",
+            "n": 3,
+            "l": 2,
+            "U_eV": -0.1,
+            "J_eV": 0.0,
+            "rc_input_bohr": 0.0,
+            "omega_bohr": 0.05
+          }
+        ],
+        "matches_mode_contract": true
+      },
+      "native_output": {
+        "path": "A_SCREENED_m0d100\\siesta.out",
+        "sha256": "b41a4fb7d582446a0e6be9fa6f1cc4639783f638bc797b8e0883ef1b739ced9d",
+        "version": "5.4.2",
+        "executable": "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta",
+        "architecture": "x86_64",
+        "compiler": "GNU-13.3.0",
+        "redata_hamiltonian_mixing_lines": [
+          4764
+        ],
+        "dftu_hamiltonian_recalculation_lines": [
+          5372,
+          5841,
+          6805,
+          11496
+        ],
+        "stepf_lines": [
+          5374
+        ],
+        "scf_iteration_summaries": [
+          {
+            "line": 5868,
+            "iteration": 1
+          },
+          {
+            "line": 6337,
+            "iteration": 2
+          },
+          {
+            "line": 6806,
+            "iteration": 3
+          },
+          {
+            "line": 7274,
+            "iteration": 4
+          },
+          {
+            "line": 7742,
+            "iteration": 5
+          },
+          {
+            "line": 8210,
+            "iteration": 6
+          },
+          {
+            "line": 8678,
+            "iteration": 7
+          },
+          {
+            "line": 9146,
+            "iteration": 8
+          },
+          {
+            "line": 9614,
+            "iteration": 9
+          },
+          {
+            "line": 10082,
+            "iteration": 10
+          },
+          {
+            "line": 10550,
+            "iteration": 11
+          },
+          {
+            "line": 11018,
+            "iteration": 12
+          }
+        ],
+        "scf_convergence": [
+          {
+            "line": 11026,
+            "text": "SCF cycle converged after 12 iterations",
+            "iterations": 12
+          }
+        ],
+        "scf_nonconvergence_lines": [],
+        "dm_read_markers": [
+          {
+            "line": 4885,
+            "text": "Attempting to read DM from file... Succeeded...",
+            "succeeded": true
+          }
+        ],
+        "using_DM_out_lines": [
+          11028
+        ],
+        "end_of_run_lines": [
+          12489
+        ],
+        "job_completed": true,
+        "normal_exit_marker_exists": true,
+        "normal_exit_marker_text": "SIESTA completed, MPI exit: 0",
+        "events": [
+          {
+            "start_line": 4906,
+            "dftu_counter": 1,
+            "end_line": 5371,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "before first stepf (initial/reference-DM population block)"
+          },
+          {
+            "start_line": 5375,
+            "dftu_counter": 1,
+            "end_line": 5840,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "after first stepf and before scf: 1 (first-diagonalization response candidate)"
+          },
+          {
+            "start_line": 5871,
+            "dftu_counter": 2,
+            "end_line": 6336,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 6339,
+            "dftu_counter": 3,
+            "end_line": 6804,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 6808,
+            "dftu_counter": 4,
+            "end_line": 7273,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 7276,
+            "dftu_counter": 5,
+            "end_line": 7741,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 7744,
+            "dftu_counter": 6,
+            "end_line": 8209,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 8212,
+            "dftu_counter": 7,
+            "end_line": 8677,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 8680,
+            "dftu_counter": 8,
+            "end_line": 9145,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 9148,
+            "dftu_counter": 9,
+            "end_line": 9613,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 9616,
+            "dftu_counter": 10,
+            "end_line": 10081,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 10084,
+            "dftu_counter": 11,
+            "end_line": 10549,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 10552,
+            "dftu_counter": 12,
+            "end_line": 11017,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 11030,
+            "dftu_counter": 13,
+            "end_line": 11495,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "post-convergence population block"
+          }
+        ],
+        "postconvergence_population_event_index_1based": 14,
+        "first_diagonalization_event_index_1based": 2,
+        "bare_selection_event_index_1based": null,
+        "all_population_events_complete_for_16_sites": true
+      },
+      "parent_DM_evidence": {
+        "reference_file_sha256": "65d418d1a21b4b4052d41d68554639fc4bc4682566bb780c0d072fd4cfe5eb47",
+        "receipt_parent_dm_sha256": "65d418d1a21b4b4052d41d68554639fc4bc4682566bb780c0d072fd4cfe5eb47",
+        "receipt_matches_reference": true,
+        "output_says_DM_read_succeeded": true,
+        "pre_run_staged_DM_snapshot_retained_separately": false,
+        "post_run_DM_sha256": "87a58111a7b745f4e85d2cf4d056e2ef7506adaeac52c2dcd426df2063c602fa"
+      },
+      "receipt_binding": {
+        "response_receipt_output_sha256": "b41a4fb7d582446a0e6be9fa6f1cc4639783f638bc797b8e0883ef1b739ced9d",
+        "matches_raw_output": true,
+        "role": "A",
+        "target": "MnLR00",
+        "alpha_eV": -0.1,
+        "parent_DM_equals_reference_DM": true
+      }
+    },
+    {
+      "run_id": "A_SCREENED_p0d000",
+      "mode": "SCREENED",
+      "target_from_receipt": "MnLR00",
+      "alpha_eV_from_receipt": 0.0,
+      "input_fdf": {
+        "path": "A_SCREENED_p0d000\\siesta.fdf",
+        "sha256": "a2e6de6da0a03740ffaf8c58b6deeb1ef9ab5b2fd0619e21f154b9c2af34c237",
+        "settings": {
+          "SystemLabel": "A_SCREENED_p0d000",
+          "DFTU.PotentialShift": "true",
+          "DFTU.FirstIteration": "true",
+          "DFTU.ProjectorGenerationMethod": "2",
+          "DFTU.CutoffNorm": "0.90",
+          "SCF.Mix": "Hamiltonian",
+          "SCF.Mixer.Method": "Pulay",
+          "SCF.Mixer.Weight": "0.05",
+          "SCF.MustConverge": "T",
+          "SCF.DM.Converge": "T",
+          "SCF.H.Converge": "T",
+          "SCF.DM.Tolerance": "1.0e-5",
+          "SCF.H.Tolerance": "1.0e-4 eV",
+          "MaxSCFIterations": "300",
+          "DM.UseSaveDM": "true"
+        },
+        "projector_count": 16,
+        "projector_signature_unique": [
+          [
+            3,
+            2,
+            0.0,
+            0.05
+          ]
+        ],
+        "nonzero_UJ_entries": [],
+        "matches_mode_contract": true
+      },
+      "native_output": {
+        "path": "A_SCREENED_p0d000\\siesta.out",
+        "sha256": "b154ae07d7fcaf2efa2314867dd7fb6b42fbd5ddcc1b9da5ce8d564aac10ffb2",
+        "version": "5.4.2",
+        "executable": "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta",
+        "architecture": "x86_64",
+        "compiler": "GNU-13.3.0",
+        "redata_hamiltonian_mixing_lines": [
+          4764
+        ],
+        "dftu_hamiltonian_recalculation_lines": [
+          5372,
+          5841,
+          7283
+        ],
+        "stepf_lines": [
+          5374
+        ],
+        "scf_iteration_summaries": [
+          {
+            "line": 5868,
+            "iteration": 1
+          },
+          {
+            "line": 6337,
+            "iteration": 2
+          },
+          {
+            "line": 6805,
+            "iteration": 3
+          }
+        ],
+        "scf_convergence": [
+          {
+            "line": 6813,
+            "text": "SCF cycle converged after 3 iterations",
+            "iterations": 3
+          }
+        ],
+        "scf_nonconvergence_lines": [],
+        "dm_read_markers": [
+          {
+            "line": 4885,
+            "text": "Attempting to read DM from file... Succeeded...",
+            "succeeded": true
+          }
+        ],
+        "using_DM_out_lines": [
+          6815
+        ],
+        "end_of_run_lines": [
+          8276
+        ],
+        "job_completed": true,
+        "normal_exit_marker_exists": true,
+        "normal_exit_marker_text": "SIESTA completed, MPI exit: 0",
+        "events": [
+          {
+            "start_line": 4906,
+            "dftu_counter": 1,
+            "end_line": 5371,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "before first stepf (initial/reference-DM population block)"
+          },
+          {
+            "start_line": 5375,
+            "dftu_counter": 1,
+            "end_line": 5840,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "after first stepf and before scf: 1 (first-diagonalization response candidate)"
+          },
+          {
+            "start_line": 5871,
+            "dftu_counter": 2,
+            "end_line": 6336,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 6339,
+            "dftu_counter": 3,
+            "end_line": 6804,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 6817,
+            "dftu_counter": 4,
+            "end_line": 7282,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "post-convergence population block"
+          }
+        ],
+        "postconvergence_population_event_index_1based": 5,
+        "first_diagonalization_event_index_1based": 2,
+        "bare_selection_event_index_1based": null,
+        "all_population_events_complete_for_16_sites": true
+      },
+      "parent_DM_evidence": {
+        "reference_file_sha256": "65d418d1a21b4b4052d41d68554639fc4bc4682566bb780c0d072fd4cfe5eb47",
+        "receipt_parent_dm_sha256": "65d418d1a21b4b4052d41d68554639fc4bc4682566bb780c0d072fd4cfe5eb47",
+        "receipt_matches_reference": true,
+        "output_says_DM_read_succeeded": true,
+        "pre_run_staged_DM_snapshot_retained_separately": false,
+        "post_run_DM_sha256": "9cab91e7f2815c39fafe2b32658f83f77d22d5a515e07f17583148c3992739d4"
+      },
+      "receipt_binding": {
+        "response_receipt_output_sha256": "b154ae07d7fcaf2efa2314867dd7fb6b42fbd5ddcc1b9da5ce8d564aac10ffb2",
+        "matches_raw_output": true,
+        "role": "A",
+        "target": "MnLR00",
+        "alpha_eV": 0.0,
+        "parent_DM_equals_reference_DM": true
+      }
+    },
+    {
+      "run_id": "A_SCREENED_p0d025",
+      "mode": "SCREENED",
+      "target_from_receipt": "MnLR00",
+      "alpha_eV_from_receipt": 0.025,
+      "input_fdf": {
+        "path": "A_SCREENED_p0d025\\siesta.fdf",
+        "sha256": "ccd128d238880788b06e6c64330caf2eb8e12b4878a344e0570e799fad73582e",
+        "settings": {
+          "SystemLabel": "A_SCREENED_p0d025",
+          "DFTU.PotentialShift": "true",
+          "DFTU.FirstIteration": "true",
+          "DFTU.ProjectorGenerationMethod": "2",
+          "DFTU.CutoffNorm": "0.90",
+          "SCF.Mix": "Hamiltonian",
+          "SCF.Mixer.Method": "Pulay",
+          "SCF.Mixer.Weight": "0.05",
+          "SCF.MustConverge": "T",
+          "SCF.DM.Converge": "T",
+          "SCF.H.Converge": "T",
+          "SCF.DM.Tolerance": "1.0e-5",
+          "SCF.H.Tolerance": "1.0e-4 eV",
+          "MaxSCFIterations": "300",
+          "DM.UseSaveDM": "true"
+        },
+        "projector_count": 16,
+        "projector_signature_unique": [
+          [
+            3,
+            2,
+            0.0,
+            0.05
+          ]
+        ],
+        "nonzero_UJ_entries": [
+          {
+            "site": "MnLR00",
+            "n": 3,
+            "l": 2,
+            "U_eV": 0.025,
+            "J_eV": 0.0,
+            "rc_input_bohr": 0.0,
+            "omega_bohr": 0.05
+          }
+        ],
+        "matches_mode_contract": true
+      },
+      "native_output": {
+        "path": "A_SCREENED_p0d025\\siesta.out",
+        "sha256": "59ba73dde58917448cd46759abb2454a60f0edc9da5024481df680d053320039",
+        "version": "5.4.2",
+        "executable": "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta",
+        "architecture": "x86_64",
+        "compiler": "GNU-13.3.0",
+        "redata_hamiltonian_mixing_lines": [
+          4764
+        ],
+        "dftu_hamiltonian_recalculation_lines": [
+          5372,
+          5841,
+          9623
+        ],
+        "stepf_lines": [
+          5374
+        ],
+        "scf_iteration_summaries": [
+          {
+            "line": 5868,
+            "iteration": 1
+          },
+          {
+            "line": 6337,
+            "iteration": 2
+          },
+          {
+            "line": 6805,
+            "iteration": 3
+          },
+          {
+            "line": 7273,
+            "iteration": 4
+          },
+          {
+            "line": 7741,
+            "iteration": 5
+          },
+          {
+            "line": 8209,
+            "iteration": 6
+          },
+          {
+            "line": 8677,
+            "iteration": 7
+          },
+          {
+            "line": 9145,
+            "iteration": 8
+          }
+        ],
+        "scf_convergence": [
+          {
+            "line": 9153,
+            "text": "SCF cycle converged after 8 iterations",
+            "iterations": 8
+          }
+        ],
+        "scf_nonconvergence_lines": [],
+        "dm_read_markers": [
+          {
+            "line": 4885,
+            "text": "Attempting to read DM from file... Succeeded...",
+            "succeeded": true
+          }
+        ],
+        "using_DM_out_lines": [
+          9155
+        ],
+        "end_of_run_lines": [
+          10616
+        ],
+        "job_completed": true,
+        "normal_exit_marker_exists": true,
+        "normal_exit_marker_text": "SIESTA completed, MPI exit: 0",
+        "events": [
+          {
+            "start_line": 4906,
+            "dftu_counter": 1,
+            "end_line": 5371,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "before first stepf (initial/reference-DM population block)"
+          },
+          {
+            "start_line": 5375,
+            "dftu_counter": 1,
+            "end_line": 5840,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "after first stepf and before scf: 1 (first-diagonalization response candidate)"
+          },
+          {
+            "start_line": 5871,
+            "dftu_counter": 2,
+            "end_line": 6336,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 6339,
+            "dftu_counter": 3,
+            "end_line": 6804,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 6807,
+            "dftu_counter": 4,
+            "end_line": 7272,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 7275,
+            "dftu_counter": 5,
+            "end_line": 7740,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 7743,
+            "dftu_counter": 6,
+            "end_line": 8208,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 8211,
+            "dftu_counter": 7,
+            "end_line": 8676,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 8679,
+            "dftu_counter": 8,
+            "end_line": 9144,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 9157,
+            "dftu_counter": 9,
+            "end_line": 9622,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "post-convergence population block"
+          }
+        ],
+        "postconvergence_population_event_index_1based": 10,
+        "first_diagonalization_event_index_1based": 2,
+        "bare_selection_event_index_1based": null,
+        "all_population_events_complete_for_16_sites": true
+      },
+      "parent_DM_evidence": {
+        "reference_file_sha256": "65d418d1a21b4b4052d41d68554639fc4bc4682566bb780c0d072fd4cfe5eb47",
+        "receipt_parent_dm_sha256": "65d418d1a21b4b4052d41d68554639fc4bc4682566bb780c0d072fd4cfe5eb47",
+        "receipt_matches_reference": true,
+        "output_says_DM_read_succeeded": true,
+        "pre_run_staged_DM_snapshot_retained_separately": false,
+        "post_run_DM_sha256": "db2643a90bdf95e0d758ae2abde2e1c114434c3484ee6349e5f6f65ef5d253c3"
+      },
+      "receipt_binding": {
+        "response_receipt_output_sha256": "59ba73dde58917448cd46759abb2454a60f0edc9da5024481df680d053320039",
+        "matches_raw_output": true,
+        "role": "A",
+        "target": "MnLR00",
+        "alpha_eV": 0.025,
+        "parent_DM_equals_reference_DM": true
+      }
+    },
+    {
+      "run_id": "A_SCREENED_p0d050",
+      "mode": "SCREENED",
+      "target_from_receipt": "MnLR00",
+      "alpha_eV_from_receipt": 0.05,
+      "input_fdf": {
+        "path": "A_SCREENED_p0d050\\siesta.fdf",
+        "sha256": "186848d1f388c037f04feeab2681a5a7c6b33768423966d514469b6cafa3cc99",
+        "settings": {
+          "SystemLabel": "A_SCREENED_p0d050",
+          "DFTU.PotentialShift": "true",
+          "DFTU.FirstIteration": "true",
+          "DFTU.ProjectorGenerationMethod": "2",
+          "DFTU.CutoffNorm": "0.90",
+          "SCF.Mix": "Hamiltonian",
+          "SCF.Mixer.Method": "Pulay",
+          "SCF.Mixer.Weight": "0.05",
+          "SCF.MustConverge": "T",
+          "SCF.DM.Converge": "T",
+          "SCF.H.Converge": "T",
+          "SCF.DM.Tolerance": "1.0e-5",
+          "SCF.H.Tolerance": "1.0e-4 eV",
+          "MaxSCFIterations": "300",
+          "DM.UseSaveDM": "true"
+        },
+        "projector_count": 16,
+        "projector_signature_unique": [
+          [
+            3,
+            2,
+            0.0,
+            0.05
+          ]
+        ],
+        "nonzero_UJ_entries": [
+          {
+            "site": "MnLR00",
+            "n": 3,
+            "l": 2,
+            "U_eV": 0.05,
+            "J_eV": 0.0,
+            "rc_input_bohr": 0.0,
+            "omega_bohr": 0.05
+          }
+        ],
+        "matches_mode_contract": true
+      },
+      "native_output": {
+        "path": "A_SCREENED_p0d050\\siesta.out",
+        "sha256": "eba591bfbba0346be7f8911c88ccf4b79cdee0edddbddafad939bd88604dcc5f",
+        "version": "5.4.2",
+        "executable": "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta",
+        "architecture": "x86_64",
+        "compiler": "GNU-13.3.0",
+        "redata_hamiltonian_mixing_lines": [
+          4764
+        ],
+        "dftu_hamiltonian_recalculation_lines": [
+          5372,
+          5841,
+          10559
+        ],
+        "stepf_lines": [
+          5374
+        ],
+        "scf_iteration_summaries": [
+          {
+            "line": 5868,
+            "iteration": 1
+          },
+          {
+            "line": 6337,
+            "iteration": 2
+          },
+          {
+            "line": 6805,
+            "iteration": 3
+          },
+          {
+            "line": 7273,
+            "iteration": 4
+          },
+          {
+            "line": 7741,
+            "iteration": 5
+          },
+          {
+            "line": 8209,
+            "iteration": 6
+          },
+          {
+            "line": 8677,
+            "iteration": 7
+          },
+          {
+            "line": 9145,
+            "iteration": 8
+          },
+          {
+            "line": 9613,
+            "iteration": 9
+          },
+          {
+            "line": 10081,
+            "iteration": 10
+          }
+        ],
+        "scf_convergence": [
+          {
+            "line": 10089,
+            "text": "SCF cycle converged after 10 iterations",
+            "iterations": 10
+          }
+        ],
+        "scf_nonconvergence_lines": [],
+        "dm_read_markers": [
+          {
+            "line": 4885,
+            "text": "Attempting to read DM from file... Succeeded...",
+            "succeeded": true
+          }
+        ],
+        "using_DM_out_lines": [
+          10091
+        ],
+        "end_of_run_lines": [
+          11552
+        ],
+        "job_completed": true,
+        "normal_exit_marker_exists": true,
+        "normal_exit_marker_text": "SIESTA completed, MPI exit: 0",
+        "events": [
+          {
+            "start_line": 4906,
+            "dftu_counter": 1,
+            "end_line": 5371,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "before first stepf (initial/reference-DM population block)"
+          },
+          {
+            "start_line": 5375,
+            "dftu_counter": 1,
+            "end_line": 5840,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "after first stepf and before scf: 1 (first-diagonalization response candidate)"
+          },
+          {
+            "start_line": 5871,
+            "dftu_counter": 2,
+            "end_line": 6336,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 6339,
+            "dftu_counter": 3,
+            "end_line": 6804,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 6807,
+            "dftu_counter": 4,
+            "end_line": 7272,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 7275,
+            "dftu_counter": 5,
+            "end_line": 7740,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 7743,
+            "dftu_counter": 6,
+            "end_line": 8208,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 8211,
+            "dftu_counter": 7,
+            "end_line": 8676,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 8679,
+            "dftu_counter": 8,
+            "end_line": 9144,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 9147,
+            "dftu_counter": 9,
+            "end_line": 9612,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 9615,
+            "dftu_counter": 10,
+            "end_line": 10080,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 10093,
+            "dftu_counter": 11,
+            "end_line": 10558,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "post-convergence population block"
+          }
+        ],
+        "postconvergence_population_event_index_1based": 12,
+        "first_diagonalization_event_index_1based": 2,
+        "bare_selection_event_index_1based": null,
+        "all_population_events_complete_for_16_sites": true
+      },
+      "parent_DM_evidence": {
+        "reference_file_sha256": "65d418d1a21b4b4052d41d68554639fc4bc4682566bb780c0d072fd4cfe5eb47",
+        "receipt_parent_dm_sha256": "65d418d1a21b4b4052d41d68554639fc4bc4682566bb780c0d072fd4cfe5eb47",
+        "receipt_matches_reference": true,
+        "output_says_DM_read_succeeded": true,
+        "pre_run_staged_DM_snapshot_retained_separately": false,
+        "post_run_DM_sha256": "7446b02133583b3c09ce1d39258c345992e2d028f11281acb578c24bacb16363"
+      },
+      "receipt_binding": {
+        "response_receipt_output_sha256": "eba591bfbba0346be7f8911c88ccf4b79cdee0edddbddafad939bd88604dcc5f",
+        "matches_raw_output": true,
+        "role": "A",
+        "target": "MnLR00",
+        "alpha_eV": 0.05,
+        "parent_DM_equals_reference_DM": true
+      }
+    },
+    {
+      "run_id": "A_SCREENED_p0d100",
+      "mode": "SCREENED",
+      "target_from_receipt": "MnLR00",
+      "alpha_eV_from_receipt": 0.1,
+      "input_fdf": {
+        "path": "A_SCREENED_p0d100\\siesta.fdf",
+        "sha256": "e8096efea7dc2d84179cd23252129889a51bb4cd014f766b9008b566af7a2bc1",
+        "settings": {
+          "SystemLabel": "A_SCREENED_p0d100",
+          "DFTU.PotentialShift": "true",
+          "DFTU.FirstIteration": "true",
+          "DFTU.ProjectorGenerationMethod": "2",
+          "DFTU.CutoffNorm": "0.90",
+          "SCF.Mix": "Hamiltonian",
+          "SCF.Mixer.Method": "Pulay",
+          "SCF.Mixer.Weight": "0.05",
+          "SCF.MustConverge": "T",
+          "SCF.DM.Converge": "T",
+          "SCF.H.Converge": "T",
+          "SCF.DM.Tolerance": "1.0e-5",
+          "SCF.H.Tolerance": "1.0e-4 eV",
+          "MaxSCFIterations": "300",
+          "DM.UseSaveDM": "true"
+        },
+        "projector_count": 16,
+        "projector_signature_unique": [
+          [
+            3,
+            2,
+            0.0,
+            0.05
+          ]
+        ],
+        "nonzero_UJ_entries": [
+          {
+            "site": "MnLR00",
+            "n": 3,
+            "l": 2,
+            "U_eV": 0.1,
+            "J_eV": 0.0,
+            "rc_input_bohr": 0.0,
+            "omega_bohr": 0.05
+          }
+        ],
+        "matches_mode_contract": true
+      },
+      "native_output": {
+        "path": "A_SCREENED_p0d100\\siesta.out",
+        "sha256": "dff8aadfe21aaf901393c8ba6745022dc74346c28f22831d2705b5c627d71495",
+        "version": "5.4.2",
+        "executable": "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta",
+        "architecture": "x86_64",
+        "compiler": "GNU-13.3.0",
+        "redata_hamiltonian_mixing_lines": [
+          4764
+        ],
+        "dftu_hamiltonian_recalculation_lines": [
+          5372,
+          5841,
+          6805,
+          11028
+        ],
+        "stepf_lines": [
+          5374
+        ],
+        "scf_iteration_summaries": [
+          {
+            "line": 5868,
+            "iteration": 1
+          },
+          {
+            "line": 6337,
+            "iteration": 2
+          },
+          {
+            "line": 6806,
+            "iteration": 3
+          },
+          {
+            "line": 7274,
+            "iteration": 4
+          },
+          {
+            "line": 7742,
+            "iteration": 5
+          },
+          {
+            "line": 8210,
+            "iteration": 6
+          },
+          {
+            "line": 8678,
+            "iteration": 7
+          },
+          {
+            "line": 9146,
+            "iteration": 8
+          },
+          {
+            "line": 9614,
+            "iteration": 9
+          },
+          {
+            "line": 10082,
+            "iteration": 10
+          },
+          {
+            "line": 10550,
+            "iteration": 11
+          }
+        ],
+        "scf_convergence": [
+          {
+            "line": 10558,
+            "text": "SCF cycle converged after 11 iterations",
+            "iterations": 11
+          }
+        ],
+        "scf_nonconvergence_lines": [],
+        "dm_read_markers": [
+          {
+            "line": 4885,
+            "text": "Attempting to read DM from file... Succeeded...",
+            "succeeded": true
+          }
+        ],
+        "using_DM_out_lines": [
+          10560
+        ],
+        "end_of_run_lines": [
+          12021
+        ],
+        "job_completed": true,
+        "normal_exit_marker_exists": true,
+        "normal_exit_marker_text": "SIESTA completed, MPI exit: 0",
+        "events": [
+          {
+            "start_line": 4906,
+            "dftu_counter": 1,
+            "end_line": 5371,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "before first stepf (initial/reference-DM population block)"
+          },
+          {
+            "start_line": 5375,
+            "dftu_counter": 1,
+            "end_line": 5840,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "after first stepf and before scf: 1 (first-diagonalization response candidate)"
+          },
+          {
+            "start_line": 5871,
+            "dftu_counter": 2,
+            "end_line": 6336,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 6339,
+            "dftu_counter": 3,
+            "end_line": 6804,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 6808,
+            "dftu_counter": 4,
+            "end_line": 7273,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 7276,
+            "dftu_counter": 5,
+            "end_line": 7741,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 7744,
+            "dftu_counter": 6,
+            "end_line": 8209,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 8212,
+            "dftu_counter": 7,
+            "end_line": 8677,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 8680,
+            "dftu_counter": 8,
+            "end_line": 9145,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 9148,
+            "dftu_counter": 9,
+            "end_line": 9613,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 9616,
+            "dftu_counter": 10,
+            "end_line": 10081,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 10084,
+            "dftu_counter": 11,
+            "end_line": 10549,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 10562,
+            "dftu_counter": 12,
+            "end_line": 11027,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "post-convergence population block"
+          }
+        ],
+        "postconvergence_population_event_index_1based": 13,
+        "first_diagonalization_event_index_1based": 2,
+        "bare_selection_event_index_1based": null,
+        "all_population_events_complete_for_16_sites": true
+      },
+      "parent_DM_evidence": {
+        "reference_file_sha256": "65d418d1a21b4b4052d41d68554639fc4bc4682566bb780c0d072fd4cfe5eb47",
+        "receipt_parent_dm_sha256": "65d418d1a21b4b4052d41d68554639fc4bc4682566bb780c0d072fd4cfe5eb47",
+        "receipt_matches_reference": true,
+        "output_says_DM_read_succeeded": true,
+        "pre_run_staged_DM_snapshot_retained_separately": false,
+        "post_run_DM_sha256": "990e05f4c545d027e0a69e19bb070697ffa7e834adcb1e7d9bec6afe8e5a0e5c"
+      },
+      "receipt_binding": {
+        "response_receipt_output_sha256": "dff8aadfe21aaf901393c8ba6745022dc74346c28f22831d2705b5c627d71495",
+        "matches_raw_output": true,
+        "role": "A",
+        "target": "MnLR00",
+        "alpha_eV": 0.1,
+        "parent_DM_equals_reference_DM": true
+      }
+    },
+    {
+      "run_id": "B_BARE_m0d025",
+      "mode": "BARE",
+      "target_from_receipt": "MnLR01",
+      "alpha_eV_from_receipt": -0.025,
+      "input_fdf": {
+        "path": "B_BARE_m0d025\\siesta.fdf",
+        "sha256": "c3518c7596de1cc95188214f0ee9731bfbfc56d7c2f3cc364dbab7892a7fed3d",
+        "settings": {
+          "SystemLabel": "B_BARE_m0d025",
+          "DFTU.PotentialShift": "true",
+          "DFTU.FirstIteration": "true",
+          "DFTU.ProjectorGenerationMethod": "2",
+          "DFTU.CutoffNorm": "0.90",
+          "SCF.Mix": "Hamiltonian",
+          "SCF.Mixer.Method": "Pulay",
+          "SCF.Mixer.Weight": "0.05",
+          "SCF.MustConverge": "F",
+          "SCF.DM.Converge": null,
+          "SCF.H.Converge": null,
+          "SCF.DM.Tolerance": null,
+          "SCF.H.Tolerance": null,
+          "MaxSCFIterations": "1",
+          "DM.UseSaveDM": "true"
+        },
+        "projector_count": 16,
+        "projector_signature_unique": [
+          [
+            3,
+            2,
+            0.0,
+            0.05
+          ]
+        ],
+        "nonzero_UJ_entries": [
+          {
+            "site": "MnLR01",
+            "n": 3,
+            "l": 2,
+            "U_eV": -0.025,
+            "J_eV": 0.0,
+            "rc_input_bohr": 0.0,
+            "omega_bohr": 0.05
+          }
+        ],
+        "matches_mode_contract": true
+      },
+      "native_output": {
+        "path": "B_BARE_m0d025\\siesta.out",
+        "sha256": "19b5e60ee4a66bb1b566165032e458e6baf24073f881aa68257ae2593e05356b",
+        "version": "5.4.2",
+        "executable": "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta",
+        "architecture": "x86_64",
+        "compiler": "GNU-13.3.0",
+        "redata_hamiltonian_mixing_lines": [
+          4759
+        ],
+        "dftu_hamiltonian_recalculation_lines": [
+          5367,
+          5836,
+          6337
+        ],
+        "stepf_lines": [
+          5369
+        ],
+        "scf_iteration_summaries": [
+          {
+            "line": 5863,
+            "iteration": 1
+          }
+        ],
+        "scf_convergence": [],
+        "scf_nonconvergence_lines": [
+          5866
+        ],
+        "dm_read_markers": [
+          {
+            "line": 4880,
+            "text": "Attempting to read DM from file... Succeeded...",
+            "succeeded": true
+          }
+        ],
+        "using_DM_out_lines": [
+          5869
+        ],
+        "end_of_run_lines": [
+          7330
+        ],
+        "job_completed": true,
+        "normal_exit_marker_exists": true,
+        "normal_exit_marker_text": "SIESTA completed, MPI exit: 0",
+        "events": [
+          {
+            "start_line": 4901,
+            "dftu_counter": 1,
+            "end_line": 5366,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "before first stepf (initial/reference-DM population block)"
+          },
+          {
+            "start_line": 5370,
+            "dftu_counter": 1,
+            "end_line": 5835,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "after first stepf and before scf: 1 (first-diagonalization response candidate)"
+          },
+          {
+            "start_line": 5871,
+            "dftu_counter": 1,
+            "end_line": 6336,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "post-one-step nonconverged BARE energy/force population block"
+          }
+        ],
+        "postconvergence_population_event_index_1based": null,
+        "first_diagonalization_event_index_1based": 2,
+        "bare_selection_event_index_1based": 2,
+        "all_population_events_complete_for_16_sites": true
+      },
+      "parent_DM_evidence": {
+        "reference_file_sha256": "65d418d1a21b4b4052d41d68554639fc4bc4682566bb780c0d072fd4cfe5eb47",
+        "receipt_parent_dm_sha256": "65d418d1a21b4b4052d41d68554639fc4bc4682566bb780c0d072fd4cfe5eb47",
+        "receipt_matches_reference": true,
+        "output_says_DM_read_succeeded": true,
+        "pre_run_staged_DM_snapshot_retained_separately": false,
+        "post_run_DM_sha256": "76860af1c2634e6f45ebfcb74ec2babf46b3bc7bc09e3e2ff1dd6a3789210086"
+      },
+      "receipt_binding": {
+        "response_receipt_output_sha256": "19b5e60ee4a66bb1b566165032e458e6baf24073f881aa68257ae2593e05356b",
+        "matches_raw_output": true,
+        "role": "B",
+        "target": "MnLR01",
+        "alpha_eV": -0.025,
+        "parent_DM_equals_reference_DM": true
+      }
+    },
+    {
+      "run_id": "B_BARE_m0d050",
+      "mode": "BARE",
+      "target_from_receipt": "MnLR01",
+      "alpha_eV_from_receipt": -0.05,
+      "input_fdf": {
+        "path": "B_BARE_m0d050\\siesta.fdf",
+        "sha256": "ee23ef307975a0d9ba8267e73a138cfef32baa557f5cd2617b0a06f84ccc459c",
+        "settings": {
+          "SystemLabel": "B_BARE_m0d050",
+          "DFTU.PotentialShift": "true",
+          "DFTU.FirstIteration": "true",
+          "DFTU.ProjectorGenerationMethod": "2",
+          "DFTU.CutoffNorm": "0.90",
+          "SCF.Mix": "Hamiltonian",
+          "SCF.Mixer.Method": "Pulay",
+          "SCF.Mixer.Weight": "0.05",
+          "SCF.MustConverge": "F",
+          "SCF.DM.Converge": null,
+          "SCF.H.Converge": null,
+          "SCF.DM.Tolerance": null,
+          "SCF.H.Tolerance": null,
+          "MaxSCFIterations": "1",
+          "DM.UseSaveDM": "true"
+        },
+        "projector_count": 16,
+        "projector_signature_unique": [
+          [
+            3,
+            2,
+            0.0,
+            0.05
+          ]
+        ],
+        "nonzero_UJ_entries": [
+          {
+            "site": "MnLR01",
+            "n": 3,
+            "l": 2,
+            "U_eV": -0.05,
+            "J_eV": 0.0,
+            "rc_input_bohr": 0.0,
+            "omega_bohr": 0.05
+          }
+        ],
+        "matches_mode_contract": true
+      },
+      "native_output": {
+        "path": "B_BARE_m0d050\\siesta.out",
+        "sha256": "e617a2fdd20ec7802e0d8240043c8a3ef37271fdb57c68b84a394341fdd24e66",
+        "version": "5.4.2",
+        "executable": "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta",
+        "architecture": "x86_64",
+        "compiler": "GNU-13.3.0",
+        "redata_hamiltonian_mixing_lines": [
+          4759
+        ],
+        "dftu_hamiltonian_recalculation_lines": [
+          5367,
+          5836,
+          6337
+        ],
+        "stepf_lines": [
+          5369
+        ],
+        "scf_iteration_summaries": [
+          {
+            "line": 5863,
+            "iteration": 1
+          }
+        ],
+        "scf_convergence": [],
+        "scf_nonconvergence_lines": [
+          5866
+        ],
+        "dm_read_markers": [
+          {
+            "line": 4880,
+            "text": "Attempting to read DM from file... Succeeded...",
+            "succeeded": true
+          }
+        ],
+        "using_DM_out_lines": [
+          5869
+        ],
+        "end_of_run_lines": [
+          7330
+        ],
+        "job_completed": true,
+        "normal_exit_marker_exists": true,
+        "normal_exit_marker_text": "SIESTA completed, MPI exit: 0",
+        "events": [
+          {
+            "start_line": 4901,
+            "dftu_counter": 1,
+            "end_line": 5366,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "before first stepf (initial/reference-DM population block)"
+          },
+          {
+            "start_line": 5370,
+            "dftu_counter": 1,
+            "end_line": 5835,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "after first stepf and before scf: 1 (first-diagonalization response candidate)"
+          },
+          {
+            "start_line": 5871,
+            "dftu_counter": 1,
+            "end_line": 6336,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "post-one-step nonconverged BARE energy/force population block"
+          }
+        ],
+        "postconvergence_population_event_index_1based": null,
+        "first_diagonalization_event_index_1based": 2,
+        "bare_selection_event_index_1based": 2,
+        "all_population_events_complete_for_16_sites": true
+      },
+      "parent_DM_evidence": {
+        "reference_file_sha256": "65d418d1a21b4b4052d41d68554639fc4bc4682566bb780c0d072fd4cfe5eb47",
+        "receipt_parent_dm_sha256": "65d418d1a21b4b4052d41d68554639fc4bc4682566bb780c0d072fd4cfe5eb47",
+        "receipt_matches_reference": true,
+        "output_says_DM_read_succeeded": true,
+        "pre_run_staged_DM_snapshot_retained_separately": false,
+        "post_run_DM_sha256": "4b921e0473f85ccfbe58d20f6e893712a82343022e565b1977eebc6587e63f66"
+      },
+      "receipt_binding": {
+        "response_receipt_output_sha256": "e617a2fdd20ec7802e0d8240043c8a3ef37271fdb57c68b84a394341fdd24e66",
+        "matches_raw_output": true,
+        "role": "B",
+        "target": "MnLR01",
+        "alpha_eV": -0.05,
+        "parent_DM_equals_reference_DM": true
+      }
+    },
+    {
+      "run_id": "B_BARE_m0d100",
+      "mode": "BARE",
+      "target_from_receipt": "MnLR01",
+      "alpha_eV_from_receipt": -0.1,
+      "input_fdf": {
+        "path": "B_BARE_m0d100\\siesta.fdf",
+        "sha256": "00c1eeabe82d351114a56f02fb62326047b845c3efb68ac0e8a7605d92c718a9",
+        "settings": {
+          "SystemLabel": "B_BARE_m0d100",
+          "DFTU.PotentialShift": "true",
+          "DFTU.FirstIteration": "true",
+          "DFTU.ProjectorGenerationMethod": "2",
+          "DFTU.CutoffNorm": "0.90",
+          "SCF.Mix": "Hamiltonian",
+          "SCF.Mixer.Method": "Pulay",
+          "SCF.Mixer.Weight": "0.05",
+          "SCF.MustConverge": "F",
+          "SCF.DM.Converge": null,
+          "SCF.H.Converge": null,
+          "SCF.DM.Tolerance": null,
+          "SCF.H.Tolerance": null,
+          "MaxSCFIterations": "1",
+          "DM.UseSaveDM": "true"
+        },
+        "projector_count": 16,
+        "projector_signature_unique": [
+          [
+            3,
+            2,
+            0.0,
+            0.05
+          ]
+        ],
+        "nonzero_UJ_entries": [
+          {
+            "site": "MnLR01",
+            "n": 3,
+            "l": 2,
+            "U_eV": -0.1,
+            "J_eV": 0.0,
+            "rc_input_bohr": 0.0,
+            "omega_bohr": 0.05
+          }
+        ],
+        "matches_mode_contract": true
+      },
+      "native_output": {
+        "path": "B_BARE_m0d100\\siesta.out",
+        "sha256": "056b7e41758321625259e52cf055b8c15ae0cad6833c905a9239523b39404293",
+        "version": "5.4.2",
+        "executable": "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta",
+        "architecture": "x86_64",
+        "compiler": "GNU-13.3.0",
+        "redata_hamiltonian_mixing_lines": [
+          4759
+        ],
+        "dftu_hamiltonian_recalculation_lines": [
+          5367,
+          5836,
+          6337
+        ],
+        "stepf_lines": [
+          5369
+        ],
+        "scf_iteration_summaries": [
+          {
+            "line": 5863,
+            "iteration": 1
+          }
+        ],
+        "scf_convergence": [],
+        "scf_nonconvergence_lines": [
+          5866
+        ],
+        "dm_read_markers": [
+          {
+            "line": 4880,
+            "text": "Attempting to read DM from file... Succeeded...",
+            "succeeded": true
+          }
+        ],
+        "using_DM_out_lines": [
+          5869
+        ],
+        "end_of_run_lines": [
+          7330
+        ],
+        "job_completed": true,
+        "normal_exit_marker_exists": true,
+        "normal_exit_marker_text": "SIESTA completed, MPI exit: 0",
+        "events": [
+          {
+            "start_line": 4901,
+            "dftu_counter": 1,
+            "end_line": 5366,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "before first stepf (initial/reference-DM population block)"
+          },
+          {
+            "start_line": 5370,
+            "dftu_counter": 1,
+            "end_line": 5835,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "after first stepf and before scf: 1 (first-diagonalization response candidate)"
+          },
+          {
+            "start_line": 5871,
+            "dftu_counter": 1,
+            "end_line": 6336,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "post-one-step nonconverged BARE energy/force population block"
+          }
+        ],
+        "postconvergence_population_event_index_1based": null,
+        "first_diagonalization_event_index_1based": 2,
+        "bare_selection_event_index_1based": 2,
+        "all_population_events_complete_for_16_sites": true
+      },
+      "parent_DM_evidence": {
+        "reference_file_sha256": "65d418d1a21b4b4052d41d68554639fc4bc4682566bb780c0d072fd4cfe5eb47",
+        "receipt_parent_dm_sha256": "65d418d1a21b4b4052d41d68554639fc4bc4682566bb780c0d072fd4cfe5eb47",
+        "receipt_matches_reference": true,
+        "output_says_DM_read_succeeded": true,
+        "pre_run_staged_DM_snapshot_retained_separately": false,
+        "post_run_DM_sha256": "6a07aca6685c3e6dff504b7898ec0d9c3de9ee876a42e1753cd29187de30bd9e"
+      },
+      "receipt_binding": {
+        "response_receipt_output_sha256": "056b7e41758321625259e52cf055b8c15ae0cad6833c905a9239523b39404293",
+        "matches_raw_output": true,
+        "role": "B",
+        "target": "MnLR01",
+        "alpha_eV": -0.1,
+        "parent_DM_equals_reference_DM": true
+      }
+    },
+    {
+      "run_id": "B_BARE_p0d000",
+      "mode": "BARE",
+      "target_from_receipt": "MnLR01",
+      "alpha_eV_from_receipt": 0.0,
+      "input_fdf": {
+        "path": "B_BARE_p0d000\\siesta.fdf",
+        "sha256": "8e2e7975a9df6d5be66f4c079c8474287c5aa36b5dd0906a4afbc00f99f20c3a",
+        "settings": {
+          "SystemLabel": "B_BARE_p0d000",
+          "DFTU.PotentialShift": "true",
+          "DFTU.FirstIteration": "true",
+          "DFTU.ProjectorGenerationMethod": "2",
+          "DFTU.CutoffNorm": "0.90",
+          "SCF.Mix": "Hamiltonian",
+          "SCF.Mixer.Method": "Pulay",
+          "SCF.Mixer.Weight": "0.05",
+          "SCF.MustConverge": "F",
+          "SCF.DM.Converge": null,
+          "SCF.H.Converge": null,
+          "SCF.DM.Tolerance": null,
+          "SCF.H.Tolerance": null,
+          "MaxSCFIterations": "1",
+          "DM.UseSaveDM": "true"
+        },
+        "projector_count": 16,
+        "projector_signature_unique": [
+          [
+            3,
+            2,
+            0.0,
+            0.05
+          ]
+        ],
+        "nonzero_UJ_entries": [],
+        "matches_mode_contract": true
+      },
+      "native_output": {
+        "path": "B_BARE_p0d000\\siesta.out",
+        "sha256": "33ab04a7d73179589ac78a226e311307b6cfe4f812788fa222aa24d86b7ed62b",
+        "version": "5.4.2",
+        "executable": "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta",
+        "architecture": "x86_64",
+        "compiler": "GNU-13.3.0",
+        "redata_hamiltonian_mixing_lines": [
+          4759
+        ],
+        "dftu_hamiltonian_recalculation_lines": [
+          5367,
+          5836,
+          6342
+        ],
+        "stepf_lines": [
+          5369
+        ],
+        "scf_iteration_summaries": [
+          {
+            "line": 5863,
+            "iteration": 1
+          }
+        ],
+        "scf_convergence": [
+          {
+            "line": 5871,
+            "text": "SCF cycle converged after 1 iterations",
+            "iterations": 1
+          }
+        ],
+        "scf_nonconvergence_lines": [],
+        "dm_read_markers": [
+          {
+            "line": 4880,
+            "text": "Attempting to read DM from file... Succeeded...",
+            "succeeded": true
+          }
+        ],
+        "using_DM_out_lines": [
+          5874
+        ],
+        "end_of_run_lines": [
+          7335
+        ],
+        "job_completed": true,
+        "normal_exit_marker_exists": true,
+        "normal_exit_marker_text": "SIESTA completed, MPI exit: 0",
+        "events": [
+          {
+            "start_line": 4901,
+            "dftu_counter": 1,
+            "end_line": 5366,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "before first stepf (initial/reference-DM population block)"
+          },
+          {
+            "start_line": 5370,
+            "dftu_counter": 1,
+            "end_line": 5835,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "after first stepf and before scf: 1 (first-diagonalization response candidate)"
+          },
+          {
+            "start_line": 5876,
+            "dftu_counter": 1,
+            "end_line": 6341,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "post-convergence population block"
+          }
+        ],
+        "postconvergence_population_event_index_1based": 3,
+        "first_diagonalization_event_index_1based": 2,
+        "bare_selection_event_index_1based": 2,
+        "all_population_events_complete_for_16_sites": true
+      },
+      "parent_DM_evidence": {
+        "reference_file_sha256": "65d418d1a21b4b4052d41d68554639fc4bc4682566bb780c0d072fd4cfe5eb47",
+        "receipt_parent_dm_sha256": "65d418d1a21b4b4052d41d68554639fc4bc4682566bb780c0d072fd4cfe5eb47",
+        "receipt_matches_reference": true,
+        "output_says_DM_read_succeeded": true,
+        "pre_run_staged_DM_snapshot_retained_separately": false,
+        "post_run_DM_sha256": "65d418d1a21b4b4052d41d68554639fc4bc4682566bb780c0d072fd4cfe5eb47"
+      },
+      "receipt_binding": {
+        "response_receipt_output_sha256": "33ab04a7d73179589ac78a226e311307b6cfe4f812788fa222aa24d86b7ed62b",
+        "matches_raw_output": true,
+        "role": "B",
+        "target": "MnLR01",
+        "alpha_eV": 0.0,
+        "parent_DM_equals_reference_DM": true
+      }
+    },
+    {
+      "run_id": "B_BARE_p0d025",
+      "mode": "BARE",
+      "target_from_receipt": "MnLR01",
+      "alpha_eV_from_receipt": 0.025,
+      "input_fdf": {
+        "path": "B_BARE_p0d025\\siesta.fdf",
+        "sha256": "670c927fc706b719f71e32181b0717bce6006760aaeacac173320c9f327a05ef",
+        "settings": {
+          "SystemLabel": "B_BARE_p0d025",
+          "DFTU.PotentialShift": "true",
+          "DFTU.FirstIteration": "true",
+          "DFTU.ProjectorGenerationMethod": "2",
+          "DFTU.CutoffNorm": "0.90",
+          "SCF.Mix": "Hamiltonian",
+          "SCF.Mixer.Method": "Pulay",
+          "SCF.Mixer.Weight": "0.05",
+          "SCF.MustConverge": "F",
+          "SCF.DM.Converge": null,
+          "SCF.H.Converge": null,
+          "SCF.DM.Tolerance": null,
+          "SCF.H.Tolerance": null,
+          "MaxSCFIterations": "1",
+          "DM.UseSaveDM": "true"
+        },
+        "projector_count": 16,
+        "projector_signature_unique": [
+          [
+            3,
+            2,
+            0.0,
+            0.05
+          ]
+        ],
+        "nonzero_UJ_entries": [
+          {
+            "site": "MnLR01",
+            "n": 3,
+            "l": 2,
+            "U_eV": 0.025,
+            "J_eV": 0.0,
+            "rc_input_bohr": 0.0,
+            "omega_bohr": 0.05
+          }
+        ],
+        "matches_mode_contract": true
+      },
+      "native_output": {
+        "path": "B_BARE_p0d025\\siesta.out",
+        "sha256": "befeb9931b6152ea522a1e363a45d8e2068f8985fd05e18d63fe73a752f8331e",
+        "version": "5.4.2",
+        "executable": "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta",
+        "architecture": "x86_64",
+        "compiler": "GNU-13.3.0",
+        "redata_hamiltonian_mixing_lines": [
+          4759
+        ],
+        "dftu_hamiltonian_recalculation_lines": [
+          5367,
+          5836,
+          6337
+        ],
+        "stepf_lines": [
+          5369
+        ],
+        "scf_iteration_summaries": [
+          {
+            "line": 5863,
+            "iteration": 1
+          }
+        ],
+        "scf_convergence": [],
+        "scf_nonconvergence_lines": [
+          5866
+        ],
+        "dm_read_markers": [
+          {
+            "line": 4880,
+            "text": "Attempting to read DM from file... Succeeded...",
+            "succeeded": true
+          }
+        ],
+        "using_DM_out_lines": [
+          5869
+        ],
+        "end_of_run_lines": [
+          7330
+        ],
+        "job_completed": true,
+        "normal_exit_marker_exists": true,
+        "normal_exit_marker_text": "SIESTA completed, MPI exit: 0",
+        "events": [
+          {
+            "start_line": 4901,
+            "dftu_counter": 1,
+            "end_line": 5366,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "before first stepf (initial/reference-DM population block)"
+          },
+          {
+            "start_line": 5370,
+            "dftu_counter": 1,
+            "end_line": 5835,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "after first stepf and before scf: 1 (first-diagonalization response candidate)"
+          },
+          {
+            "start_line": 5871,
+            "dftu_counter": 1,
+            "end_line": 6336,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "post-one-step nonconverged BARE energy/force population block"
+          }
+        ],
+        "postconvergence_population_event_index_1based": null,
+        "first_diagonalization_event_index_1based": 2,
+        "bare_selection_event_index_1based": 2,
+        "all_population_events_complete_for_16_sites": true
+      },
+      "parent_DM_evidence": {
+        "reference_file_sha256": "65d418d1a21b4b4052d41d68554639fc4bc4682566bb780c0d072fd4cfe5eb47",
+        "receipt_parent_dm_sha256": "65d418d1a21b4b4052d41d68554639fc4bc4682566bb780c0d072fd4cfe5eb47",
+        "receipt_matches_reference": true,
+        "output_says_DM_read_succeeded": true,
+        "pre_run_staged_DM_snapshot_retained_separately": false,
+        "post_run_DM_sha256": "f81f292bc6389271d94836176add13fd119a394d5fde73cef9475e2b5f23d0c0"
+      },
+      "receipt_binding": {
+        "response_receipt_output_sha256": "befeb9931b6152ea522a1e363a45d8e2068f8985fd05e18d63fe73a752f8331e",
+        "matches_raw_output": true,
+        "role": "B",
+        "target": "MnLR01",
+        "alpha_eV": 0.025,
+        "parent_DM_equals_reference_DM": true
+      }
+    },
+    {
+      "run_id": "B_BARE_p0d050",
+      "mode": "BARE",
+      "target_from_receipt": "MnLR01",
+      "alpha_eV_from_receipt": 0.05,
+      "input_fdf": {
+        "path": "B_BARE_p0d050\\siesta.fdf",
+        "sha256": "1355e9d4a518974838d5c803ab225e1ec2e21d8f43c94ceb888cbccc5197a50a",
+        "settings": {
+          "SystemLabel": "B_BARE_p0d050",
+          "DFTU.PotentialShift": "true",
+          "DFTU.FirstIteration": "true",
+          "DFTU.ProjectorGenerationMethod": "2",
+          "DFTU.CutoffNorm": "0.90",
+          "SCF.Mix": "Hamiltonian",
+          "SCF.Mixer.Method": "Pulay",
+          "SCF.Mixer.Weight": "0.05",
+          "SCF.MustConverge": "F",
+          "SCF.DM.Converge": null,
+          "SCF.H.Converge": null,
+          "SCF.DM.Tolerance": null,
+          "SCF.H.Tolerance": null,
+          "MaxSCFIterations": "1",
+          "DM.UseSaveDM": "true"
+        },
+        "projector_count": 16,
+        "projector_signature_unique": [
+          [
+            3,
+            2,
+            0.0,
+            0.05
+          ]
+        ],
+        "nonzero_UJ_entries": [
+          {
+            "site": "MnLR01",
+            "n": 3,
+            "l": 2,
+            "U_eV": 0.05,
+            "J_eV": 0.0,
+            "rc_input_bohr": 0.0,
+            "omega_bohr": 0.05
+          }
+        ],
+        "matches_mode_contract": true
+      },
+      "native_output": {
+        "path": "B_BARE_p0d050\\siesta.out",
+        "sha256": "793e18330c85a111232103de9e3d851347c39179f158d04c2d9beddf54a44f38",
+        "version": "5.4.2",
+        "executable": "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta",
+        "architecture": "x86_64",
+        "compiler": "GNU-13.3.0",
+        "redata_hamiltonian_mixing_lines": [
+          4759
+        ],
+        "dftu_hamiltonian_recalculation_lines": [
+          5367,
+          5836,
+          6337
+        ],
+        "stepf_lines": [
+          5369
+        ],
+        "scf_iteration_summaries": [
+          {
+            "line": 5863,
+            "iteration": 1
+          }
+        ],
+        "scf_convergence": [],
+        "scf_nonconvergence_lines": [
+          5866
+        ],
+        "dm_read_markers": [
+          {
+            "line": 4880,
+            "text": "Attempting to read DM from file... Succeeded...",
+            "succeeded": true
+          }
+        ],
+        "using_DM_out_lines": [
+          5869
+        ],
+        "end_of_run_lines": [
+          7330
+        ],
+        "job_completed": true,
+        "normal_exit_marker_exists": true,
+        "normal_exit_marker_text": "SIESTA completed, MPI exit: 0",
+        "events": [
+          {
+            "start_line": 4901,
+            "dftu_counter": 1,
+            "end_line": 5366,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "before first stepf (initial/reference-DM population block)"
+          },
+          {
+            "start_line": 5370,
+            "dftu_counter": 1,
+            "end_line": 5835,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "after first stepf and before scf: 1 (first-diagonalization response candidate)"
+          },
+          {
+            "start_line": 5871,
+            "dftu_counter": 1,
+            "end_line": 6336,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "post-one-step nonconverged BARE energy/force population block"
+          }
+        ],
+        "postconvergence_population_event_index_1based": null,
+        "first_diagonalization_event_index_1based": 2,
+        "bare_selection_event_index_1based": 2,
+        "all_population_events_complete_for_16_sites": true
+      },
+      "parent_DM_evidence": {
+        "reference_file_sha256": "65d418d1a21b4b4052d41d68554639fc4bc4682566bb780c0d072fd4cfe5eb47",
+        "receipt_parent_dm_sha256": "65d418d1a21b4b4052d41d68554639fc4bc4682566bb780c0d072fd4cfe5eb47",
+        "receipt_matches_reference": true,
+        "output_says_DM_read_succeeded": true,
+        "pre_run_staged_DM_snapshot_retained_separately": false,
+        "post_run_DM_sha256": "061e31548b7e70e03aed3d048dd4460e112c7c794289631a3ba1806571efd985"
+      },
+      "receipt_binding": {
+        "response_receipt_output_sha256": "793e18330c85a111232103de9e3d851347c39179f158d04c2d9beddf54a44f38",
+        "matches_raw_output": true,
+        "role": "B",
+        "target": "MnLR01",
+        "alpha_eV": 0.05,
+        "parent_DM_equals_reference_DM": true
+      }
+    },
+    {
+      "run_id": "B_BARE_p0d100",
+      "mode": "BARE",
+      "target_from_receipt": "MnLR01",
+      "alpha_eV_from_receipt": 0.1,
+      "input_fdf": {
+        "path": "B_BARE_p0d100\\siesta.fdf",
+        "sha256": "5209c9009ec509ceb1c4963c1402201c354cda1641de449a6e1b30893fa2f51b",
+        "settings": {
+          "SystemLabel": "B_BARE_p0d100",
+          "DFTU.PotentialShift": "true",
+          "DFTU.FirstIteration": "true",
+          "DFTU.ProjectorGenerationMethod": "2",
+          "DFTU.CutoffNorm": "0.90",
+          "SCF.Mix": "Hamiltonian",
+          "SCF.Mixer.Method": "Pulay",
+          "SCF.Mixer.Weight": "0.05",
+          "SCF.MustConverge": "F",
+          "SCF.DM.Converge": null,
+          "SCF.H.Converge": null,
+          "SCF.DM.Tolerance": null,
+          "SCF.H.Tolerance": null,
+          "MaxSCFIterations": "1",
+          "DM.UseSaveDM": "true"
+        },
+        "projector_count": 16,
+        "projector_signature_unique": [
+          [
+            3,
+            2,
+            0.0,
+            0.05
+          ]
+        ],
+        "nonzero_UJ_entries": [
+          {
+            "site": "MnLR01",
+            "n": 3,
+            "l": 2,
+            "U_eV": 0.1,
+            "J_eV": 0.0,
+            "rc_input_bohr": 0.0,
+            "omega_bohr": 0.05
+          }
+        ],
+        "matches_mode_contract": true
+      },
+      "native_output": {
+        "path": "B_BARE_p0d100\\siesta.out",
+        "sha256": "18a2a6145d1fd50edf54b886431788255557f6d34931ef06062fad02d1acc613",
+        "version": "5.4.2",
+        "executable": "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta",
+        "architecture": "x86_64",
+        "compiler": "GNU-13.3.0",
+        "redata_hamiltonian_mixing_lines": [
+          4759
+        ],
+        "dftu_hamiltonian_recalculation_lines": [
+          5367,
+          5836,
+          6337
+        ],
+        "stepf_lines": [
+          5369
+        ],
+        "scf_iteration_summaries": [
+          {
+            "line": 5863,
+            "iteration": 1
+          }
+        ],
+        "scf_convergence": [],
+        "scf_nonconvergence_lines": [
+          5866
+        ],
+        "dm_read_markers": [
+          {
+            "line": 4880,
+            "text": "Attempting to read DM from file... Succeeded...",
+            "succeeded": true
+          }
+        ],
+        "using_DM_out_lines": [
+          5869
+        ],
+        "end_of_run_lines": [
+          7330
+        ],
+        "job_completed": true,
+        "normal_exit_marker_exists": true,
+        "normal_exit_marker_text": "SIESTA completed, MPI exit: 0",
+        "events": [
+          {
+            "start_line": 4901,
+            "dftu_counter": 1,
+            "end_line": 5366,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "before first stepf (initial/reference-DM population block)"
+          },
+          {
+            "start_line": 5370,
+            "dftu_counter": 1,
+            "end_line": 5835,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "after first stepf and before scf: 1 (first-diagonalization response candidate)"
+          },
+          {
+            "start_line": 5871,
+            "dftu_counter": 1,
+            "end_line": 6336,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "post-one-step nonconverged BARE energy/force population block"
+          }
+        ],
+        "postconvergence_population_event_index_1based": null,
+        "first_diagonalization_event_index_1based": 2,
+        "bare_selection_event_index_1based": 2,
+        "all_population_events_complete_for_16_sites": true
+      },
+      "parent_DM_evidence": {
+        "reference_file_sha256": "65d418d1a21b4b4052d41d68554639fc4bc4682566bb780c0d072fd4cfe5eb47",
+        "receipt_parent_dm_sha256": "65d418d1a21b4b4052d41d68554639fc4bc4682566bb780c0d072fd4cfe5eb47",
+        "receipt_matches_reference": true,
+        "output_says_DM_read_succeeded": true,
+        "pre_run_staged_DM_snapshot_retained_separately": false,
+        "post_run_DM_sha256": "95ed388a79f076ab51daf0c5015168f06c78dffb476ab1d8876534bcc042c759"
+      },
+      "receipt_binding": {
+        "response_receipt_output_sha256": "18a2a6145d1fd50edf54b886431788255557f6d34931ef06062fad02d1acc613",
+        "matches_raw_output": true,
+        "role": "B",
+        "target": "MnLR01",
+        "alpha_eV": 0.1,
+        "parent_DM_equals_reference_DM": true
+      }
+    },
+    {
+      "run_id": "B_SCREENED_m0d025",
+      "mode": "SCREENED",
+      "target_from_receipt": "MnLR01",
+      "alpha_eV_from_receipt": -0.025,
+      "input_fdf": {
+        "path": "B_SCREENED_m0d025\\siesta.fdf",
+        "sha256": "79dc0436f896b81aa3e0fee666e9b0d4d93ab335fee4cb1b750667ca0b081851",
+        "settings": {
+          "SystemLabel": "B_SCREENED_m0d025",
+          "DFTU.PotentialShift": "true",
+          "DFTU.FirstIteration": "true",
+          "DFTU.ProjectorGenerationMethod": "2",
+          "DFTU.CutoffNorm": "0.90",
+          "SCF.Mix": "Hamiltonian",
+          "SCF.Mixer.Method": "Pulay",
+          "SCF.Mixer.Weight": "0.05",
+          "SCF.MustConverge": "T",
+          "SCF.DM.Converge": "T",
+          "SCF.H.Converge": "T",
+          "SCF.DM.Tolerance": "1.0e-5",
+          "SCF.H.Tolerance": "1.0e-4 eV",
+          "MaxSCFIterations": "300",
+          "DM.UseSaveDM": "true"
+        },
+        "projector_count": 16,
+        "projector_signature_unique": [
+          [
+            3,
+            2,
+            0.0,
+            0.05
+          ]
+        ],
+        "nonzero_UJ_entries": [
+          {
+            "site": "MnLR01",
+            "n": 3,
+            "l": 2,
+            "U_eV": -0.025,
+            "J_eV": 0.0,
+            "rc_input_bohr": 0.0,
+            "omega_bohr": 0.05
+          }
+        ],
+        "matches_mode_contract": true
+      },
+      "native_output": {
+        "path": "B_SCREENED_m0d025\\siesta.out",
+        "sha256": "cf609157d01135550f65ef0e655d02cf4739051e98a83d5939d5f20d1c891ce1",
+        "version": "5.4.2",
+        "executable": "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta",
+        "architecture": "x86_64",
+        "compiler": "GNU-13.3.0",
+        "redata_hamiltonian_mixing_lines": [
+          4764
+        ],
+        "dftu_hamiltonian_recalculation_lines": [
+          5372,
+          5841,
+          10091
+        ],
+        "stepf_lines": [
+          5374
+        ],
+        "scf_iteration_summaries": [
+          {
+            "line": 5868,
+            "iteration": 1
+          },
+          {
+            "line": 6337,
+            "iteration": 2
+          },
+          {
+            "line": 6805,
+            "iteration": 3
+          },
+          {
+            "line": 7273,
+            "iteration": 4
+          },
+          {
+            "line": 7741,
+            "iteration": 5
+          },
+          {
+            "line": 8209,
+            "iteration": 6
+          },
+          {
+            "line": 8677,
+            "iteration": 7
+          },
+          {
+            "line": 9145,
+            "iteration": 8
+          },
+          {
+            "line": 9613,
+            "iteration": 9
+          }
+        ],
+        "scf_convergence": [
+          {
+            "line": 9621,
+            "text": "SCF cycle converged after 9 iterations",
+            "iterations": 9
+          }
+        ],
+        "scf_nonconvergence_lines": [],
+        "dm_read_markers": [
+          {
+            "line": 4885,
+            "text": "Attempting to read DM from file... Succeeded...",
+            "succeeded": true
+          }
+        ],
+        "using_DM_out_lines": [
+          9623
+        ],
+        "end_of_run_lines": [
+          11084
+        ],
+        "job_completed": true,
+        "normal_exit_marker_exists": true,
+        "normal_exit_marker_text": "SIESTA completed, MPI exit: 0",
+        "events": [
+          {
+            "start_line": 4906,
+            "dftu_counter": 1,
+            "end_line": 5371,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "before first stepf (initial/reference-DM population block)"
+          },
+          {
+            "start_line": 5375,
+            "dftu_counter": 1,
+            "end_line": 5840,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "after first stepf and before scf: 1 (first-diagonalization response candidate)"
+          },
+          {
+            "start_line": 5871,
+            "dftu_counter": 2,
+            "end_line": 6336,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 6339,
+            "dftu_counter": 3,
+            "end_line": 6804,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 6807,
+            "dftu_counter": 4,
+            "end_line": 7272,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 7275,
+            "dftu_counter": 5,
+            "end_line": 7740,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 7743,
+            "dftu_counter": 6,
+            "end_line": 8208,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 8211,
+            "dftu_counter": 7,
+            "end_line": 8676,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 8679,
+            "dftu_counter": 8,
+            "end_line": 9144,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 9147,
+            "dftu_counter": 9,
+            "end_line": 9612,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 9625,
+            "dftu_counter": 10,
+            "end_line": 10090,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "post-convergence population block"
+          }
+        ],
+        "postconvergence_population_event_index_1based": 11,
+        "first_diagonalization_event_index_1based": 2,
+        "bare_selection_event_index_1based": null,
+        "all_population_events_complete_for_16_sites": true
+      },
+      "parent_DM_evidence": {
+        "reference_file_sha256": "65d418d1a21b4b4052d41d68554639fc4bc4682566bb780c0d072fd4cfe5eb47",
+        "receipt_parent_dm_sha256": "65d418d1a21b4b4052d41d68554639fc4bc4682566bb780c0d072fd4cfe5eb47",
+        "receipt_matches_reference": true,
+        "output_says_DM_read_succeeded": true,
+        "pre_run_staged_DM_snapshot_retained_separately": false,
+        "post_run_DM_sha256": "3dc20aae4a3860646cfab283ea8f5661b6e966c0b6bd2e64d3a87018f1fac375"
+      },
+      "receipt_binding": {
+        "response_receipt_output_sha256": "cf609157d01135550f65ef0e655d02cf4739051e98a83d5939d5f20d1c891ce1",
+        "matches_raw_output": true,
+        "role": "B",
+        "target": "MnLR01",
+        "alpha_eV": -0.025,
+        "parent_DM_equals_reference_DM": true
+      }
+    },
+    {
+      "run_id": "B_SCREENED_m0d050",
+      "mode": "SCREENED",
+      "target_from_receipt": "MnLR01",
+      "alpha_eV_from_receipt": -0.05,
+      "input_fdf": {
+        "path": "B_SCREENED_m0d050\\siesta.fdf",
+        "sha256": "6db21c5c775a155285fccc9d75cf25394d9a3c97d4d36a0b5ff90a8dd4cff8dc",
+        "settings": {
+          "SystemLabel": "B_SCREENED_m0d050",
+          "DFTU.PotentialShift": "true",
+          "DFTU.FirstIteration": "true",
+          "DFTU.ProjectorGenerationMethod": "2",
+          "DFTU.CutoffNorm": "0.90",
+          "SCF.Mix": "Hamiltonian",
+          "SCF.Mixer.Method": "Pulay",
+          "SCF.Mixer.Weight": "0.05",
+          "SCF.MustConverge": "T",
+          "SCF.DM.Converge": "T",
+          "SCF.H.Converge": "T",
+          "SCF.DM.Tolerance": "1.0e-5",
+          "SCF.H.Tolerance": "1.0e-4 eV",
+          "MaxSCFIterations": "300",
+          "DM.UseSaveDM": "true"
+        },
+        "projector_count": 16,
+        "projector_signature_unique": [
+          [
+            3,
+            2,
+            0.0,
+            0.05
+          ]
+        ],
+        "nonzero_UJ_entries": [
+          {
+            "site": "MnLR01",
+            "n": 3,
+            "l": 2,
+            "U_eV": -0.05,
+            "J_eV": 0.0,
+            "rc_input_bohr": 0.0,
+            "omega_bohr": 0.05
+          }
+        ],
+        "matches_mode_contract": true
+      },
+      "native_output": {
+        "path": "B_SCREENED_m0d050\\siesta.out",
+        "sha256": "5a2f6473b648413e2246bdffbd80577df545299369feaaf599fe7059e3d4c499",
+        "version": "5.4.2",
+        "executable": "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta",
+        "architecture": "x86_64",
+        "compiler": "GNU-13.3.0",
+        "redata_hamiltonian_mixing_lines": [
+          4764
+        ],
+        "dftu_hamiltonian_recalculation_lines": [
+          5372,
+          5841,
+          11495
+        ],
+        "stepf_lines": [
+          5374
+        ],
+        "scf_iteration_summaries": [
+          {
+            "line": 5868,
+            "iteration": 1
+          },
+          {
+            "line": 6337,
+            "iteration": 2
+          },
+          {
+            "line": 6805,
+            "iteration": 3
+          },
+          {
+            "line": 7273,
+            "iteration": 4
+          },
+          {
+            "line": 7741,
+            "iteration": 5
+          },
+          {
+            "line": 8209,
+            "iteration": 6
+          },
+          {
+            "line": 8677,
+            "iteration": 7
+          },
+          {
+            "line": 9145,
+            "iteration": 8
+          },
+          {
+            "line": 9613,
+            "iteration": 9
+          },
+          {
+            "line": 10081,
+            "iteration": 10
+          },
+          {
+            "line": 10549,
+            "iteration": 11
+          },
+          {
+            "line": 11017,
+            "iteration": 12
+          }
+        ],
+        "scf_convergence": [
+          {
+            "line": 11025,
+            "text": "SCF cycle converged after 12 iterations",
+            "iterations": 12
+          }
+        ],
+        "scf_nonconvergence_lines": [],
+        "dm_read_markers": [
+          {
+            "line": 4885,
+            "text": "Attempting to read DM from file... Succeeded...",
+            "succeeded": true
+          }
+        ],
+        "using_DM_out_lines": [
+          11027
+        ],
+        "end_of_run_lines": [
+          12488
+        ],
+        "job_completed": true,
+        "normal_exit_marker_exists": true,
+        "normal_exit_marker_text": "SIESTA completed, MPI exit: 0",
+        "events": [
+          {
+            "start_line": 4906,
+            "dftu_counter": 1,
+            "end_line": 5371,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "before first stepf (initial/reference-DM population block)"
+          },
+          {
+            "start_line": 5375,
+            "dftu_counter": 1,
+            "end_line": 5840,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "after first stepf and before scf: 1 (first-diagonalization response candidate)"
+          },
+          {
+            "start_line": 5871,
+            "dftu_counter": 2,
+            "end_line": 6336,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 6339,
+            "dftu_counter": 3,
+            "end_line": 6804,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 6807,
+            "dftu_counter": 4,
+            "end_line": 7272,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 7275,
+            "dftu_counter": 5,
+            "end_line": 7740,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 7743,
+            "dftu_counter": 6,
+            "end_line": 8208,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 8211,
+            "dftu_counter": 7,
+            "end_line": 8676,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 8679,
+            "dftu_counter": 8,
+            "end_line": 9144,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 9147,
+            "dftu_counter": 9,
+            "end_line": 9612,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 9615,
+            "dftu_counter": 10,
+            "end_line": 10080,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 10083,
+            "dftu_counter": 11,
+            "end_line": 10548,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 10551,
+            "dftu_counter": 12,
+            "end_line": 11016,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 11029,
+            "dftu_counter": 13,
+            "end_line": 11494,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "post-convergence population block"
+          }
+        ],
+        "postconvergence_population_event_index_1based": 14,
+        "first_diagonalization_event_index_1based": 2,
+        "bare_selection_event_index_1based": null,
+        "all_population_events_complete_for_16_sites": true
+      },
+      "parent_DM_evidence": {
+        "reference_file_sha256": "65d418d1a21b4b4052d41d68554639fc4bc4682566bb780c0d072fd4cfe5eb47",
+        "receipt_parent_dm_sha256": "65d418d1a21b4b4052d41d68554639fc4bc4682566bb780c0d072fd4cfe5eb47",
+        "receipt_matches_reference": true,
+        "output_says_DM_read_succeeded": true,
+        "pre_run_staged_DM_snapshot_retained_separately": false,
+        "post_run_DM_sha256": "6afb0d597b20063104d34620ac967e34b8d573d8c58d6fcf388fe5900e0e6534"
+      },
+      "receipt_binding": {
+        "response_receipt_output_sha256": "5a2f6473b648413e2246bdffbd80577df545299369feaaf599fe7059e3d4c499",
+        "matches_raw_output": true,
+        "role": "B",
+        "target": "MnLR01",
+        "alpha_eV": -0.05,
+        "parent_DM_equals_reference_DM": true
+      }
+    },
+    {
+      "run_id": "B_SCREENED_m0d100",
+      "mode": "SCREENED",
+      "target_from_receipt": "MnLR01",
+      "alpha_eV_from_receipt": -0.1,
+      "input_fdf": {
+        "path": "B_SCREENED_m0d100\\siesta.fdf",
+        "sha256": "96b238779ab208cdb8e65f22f13e4b87f54d540714e53e802eb053148dd0226d",
+        "settings": {
+          "SystemLabel": "B_SCREENED_m0d100",
+          "DFTU.PotentialShift": "true",
+          "DFTU.FirstIteration": "true",
+          "DFTU.ProjectorGenerationMethod": "2",
+          "DFTU.CutoffNorm": "0.90",
+          "SCF.Mix": "Hamiltonian",
+          "SCF.Mixer.Method": "Pulay",
+          "SCF.Mixer.Weight": "0.05",
+          "SCF.MustConverge": "T",
+          "SCF.DM.Converge": "T",
+          "SCF.H.Converge": "T",
+          "SCF.DM.Tolerance": "1.0e-5",
+          "SCF.H.Tolerance": "1.0e-4 eV",
+          "MaxSCFIterations": "300",
+          "DM.UseSaveDM": "true"
+        },
+        "projector_count": 16,
+        "projector_signature_unique": [
+          [
+            3,
+            2,
+            0.0,
+            0.05
+          ]
+        ],
+        "nonzero_UJ_entries": [
+          {
+            "site": "MnLR01",
+            "n": 3,
+            "l": 2,
+            "U_eV": -0.1,
+            "J_eV": 0.0,
+            "rc_input_bohr": 0.0,
+            "omega_bohr": 0.05
+          }
+        ],
+        "matches_mode_contract": true
+      },
+      "native_output": {
+        "path": "B_SCREENED_m0d100\\siesta.out",
+        "sha256": "62261230b535144b1dd02fdfdb9d130a7721565b93ba702a040387f0c1dfba45",
+        "version": "5.4.2",
+        "executable": "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta",
+        "architecture": "x86_64",
+        "compiler": "GNU-13.3.0",
+        "redata_hamiltonian_mixing_lines": [
+          4764
+        ],
+        "dftu_hamiltonian_recalculation_lines": [
+          5372,
+          5841,
+          6805,
+          11496
+        ],
+        "stepf_lines": [
+          5374
+        ],
+        "scf_iteration_summaries": [
+          {
+            "line": 5868,
+            "iteration": 1
+          },
+          {
+            "line": 6337,
+            "iteration": 2
+          },
+          {
+            "line": 6806,
+            "iteration": 3
+          },
+          {
+            "line": 7274,
+            "iteration": 4
+          },
+          {
+            "line": 7742,
+            "iteration": 5
+          },
+          {
+            "line": 8210,
+            "iteration": 6
+          },
+          {
+            "line": 8678,
+            "iteration": 7
+          },
+          {
+            "line": 9146,
+            "iteration": 8
+          },
+          {
+            "line": 9614,
+            "iteration": 9
+          },
+          {
+            "line": 10082,
+            "iteration": 10
+          },
+          {
+            "line": 10550,
+            "iteration": 11
+          },
+          {
+            "line": 11018,
+            "iteration": 12
+          }
+        ],
+        "scf_convergence": [
+          {
+            "line": 11026,
+            "text": "SCF cycle converged after 12 iterations",
+            "iterations": 12
+          }
+        ],
+        "scf_nonconvergence_lines": [],
+        "dm_read_markers": [
+          {
+            "line": 4885,
+            "text": "Attempting to read DM from file... Succeeded...",
+            "succeeded": true
+          }
+        ],
+        "using_DM_out_lines": [
+          11028
+        ],
+        "end_of_run_lines": [
+          12489
+        ],
+        "job_completed": true,
+        "normal_exit_marker_exists": true,
+        "normal_exit_marker_text": "SIESTA completed, MPI exit: 0",
+        "events": [
+          {
+            "start_line": 4906,
+            "dftu_counter": 1,
+            "end_line": 5371,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "before first stepf (initial/reference-DM population block)"
+          },
+          {
+            "start_line": 5375,
+            "dftu_counter": 1,
+            "end_line": 5840,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "after first stepf and before scf: 1 (first-diagonalization response candidate)"
+          },
+          {
+            "start_line": 5871,
+            "dftu_counter": 2,
+            "end_line": 6336,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 6339,
+            "dftu_counter": 3,
+            "end_line": 6804,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 6808,
+            "dftu_counter": 4,
+            "end_line": 7273,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 7276,
+            "dftu_counter": 5,
+            "end_line": 7741,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 7744,
+            "dftu_counter": 6,
+            "end_line": 8209,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 8212,
+            "dftu_counter": 7,
+            "end_line": 8677,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 8680,
+            "dftu_counter": 8,
+            "end_line": 9145,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 9148,
+            "dftu_counter": 9,
+            "end_line": 9613,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 9616,
+            "dftu_counter": 10,
+            "end_line": 10081,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 10084,
+            "dftu_counter": 11,
+            "end_line": 10549,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 10552,
+            "dftu_counter": 12,
+            "end_line": 11017,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 11030,
+            "dftu_counter": 13,
+            "end_line": 11495,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "post-convergence population block"
+          }
+        ],
+        "postconvergence_population_event_index_1based": 14,
+        "first_diagonalization_event_index_1based": 2,
+        "bare_selection_event_index_1based": null,
+        "all_population_events_complete_for_16_sites": true
+      },
+      "parent_DM_evidence": {
+        "reference_file_sha256": "65d418d1a21b4b4052d41d68554639fc4bc4682566bb780c0d072fd4cfe5eb47",
+        "receipt_parent_dm_sha256": "65d418d1a21b4b4052d41d68554639fc4bc4682566bb780c0d072fd4cfe5eb47",
+        "receipt_matches_reference": true,
+        "output_says_DM_read_succeeded": true,
+        "pre_run_staged_DM_snapshot_retained_separately": false,
+        "post_run_DM_sha256": "0aba420e30894ac92eeb97a826517247515d92f6309095a057c37088cd890373"
+      },
+      "receipt_binding": {
+        "response_receipt_output_sha256": "62261230b535144b1dd02fdfdb9d130a7721565b93ba702a040387f0c1dfba45",
+        "matches_raw_output": true,
+        "role": "B",
+        "target": "MnLR01",
+        "alpha_eV": -0.1,
+        "parent_DM_equals_reference_DM": true
+      }
+    },
+    {
+      "run_id": "B_SCREENED_p0d000",
+      "mode": "SCREENED",
+      "target_from_receipt": "MnLR01",
+      "alpha_eV_from_receipt": 0.0,
+      "input_fdf": {
+        "path": "B_SCREENED_p0d000\\siesta.fdf",
+        "sha256": "285c7ffc0f055248429681066640e4911983647997b234f13f5e55081768e584",
+        "settings": {
+          "SystemLabel": "B_SCREENED_p0d000",
+          "DFTU.PotentialShift": "true",
+          "DFTU.FirstIteration": "true",
+          "DFTU.ProjectorGenerationMethod": "2",
+          "DFTU.CutoffNorm": "0.90",
+          "SCF.Mix": "Hamiltonian",
+          "SCF.Mixer.Method": "Pulay",
+          "SCF.Mixer.Weight": "0.05",
+          "SCF.MustConverge": "T",
+          "SCF.DM.Converge": "T",
+          "SCF.H.Converge": "T",
+          "SCF.DM.Tolerance": "1.0e-5",
+          "SCF.H.Tolerance": "1.0e-4 eV",
+          "MaxSCFIterations": "300",
+          "DM.UseSaveDM": "true"
+        },
+        "projector_count": 16,
+        "projector_signature_unique": [
+          [
+            3,
+            2,
+            0.0,
+            0.05
+          ]
+        ],
+        "nonzero_UJ_entries": [],
+        "matches_mode_contract": true
+      },
+      "native_output": {
+        "path": "B_SCREENED_p0d000\\siesta.out",
+        "sha256": "0126124a94443e66090c12c859633187eea23281c0d83176d340c5d743d72994",
+        "version": "5.4.2",
+        "executable": "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta",
+        "architecture": "x86_64",
+        "compiler": "GNU-13.3.0",
+        "redata_hamiltonian_mixing_lines": [
+          4764
+        ],
+        "dftu_hamiltonian_recalculation_lines": [
+          5372,
+          5841,
+          7283
+        ],
+        "stepf_lines": [
+          5374
+        ],
+        "scf_iteration_summaries": [
+          {
+            "line": 5868,
+            "iteration": 1
+          },
+          {
+            "line": 6337,
+            "iteration": 2
+          },
+          {
+            "line": 6805,
+            "iteration": 3
+          }
+        ],
+        "scf_convergence": [
+          {
+            "line": 6813,
+            "text": "SCF cycle converged after 3 iterations",
+            "iterations": 3
+          }
+        ],
+        "scf_nonconvergence_lines": [],
+        "dm_read_markers": [
+          {
+            "line": 4885,
+            "text": "Attempting to read DM from file... Succeeded...",
+            "succeeded": true
+          }
+        ],
+        "using_DM_out_lines": [
+          6815
+        ],
+        "end_of_run_lines": [
+          8276
+        ],
+        "job_completed": true,
+        "normal_exit_marker_exists": true,
+        "normal_exit_marker_text": "SIESTA completed, MPI exit: 0",
+        "events": [
+          {
+            "start_line": 4906,
+            "dftu_counter": 1,
+            "end_line": 5371,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "before first stepf (initial/reference-DM population block)"
+          },
+          {
+            "start_line": 5375,
+            "dftu_counter": 1,
+            "end_line": 5840,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "after first stepf and before scf: 1 (first-diagonalization response candidate)"
+          },
+          {
+            "start_line": 5871,
+            "dftu_counter": 2,
+            "end_line": 6336,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 6339,
+            "dftu_counter": 3,
+            "end_line": 6804,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 6817,
+            "dftu_counter": 4,
+            "end_line": 7282,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "post-convergence population block"
+          }
+        ],
+        "postconvergence_population_event_index_1based": 5,
+        "first_diagonalization_event_index_1based": 2,
+        "bare_selection_event_index_1based": null,
+        "all_population_events_complete_for_16_sites": true
+      },
+      "parent_DM_evidence": {
+        "reference_file_sha256": "65d418d1a21b4b4052d41d68554639fc4bc4682566bb780c0d072fd4cfe5eb47",
+        "receipt_parent_dm_sha256": "65d418d1a21b4b4052d41d68554639fc4bc4682566bb780c0d072fd4cfe5eb47",
+        "receipt_matches_reference": true,
+        "output_says_DM_read_succeeded": true,
+        "pre_run_staged_DM_snapshot_retained_separately": false,
+        "post_run_DM_sha256": "9cab91e7f2815c39fafe2b32658f83f77d22d5a515e07f17583148c3992739d4"
+      },
+      "receipt_binding": {
+        "response_receipt_output_sha256": "0126124a94443e66090c12c859633187eea23281c0d83176d340c5d743d72994",
+        "matches_raw_output": true,
+        "role": "B",
+        "target": "MnLR01",
+        "alpha_eV": 0.0,
+        "parent_DM_equals_reference_DM": true
+      }
+    },
+    {
+      "run_id": "B_SCREENED_p0d025",
+      "mode": "SCREENED",
+      "target_from_receipt": "MnLR01",
+      "alpha_eV_from_receipt": 0.025,
+      "input_fdf": {
+        "path": "B_SCREENED_p0d025\\siesta.fdf",
+        "sha256": "b7cabd420fcd7345f0e85aeb1d607aef94ff3b2557068897cd309156ae808506",
+        "settings": {
+          "SystemLabel": "B_SCREENED_p0d025",
+          "DFTU.PotentialShift": "true",
+          "DFTU.FirstIteration": "true",
+          "DFTU.ProjectorGenerationMethod": "2",
+          "DFTU.CutoffNorm": "0.90",
+          "SCF.Mix": "Hamiltonian",
+          "SCF.Mixer.Method": "Pulay",
+          "SCF.Mixer.Weight": "0.05",
+          "SCF.MustConverge": "T",
+          "SCF.DM.Converge": "T",
+          "SCF.H.Converge": "T",
+          "SCF.DM.Tolerance": "1.0e-5",
+          "SCF.H.Tolerance": "1.0e-4 eV",
+          "MaxSCFIterations": "300",
+          "DM.UseSaveDM": "true"
+        },
+        "projector_count": 16,
+        "projector_signature_unique": [
+          [
+            3,
+            2,
+            0.0,
+            0.05
+          ]
+        ],
+        "nonzero_UJ_entries": [
+          {
+            "site": "MnLR01",
+            "n": 3,
+            "l": 2,
+            "U_eV": 0.025,
+            "J_eV": 0.0,
+            "rc_input_bohr": 0.0,
+            "omega_bohr": 0.05
+          }
+        ],
+        "matches_mode_contract": true
+      },
+      "native_output": {
+        "path": "B_SCREENED_p0d025\\siesta.out",
+        "sha256": "4906ed5ae1c0b33573aaa8fd6fb0fed3e6591974a9fe93ec83ea062b6e52efd7",
+        "version": "5.4.2",
+        "executable": "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta",
+        "architecture": "x86_64",
+        "compiler": "GNU-13.3.0",
+        "redata_hamiltonian_mixing_lines": [
+          4764
+        ],
+        "dftu_hamiltonian_recalculation_lines": [
+          5372,
+          5841,
+          9623
+        ],
+        "stepf_lines": [
+          5374
+        ],
+        "scf_iteration_summaries": [
+          {
+            "line": 5868,
+            "iteration": 1
+          },
+          {
+            "line": 6337,
+            "iteration": 2
+          },
+          {
+            "line": 6805,
+            "iteration": 3
+          },
+          {
+            "line": 7273,
+            "iteration": 4
+          },
+          {
+            "line": 7741,
+            "iteration": 5
+          },
+          {
+            "line": 8209,
+            "iteration": 6
+          },
+          {
+            "line": 8677,
+            "iteration": 7
+          },
+          {
+            "line": 9145,
+            "iteration": 8
+          }
+        ],
+        "scf_convergence": [
+          {
+            "line": 9153,
+            "text": "SCF cycle converged after 8 iterations",
+            "iterations": 8
+          }
+        ],
+        "scf_nonconvergence_lines": [],
+        "dm_read_markers": [
+          {
+            "line": 4885,
+            "text": "Attempting to read DM from file... Succeeded...",
+            "succeeded": true
+          }
+        ],
+        "using_DM_out_lines": [
+          9155
+        ],
+        "end_of_run_lines": [
+          10616
+        ],
+        "job_completed": true,
+        "normal_exit_marker_exists": true,
+        "normal_exit_marker_text": "SIESTA completed, MPI exit: 0",
+        "events": [
+          {
+            "start_line": 4906,
+            "dftu_counter": 1,
+            "end_line": 5371,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "before first stepf (initial/reference-DM population block)"
+          },
+          {
+            "start_line": 5375,
+            "dftu_counter": 1,
+            "end_line": 5840,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "after first stepf and before scf: 1 (first-diagonalization response candidate)"
+          },
+          {
+            "start_line": 5871,
+            "dftu_counter": 2,
+            "end_line": 6336,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 6339,
+            "dftu_counter": 3,
+            "end_line": 6804,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 6807,
+            "dftu_counter": 4,
+            "end_line": 7272,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 7275,
+            "dftu_counter": 5,
+            "end_line": 7740,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 7743,
+            "dftu_counter": 6,
+            "end_line": 8208,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 8211,
+            "dftu_counter": 7,
+            "end_line": 8676,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 8679,
+            "dftu_counter": 8,
+            "end_line": 9144,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 9157,
+            "dftu_counter": 9,
+            "end_line": 9622,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "post-convergence population block"
+          }
+        ],
+        "postconvergence_population_event_index_1based": 10,
+        "first_diagonalization_event_index_1based": 2,
+        "bare_selection_event_index_1based": null,
+        "all_population_events_complete_for_16_sites": true
+      },
+      "parent_DM_evidence": {
+        "reference_file_sha256": "65d418d1a21b4b4052d41d68554639fc4bc4682566bb780c0d072fd4cfe5eb47",
+        "receipt_parent_dm_sha256": "65d418d1a21b4b4052d41d68554639fc4bc4682566bb780c0d072fd4cfe5eb47",
+        "receipt_matches_reference": true,
+        "output_says_DM_read_succeeded": true,
+        "pre_run_staged_DM_snapshot_retained_separately": false,
+        "post_run_DM_sha256": "126674bf84e9a603ff361c55bda3c27de68df7e4ea882b91b140933b6c9db87e"
+      },
+      "receipt_binding": {
+        "response_receipt_output_sha256": "4906ed5ae1c0b33573aaa8fd6fb0fed3e6591974a9fe93ec83ea062b6e52efd7",
+        "matches_raw_output": true,
+        "role": "B",
+        "target": "MnLR01",
+        "alpha_eV": 0.025,
+        "parent_DM_equals_reference_DM": true
+      }
+    },
+    {
+      "run_id": "B_SCREENED_p0d050",
+      "mode": "SCREENED",
+      "target_from_receipt": "MnLR01",
+      "alpha_eV_from_receipt": 0.05,
+      "input_fdf": {
+        "path": "B_SCREENED_p0d050\\siesta.fdf",
+        "sha256": "8cc5bfd079fed55ce2250477733f6dc0233df43182cd1be18ffd9536550fb024",
+        "settings": {
+          "SystemLabel": "B_SCREENED_p0d050",
+          "DFTU.PotentialShift": "true",
+          "DFTU.FirstIteration": "true",
+          "DFTU.ProjectorGenerationMethod": "2",
+          "DFTU.CutoffNorm": "0.90",
+          "SCF.Mix": "Hamiltonian",
+          "SCF.Mixer.Method": "Pulay",
+          "SCF.Mixer.Weight": "0.05",
+          "SCF.MustConverge": "T",
+          "SCF.DM.Converge": "T",
+          "SCF.H.Converge": "T",
+          "SCF.DM.Tolerance": "1.0e-5",
+          "SCF.H.Tolerance": "1.0e-4 eV",
+          "MaxSCFIterations": "300",
+          "DM.UseSaveDM": "true"
+        },
+        "projector_count": 16,
+        "projector_signature_unique": [
+          [
+            3,
+            2,
+            0.0,
+            0.05
+          ]
+        ],
+        "nonzero_UJ_entries": [
+          {
+            "site": "MnLR01",
+            "n": 3,
+            "l": 2,
+            "U_eV": 0.05,
+            "J_eV": 0.0,
+            "rc_input_bohr": 0.0,
+            "omega_bohr": 0.05
+          }
+        ],
+        "matches_mode_contract": true
+      },
+      "native_output": {
+        "path": "B_SCREENED_p0d050\\siesta.out",
+        "sha256": "0eb5a990dc92cd062b24ef600f1c36641508b609cf5d06c378bd3479b7991fb7",
+        "version": "5.4.2",
+        "executable": "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta",
+        "architecture": "x86_64",
+        "compiler": "GNU-13.3.0",
+        "redata_hamiltonian_mixing_lines": [
+          4764
+        ],
+        "dftu_hamiltonian_recalculation_lines": [
+          5372,
+          5841,
+          10559
+        ],
+        "stepf_lines": [
+          5374
+        ],
+        "scf_iteration_summaries": [
+          {
+            "line": 5868,
+            "iteration": 1
+          },
+          {
+            "line": 6337,
+            "iteration": 2
+          },
+          {
+            "line": 6805,
+            "iteration": 3
+          },
+          {
+            "line": 7273,
+            "iteration": 4
+          },
+          {
+            "line": 7741,
+            "iteration": 5
+          },
+          {
+            "line": 8209,
+            "iteration": 6
+          },
+          {
+            "line": 8677,
+            "iteration": 7
+          },
+          {
+            "line": 9145,
+            "iteration": 8
+          },
+          {
+            "line": 9613,
+            "iteration": 9
+          },
+          {
+            "line": 10081,
+            "iteration": 10
+          }
+        ],
+        "scf_convergence": [
+          {
+            "line": 10089,
+            "text": "SCF cycle converged after 10 iterations",
+            "iterations": 10
+          }
+        ],
+        "scf_nonconvergence_lines": [],
+        "dm_read_markers": [
+          {
+            "line": 4885,
+            "text": "Attempting to read DM from file... Succeeded...",
+            "succeeded": true
+          }
+        ],
+        "using_DM_out_lines": [
+          10091
+        ],
+        "end_of_run_lines": [
+          11552
+        ],
+        "job_completed": true,
+        "normal_exit_marker_exists": true,
+        "normal_exit_marker_text": "SIESTA completed, MPI exit: 0",
+        "events": [
+          {
+            "start_line": 4906,
+            "dftu_counter": 1,
+            "end_line": 5371,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "before first stepf (initial/reference-DM population block)"
+          },
+          {
+            "start_line": 5375,
+            "dftu_counter": 1,
+            "end_line": 5840,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "after first stepf and before scf: 1 (first-diagonalization response candidate)"
+          },
+          {
+            "start_line": 5871,
+            "dftu_counter": 2,
+            "end_line": 6336,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 6339,
+            "dftu_counter": 3,
+            "end_line": 6804,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 6807,
+            "dftu_counter": 4,
+            "end_line": 7272,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 7275,
+            "dftu_counter": 5,
+            "end_line": 7740,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 7743,
+            "dftu_counter": 6,
+            "end_line": 8208,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 8211,
+            "dftu_counter": 7,
+            "end_line": 8676,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 8679,
+            "dftu_counter": 8,
+            "end_line": 9144,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 9147,
+            "dftu_counter": 9,
+            "end_line": 9612,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 9615,
+            "dftu_counter": 10,
+            "end_line": 10080,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 10093,
+            "dftu_counter": 11,
+            "end_line": 10558,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "post-convergence population block"
+          }
+        ],
+        "postconvergence_population_event_index_1based": 12,
+        "first_diagonalization_event_index_1based": 2,
+        "bare_selection_event_index_1based": null,
+        "all_population_events_complete_for_16_sites": true
+      },
+      "parent_DM_evidence": {
+        "reference_file_sha256": "65d418d1a21b4b4052d41d68554639fc4bc4682566bb780c0d072fd4cfe5eb47",
+        "receipt_parent_dm_sha256": "65d418d1a21b4b4052d41d68554639fc4bc4682566bb780c0d072fd4cfe5eb47",
+        "receipt_matches_reference": true,
+        "output_says_DM_read_succeeded": true,
+        "pre_run_staged_DM_snapshot_retained_separately": false,
+        "post_run_DM_sha256": "c5e0814fa51a5ad80c79379aefda7e84aaf4b67d48cd533fd4359a911fa0d47c"
+      },
+      "receipt_binding": {
+        "response_receipt_output_sha256": "0eb5a990dc92cd062b24ef600f1c36641508b609cf5d06c378bd3479b7991fb7",
+        "matches_raw_output": true,
+        "role": "B",
+        "target": "MnLR01",
+        "alpha_eV": 0.05,
+        "parent_DM_equals_reference_DM": true
+      }
+    },
+    {
+      "run_id": "B_SCREENED_p0d100",
+      "mode": "SCREENED",
+      "target_from_receipt": "MnLR01",
+      "alpha_eV_from_receipt": 0.1,
+      "input_fdf": {
+        "path": "B_SCREENED_p0d100\\siesta.fdf",
+        "sha256": "6e7893dd6087095b3817d2b64365d0e839bbdd185c53600d6a72a7f271c67ec4",
+        "settings": {
+          "SystemLabel": "B_SCREENED_p0d100",
+          "DFTU.PotentialShift": "true",
+          "DFTU.FirstIteration": "true",
+          "DFTU.ProjectorGenerationMethod": "2",
+          "DFTU.CutoffNorm": "0.90",
+          "SCF.Mix": "Hamiltonian",
+          "SCF.Mixer.Method": "Pulay",
+          "SCF.Mixer.Weight": "0.05",
+          "SCF.MustConverge": "T",
+          "SCF.DM.Converge": "T",
+          "SCF.H.Converge": "T",
+          "SCF.DM.Tolerance": "1.0e-5",
+          "SCF.H.Tolerance": "1.0e-4 eV",
+          "MaxSCFIterations": "300",
+          "DM.UseSaveDM": "true"
+        },
+        "projector_count": 16,
+        "projector_signature_unique": [
+          [
+            3,
+            2,
+            0.0,
+            0.05
+          ]
+        ],
+        "nonzero_UJ_entries": [
+          {
+            "site": "MnLR01",
+            "n": 3,
+            "l": 2,
+            "U_eV": 0.1,
+            "J_eV": 0.0,
+            "rc_input_bohr": 0.0,
+            "omega_bohr": 0.05
+          }
+        ],
+        "matches_mode_contract": true
+      },
+      "native_output": {
+        "path": "B_SCREENED_p0d100\\siesta.out",
+        "sha256": "22f55a82e727fbc7bcf0faed4dde4dfa699bd71121d860afa84168972677a271",
+        "version": "5.4.2",
+        "executable": "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta",
+        "architecture": "x86_64",
+        "compiler": "GNU-13.3.0",
+        "redata_hamiltonian_mixing_lines": [
+          4764
+        ],
+        "dftu_hamiltonian_recalculation_lines": [
+          5372,
+          5841,
+          6805,
+          11028
+        ],
+        "stepf_lines": [
+          5374
+        ],
+        "scf_iteration_summaries": [
+          {
+            "line": 5868,
+            "iteration": 1
+          },
+          {
+            "line": 6337,
+            "iteration": 2
+          },
+          {
+            "line": 6806,
+            "iteration": 3
+          },
+          {
+            "line": 7274,
+            "iteration": 4
+          },
+          {
+            "line": 7742,
+            "iteration": 5
+          },
+          {
+            "line": 8210,
+            "iteration": 6
+          },
+          {
+            "line": 8678,
+            "iteration": 7
+          },
+          {
+            "line": 9146,
+            "iteration": 8
+          },
+          {
+            "line": 9614,
+            "iteration": 9
+          },
+          {
+            "line": 10082,
+            "iteration": 10
+          },
+          {
+            "line": 10550,
+            "iteration": 11
+          }
+        ],
+        "scf_convergence": [
+          {
+            "line": 10558,
+            "text": "SCF cycle converged after 11 iterations",
+            "iterations": 11
+          }
+        ],
+        "scf_nonconvergence_lines": [],
+        "dm_read_markers": [
+          {
+            "line": 4885,
+            "text": "Attempting to read DM from file... Succeeded...",
+            "succeeded": true
+          }
+        ],
+        "using_DM_out_lines": [
+          10560
+        ],
+        "end_of_run_lines": [
+          12021
+        ],
+        "job_completed": true,
+        "normal_exit_marker_exists": true,
+        "normal_exit_marker_text": "SIESTA completed, MPI exit: 0",
+        "events": [
+          {
+            "start_line": 4906,
+            "dftu_counter": 1,
+            "end_line": 5371,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "before first stepf (initial/reference-DM population block)"
+          },
+          {
+            "start_line": 5375,
+            "dftu_counter": 1,
+            "end_line": 5840,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "after first stepf and before scf: 1 (first-diagonalization response candidate)"
+          },
+          {
+            "start_line": 5871,
+            "dftu_counter": 2,
+            "end_line": 6336,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 6339,
+            "dftu_counter": 3,
+            "end_line": 6804,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 6808,
+            "dftu_counter": 4,
+            "end_line": 7273,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 7276,
+            "dftu_counter": 5,
+            "end_line": 7741,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 7744,
+            "dftu_counter": 6,
+            "end_line": 8209,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 8212,
+            "dftu_counter": 7,
+            "end_line": 8677,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 8680,
+            "dftu_counter": 8,
+            "end_line": 9145,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 9148,
+            "dftu_counter": 9,
+            "end_line": 9613,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 9616,
+            "dftu_counter": 10,
+            "end_line": 10081,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 10084,
+            "dftu_counter": 11,
+            "end_line": 10549,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "SCF-cycle population block"
+          },
+          {
+            "start_line": 10562,
+            "dftu_counter": 12,
+            "end_line": 11027,
+            "hubbard_atom_blocks": 16,
+            "occupation_summaries": 16,
+            "interpretive_position": "post-convergence population block"
+          }
+        ],
+        "postconvergence_population_event_index_1based": 13,
+        "first_diagonalization_event_index_1based": 2,
+        "bare_selection_event_index_1based": null,
+        "all_population_events_complete_for_16_sites": true
+      },
+      "parent_DM_evidence": {
+        "reference_file_sha256": "65d418d1a21b4b4052d41d68554639fc4bc4682566bb780c0d072fd4cfe5eb47",
+        "receipt_parent_dm_sha256": "65d418d1a21b4b4052d41d68554639fc4bc4682566bb780c0d072fd4cfe5eb47",
+        "receipt_matches_reference": true,
+        "output_says_DM_read_succeeded": true,
+        "pre_run_staged_DM_snapshot_retained_separately": false,
+        "post_run_DM_sha256": "f15278bf252127cf4184ce1d97290be018b96ff1199359ce450945754ff257b8"
+      },
+      "receipt_binding": {
+        "response_receipt_output_sha256": "22f55a82e727fbc7bcf0faed4dde4dfa699bd71121d860afa84168972677a271",
+        "matches_raw_output": true,
+        "role": "B",
+        "target": "MnLR01",
+        "alpha_eV": 0.1,
+        "parent_DM_equals_reference_DM": true
+      }
+    }
+  ]
+}

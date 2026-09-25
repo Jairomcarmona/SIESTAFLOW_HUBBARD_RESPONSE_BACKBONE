@@ -1,0 +1,120 @@
+{
+  "campaign_id": "FEO_PBE_LRU_SC222_VALIDATION_V1",
+  "material": "FeO",
+  "lattice_constant_ang": 4.334,
+  "lattice_vectors_parent": [
+    [
+      0.0,
+      1.0,
+      1.0
+    ],
+    [
+      0.5,
+      0.0,
+      0.5
+    ],
+    [
+      0.5,
+      0.5,
+      0.0
+    ]
+  ],
+  "lattice_vectors_supercell": [
+    [
+      0.0,
+      2.0,
+      2.0
+    ],
+    [
+      1.0,
+      0.0,
+      1.0
+    ],
+    [
+      1.0,
+      1.0,
+      0.0
+    ]
+  ],
+  "correlated": {
+    "element": "Fe",
+    "atomic_number": 26,
+    "label_prefix": "FeLR"
+  },
+  "oxygen": {
+    "label": "O",
+    "atomic_number": 8
+  },
+  "parent_atoms": [
+    {
+      "role": "Fe_A",
+      "sublattice": "A",
+      "fractional": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "role": "Fe_B",
+      "sublattice": "B",
+      "fractional": [
+        0.5,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "role": "O_0",
+      "sublattice": "O",
+      "fractional": [
+        0.25,
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "role": "O_1",
+      "sublattice": "O",
+      "fractional": [
+        0.75,
+        0.5,
+        0.5
+      ]
+    }
+  ],
+  "initial_moments": {
+    "A": 4.0,
+    "B": -4.0,
+    "O": 0.0
+  },
+  "output_controls": {
+    "write_dm": true,
+    "write_mulliken": true
+  },
+  "projector": {
+    "method": 2,
+    "rc_bohr": 3.0,
+    "omega": 0.05,
+    "cutoff_policy": "explicit_rc"
+  },
+  "alpha_ev": 0.05,
+  "kgrid": [
+    3,
+    3,
+    3
+  ],
+  "representatives": {
+    "A": "FeLR00",
+    "B": "FeLR01"
+  },
+  "scientific_purpose": "independent 3d/spin-polarized transfer validation; not a fitted literature benchmark",
+  "literature_context": {
+    "reference": "Cococcioni & de Gironcoli, Phys. Rev. B 71, 035105 (2005)",
+    "reported_u_ev": 4.3,
+    "method": "DFPT linear response",
+    "code": "Quantum ESPRESSO",
+    "xc": "LDA",
+    "comparability": "context only; XC, projector and cell differ"
+  }
+}

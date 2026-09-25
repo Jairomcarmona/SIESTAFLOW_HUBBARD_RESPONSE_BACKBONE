@@ -63,13 +63,39 @@ bash -n slurm/submit_scientific_lru_dag.slurm
 cp slurm/site_profile.local.example slurm/site_profile.local
 # Edit only local module/executable settings; do not commit this file.
 source slurm/site_profile.local
-sbatch --partition "$SIESTAFLOW_PARTITION" slurm/submit_scientific_lru_dag.slurm
+sbatch --wait --no-requeue --time=1:00:00 --partition local \
+  -N1 -n4 --ntasks-per-node=4 -c1 --exclusive \
+  --export=ALL,OMP_NUM_THREADS=1,SIESTAFLOW_EXECUTION_PROFILE=local_openmpi \
+  slurm/submit_scientific_lru_dag.slurm
 ```
 
-If the site has no partition selector, omit the `--partition` argument. The
-five-node / 100-rank request remains an example profile: change it only after a
-site-level placement validation, keeping the script's `NODES`, `RANKS` and
-`PPN` checks consistent with the scheduler request.
+The validated local WSL profile uses Slurm partition `local`, one node, four
+tasks and Open MPI 4.1.6 (`orterun`/`mpiexec`). The equivalent foreground
+contract used by the MnO runner is `sbatch --wait --no-requeue -p local -N1
+-n4 -c1 --exclusive --export=NONE,OMP_NUM_THREADS=1`; its Open MPI launch maps
+four ranks onto the allocated host. The generic DAG uses `--export=ALL` so the
+site profile and executable paths remain available inside the job.
+
+For a cluster that has validated Intel Hydra placement, choose
+`SIESTAFLOW_EXECUTION_PROFILE=slurm_hydra_5x20` in the site profile and submit
+with its site-validated partition and time limit, plus `-N5 -n100
+--ntasks-per-node=20 -c1`. Hydra placement is checked as 20 ranks on each of
+the five allocated hosts. Neither profile is inferred from installed MPI
+executables; an unset or unknown profile fails before the DAG starts.
+
+The template has no hard-coded node, task, thread, or wall-time request. The
+`sbatch` resource request and selected execution profile must agree; the job
+checks the allocated node and task counts before running any preflight or
+scientific calculation.
+
+The MnO v3r2 folder is not currently a valid target for this generic installer.
+Its top-level `runs/manifest.json` contains nine legacy ±0.05 cases, while the
+locked response contract and `tools/run_mno_afmii_response_v3r2.py` define 29
+nodes over seven alpha values; it also lacks generic `validate_run.py` and
+analysis adapters. Do not install against those nine cases as a substitute for
+the locked matrix protocol or write into archived `results/` directories. A
+material-specific adapter over a separately staged 29-node manifest remains
+open work.
 
 The central Hubbard label is inferred from the first perturbed target in the
 manifest. Override it with `--central-label` only when that inference is not

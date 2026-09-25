@@ -15,6 +15,8 @@ import tempfile
 import numpy as np
 import pytest
 
+from siestaflow_hubbard.siesta_backend.fdf_builder import LegacyBareMaterializationDisabledError
+
 # ─── Path setup ─────────────────────────────────────────────────────────────
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 sys.path.insert(0, ROOT)
@@ -842,8 +844,8 @@ def test_estimate_run_counts_nonzero():
     assert counts['final_lr'] > 0
 
 
-def test_dry_run_produces_unique_dirs(tmp_path):
-    """Dry-run must create distinct directories for each (J, alpha, mode) combo."""
+def test_legacy_dry_run_rejects_bare_materialization(tmp_path):
+    """The former dry-run route must not materialize a legacy BARE campaign."""
     campaign_dir = str(tmp_path / 'campaign')
     os.makedirs(campaign_dir, exist_ok=True)
     _ensure_dummy_ref_dm(campaign_dir, 'Cu2O')
@@ -874,29 +876,20 @@ def test_dry_run_produces_unique_dirs(tmp_path):
         json.dump(mat_cfg, fh)
 
     from production_benchmarks.slurm_runner import cli_main
-    ret = cli_main([
-        '--campaign-dir', campaign_dir,
-        '--material', 'Cu2O',
-        '--dag-node', 'SCREENING',
-        '--mpi-ranks', '4',
-        '--max-concurrent', '2',
-        '--alpha', '-0.01', '0.0', '0.01',
-        '--dry-run',
-    ])
-    assert ret == 0
-
-    # Find all run dirs created
-    runs_root = os.path.join(campaign_dir, 'runs', 'Cu2O', 'SCREENING')
-    if os.path.exists(runs_root):
-        dirs = [d for d in os.listdir(runs_root) if os.path.isdir(os.path.join(runs_root, d))]
-        # 2 common + 4*4 = 18
-        assert len(dirs) == 18, f"Expected 18 unique dirs, got {len(dirs)}: {dirs}"
-        # All unique
-        assert len(dirs) == len(set(dirs))
+    with pytest.raises(LegacyBareMaterializationDisabledError, match="admitted SIESTA runtime"):
+        cli_main([
+            '--campaign-dir', campaign_dir,
+            '--material', 'Cu2O',
+            '--dag-node', 'SCREENING',
+            '--mpi-ranks', '4',
+            '--max-concurrent', '2',
+            '--alpha', '-0.01', '0.0', '0.01',
+            '--dry-run',
+        ])
 
 
-def test_dry_run_manifest_contains_correct_sites(tmp_path):
-    """Dry-run manifest must reference all 4 Cu sites for Cu2O."""
+def test_legacy_dry_run_cannot_emit_manifest(tmp_path):
+    """A rejected legacy BARE plan must not produce an accepted manifest."""
     campaign_dir = str(tmp_path / 'campaign')
     os.makedirs(campaign_dir, exist_ok=True)
     _ensure_dummy_ref_dm(campaign_dir, 'Cu2O')
@@ -922,24 +915,17 @@ def test_dry_run_manifest_contains_correct_sites(tmp_path):
         json.dump(mat_cfg, fh)
 
     from production_benchmarks.slurm_runner import cli_main
-    cli_main([
-        '--campaign-dir', campaign_dir,
-        '--material', 'Cu2O',
-        '--dag-node', 'FINAL_5POINT',
-        '--alpha', '-0.02', '-0.01', '0.0', '0.01', '0.02',
-        '--dry-run',
-    ])
-
     manifest_path = os.path.join(campaign_dir, 'runs', 'Cu2O',
                                   'FINAL_5POINT_dryrun_manifest.json')
-    assert os.path.exists(manifest_path)
-    with open(manifest_path) as fh:
-        runs = json.load(fh)
-
-    sites = {r['perturbed_site'] for r in runs}
-    assert sites == {0, 1, 2, 3}, f"Expected 4 distinct sites, got {sites}"
-    # 2 common + 8*4 = 34 runs
-    assert len(runs) == 34
+    with pytest.raises(LegacyBareMaterializationDisabledError, match="admitted SIESTA runtime"):
+        cli_main([
+            '--campaign-dir', campaign_dir,
+            '--material', 'Cu2O',
+            '--dag-node', 'FINAL_5POINT',
+            '--alpha', '-0.02', '-0.01', '0.0', '0.01', '0.02',
+            '--dry-run',
+        ])
+    assert not os.path.exists(manifest_path)
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -1243,8 +1229,8 @@ def test_plan_contains_bare_and_screened(tmp_path):
     assert modes == {'BARE', 'SCREENED'}, "Plan must contain both BARE and SCREENED specs"
 
 
-def test_nio_dryrun_writes_real_fdfs(tmp_path):
-    """Dry-run materializes REAL executable FDF files on disk."""
+def test_nio_legacy_dry_run_is_rejected(tmp_path):
+    """The legacy NiO dry-run cannot materialize BARE inputs."""
     campaign_dir = str(tmp_path / 'campaign')
     os.makedirs(os.path.join(campaign_dir, 'materials', 'nio'), exist_ok=True)
     _ensure_dummy_ref_dm(campaign_dir, 'NiO')
@@ -1266,26 +1252,12 @@ def test_nio_dryrun_writes_real_fdfs(tmp_path):
         json.dump(mat_cfg, fh)
 
     from production_benchmarks.slurm_runner import cli_main
-    cli_main(['--campaign-dir', campaign_dir, '--material', 'NiO', '--dag-node', 'SCREENING_3POINT', '--dry-run'])
-
-    runs_dir = os.path.join(campaign_dir, 'runs', 'NiO', 'SCREENING_3POINT')
-    assert os.path.exists(runs_dir)
-    fdf_files = []
-    for root, dirs, files in os.walk(runs_dir):
-        for f in files:
-            if f == 'siesta.fdf':
-                fdf_files.append(os.path.join(root, f))
-
-    assert len(fdf_files) == 10, f"Expected 10 FDF files on disk, got {len(fdf_files)}"
-    for fdf in fdf_files:
-        with open(fdf, 'r', encoding='utf-8') as fh:
-            text = fh.read()
-        assert len(text) > 100
-        assert '%block DFTU.proj' in text
+    with pytest.raises(LegacyBareMaterializationDisabledError, match="admitted SIESTA runtime"):
+        cli_main(['--campaign-dir', campaign_dir, '--material', 'NiO', '--dag-node', 'SCREENING_3POINT', '--dry-run'])
 
 
-def test_cu2o_dryrun_writes_real_fdfs(tmp_path):
-    """Cu2O dry-run materializes 18 real FDF files on disk."""
+def test_cu2o_legacy_dry_run_is_rejected(tmp_path):
+    """The legacy Cu2O dry-run cannot materialize BARE inputs."""
     campaign_dir = str(tmp_path / 'campaign')
     os.makedirs(os.path.join(campaign_dir, 'materials', 'cu2o'), exist_ok=True)
     _ensure_dummy_ref_dm(campaign_dir, 'Cu2O')
@@ -1309,15 +1281,12 @@ def test_cu2o_dryrun_writes_real_fdfs(tmp_path):
         json.dump(mat_cfg, fh)
 
     from production_benchmarks.slurm_runner import cli_main
-    cli_main(['--campaign-dir', campaign_dir, '--material', 'Cu2O', '--dag-node', 'SCREENING_3POINT', '--dry-run'])
-
-    runs_dir = os.path.join(campaign_dir, 'runs', 'Cu2O', 'SCREENING_3POINT')
-    fdf_files = [os.path.join(root, f) for root, _, files in os.walk(runs_dir) for f in files if f == 'siesta.fdf']
-    assert len(fdf_files) == 18, f"Expected 18 FDF files for Cu2O 3-pt, got {len(fdf_files)}"
+    with pytest.raises(LegacyBareMaterializationDisabledError, match="admitted SIESTA runtime"):
+        cli_main(['--campaign-dir', campaign_dir, '--material', 'Cu2O', '--dag-node', 'SCREENING_3POINT', '--dry-run'])
 
 
-def test_nio_bare_fdf_semantics(tmp_path):
-    """Verify NiO BARE FDF contains MaxSCFIterations 2 and SCF.MustConverge F."""
+def test_nio_legacy_bare_fdf_semantics_are_rejected(tmp_path):
+    """The density-mixed two-step BARE input has no public materializer."""
     mat_cfg = {
         'name': 'NiO', 'n_correlated_sites': 2, 'lattice_constant_ang': 4.177,
         'spin_mode': 'collinear_polarized',
@@ -1337,13 +1306,8 @@ def test_nio_bare_fdf_semantics(tmp_path):
         response_mode='BARE', alpha=0.01, perturbed_site=0, n_sites=2, identity_key='test_bare',
         mat_cfg=mat_cfg,
     )
-    fdf_text = materialize_run_fdf(spec)
-    assert 'MaxSCFIterations 2' in fdf_text
-    assert 'SCF.MustConverge F' in fdf_text
-    assert 'NiLR0' in fdf_text
-    assert 'NiLR1' in fdf_text
-    assert '+2.0' in fdf_text
-    assert '-2.0' in fdf_text
+    with pytest.raises(LegacyBareMaterializationDisabledError, match="admitted SIESTA runtime"):
+        materialize_run_fdf(spec)
 
 
 def test_nio_screened_fdf_semantics(tmp_path):

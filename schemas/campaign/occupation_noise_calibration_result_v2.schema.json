@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SiestaFlow immutable occupation-noise calibration result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "calibration_lock_sha256", "occupation_noise_e", "by_mode", "policy", "replica_receipts"],
+  "properties": {
+    "schema": {"const": "siestaflow-occupation-noise-calibration-result-v1"},
+    "calibration_lock_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "occupation_noise_e": {"type": "number", "exclusiveMinimum": 0},
+    "policy": {"type": "object", "additionalProperties": false, "required": ["replica_count", "safety_factor", "deterministic_floor_e", "output_quantum_e", "orbital_count", "spin_factor", "required_modes"], "properties": {"replica_count": {"const": 5}, "safety_factor": {"const": 2}, "deterministic_floor_e": {"const": 0.00005}, "output_quantum_e": {"const": 0.00005}, "orbital_count": {"const": 5}, "spin_factor": {"const": 2}, "required_modes": {"const": ["REFERENCE", "BARE", "SCREENED"]}}},
+    "by_mode": {
+      "type": "object",
+      "required": ["REFERENCE", "BARE", "SCREENED", "paired_controls"],
+      "additionalProperties": false,
+      "properties": {
+        "REFERENCE": {"$ref": "#/$defs/modeDiagnostics"},
+        "BARE": {"$ref": "#/$defs/modeDiagnostics"},
+        "SCREENED": {"$ref": "#/$defs/modeDiagnostics"},
+        "paired_controls": {"$ref": "#/$defs/pairedDiagnostics"}
+      }
+    },
+    "replica_receipts": {"type": "array", "minItems": 5, "maxItems": 5, "items": {"type": "object", "additionalProperties": false, "required": ["replica_id", "slurm_job_id", "receipts_sha256", "reference_dm_sha256", "replica_result_path", "replica_result_sha256"], "properties": {"replica_id": {"type": "string", "minLength": 1}, "slurm_job_id": {"type": "string", "pattern": "^[1-9][0-9]*$"}, "receipts_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}, "reference_dm_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}, "replica_result_path": {"type": "string", "pattern": "^results-v2/calibration-replicas/[^/]+/replica-result\\.json$"}, "replica_result_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}}}
+  },
+  "$defs": {
+    "finiteNumber": {"type": "number"},
+    "modeDiagnostics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["occupations", "median_occupation", "maximum_absolute_deviation_e", "scaled_deviation_e", "deterministic", "occupation_noise_e"],
+      "properties": {
+        "occupations": {"type": "array", "minItems": 5, "maxItems": 5, "items": {"$ref": "#/$defs/finiteNumber"}},
+        "median_occupation": {"$ref": "#/$defs/finiteNumber"},
+        "maximum_absolute_deviation_e": {"type": "number", "minimum": 0},
+        "scaled_deviation_e": {"type": "number", "minimum": 0},
+        "deterministic": {"type": "boolean"},
+        "occupation_noise_e": {"type": "number", "minimum": 0.00005}
+      }
+    },
+    "pairedDiagnostics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reference_median_occupation", "bare_reference_systematic_offset_e", "screened_reference_systematic_offset_e", "bare_screened_systematic_offset_e", "occupation_noise_e"],
+      "properties": {
+        "reference_median_occupation": {"$ref": "#/$defs/finiteNumber"},
+        "bare_reference_systematic_offset_e": {"$ref": "#/$defs/finiteNumber"},
+        "screened_reference_systematic_offset_e": {"$ref": "#/$defs/finiteNumber"},
+        "bare_screened_systematic_offset_e": {"$ref": "#/$defs/finiteNumber"},
+        "occupation_noise_e": {"type": "number", "minimum": 0.00005}
+      }
+    }
+  }
+}

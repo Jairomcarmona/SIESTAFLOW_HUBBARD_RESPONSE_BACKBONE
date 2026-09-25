@@ -132,13 +132,22 @@ def fit_response(alpha: Sequence[float], occupations: Sequence[float]) -> Linear
     """
     Fit n(alpha) = intercept + slope * alpha using OLS.
     alpha and occupations must have the same length (>= 2).
-    Computes one-sided and symmetric central-difference diagnostics
-    when alpha=0, ±0.01, ±0.02 are present.
+    Computes legacy one-sided and central-difference diagnostics when their
+    specific alpha values are present; the fitted slope uses all supplied data.
     """
     a = np.asarray(alpha, dtype=float)
     n = np.asarray(occupations, dtype=float)
+    if a.ndim != 1 or n.ndim != 1 or len(a) != len(n):
+        raise ValueError("alpha and occupations must be one-dimensional arrays of equal length")
     if len(a) < 2:
         raise ValueError("fit_response requires at least 2 points")
+    if not np.all(np.isfinite(a)) or not np.all(np.isfinite(n)):
+        raise ValueError("alpha and occupations must contain only finite values")
+    distinct_alpha = np.unique(a).size
+    if distinct_alpha < 2:
+        raise ValueError("fit_response requires at least 2 distinct alpha values")
+    if distinct_alpha != a.size:
+        raise ValueError("duplicate alpha observations require explicit aggregation before fitting")
 
     X = np.column_stack([np.ones_like(a), a])
     coeffs, _, _, _ = np.linalg.lstsq(X, n, rcond=None)
@@ -199,6 +208,26 @@ def fit_response(alpha: Sequence[float], occupations: Sequence[float]) -> Linear
         central_slope_001=central_001,
         central_slope_002=central_002,
     )
+
+
+def select_inner_alpha_window(alpha: Sequence[float]) -> np.ndarray:
+    """Select the smallest measured alpha shell around zero.
+
+    The selection follows the supplied grid instead of assuming a particular
+    value such as 0.01 eV. A usable local window must contain at least two
+    distinct alpha values.
+    """
+    values = np.asarray(alpha, dtype=float)
+    if values.ndim != 1 or values.size < 2 or not np.all(np.isfinite(values)):
+        raise ValueError("alpha window selection requires at least two finite one-dimensional values")
+    nonzero = np.abs(values[np.abs(values) > 1e-12])
+    if nonzero.size == 0:
+        raise ValueError("alpha window selection requires a non-zero perturbation")
+    radius = float(np.min(nonzero))
+    mask = np.abs(values) <= radius + max(1e-12, radius * 1e-12)
+    if np.unique(values[mask]).size < 2:
+        raise ValueError("the smallest measured alpha shell has fewer than two distinct values")
+    return mask
 
 
 def compute_scalar_u(chi0: float, chi: float) -> float:
@@ -294,10 +323,8 @@ def analyze_scalar_response_campaign(
     bare_full = fit_response(alphas, n0s)
     screened_full = fit_response(alphas, ns)
 
-    # Inner 3-point fits (|alpha| <= 0.011)
-    inner_mask = np.array([abs(a) <= 0.011 for a in alphas])
-    if inner_mask.sum() < 2:
-        raise ValueError("Inner window has fewer than 2 points")
+    # Fit the smallest measured alpha shell; never infer a fixed 0.01 eV grid.
+    inner_mask = select_inner_alpha_window(alphas)
     bare_inner = fit_response(alphas[inner_mask], n0s[inner_mask])
     screened_inner = fit_response(alphas[inner_mask], ns[inner_mask])
 

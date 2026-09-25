@@ -1,12 +1,11 @@
-"""Select the PSML matching an FDF species label by atomic number."""
+"""Select the PSML matching an FDF species label by exact label and atomic number."""
 
 from __future__ import annotations
 
 import argparse
-import sys
 from pathlib import Path
 
-from stage_fdf_pseudos import fdf_species, pseudo_atomic_number
+from psml_selection import read_fdf_species, select_psml_sources
 
 
 def main() -> None:
@@ -15,13 +14,14 @@ def main() -> None:
     parser.add_argument("--label", required=True)
     parser.add_argument("--pseudo-directory", type=Path, required=True)
     args = parser.parse_args()
-    species = fdf_species(args.fdf)
-    if args.label not in species:
-        raise SystemExit(f"FDF label not found: {args.label}")
-    matching = [path for path in args.pseudo_directory.glob("*.psml") if pseudo_atomic_number(path) == species[args.label]]
-    if len(matching) != 1:
-        raise SystemExit(f"expected exactly one PSML for {args.label}; found {len(matching)}")
-    print(matching[0])
+    try:
+        species = read_fdf_species(args.fdf)
+        if args.label not in species:
+            raise ValueError(f"FDF label not found: {args.label}")
+        selected = select_psml_sources(species, sorted(args.pseudo_directory.glob("*.psml")))
+    except (OSError, ValueError) as exc:
+        raise SystemExit(str(exc)) from exc
+    print(selected[args.label])
 
 
 if __name__ == "__main__":

@@ -27,6 +27,7 @@ scratch/
 
 # Site-private execution configuration. Commit the .example template only.
 **/site_profile.local
+private/
 
 # Native SIESTA / Slurm run artefacts. Preserve them in an evidence archive,
 # never in the Git working tree used for source publication.

@@ -3,31 +3,14 @@
 from __future__ import annotations
 
 import argparse
-import re
 import shutil
-import xml.etree.ElementTree as ET
 from pathlib import Path
 
-
-def pseudo_atomic_number(path: Path) -> int:
-    root = ET.parse(path).getroot()
-    atom = next((node for node in root.iter() if node.tag.rsplit("}", 1)[-1] == "pseudo-atom-spec"), None)
-    if atom is None or atom.get("atomic-number") is None:
-        raise ValueError(f"cannot read atomic number from PSML: {path}")
-    return int(atom.get("atomic-number"))
+from psml_selection import pseudo_atomic_number, read_fdf_species, select_psml_sources
 
 
 def fdf_species(path: Path) -> dict[str, int]:
-    text = path.read_text(encoding="utf-8")
-    match = re.search(r"%block\s+ChemicalSpeciesLabel\s*(.*?)%endblock\s+ChemicalSpeciesLabel", text, re.I | re.S)
-    if not match:
-        raise ValueError("FDF lacks ChemicalSpeciesLabel")
-    result = {}
-    for line in match.group(1).splitlines():
-        fields = line.split()
-        if fields and not line.lstrip().startswith("#"):
-            result[fields[2]] = int(fields[1])
-    return result
+    return read_fdf_species(path)
 
 
 def main() -> None:
@@ -36,12 +19,17 @@ def main() -> None:
     parser.add_argument("--pseudo-directory", type=Path, required=True)
     parser.add_argument("--destination", type=Path, required=True)
     args = parser.parse_args()
-    sources = {pseudo_atomic_number(path): path for path in args.pseudo_directory.glob("*.psml")}
+    try:
+        species = fdf_species(args.fdf)
+        selected = select_psml_sources(species, sorted(args.pseudo_directory.glob("*.psml")))
+    except (OSError, ValueError) as exc:
+        raise SystemExit(str(exc)) from exc
+
+    # Resolve every species before writing any staged file, so a semantic
+    # selection error never leaves a half-staged set.
+    args.destination.mkdir(parents=True, exist_ok=True)
     staged = []
-    for label, atomic_number in fdf_species(args.fdf).items():
-        source = sources.get(atomic_number)
-        if source is None:
-            raise SystemExit(f"no PSML source for atomic number {atomic_number}, FDF species {label}")
+    for label, source in selected.items():
         target = args.destination / f"{label}.psml"
         shutil.copy2(source, target)
         staged.append(target.name)

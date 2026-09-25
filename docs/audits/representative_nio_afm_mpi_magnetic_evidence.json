@@ -1,0 +1,30 @@
+{
+  "atom_count": 4,
+  "input_fdf_sha256": "29e2526f1877799170a8efc901293b27286c0931597ace02cf83913a4da1a438",
+  "moments_by_atom_index": {
+    "1": [
+      0.0,
+      0.0,
+      1.295705
+    ],
+    "2": [
+      0.0,
+      0.0,
+      -1.295209
+    ],
+    "3": [
+      0.0,
+      0.0,
+      -0.000242
+    ],
+    "4": [
+      0.0,
+      0.0,
+      -0.000242
+    ]
+  },
+  "normal_completion_verified": true,
+  "parser": "siesta_5_4_final_collinear_mulliken_sz_v1",
+  "schema_version": 1,
+  "siesta_output_sha256": "4f7f1c49d57c03dac3f6a6c1f1957129c72b128fa54febc9d23aad4bff5dfcfd"
+}

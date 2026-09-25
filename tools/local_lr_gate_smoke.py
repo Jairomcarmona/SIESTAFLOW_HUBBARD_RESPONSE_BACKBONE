@@ -26,7 +26,7 @@ import sys
 from typing import Iterable
 
 from siestaflow_hubbard.domain.alpha_selection import AlphaSelectionPolicy, select_common_alpha_window
-from siestaflow_hubbard.siesta_backend.fdf_builder import FdfBuilder
+from siestaflow_hubbard.siesta_backend.fdf_builder import LegacyBareMaterializationDisabledError
 
 
 GRID_FACTORS = (-2.0, -1.0, -0.5, 0.0, 0.5, 1.0, 2.0)
@@ -57,29 +57,12 @@ def materialize_response_plan(
     rc_bohr: float,
     omega: float,
 ) -> list[dict[str, object]]:
-    """Write exactly BARE/SCREENED x seven centred FDFs to an empty directory."""
+    """Reject legacy BARE/SCREENED plan materialization outside admission."""
 
-    builder = FdfBuilder()
-    records: list[dict[str, object]] = []
-    for index, alpha in enumerate(centred_alphas(alpha_step_ev)):
-        for mode in ("BARE", "SCREENED"):
-            step = f"{index:02d}_{mode}_{alpha:+.6f}".replace("+", "p").replace("-", "m")
-            run_dir = workdir / "responses" / step
-            run_dir.mkdir(parents=True, exist_ok=False)
-            fdf = run_dir / "siesta.fdf"
-            builder.prepare_fdf(
-                str(source_fdf), str(fdf), alpha, run_name=step,
-                response_mode=mode, species=species, n=n, l=l,
-                rc=rc_bohr, omega=omega,
-            )
-            records.append({
-                "step": step,
-                "mode": mode,
-                "alpha_ev": alpha,
-                "fdf": str(fdf.relative_to(workdir)),
-                "fdf_sha256": sha256_file(fdf),
-            })
-    return records
+    del source_fdf, workdir, alpha_step_ev, species, n, l, rc_bohr, omega
+    raise LegacyBareMaterializationDisabledError(
+        "local response-plan materialization is disabled; use an admitted SIESTA runtime"
+    )
 
 
 def alpha_gate_self_check(alpha_step_ev: float) -> dict[str, object]:

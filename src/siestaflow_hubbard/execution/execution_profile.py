@@ -45,6 +45,7 @@ class HydraLauncher:
     command: tuple[str, ...]
     bootstrap: str
     processes_per_node: int
+    kind: str = "hydra"
 
 
 @dataclass(frozen=True)
@@ -94,8 +95,9 @@ class ExecutionProfile:
             raise ProfileValidationError("target must be 'slurm'")
         slurm, allocation, runtime, policy = (mapping(k) for k in ("slurm", "allocation", "runtime", "task_policy"))
         launcher = runtime.get("launcher")
-        if not isinstance(launcher, Mapping) or launcher.get("kind") != "hydra":
-            raise ProfileValidationError("runtime.launcher.kind must be 'hydra'")
+        if not isinstance(launcher, Mapping) or launcher.get("kind") not in {"hydra", "openmpi"}:
+            raise ProfileValidationError("runtime.launcher.kind must be 'hydra' or 'openmpi'")
+        launcher_kind = launcher["kind"]
         command = launcher.get("command")
         if not isinstance(command, list) or not command or not all(isinstance(x, str) and x for x in command):
             raise ProfileValidationError("runtime.launcher.command must be a non-empty string list")
@@ -128,7 +130,7 @@ class ExecutionProfile:
                                   positive(allocation.get("shutdown_margin_seconds"), "allocation.shutdown_margin_seconds"),
                                   positive(allocation.get("termination_grace_seconds"), "allocation.termination_grace_seconds")),
             runtime=Runtime(tuple(modules), text(runtime.get("siesta_executable"), "runtime.siesta_executable"), runtime.get("exclusive"),
-                            dict(environment), HydraLauncher(tuple(command), "ssh", positive(launcher.get("processes_per_node"), "runtime.launcher.processes_per_node"))),
+                            dict(environment), HydraLauncher(tuple(command), "ssh", positive(launcher.get("processes_per_node"), "runtime.launcher.processes_per_node"), launcher_kind)),
             task_policy=TaskPolicy(positive(policy.get("max_attempts"), "task_policy.max_attempts"), policy.get("require_scf_converged")),
             evidence=evidence,
         )

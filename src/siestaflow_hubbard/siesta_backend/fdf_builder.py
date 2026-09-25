@@ -4,6 +4,10 @@ from dataclasses import dataclass
 from siestaflow_hubbard.siesta_backend.fdf_validator import FdfValidator, FdfParser
 from siestaflow_hubbard.siesta_backend.dftu_models import DftuProjector, DftuProjectorBlock
 
+
+class LegacyBareMaterializationDisabledError(ValueError):
+    """The generic FDF builder is not a production BARE materializer."""
+
 @dataclass(frozen=True)
 class MaterializedDftuContract:
     species: str
@@ -26,16 +30,10 @@ class MaterializedDftuContract:
     
     @property
     def is_bare_valid(self) -> bool:
-        if self.max_scf_iterations != 2: return False
-        if self.must_converge is not False: return False
-        if self.use_save_dm is not True: return False
-        if not self.scf_mix or self.scf_mix.lower() != "density": return False
-        if not self.mixer_method or self.mixer_method.lower() != "linear": return False
-        if self.mixer_weight is None or abs(self.mixer_weight - 1.0) > 1e-4: return False
-        if not self.projector_method or self.projector_method.lower() not in ("2", "pseudo"): return False
-        if not self.potential_shift: return False
-        if not self.first_iteration: return False
-        return True
+        # This legacy shape formerly certified a density-mixing/two-iteration
+        # input.  It has no admission or source-audited profile and must never
+        # certify a production BARE calculation.
+        return False
 
 class FdfBuilder:
     """Handles reading an FDF file and writing it out with linear response modifications."""
@@ -51,19 +49,62 @@ class FdfBuilder:
         with open(path, "w", encoding="utf-8", newline='\n') as f:
             f.write(content)
 
-    def construct_dftu_proj_block(self, projections: List[Dict], alpha: float = 0.0) -> str:
+    def construct_dftu_proj_block(
+        self,
+        projections: List[Dict],
+        alpha: float = 0.0,
+        *,
+        target_species: Optional[str] = None,
+    ) -> str:
         """
         Constructs the DFTU.proj block enforcing the 4-line method-2 format.
-        If a projection dict contains 'alpha' or 'U', that value is used for that species;
-        otherwise the parameter `alpha` is used as fallback.
+
+        A non-zero global alpha is applied to one explicitly identified species
+        only. Other species receive zero. For a multi-species block called
+        directly, either pass ``target_species`` or specify alpha/U on every
+        projection; ambiguous fallbacks are rejected.
         """
+        if not projections:
+            raise ValueError("at least one DFTU projector must be specified")
+        if isinstance(alpha, bool) or not isinstance(alpha, (int, float)) or not float("-inf") < float(alpha) < float("inf"):
+            raise ValueError("alpha must be a finite number")
+
+        if alpha != 0.0 and len(projections) > 1 and target_species is None:
+            if not all("alpha" in item or "U" in item for item in projections):
+                raise ValueError(
+                    "non-zero alpha with multiple projectors requires target_species "
+                    "or an explicit alpha/U value for every projector"
+                )
+
+        if alpha != 0.0 and target_species is not None:
+            target_count = sum(
+                item.get("species", "Mn") == target_species for item in projections
+            )
+            if target_count != 1:
+                raise ValueError(
+                    f"target_species {target_species!r} must identify exactly one projector; "
+                    f"found {target_count}"
+                )
+
         species_map = {}
+        nonzero_shifts = 0
         for proj_dict in projections:
             sp = proj_dict.get("species", "Mn")
             if sp not in species_map:
                 species_map[sp] = []
-            
-            u_val = proj_dict.get("alpha", proj_dict.get("U", alpha))
+
+            if "alpha" in proj_dict:
+                u_val = proj_dict["alpha"]
+            elif "U" in proj_dict:
+                u_val = proj_dict["U"]
+            elif target_species is not None:
+                u_val = alpha if sp == target_species else 0.0
+            else:
+                u_val = alpha if len(projections) == 1 else 0.0
+            if isinstance(u_val, bool) or not isinstance(u_val, (int, float)) or not float("-inf") < float(u_val) < float("inf"):
+                raise ValueError(f"projector alpha/U for species {sp!r} must be finite")
+            if float(u_val) != 0.0:
+                nonzero_shifts += 1
             proj = DftuProjector(
                 n=proj_dict.get("n", 3),
                 l=proj_dict.get("l", 2),
@@ -74,6 +115,12 @@ class FdfBuilder:
                 lambda_factor=proj_dict.get("lambda_factor", None)
             )
             species_map[sp].append(proj)
+
+        if alpha != 0.0 and nonzero_shifts != 1:
+            raise ValueError(
+                "linear-response perturbation must shift exactly one projector; "
+                f"found {nonzero_shifts} non-zero projector shifts"
+            )
         
         lines = ["%block DFTU.proj"]
         for sp, projs in species_map.items():
@@ -113,6 +160,10 @@ class FdfBuilder:
         projections: Optional[List[Dict]] = None,
     ) -> str:
         """Modifies FDF text content for BARE or SCREENED response mode."""
+        if str(response_mode).upper() == "BARE":
+            raise LegacyBareMaterializationDisabledError(
+                "legacy BARE FDF materialization is disabled; use an admitted SIESTA runtime"
+            )
         
         if run_name:
             content = self.replace_or_append_fdf_key(content, "SystemLabel", run_name)
@@ -129,7 +180,9 @@ class FdfBuilder:
                 }
             ]
 
-        proj_block_str = self.construct_dftu_proj_block(projections, alpha)
+        proj_block_str = self.construct_dftu_proj_block(
+            projections, alpha, target_species=species
+        )
 
         # Remove pre-existing DFTU.proj block if present (both LDAU and DFTU)
         content = re.sub(
@@ -147,16 +200,7 @@ class FdfBuilder:
         content = self.replace_or_append_fdf_key(content, "DFTU.FirstIteration", "true")
 
         mode_upper = response_mode.upper()
-        if mode_upper == "BARE":
-            content = self.replace_or_append_fdf_key(content, "MaxSCFIterations", "2")
-            content = self.replace_or_append_fdf_key(content, "SCF.MustConverge", "F")
-            content = self.replace_or_append_fdf_key(content, "DM.UseSaveDM", "true")
-            content = self.replace_or_append_fdf_key(content, "SCF.Mix", "density")
-            content = self.replace_or_append_fdf_key(content, "SCF.Mixer.Method", "Linear")
-            content = self.replace_or_append_fdf_key(content, "SCF.Mixer.Weight", "1.0")
-            # Clear old default if present
-            content = re.sub(r"^\s*DM\.MixingWeight\b.*$", "", content, flags=re.IGNORECASE | re.MULTILINE)
-        elif mode_upper == "SCREENED":
+        if mode_upper == "SCREENED":
             content = self.replace_or_append_fdf_key(content, "DM.UseSaveDM", "true")
 
         # Apply geometry enforcement
@@ -182,6 +226,10 @@ class FdfBuilder:
         projections: Optional[List[Dict]] = None,
     ) -> str:
         """Reads base FDF file, applies modifications, and writes target FDF file."""
+        if str(response_mode).upper() == "BARE":
+            raise LegacyBareMaterializationDisabledError(
+                "legacy BARE FDF materialization is disabled; use an admitted SIESTA runtime"
+            )
         content = self.read_fdf(base_fdf_path)
         modified_content = self.modify_fdf_content(
             content=content,
@@ -207,13 +255,8 @@ class FdfBuilder:
         run_name: Optional[str] = None,
         **kwargs,
     ) -> str:
-        return self.prepare_fdf(
-            base_fdf_path=base_fdf_path,
-            target_fdf_path=target_fdf_path,
-            alpha=alpha,
-            run_name=run_name,
-            response_mode="BARE",
-            **kwargs,
+        raise LegacyBareMaterializationDisabledError(
+            "prepare_fdf_bare is disabled; use build_admitted_siesta542_runtime"
         )
 
     def prepare_fdf_screened(
@@ -340,11 +383,15 @@ class FdfBuilder:
 
     def preflight_verify(self, fdf_content: str, expected_alpha: float, expected_block: DftuProjectorBlock, expected_response_mode: str = "SCREENED") -> bool:
         """Wrapper around verify_and_report_roundtrip for backward compatibility."""
+        if str(expected_response_mode).upper() == "BARE":
+            return False
         res = self.verify_and_report_roundtrip(fdf_content, expected_alpha, expected_block, expected_response_mode)
         return res["RESULT"] == "PASS"
 
     def verify_and_report_roundtrip(self, fdf_content: str, expected_alpha: float, expected_block: DftuProjectorBlock, expected_response_mode: str = "SCREENED") -> Dict:
         """Returns a machine-readable round-trip verification record based on materialized parsing."""
+        if str(expected_response_mode).upper() == "BARE":
+            return {"RESULT": "FAIL", "reason": "legacy BARE validation is disabled"}
         parsed_contract = self.parse_materialized_dftu_contract(fdf_content, expected_block.species)
         
         match = re.search(r"%block\s+DFTU\.proj(.*?)%endblock\s+DFTU\.proj", fdf_content, flags=re.IGNORECASE | re.DOTALL)
@@ -558,4 +605,3 @@ def materialize_split_species_fdf(
     new_content = builder.replace_or_append_fdf_key(new_content, "NumberOfSpecies", str(next_idx - 1))
 
     return new_content, new_species_labels
-

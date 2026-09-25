@@ -79,13 +79,22 @@ Store a short `bare_semantics.json` next to campaign evidence:
 ```
 
 The runtime verifier requires the stricter schema
-`siestaflow-bare-semantics-v1`: in addition to the fields above it binds the
-record to `executable_sha256`, `output_sha256`, `trace_sha256`, a relative
-`trace_reference`, and four unique exact `trace_markers` in this order:
-`reference_dm_loaded`, `perturbation_applied`, `selected_population`,
+`siestaflow-bare-semantics-v2`: in addition to the fields above it binds the
+record to `executable_sha256`, `input_fdf_sha256`, `output_sha256`,
+`trace_sha256`, a relative `trace_reference`, and four unique exact
+`trace_markers` in this order: `reference_dm_loaded`,
+`selected_population`, `perturbation_applied`,
 `hxc_rebuild_after_selected_population`. The selected output line interval and
-the parent-DM hash must match the current run. A diagnostic trace whose order
-differs, whose files were substituted, or whose build hash differs is rejected.
+the parent-DM hash must match the current run. The verifier rereads the output
+and rejects an abort or missing normal termination even if an attacker has
+rebound its hash.
+
+The sidecar is not an authority for its own grammar. The campaign policy must
+provide an independent `BareTraceExpectation` with the audited source revision
+and the exact four marker strings. A sidecar declaring another revision or a
+different marker vocabulary is rejected. Standard SIESTA output does not
+provide this expectation; in that case BARE remains unresolved rather than
+being promoted to `VERIFIED_BARE`.
 
 Only `PASS`, a nonempty `trace_reference`, and
 `hxc_rebuild_excluded_before_selected_event=true` may populate

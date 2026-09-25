@@ -1,0 +1,58 @@
+{
+  "lattice_constant_ang": 4.43,
+  "lattice_vectors": [
+    [
+      0.0,
+      1.0,
+      1.0
+    ],
+    [
+      0.5,
+      0.0,
+      0.5
+    ],
+    [
+      0.5,
+      0.5,
+      0.0
+    ]
+  ],
+  "atoms": [
+    {
+      "role": "Mn_A",
+      "sublattice": "A",
+      "fractional": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "role": "Mn_B",
+      "sublattice": "B",
+      "fractional": [
+        0.5,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "role": "O_0",
+      "sublattice": "O",
+      "fractional": [
+        0.25,
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "role": "O_1",
+      "sublattice": "O",
+      "fractional": [
+        0.75,
+        0.5,
+        0.5
+      ]
+    }
+  ]
+}

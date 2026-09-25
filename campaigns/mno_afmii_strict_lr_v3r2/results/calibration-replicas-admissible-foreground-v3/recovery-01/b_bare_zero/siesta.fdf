@@ -1,0 +1,195 @@
+SystemName MnO PBE LR-U SC222
+SystemLabel recovery-01_B_BARE_ZERO
+NumberOfAtoms 32
+NumberOfSpecies 17
+%block ChemicalSpeciesLabel
+  1 25 MnLR00
+  2 25 MnLR01
+  3 25 MnLR02
+  4 25 MnLR03
+  5 25 MnLR04
+  6 25 MnLR05
+  7 25 MnLR06
+  8 25 MnLR07
+  9 25 MnLR08
+  10 25 MnLR09
+  11 25 MnLR10
+  12 25 MnLR11
+  13 25 MnLR12
+  14 25 MnLR13
+  15 25 MnLR14
+  16 25 MnLR15
+  17 8 O
+%endblock ChemicalSpeciesLabel
+
+LatticeConstant 4.4300 Ang
+%block LatticeVectors
+  0.000000 2.000000 2.000000
+  1.000000 0.000000 1.000000
+  1.000000 1.000000 0.000000
+%endblock LatticeVectors
+AtomicCoordinatesFormat Fractional
+%block AtomicCoordinatesAndAtomicSpecies
+  0.00000000 0.00000000 0.00000000 1 # MnLR00
+  0.25000000 0.00000000 0.00000000 2 # MnLR01
+  0.12500000 0.25000000 0.25000000 17 # O
+  0.37500000 0.25000000 0.25000000 17 # O
+  0.00000000 0.00000000 0.50000000 3 # MnLR02
+  0.25000000 0.00000000 0.50000000 4 # MnLR03
+  0.12500000 0.25000000 0.75000000 17 # O
+  0.37500000 0.25000000 0.75000000 17 # O
+  0.00000000 0.50000000 0.00000000 5 # MnLR04
+  0.25000000 0.50000000 0.00000000 6 # MnLR05
+  0.12500000 0.75000000 0.25000000 17 # O
+  0.37500000 0.75000000 0.25000000 17 # O
+  0.00000000 0.50000000 0.50000000 7 # MnLR06
+  0.25000000 0.50000000 0.50000000 8 # MnLR07
+  0.12500000 0.75000000 0.75000000 17 # O
+  0.37500000 0.75000000 0.75000000 17 # O
+  0.50000000 0.00000000 0.00000000 9 # MnLR08
+  0.75000000 0.00000000 0.00000000 10 # MnLR09
+  0.62500000 0.25000000 0.25000000 17 # O
+  0.87500000 0.25000000 0.25000000 17 # O
+  0.50000000 0.00000000 0.50000000 11 # MnLR10
+  0.75000000 0.00000000 0.50000000 12 # MnLR11
+  0.62500000 0.25000000 0.75000000 17 # O
+  0.87500000 0.25000000 0.75000000 17 # O
+  0.50000000 0.50000000 0.00000000 13 # MnLR12
+  0.75000000 0.50000000 0.00000000 14 # MnLR13
+  0.62500000 0.75000000 0.25000000 17 # O
+  0.87500000 0.75000000 0.25000000 17 # O
+  0.50000000 0.50000000 0.50000000 15 # MnLR14
+  0.75000000 0.50000000 0.50000000 16 # MnLR15
+  0.62500000 0.75000000 0.75000000 17 # O
+  0.87500000 0.75000000 0.75000000 17 # O
+%endblock AtomicCoordinatesAndAtomicSpecies
+
+XC.Functional GGA
+XC.Authors PBE
+Spin polarized
+PAO.BasisSize DZP
+PAO.EnergyShift 0.005 Ry
+PAO.SplitNorm 0.15
+PAO.BasisType split
+MeshCutoff 200 Ry
+%block kgrid_Monkhorst_Pack
+  3 0 0 0.0
+  0 3 0 0.0
+  0 0 3 0.0
+%endblock kgrid_Monkhorst_Pack
+OccupationFunction FD
+ElectronicTemperature 300 K
+MD.NumCGsteps 0
+Write.DM true
+WriteMullikenPop 1
+%block DM.InitSpin
+  1 +5.0
+  2 -5.0
+  3 +0.0
+  4 +0.0
+  5 +5.0
+  6 -5.0
+  7 +0.0
+  8 +0.0
+  9 +5.0
+  10 -5.0
+  11 +0.0
+  12 +0.0
+  13 +5.0
+  14 -5.0
+  15 +0.0
+  16 +0.0
+  17 +5.0
+  18 -5.0
+  19 +0.0
+  20 +0.0
+  21 +5.0
+  22 -5.0
+  23 +0.0
+  24 +0.0
+  25 +5.0
+  26 -5.0
+  27 +0.0
+  28 +0.0
+  29 +5.0
+  30 -5.0
+  31 +0.0
+  32 +0.0
+%endblock DM.InitSpin
+%block DFTU.Proj
+  MnLR00 1
+  3 2
+  +0.0000 0.0000
+  0.0000 0.0500
+  MnLR01 1
+  3 2
+  +0.0000 0.0000
+  0.0000 0.0500
+  MnLR02 1
+  3 2
+  +0.0000 0.0000
+  0.0000 0.0500
+  MnLR03 1
+  3 2
+  +0.0000 0.0000
+  0.0000 0.0500
+  MnLR04 1
+  3 2
+  +0.0000 0.0000
+  0.0000 0.0500
+  MnLR05 1
+  3 2
+  +0.0000 0.0000
+  0.0000 0.0500
+  MnLR06 1
+  3 2
+  +0.0000 0.0000
+  0.0000 0.0500
+  MnLR07 1
+  3 2
+  +0.0000 0.0000
+  0.0000 0.0500
+  MnLR08 1
+  3 2
+  +0.0000 0.0000
+  0.0000 0.0500
+  MnLR09 1
+  3 2
+  +0.0000 0.0000
+  0.0000 0.0500
+  MnLR10 1
+  3 2
+  +0.0000 0.0000
+  0.0000 0.0500
+  MnLR11 1
+  3 2
+  +0.0000 0.0000
+  0.0000 0.0500
+  MnLR12 1
+  3 2
+  +0.0000 0.0000
+  0.0000 0.0500
+  MnLR13 1
+  3 2
+  +0.0000 0.0000
+  0.0000 0.0500
+  MnLR14 1
+  3 2
+  +0.0000 0.0000
+  0.0000 0.0500
+  MnLR15 1
+  3 2
+  +0.0000 0.0000
+  0.0000 0.0500
+%endblock DFTU.Proj
+DFTU.ProjectorGenerationMethod 2
+DFTU.CutoffNorm 0.90
+DFTU.PotentialShift true
+DFTU.FirstIteration true
+MaxSCFIterations 1
+SCF.MustConverge F
+SCF.Mix Hamiltonian
+SCF.Mixer.Method Pulay
+SCF.Mixer.Weight 0.05
+SCF.Mixer.History 8
+DM.UseSaveDM true

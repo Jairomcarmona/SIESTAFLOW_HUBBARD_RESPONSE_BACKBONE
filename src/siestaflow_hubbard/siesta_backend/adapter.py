@@ -1,20 +1,21 @@
-import hashlib
-import os
-import re
-import shutil
-import subprocess
-from typing import Dict, Any, List, Optional
-import sys
-import numpy as np
+"""Retired compatibility surface for the former direct SIESTA adapter.
 
-from siestaflow_hubbard.domain.exceptions import (
-    SiestaParserError,
-    SemanticValidationFailure,
-    ChecksumFailure,
-    ExecutionError,
-)
-from siestaflow_hubbard.synthetic_backend.population_generator import OccupationRecord
+Production SIESTA execution is deliberately composed only by
+``build_admitted_siesta542_runtime``. This module keeps the old import path
+from silently becoming an execution bypass while callers migrate.
+"""
+from __future__ import annotations
+
+from hashlib import sha256
+from pathlib import Path
+from shutil import copy2
+from typing import List
+
 from siestaflow_hubbard.domain.interfaces import BaseBackendAdapter
+
+
+class LegacySiestaExecutionDisabledError(RuntimeError):
+    """Raised by retired direct execution and evidence-extraction methods."""
 
 
 def prepare_canonical_dm(
@@ -22,370 +23,61 @@ def prepare_canonical_dm(
     child_dm_path: str,
     reference_sha256: str,
 ) -> str:
+    """Copy a declared parent DM and verify its bytes.
+
+    This is an integrity helper only. It does not authorize a calculation or
+    create a scientific receipt.
     """
-    Enforce the parent-DM execution invariant for a linear-response perturbation run.
-
-    Scientific rule:
-        All perturbations belonging to the same LR campaign must start
-        from the same canonical reference DM.
-
-    This function must be called BEFORE every real subprocess execution,
-    unconditionally, regardless of whether a prior child DM already exists.
-
-    Steps
-    -----
-    1. Copy the canonical reference DM -> child DM path (overwrite any stale child).
-    2. Hash the child DM immediately after the copy.
-    3. Assert the hash matches the expected reference hash.
-    4. Return the verified hash (to be recorded as parent_dm_sha256 in manifest).
-
-    Parameters
-    ----------
-    reference_dm_path : str
-        Absolute path to the canonical reference DM (produced by the unperturbed run).
-    child_dm_path : str
-        Absolute path where the child DM should be placed before the run.
-    reference_sha256 : str
-        Pre-computed SHA256 of the reference DM.  Used to detect any source corruption.
-
-    Returns
-    -------
-    str
-        SHA256 of the child DM immediately after copy (== reference_sha256 on success).
-
-    Raises
-    ------
-    RuntimeError
-        If the post-copy child hash does not equal the reference hash.
-    """
-    shutil.copy2(reference_dm_path, child_dm_path)
-
-    with open(child_dm_path, "rb") as fh:
-        child_sha = hashlib.sha256(fh.read()).hexdigest()
-
-    if child_sha != reference_sha256:
-        raise RuntimeError(
-            f"Parent DM identity mismatch after copy.\n"
-            f"  Reference: {reference_sha256}\n"
-            f"  Child:     {child_sha}\n"
-            f"  Source:    {reference_dm_path}\n"
-            f"  Dest:      {child_dm_path}"
-        )
-
-    return child_sha
-
+    source, destination = Path(reference_dm_path), Path(child_dm_path)
+    copy2(source, destination)
+    digest = sha256(destination.read_bytes()).hexdigest()
+    if digest != reference_sha256:
+        raise RuntimeError("Parent DM identity mismatch after copy")
+    return digest
 
 
 class SiestaLRAdapter(BaseBackendAdapter):
-    """Formal backend adapter for SIESTA 5.4.2 Linear Response calculations."""
+    """Deprecated non-production adapter retained solely for clear failures."""
 
-    def __init__(self, wsl_siesta_path: str = "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta"):
-        self.wsl_siesta_path = wsl_siesta_path
+    def __init__(self, *args: object, **kwargs: object):
+        # Do not retain a default executable path: accepting one would imply a
+        # deployment choice outside the admission route.
+        del args, kwargs
 
-    def run_siesta_mpi_local(
-        self,
-        fdf_filename: str,
-        out_filename: str,
-        cwd: str,
-        mpi_ranks: int = 4,
-        omp_threads: int = 1,
-    ) -> dict[str, Any]:
-        """
-        Runs SIESTA inside WSL using local OpenMPI with mpi_ranks processes.
-        Explicitly sets OMP_NUM_THREADS, MKL_NUM_THREADS, OPENBLAS_NUM_THREADS to prevent oversubscription.
-        Returns execution telemetry metadata.
-        """
-        import time
-        abs_cwd = os.path.abspath(cwd)
-        wsl_cwd = "/mnt/c" + abs_cwd[2:].replace("\\", "/")
-
-        env_vars = f"export OMP_NUM_THREADS={omp_threads} MKL_NUM_THREADS={omp_threads} OPENBLAS_NUM_THREADS={omp_threads}"
-        mpi_cmd = f"mpirun -np {mpi_ranks} {self.wsl_siesta_path} < {fdf_filename} > {out_filename}"
-        full_cmd = f'wsl bash -c "cd {wsl_cwd} && {env_vars} && {mpi_cmd}"'
-
-        t0 = time.time()
-        result = subprocess.run(full_cmd, shell=True, capture_output=True, text=True)
-        t1 = time.time()
-
-        if result.returncode != 0:
-            raise ExecutionError(f"MPI SIESTA execution failed with return code {result.returncode}:\n{result.stderr}")
-
-        out_path = os.path.join(abs_cwd, out_filename)
-        out_text = open(out_path).read() if os.path.exists(out_path) else ""
-
-        job_completed = "Job completed" in out_text or "siesta: Program's normal termination" in out_text
-
-        ranks_observed = None
-        m_ranks = re.search(r"Running on\s+(\d+)\s+nodes", out_text)
-        if not m_ranks:
-            m_ranks = re.search(r"MPI ranks:\s*(\d+)", out_text)
-        if not m_ranks:
-            m_ranks = re.search(r"Parallel version:\s*(\d+)\s*nodes", out_text, re.IGNORECASE)
-
-        if m_ranks:
-            ranks_observed = int(m_ranks.group(1))
-        elif "Parallel version" in out_text:
-            ranks_observed = mpi_ranks
-
-        return {
-            "returncode": result.returncode,
-            "walltime_seconds": t1 - t0,
-            "exact_command": full_cmd,
-            "mpi_ranks_requested": mpi_ranks,
-            "mpi_ranks_observed": ranks_observed if ranks_observed is not None else mpi_ranks,
-            "omp_threads": omp_threads,
-            "job_completed": job_completed,
-        }
-
-    def run_siesta_wsl(self, fdf_filename: str, out_filename: str, cwd: str) -> None:
-        """Runs SIESTA inside WSL directly (serial)."""
-        wsl_cwd = "/mnt/c" + cwd[2:].replace("\\", "/")
-        cmd = f'wsl bash -c "cd {wsl_cwd} && {self.wsl_siesta_path} < {fdf_filename} > {out_filename}"'
-        result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
-        if result.returncode != 0:
-            raise ExecutionError(f"SIESTA execution failed with return code {result.returncode}:\n{result.stderr}")
-
-    def run_siesta_slurm(self, fdf_filename: str, out_filename: str, cwd: str = ".", n_procs: int = 4) -> None:
-        """
-        Runs SIESTA via SLURM or MPI, supporting both native Linux HPC clusters (like Yoltla)
-        and WSL development environments. Automatically detects active SLURM job allocations.
-        """
-        job_name = fdf_filename.replace('.fdf', '')
-        abs_cwd = os.path.abspath(cwd)
-
-        # Detect OS & path format (Windows/WSL vs Native Linux HPC like Yoltla)
-        is_windows = os.name == 'nt' or '\\' in abs_cwd
-        if is_windows:
-            linux_cwd = "/mnt/c" + abs_cwd[2:].replace("\\", "/")
-            siesta_cmd = self.wsl_siesta_path
-        else:
-            linux_cwd = abs_cwd
-            siesta_cmd = self.wsl_siesta_path if self.wsl_siesta_path != "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta" else "siesta"
-
-        # Check if already inside an active SLURM allocation (e.g. on Yoltla node)
-        in_slurm_allocation = "SLURM_JOB_ID" in os.environ
-
-        if in_slurm_allocation:
-            # Direct execution inside active Slurm allocation
-            # Yoltla system mandate: mpiexec.hydra -bootstrap ssh
-            import shutil
-            if shutil.which("mpiexec.hydra"):
-                launcher = "mpiexec.hydra -bootstrap ssh"
-            elif shutil.which("srun"):
-                launcher = "srun"
-            else:
-                launcher = f"mpirun -np {n_procs}"
-
-            stdbuf_cmd = "stdbuf -oL -eL " if shutil.which("stdbuf") else ""
-            cmd = f"cd {linux_cwd} && {stdbuf_cmd}{launcher} {siesta_cmd} < {fdf_filename} > {out_filename}"
-            sys.stdout.flush()
-            result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
-            if result.returncode != 0:
-                raise ExecutionError(f"SIESTA execution failed in Slurm allocation:\n{result.stderr}")
-        else:
-            # Submit standalone job via sbatch --wait or bash fallback
-            wsl_workdir = f"/tmp/siesta_run_{job_name}"
-            bash_script = f"""#!/bin/bash
-rm -rf {wsl_workdir}
-mkdir -p {wsl_workdir}
-cp {linux_cwd}/*.fdf {linux_cwd}/*.psml {linux_cwd}/*.DM {wsl_workdir}/ 2>/dev/null || true
-
-cat << 'EOF' > {wsl_workdir}/submit.sh
-#!/bin/bash
-#SBATCH --job-name={job_name}
-#SBATCH --ntasks={n_procs}
-#SBATCH --output=slurm_{job_name}.out
-#SBATCH --partition=batch
-
-cd {wsl_workdir}
-mpirun -np {n_procs} {siesta_cmd} < {fdf_filename} > {out_filename}
-EOF
-
-chmod +x {wsl_workdir}/submit.sh
-if command -v sbatch >/dev/null 2>&1; then
-    cd {wsl_workdir} && sbatch --wait {wsl_workdir}/submit.sh
-else
-    cd {wsl_workdir} && bash {wsl_workdir}/submit.sh
-fi
-cp {wsl_workdir}/{out_filename} {linux_cwd}/ 2>/dev/null || true
-cp {wsl_workdir}/*.DM {linux_cwd}/ 2>/dev/null || true
-"""
-            runner_file = os.path.join(abs_cwd, f"run_slurm_{job_name}.sh")
-            with open(runner_file, 'w', newline='\n') as f:
-                f.write(bash_script)
-
-            if is_windows:
-                linux_runner_path = "/mnt/c" + runner_file[2:].replace("\\", "/")
-                cmd = f"wsl bash {linux_runner_path}"
-            else:
-                cmd = f"bash {runner_file}"
-
-            result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
-            if result.returncode != 0:
-                raise ExecutionError(f"SLURM/MPI execution failed with return code {result.returncode}:\n{result.stderr}")
+    @staticmethod
+    def _disabled() -> None:
+        raise LegacySiestaExecutionDisabledError(
+            "direct SIESTA execution and occupation extraction are disabled; "
+            "use build_admitted_siesta542_runtime"
+        )
 
     def prepare_input(self, fdf_template: str, alpha: float, mode: str) -> str:
-        from siestaflow_hubbard.siesta_backend.fdf_builder import FdfBuilder
-        builder = FdfBuilder(fdf_template)
-        target = fdf_template.replace('.fdf', f'_{mode}_{alpha}.fdf')
-        return builder.prepare_fdf(fdf_template, target, alpha, response_mode=mode)
+        del fdf_template, alpha, mode
+        self._disabled()
 
     def run_simulation(self, fdf_filename: str, out_filename: str, n_procs: int) -> None:
-        return self.run_siesta_slurm(fdf_filename, out_filename, cwd='.', n_procs=n_procs)
+        del fdf_filename, out_filename, n_procs
+        self._disabled()
 
-    def parse_converged_hubbard_occupations(self, out_file_or_content: str) -> Dict[Any, Any]:
-        """
-        Adversarial parser for SIESTA 5.4 Hubbard output.
-        Accepts either a file path or raw text output content.
-        - Validates geometry didn't relax
-        - Extracts the LAST hubbard occupations block
-        - Extracts 5x5 occupation matrices and summary traces for ALL atoms
-        - Computes trace checksum and compares with SIESTA's printed total for each atom
-        - Extracts maximum change in local occupations
-        """
-        if os.path.exists(out_file_or_content):
-            with open(out_file_or_content, 'r', encoding='utf-8', errors='replace') as f:
-                content = f.read()
-        else:
-            content = out_file_or_content
+    def extract_occupations(self, out_filename: str, *args: object, **kwargs: object) -> List[float]:
+        del out_filename, args, kwargs
+        self._disabled()
 
-        # 1. Geometry Check
-        cg_moves = len(re.findall(r'Begin CG move', content))
-        if cg_moves > 1:
-            raise SemanticValidationFailure(f"Geometry relaxation detected ({cg_moves} CG moves). Fixed geometry required.")
+    # These names previously constructed shell commands or selected outputs.
+    # Keep explicit fail-closed methods so existing callers cannot fall back to
+    # scheduler/PATH discovery during migration.
+    def run_siesta_mpi_local(self, *args: object, **kwargs: object) -> None:
+        del args, kwargs
+        self._disabled()
 
-        # 2. Extract Hubbard Blocks
-        if 'hubbard_term: recalculating local occupations' in content:
-            blocks = content.split('hubbard_term: recalculating local occupations')
-            last_block = blocks[-1]
-        elif 'hubbard_term: projector occupations' in content:
-            blocks = content.split('hubbard_term: projector occupations')
-            last_block = blocks[-1]
-        else:
-            raise SiestaParserError("No hubbard_term blocks found in output. Did DFTU run?")
+    def run_siesta_wsl(self, *args: object, **kwargs: object) -> None:
+        del args, kwargs
+        self._disabled()
 
-        # Extract maximum change in local occup if present
-        max_change = None
-        max_change_match = re.search(
-            r'hubbard_term:\s+maximum change in local occup\.\s+([-+]?\d*\.\d+|\d+)',
-            last_block
-        )
-        if max_change_match:
-            max_change = float(max_change_match.group(1))
+    def run_siesta_slurm(self, *args: object, **kwargs: object) -> None:
+        del args, kwargs
+        self._disabled()
 
-        # Look for atom species sub-blocks
-        atom_blocks = last_block.split('hubbard_term: atom, species:')
-        if len(atom_blocks) < 2:
-            raise SiestaParserError("No atom species found in the last hubbard block.")
-
-        results = {}
-        if max_change is not None:
-            results["max_change"] = max_change
-
-        for atom_block in atom_blocks[1:]:
-            header_match = re.match(r'^\s*(\d+)\s+(\d+)', atom_block.strip())
-            if not header_match:
-                raise SiestaParserError("Could not parse atom index and species index from hubbard block.")
-
-            atom_idx = int(header_match.group(1))
-            species_idx = int(header_match.group(2))
-
-            # Extract the 5x5 matrix
-            matrix_lines = re.findall(
-                r'^\s*([1-5])\s+([1-5])\s+([-+]?\d*\.\d+)(?:\s+([-+]?\d*\.\d+))?',
-                atom_block,
-                re.MULTILINE
-            )
-            if len(matrix_lines) != 25:
-                raise SemanticValidationFailure(
-                    f"Atom {atom_idx}: Expected 25 matrix elements for d-orbital, found {len(matrix_lines)}"
-                )
-
-            up_trace = 0.0
-            down_trace = 0.0
-            matrix_up = np.zeros((5, 5))
-            matrix_down = np.zeros((5, 5))
-
-            for m1_str, m2_str, up_str, down_str in matrix_lines:
-                m1, m2 = int(m1_str) - 1, int(m2_str) - 1
-                up_val = float(up_str)
-                down_val = float(down_str) if down_str else up_val
-                matrix_up[m1, m2] = up_val
-                matrix_down[m1, m2] = down_val
-                if m1 == m2:
-                    up_trace += up_val
-                    down_trace += down_val
-
-            # 3. Checksum verification
-            occ_match_pol = re.search(
-                r'Occupations:\s+([-+]?\d*\.\d+)\s+([-+]?\d*\.\d+)\s+([-+]?\d*\.\d+)',
-                atom_block
-            )
-            occ_match_nonpol = re.search(
-                r'Occupations:\s+([-+]?\d*\.\d+)\s+([-+]?\d*\.\d+)',
-                atom_block
-            )
-            
-            if occ_match_pol:
-                siesta_up = float(occ_match_pol.group(1))
-                siesta_down = float(occ_match_pol.group(2))
-                siesta_total = float(occ_match_pol.group(3))
-            elif occ_match_nonpol:
-                siesta_up = float(occ_match_nonpol.group(1))
-                siesta_down = float(occ_match_nonpol.group(2))
-                siesta_total = siesta_up + siesta_down
-            else:
-                raise SiestaParserError(f"Could not find 'Occupations:' summary line for atom {atom_idx}.")
-
-            if abs(up_trace - siesta_up) > 1e-4:
-                raise ChecksumFailure(
-                    f"Atom {atom_idx} Spin-UP trace mismatch: computed {up_trace:.5f}, printed {siesta_up:.5f}"
-                )
-            if abs(down_trace - siesta_down) > 1e-4:
-                raise ChecksumFailure(
-                    f"Atom {atom_idx} Spin-DOWN trace mismatch: computed {down_trace:.5f}, printed {siesta_down:.5f}"
-                )
-
-            total_trace = up_trace + down_trace
-            if abs(total_trace - siesta_total) > 1e-4:
-                raise ChecksumFailure(
-                    f"Atom {atom_idx} Total trace mismatch: computed {total_trace:.5f}, printed {siesta_total:.5f}"
-                )
-
-            results[atom_idx] = {
-                "species": species_idx,
-                "matrix_up": matrix_up,
-                "matrix_down": matrix_down,
-                "trace_up": up_trace,
-                "trace_down": down_trace,
-                "trace_total": total_trace,
-            }
-
-        return results
-
-    def extract_occupations(
-        self,
-        out_filename: str,
-        response_mode: str,
-        alpha: float,
-        target_atom_idx: int = 1,
-        channel_index: int = 0,
-        observable_index: int = 0,
-    ) -> List[OccupationRecord]:
-        """
-        Extracts OccupationRecords for a given output file/content, response_mode, and alpha.
-        Matches prototype occupation extraction logic.
-        """
-        parsed = self.parse_converged_hubbard_occupations(out_filename)
-        if target_atom_idx not in parsed:
-            return []
-
-        trace_total = parsed[target_atom_idx]["trace_total"]
-        record = OccupationRecord(
-            response_mode=response_mode,
-            channel_index=channel_index,
-            alpha_ev=alpha,
-            observable_index=observable_index,
-            occupation=trace_total,
-        )
-        return [record]
+    def parse_converged_hubbard_occupations(self, *args: object, **kwargs: object) -> List[float]:
+        del args, kwargs
+        self._disabled()

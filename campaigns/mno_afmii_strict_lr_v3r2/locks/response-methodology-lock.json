@@ -1,0 +1,12 @@
+{
+  "schema": "siestaflow-mno-mode-centred-response-v1",
+  "campaign_id": "mno-afmii-strict-lr-v3r2",
+  "immutable": true,
+  "representatives": ["MnLR00", "MnLR01"],
+  "alpha_ev": [-0.1, -0.05, -0.025, 0.0, 0.025, 0.05, 0.1],
+  "modes": ["BARE", "SCREENED"],
+  "zero_control": "per_mode_from_same_parent_reference_dm",
+  "analysis": {"common_alpha_window": true, "direct_inversion_only": true, "matrix_dimension": 16},
+  "reconstruction": "AFM representative A/B responses translated to the 16-site supercell",
+  "precondition": "admitted calibration-result.json"
+}

@@ -20,10 +20,10 @@ No silent pinv/lstsq/regularization.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Optional, Sequence
+from typing import Literal, Optional, Sequence
 import numpy as np
 
-from .scalar_lr import fit_response, LinearFit
+from .scalar_lr import fit_response, select_inner_alpha_window, LinearFit
 
 
 # ─────────────────────────────────────────────
@@ -121,7 +121,13 @@ class MatrixResponseResult:
     chi0_sym: np.ndarray             # (chi0_raw + chi0_raw.T) / 2
     chi_sym: np.ndarray
 
-    # Condition reports for raw matrices
+    # The one and only matrix representation used for rank, inverse and U.
+    # Raw and symmetric representations are always retained as evidence.
+    matrix_for_inversion: Literal["raw", "symmetrized"]
+    chi0_selected: np.ndarray
+    chi_selected: np.ndarray
+
+    # Condition reports for the selected matrices
     condition_chi0: MatrixConditionReport
     condition_chi: MatrixConditionReport
 
@@ -199,18 +205,13 @@ def fit_response_matrix(
             fit0_full = fit_response(alpha_vals, bare_occ)
             fit_full = fit_response(alpha_vals, scrn_occ)
 
-            # Inner 3-point fits
-            inner_mask = [abs(a) <= 0.011 for a in alpha_vals]
+            # Fit the smallest measured alpha shell; do not assume a fixed grid.
+            inner_mask = select_inner_alpha_window(alpha_vals)
             alpha_inner = [a for a, m in zip(alpha_vals, inner_mask) if m]
             bare_inner = [n for n, m in zip(bare_occ, inner_mask) if m]
             scrn_inner = [n for n, m in zip(scrn_occ, inner_mask) if m]
-
-            if len(alpha_inner) >= 2:
-                fit0_inner = fit_response(alpha_inner, bare_inner)
-                fit_inner = fit_response(alpha_inner, scrn_inner)
-            else:
-                fit0_inner = fit0_full   # fallback: same as full
-                fit_inner = fit_full
+            fit0_inner = fit_response(alpha_inner, bare_inner)
+            fit_inner = fit_response(alpha_inner, scrn_inner)
 
             chi0_raw[I_idx, J_idx] = fit0_full.slope
             chi_raw[I_idx, J_idx] = fit_full.slope
@@ -310,6 +311,8 @@ def compute_interaction_matrix(
 
 def analyze_matrix_response_campaign(
     observations: list[ResponseObservation],
+    *,
+    matrix_for_inversion: Literal["raw", "symmetrized"] = "raw",
 ) -> MatrixResponseResult:
     """
     Run the complete N×N linear-response analysis.
@@ -319,6 +322,10 @@ def analyze_matrix_response_campaign(
     observations : list[ResponseObservation]
         All ResponseObservation objects for all perturbation columns and alpha
         values. Must cover every (J, alpha) combination needed.
+    matrix_for_inversion : {"raw", "symmetrized"}
+        Locked scientific policy for *all* numerical diagnostics, direct
+        inversions and U.  This is never inferred from a reporting choice.
+        Both representations remain in the returned evidence object.
 
     Returns
     -------
@@ -341,9 +348,19 @@ def analyze_matrix_response_campaign(
     chi0_sym = 0.5 * (chi0_raw + chi0_raw.T)
     chi_sym = 0.5 * (chi_raw + chi_raw.T)
 
-    # 3. Condition analysis
-    cond_chi0 = analyze_matrix_condition(chi0_raw)
-    cond_chi = analyze_matrix_condition(chi_raw)
+    if matrix_for_inversion == "raw":
+        chi0_selected, chi_selected = chi0_raw, chi_raw
+    elif matrix_for_inversion == "symmetrized":
+        chi0_selected, chi_selected = chi0_sym, chi_sym
+    else:
+        raise ValueError(
+            "matrix_for_inversion must be 'raw' or 'symmetrized', got "
+            f"{matrix_for_inversion!r}"
+        )
+
+    # 3. Condition analysis of exactly the representation selected above.
+    cond_chi0 = analyze_matrix_condition(chi0_selected)
+    cond_chi = analyze_matrix_condition(chi_selected)
 
     # 4. Inversion (only if full rank)
     inv_report_chi0: Optional[InversionReport] = None
@@ -355,8 +372,8 @@ def analyze_matrix_response_campaign(
         matrix_status = "RANK_DEFICIENT"
     else:
         try:
-            inv_report_chi0 = invert_response_matrix(chi0_raw, cond_chi0)
-            inv_report_chi = invert_response_matrix(chi_raw, cond_chi)
+            inv_report_chi0 = invert_response_matrix(chi0_selected, cond_chi0)
+            inv_report_chi = invert_response_matrix(chi_selected, cond_chi)
             U_matrix = compute_interaction_matrix(
                 inv_report_chi0.inverse, inv_report_chi.inverse
             )
@@ -372,6 +389,9 @@ def analyze_matrix_response_campaign(
         chi_asymmetry_norm=chi_asym_norm,
         chi0_sym=chi0_sym,
         chi_sym=chi_sym,
+        matrix_for_inversion=matrix_for_inversion,
+        chi0_selected=chi0_selected,
+        chi_selected=chi_selected,
         condition_chi0=cond_chi0,
         condition_chi=cond_chi,
         inversion_chi0=inv_report_chi0,

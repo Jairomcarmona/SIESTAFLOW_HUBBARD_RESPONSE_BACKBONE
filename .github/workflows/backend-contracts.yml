@@ -1,0 +1,63 @@
+name: Backend admission contracts
+
+on:
+  push:
+    paths:
+      - "src/siestaflow_hubbard/domain/backend_compatibility.py"
+      - "src/siestaflow_hubbard/domain/lr_campaign_contract.py"
+      - "src/siestaflow_hubbard/siesta_backend/backend_*.py"
+      - "src/siestaflow_hubbard/siesta_backend/siesta542_bare_profile.py"
+      - "src/siestaflow_hubbard/siesta_backend/output_validator.py"
+      - "src/siestaflow_hubbard/siesta_backend/production_runtime.py"
+      - "src/siestaflow_hubbard/siesta_backend/symmetry_materializer.py"
+      - "tests/unit/test_backend_*.py"
+      - "tests/unit/test_lr_campaign_contract.py"
+      - "tests/unit/test_siesta542_bare_profile.py"
+      - "tests/unit/test_siesta_output_validator.py"
+      - "tests/unit/test_siesta_command_factory.py"
+      - "tests/unit/test_siesta_production_runtime.py"
+      - "tests/unit/test_local_lr_gate_smoke.py"
+      - "tests/unit/test_symmetry_materializer.py"
+      - ".github/workflows/backend-contracts.yml"
+  pull_request:
+    paths:
+      - "src/siestaflow_hubbard/domain/backend_compatibility.py"
+      - "src/siestaflow_hubbard/domain/lr_campaign_contract.py"
+      - "src/siestaflow_hubbard/siesta_backend/backend_*.py"
+      - "src/siestaflow_hubbard/siesta_backend/siesta542_bare_profile.py"
+      - "src/siestaflow_hubbard/siesta_backend/output_validator.py"
+      - "src/siestaflow_hubbard/siesta_backend/production_runtime.py"
+      - "src/siestaflow_hubbard/siesta_backend/symmetry_materializer.py"
+      - "tests/unit/test_backend_*.py"
+      - "tests/unit/test_lr_campaign_contract.py"
+      - "tests/unit/test_siesta542_bare_profile.py"
+      - "tests/unit/test_siesta_output_validator.py"
+      - "tests/unit/test_siesta_command_factory.py"
+      - "tests/unit/test_siesta_production_runtime.py"
+      - "tests/unit/test_local_lr_gate_smoke.py"
+      - "tests/unit/test_symmetry_materializer.py"
+      - ".github/workflows/backend-contracts.yml"
+
+jobs:
+  contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --upgrade pip && python -m pip install -e ".[test]"
+      - run: >-
+          python -m pytest
+          tests/unit/test_backend_compatibility.py
+          tests/unit/test_backend_identity.py
+          tests/unit/test_backend_admission.py
+          tests/unit/test_backend_admission_plugin.py
+          tests/unit/test_lr_campaign_contract.py
+          tests/unit/test_siesta542_bare_profile.py
+          tests/unit/test_siesta_output_validator.py
+          tests/unit/test_siesta_command_factory.py
+          tests/unit/test_siesta_production_runtime.py
+          tests/unit/test_local_lr_gate_smoke.py
+          tests/unit/test_symmetry_materializer.py
+          -q -p no:cacheprovider

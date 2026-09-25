@@ -1,16 +1,18 @@
-from siestaflow_hubbard.domain.semantic_validation import SemanticValidator
-from siestaflow_hubbard.domain.campaign_manifest import CampaignManifest
+from pathlib import Path
+
 import pytest
-import os
-import glob
+
+from siestaflow_hubbard.domain.semantic_validation import SemanticValidator
 
 def test_no_pinv_in_source():
-    src_dir = os.path.join(os.path.dirname(__file__), '..', '..', 'src')
-    if os.path.exists(src_dir):
-        for py_file in glob.glob(f"{src_dir}/**/*.py", recursive=True):
-            with open(py_file) as f:
-                content = f.read()
-                assert 'pinv' not in content or 'pinvh' not in content, f"Found pinv in {py_file}"
+    src_dir = Path(__file__).resolve().parents[2] / "src"
+    assert src_dir.is_dir(), f"Missing source root: {src_dir}"
+    offenders = []
+    for py_file in src_dir.rglob("*.py"):
+        content = py_file.read_text(encoding="utf-8")
+        if ".pinv(" in content or ".pinvh(" in content:
+            offenders.append(str(py_file))
+    assert not offenders, f"Pseudoinverse forbidden in LR source: {offenders}"
 
 def test_no_pinvh_in_source():
     assert isinstance(SemanticValidator().validate_campaign(None), list)

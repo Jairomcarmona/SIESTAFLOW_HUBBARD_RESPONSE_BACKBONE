@@ -24,6 +24,14 @@ class NumericalPolicy:
     allow_pinv_fallback: bool = False
     enforce_physical_gauge: bool = False
 
+    def __post_init__(self):
+        """Keep the historical field fail-closed: LR production never uses a pseudoinverse."""
+        if self.allow_pinv_fallback:
+            raise ValueError(
+                "allow_pinv_fallback is prohibited for Hubbard linear response; "
+                "a rank-deficient or ill-conditioned response is invalid evidence."
+            )
+
 
 from .provenance import ScientificArtifact
 

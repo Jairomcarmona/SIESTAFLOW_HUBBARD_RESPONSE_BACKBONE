@@ -62,26 +62,16 @@ def compute_u_matrix(
     
     if policy.max_condition_number is not None and max_cond > policy.max_condition_number:
         rank_status = GaugeRankStatus.ILL_CONDITIONED
-        if not policy.allow_pinv_fallback:
-            raise InversionError(f"Matrix condition number {max_cond} exceeds allowed {policy.max_condition_number}.")
+        raise InversionError(f"Matrix condition number {max_cond} exceeds allowed {policy.max_condition_number}.")
             
     # Check for singularity/rank deficiency
     inversion_method = "DIRECT"
     try:
-        if policy.allow_pinv_fallback and rank_status == GaugeRankStatus.ILL_CONDITIONED:
-            inv_chi0 = np.linalg.pinv(chi0_val)
-            inv_chi = np.linalg.pinv(chi_val)
-            inversion_method = "PSEUDOINVERSE"
-        else:
-            inv_chi0 = np.linalg.inv(chi0_val)
-            inv_chi = np.linalg.inv(chi_val)
+        inv_chi0 = np.linalg.inv(chi0_val)
+        inv_chi = np.linalg.inv(chi_val)
     except np.linalg.LinAlgError as e:
         rank_status = GaugeRankStatus.RANK_DEFICIENT_INVALID
-        if not policy.allow_pinv_fallback:
-            raise InversionError(f"Singular matrix encountered: {e}")
-        inv_chi0 = np.linalg.pinv(chi0_val)
-        inv_chi = np.linalg.pinv(chi_val)
-        inversion_method = "PSEUDOINVERSE"
+        raise InversionError(f"Singular matrix encountered: {e}")
 
     # Compute inversion residuals
     N = chi0_val.shape[0]

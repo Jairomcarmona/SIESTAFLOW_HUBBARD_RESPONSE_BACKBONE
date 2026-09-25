@@ -2,7 +2,7 @@ import pytest
 
 from siestaflow_hubbard.execution import (
     EvidenceLevel, ExecutionProfile, NodeState, ProfileValidationError,
-    SlurmEnvironment, build_hydra_launch, may_analyze, may_start,
+    SlurmEnvironment, build_hydra_launch, build_mpi_launch, may_analyze, may_start,
 )
 
 
@@ -38,6 +38,19 @@ def test_hydra_placement_is_exact_and_gets_fresh_uuid():
     second = build_hydra_launch(launcher, ["host-a", "host-b"], 4, "siesta")
     assert first.uuid != second.uuid and "-bootstrap" in first.argv and "-ppn" in first.argv
     with pytest.raises(ProfileValidationError): build_hydra_launch(launcher, ["host-a", "host-b"], 2, "siesta")
+
+
+def test_openmpi_placement_uses_provider_specific_arguments():
+    payload = profile_payload()
+    payload["runtime"]["launcher"].update({
+        "kind": "openmpi", "command": ["/usr/bin/orterun"],
+    })
+    launcher = ExecutionProfile.from_mapping(payload).runtime.launcher
+    launch = build_mpi_launch(launcher, ["host-a", "host-b"], 4, "/opt/siesta")
+    assert launch.argv == (
+        "/usr/bin/orterun", "--host", "host-a:2,host-b:2", "--map-by", "ppr:2:node",
+        "-np", "4", "/opt/siesta",
+    )
 
 
 def test_dag_refuses_partial_or_failed_scientific_descendants():

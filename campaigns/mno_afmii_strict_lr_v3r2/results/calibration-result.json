@@ -1,0 +1,36 @@
+{
+  "calibration_lock_sha256": "7a60e5ff38eecd69e7e55c3afa9bb703c21334967f2c77e8c78379d0ba702d23",
+  "interrole_offsets_diagnostic_only": {
+    "A_bare_minus_reference": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "B_bare_minus_reference": [
+      1.0000000000509601e-05,
+      1.0000000000509601e-05,
+      1.0000000000509601e-05,
+      1.0000000000509601e-05,
+      1.0000000000509601e-05
+    ]
+  },
+  "occupation_noise_e": 5e-05,
+  "receipt_sha256": {
+    "recovery-01": "4c33eb32e6eb748526069a370b85852d6d97cd5948ef49be148e884d7b415af4",
+    "recovery-02": "84ea6f08af158b5bc33beb2a98bbdc331a61945b15bfc9ccb87e895d8445eb99",
+    "recovery-03": "7f7ebd6a84de52a8ad3d228d707932178b41ed472b0b4521465ae17e026f45e2",
+    "recovery-04": "270c53502623453b29a07124f8c9a0fd9f82d24f2a8b8d367a3003aa88eebb62",
+    "recovery-05": "9feb63808fc158af89c425f852861f27ac80c4ee8f0cb869a1fbb5028641f248"
+  },
+  "schema": "siestaflow-mno-calibration-result-v1",
+  "status": "ADMITTED",
+  "within_mode_spread_e": {
+    "A_BARE_ZERO": 0.0,
+    "A_SCREENED_ZERO": 0.0,
+    "B_BARE_ZERO": 0.0,
+    "B_SCREENED_ZERO": 0.0,
+    "REFERENCE": 0.0
+  }
+}
