@@ -5,7 +5,7 @@ import unittest
 
 import numpy as np
 
-from src.symmetry_reduction_proposal import detect_symmetry
+from symmetry_reduction_proposal import detect_symmetry
 from tests.support import geometry
 
 
