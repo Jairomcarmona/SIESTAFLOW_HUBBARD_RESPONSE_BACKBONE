@@ -7,7 +7,8 @@ campaña P5 terminaron, pero el U de NiO permanece
 `NUMERICAL_CANDIDATE_UNASSESSED` / `NOT_ESTABLISHED` frente al objetivo
 científico del usuario. Véase el [registro final](docs/P0_EXECUTION_20260928.md).
 El [inventario de sincronización](docs/ESTADO_REPOSITORIO_Y_PUBLICACION_20260929.md)
-explica el commit local preparado y su estado de publicación en GitHub.
+explica la publicación en el [PR borrador #4](https://github.com/Jairomcarmona/SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE/pull/4)
+y la diferencia respecto de `main`.
 
 SIESTAFLOW runs finite-difference charge-response campaigns with SIESTA, records their inputs and outputs, analyzes the response matrices, and writes a versioned JSON result plus a Markdown report. Its result is `U_scalar_charge`; the software does not convert that value automatically to `Ueff_Dudarev` or declare physical acceptance without the required scientific contract.
 

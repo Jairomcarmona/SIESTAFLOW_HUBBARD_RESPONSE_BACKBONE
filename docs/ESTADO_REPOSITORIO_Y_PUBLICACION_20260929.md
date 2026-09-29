@@ -1,17 +1,17 @@
 # Estado del repositorio y distancia respecto a GitHub
 
-**Fecha de inspección y preparación:** 2026-09-29. **Alcance:** lectura del
-checkout, verificación de la rama remota, selección de archivos y preparación
-de un commit local. Este documento no certifica una publicación remota.
+**Fecha de inspección y publicación:** 2026-09-29. **Alcance:** lectura del
+checkout, verificación de la rama remota, selección de archivos, commit local
+y publicación en una rama de GitHub con PR borrador.
 
 ## Conclusión inmediata
 
-El trabajo de cierre de SIESTAFLOW se consolidó en un commit local de la rama
+El trabajo de cierre de SIESTAFLOW se consolidó en la rama
 `codex/sync-product-20260929`, que reúne la implementación 0.1.2, pruebas,
-documentación y resultados NiO seleccionados. **La rama todavía no se envió a
-GitHub.** Una revisión hecha sólo sobre GitHub verá una versión anterior del
-producto y no podrá contrastar allí el análisis v3, el CLI 0.1.2 ni el
-expediente actual del cuello de botella de U.
+documentación y resultados NiO seleccionados. La rama está publicada en
+GitHub mediante el [PR borrador #4](https://github.com/Jairomcarmona/SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE/pull/4),
+con base `fix/mno-audit-20260925`. **`main` aún no contiene estos cambios**;
+quien analice el código debe abrir la rama o el diff de ese PR.
 
 La rama local de partida fue `fix/mno-audit-20260925` en
 `e53a6b0266bd83e8e41589973c59eb251ce034a7`. Una consulta de lectura
@@ -89,13 +89,12 @@ serían inexactas.
 4. **Revisión del conjunto seleccionado:** inspeccionar el diff final y su
    tamaño, excluir staging de compilación y temporales, y verificar que la
    versión 0.1.2 descrita puede construirse desde las fuentes publicadas.
-5. **Publicación:** la rama y el commit local ya están preparados. El intento
-   de `git push` fue rechazado por la revisión automática porque exportaría
-   código, documentación y resultados de campañas a un repositorio público
-   sin autorización explícita para publicar este conjunto exacto. No se
-   intentó otra vía de envío. El estado remoto sólo cambiará tras esa
-   autorización y un envío aprobado; después se podrá abrir un PR contra
-   `fix/mno-audit-20260925`.
+5. **Publicación:** el primer `git push` fue rechazado por la revisión
+   automática porque el repositorio es público y aún faltaba autorización
+   explícita para exportar este conjunto exacto. El usuario autorizó después
+   el commit, se envió la rama y se abrió el
+   [PR borrador #4](https://github.com/Jairomcarmona/SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE/pull/4).
+   El PR está disponible para revisión; no está fusionado en `main`.
 
 ## Límite científico para esa actualización
 

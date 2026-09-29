@@ -13,9 +13,10 @@ producto. Este informe busca una vía para resolver ese bloqueo; no reclasifica
 el estado terminal.
 
 **Disponibilidad del repositorio:** la implementación 0.1.2, varios módulos
-v3, pruebas y documentos de cierre están reunidos en la rama local
-`codex/sync-product-20260929`, pendiente de envío. Una lectura de GitHub por
-sí sola refleja aún una versión anterior. Véase
+v3, pruebas y documentos de cierre están en la rama publicada
+`codex/sync-product-20260929` y en el
+[PR borrador #4](https://github.com/Jairomcarmona/SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE/pull/4).
+La rama `main` conserva una versión anterior. Véase
 el [inventario de sincronización](ESTADO_REPOSITORIO_Y_PUBLICACION_20260929.md)
 antes de atribuir a la rama remota el estado de este expediente.
 
@@ -416,10 +417,11 @@ Un análisis externo útil debería contestar, con evidencias y no con preferenc
 
 > Lee el informe como expediente de evidencia, no como instrucción de defender el criterio existente. Analiza el cuello de botella de SIESTAFLOW para obtener un U numérico útil y respaldado, manteniendo la portabilidad a instalaciones estándar de SIESTA 5.4.2. Distingue explícitamente hechos observados, inferencias y preguntas sin resolver. Intenta falsificar las hipótesis H1–H6: no supongas que `f12.6` es la causa, que ±0.02 eV es una ley física, que la cota conservadora es el error real, ni que el análisis actual tiene razón por fallar la puerta. Tampoco reduzcas retrospectivamente el objetivo para obtener aprobación. Usa primero la evidencia existente y las fuentes enlazadas. Compara cuantización, estimador/ventana, SCF/reproducibilidad, condicionamiento y semántica del observable. Propón la siguiente acción más pequeña que discrimine hipótesis y explica qué resultado cambiaría la decisión. No modifiques archivos o parámetros, no ejecutes SIESTA, no inicies una campaña y no uses coincidencia con literatura como criterio de aceptación. Devuelve: (1) diagnóstico priorizado con confianza, (2) evidencia a favor y en contra, (3) acción siguiente mínima, (4) costo/nodos si aplica, claramente como propuesta no autorizada, y (5) la afirmación sobre U que sí sería legítimo comunicar después de esa acción.
 
-Si sólo tienes acceso a GitHub, indica qué afirmaciones no puedes contrastar
-porque el código, las pruebas y los documentos 0.1.2 descritos aquí están en
-una rama local aún no enviada. No atribuyas al estado remoto la evidencia del
-workspace sin haberla recibido o verificado directamente.
+Si sólo tienes acceso a GitHub, revisa el
+[PR borrador #4](https://github.com/Jairomcarmona/SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE/pull/4)
+y su rama para contrastar el código, las pruebas y los documentos 0.1.2.
+Indica qué afirmaciones dependen todavía de artefactos WSL no incluidos en
+GitHub; no las infieras sólo del resumen del PR.
 
 ---
 
