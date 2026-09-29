@@ -11,8 +11,11 @@ from siestaflow_hubbard.siesta_backend.bare_semantics_evidence import (
     verify_bare_semantics_evidence,
     write_bare_semantics_sidecar,
 )
-from siestaflow_hubbard.siesta_backend.observation_selector import Siesta542BarePolicyV1
-from siestaflow_hubbard.siesta_backend.parser_models import HubbardPopulationEvent, ObservationContext, ObservationRole
+from siestaflow_hubbard.siesta_backend.observation_selector import (
+    ObservationPolicyError,
+    Siesta542BarePolicyV1,
+)
+from siestaflow_hubbard.siesta_backend.parser_models import HubbardPopulationEvent, ObservationContext
 
 
 def _digest(path: Path) -> str:
@@ -73,10 +76,10 @@ def test_verified_sidecar_binds_trace_output_dm_and_executable(tmp_path: Path):
     )
     assert context.bare_hxc_rebuild_excluded is True
     assert context.bare_semantics_evidence_ref == result.evidence_reference
-    selection = Siesta542BarePolicyV1.get_verified_bare_observation(
-        [HubbardPopulationEvent(1, 1, 1, ""), HubbardPopulationEvent(2, 2, 2, "")], context,
-    )
-    assert selection.role is ObservationRole.VERIFIED_BARE
+    with pytest.raises(ObservationPolicyError, match="must bind.*native output through SiestaOutputValidator"):
+        Siesta542BarePolicyV1.get_verified_bare_observation(
+            [HubbardPopulationEvent(1, 1, 1, ""), HubbardPopulationEvent(2, 2, 2, "")], context,
+        )
 
 
 def test_rejects_reordered_native_trace(tmp_path: Path):

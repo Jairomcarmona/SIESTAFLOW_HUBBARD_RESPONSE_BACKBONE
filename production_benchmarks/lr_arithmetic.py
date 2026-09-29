@@ -8,8 +8,21 @@ provides the orchestration-layer matrix builders from observation dictionaries.
 NO pseudoinverse. NO zero-filled placeholders. NO hardcoded diagnostics.
 """
 from __future__ import annotations
+
+import math
+import re
+from typing import Dict, List, Tuple, Optional, Any, Mapping, Sequence
+
 import numpy as np
-from typing import Dict, List, Tuple, Optional, Any
+
+from siestaflow_hubbard.domain.matrix_lr import (
+    ResponseObservation,
+    analyze_matrix_condition,
+    compute_interaction_matrix,
+    fit_polynomial_response,
+    invert_response_matrix,
+)
+from siestaflow_hubbard.domain.scalar_lr import fit_response
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -17,87 +30,94 @@ from typing import Dict, List, Tuple, Optional, Any
 # ─────────────────────────────────────────────────────────────────────────────
 
 def central_3point(n_minus: float, n_plus: float, delta: float) -> float:
-    """Central finite difference: (n(+δ) - n(-δ)) / (2δ)."""
+    """Compatibility wrapper around the shared domain linear response fitter."""
     if abs(delta) < 1e-15:
         raise ValueError(f"delta must be nonzero, got {delta}")
-    return (n_plus - n_minus) / (2.0 * delta)
+    return float(fit_response([-delta, delta], [n_minus, n_plus]).slope)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 5-point linear fit
+# 5-point response fit
 # ─────────────────────────────────────────────────────────────────────────────
 
-def fit_5point(alphas: List[float], occupations: List[float]) -> dict:
-    """
-    Fit n(alpha) = slope * alpha + intercept over 5 points.
-
-    Expected alpha ordering: [-2δ, -δ, 0, +δ, +2δ]
-
-    Returns
-    -------
-    dict with:
-      slope, intercept, residuals, r2,
-      inner_central_slope  : (n[3]-n[1]) / (2δ)   from inner pair
-      outer_slope          : (n[4]-n[0]) / (4δ)   from outer pair
-      positive_slope       : linear fit over alpha >= 0
-      negative_slope       : linear fit over alpha <= 0
-      asymmetry            : |pos_slope - neg_slope| / max(|pos|, |neg|)
-    """
+def fit_5point(
+    alphas: List[float],
+    occupations: List[float],
+    *,
+    fit_method: str = 'linear',
+    polynomial_degree: int = 3,
+    minimum_residual_dof: int = 1,
+) -> dict:
+    """Compatibility diagnostics backed by the shared domain fitters."""
     a = np.asarray(alphas, dtype=float)
     n = np.asarray(occupations, dtype=float)
-
     if len(a) != 5:
         raise ValueError(f"fit_5point requires exactly 5 points, got {len(a)}")
-
-    # Sort by alpha
+    if not np.all(np.isfinite(a)) or not np.all(np.isfinite(n)):
+        raise ValueError("alphas and occupations must be finite")
     order = np.argsort(a)
     a = a[order]
     n = n[order]
+    linear = fit_response(a.tolist(), n.tolist())
+    linear_reference = {
+        'slope': float(linear.slope),
+        'intercept': float(linear.intercept),
+        'residuals': [float(value) for value in linear.residuals],
+        'r2': float(linear.r_squared),
+        'residual_rms': float(np.sqrt(np.mean(np.square(linear.residuals)))),
+        'residual_dof': len(a) - 2,
+        'design_condition_number': None,
+    }
 
-    # Full 5-point linear regression
-    A = np.column_stack([a, np.ones(5)])
-    coeffs, residuals_raw, rank, sv = np.linalg.lstsq(A, n, rcond=None)
-    slope, intercept = float(coeffs[0]), float(coeffs[1])
+    if fit_method == 'linear':
+        slope, intercept = float(linear.slope), float(linear.intercept)
+        res, r2 = np.asarray(linear.residuals, dtype=float), float(linear.r_squared)
+        regression = {
+            'method': 'linear',
+            'degree': 1,
+            'coefficients': [intercept, slope],
+            'residual_rms': linear_reference['residual_rms'],
+            'residual_dof': linear_reference['residual_dof'],
+            'design_condition_number': None,
+        }
+    elif fit_method == 'polynomial':
+        fitted = fit_polynomial_response(
+            a,
+            n,
+            degree=polynomial_degree,
+            minimum_residual_dof=minimum_residual_dof,
+        )
+        slope, intercept = fitted.slope, fitted.intercept
+        res = np.asarray(fitted.residuals, dtype=float)
+        r2 = fitted.r_squared
+        regression = {
+            'method': 'polynomial',
+            'degree': fitted.degree,
+            'coefficients': fitted.coefficients,
+            'residual_rms': fitted.residual_rms,
+            'residual_dof': fitted.residual_dof,
+            'design_condition_number': fitted.design_condition_number,
+        }
+    else:
+        raise ValueError("fit_method must be 'linear' or 'polynomial'")
 
-    n_fit  = slope * a + intercept
-    res    = n - n_fit
-    ss_res = float(np.sum(res**2))
-    ss_tot = float(np.sum((n - np.mean(n))**2))
-    r2     = 1.0 - ss_res / ss_tot if ss_tot > 1e-30 else 0.0
-
-    # Inner central slope: between alpha[1] and alpha[3]
-    delta_inner = a[3] - a[1]
-    inner_central_slope = (n[3] - n[1]) / delta_inner if abs(delta_inner) > 1e-15 else 0.0
-
-    # Outer slope: between alpha[0] and alpha[4]
-    delta_outer = a[4] - a[0]
-    outer_slope = (n[4] - n[0]) / delta_outer if abs(delta_outer) > 1e-15 else 0.0
-
-    # Positive-side slope: fit over alpha >= 0 (indices 2,3,4)
-    a_pos = a[2:]
-    n_pos = n[2:]
-    A_pos = np.column_stack([a_pos, np.ones(3)])
-    c_pos, _, _, _ = np.linalg.lstsq(A_pos, n_pos, rcond=None)
-    positive_slope = float(c_pos[0])
-
-    # Negative-side slope: fit over alpha <= 0 (indices 0,1,2)
-    a_neg = a[:3]
-    n_neg = n[:3]
-    A_neg = np.column_stack([a_neg, np.ones(3)])
-    c_neg, _, _, _ = np.linalg.lstsq(A_neg, n_neg, rcond=None)
-    negative_slope = float(c_neg[0])
-
-    # Asymmetry
+    inner = fit_response(a[1:4:2].tolist(), n[1:4:2].tolist())
+    outer = fit_response(a[[0, 4]].tolist(), n[[0, 4]].tolist())
+    positive = fit_response(a[2:].tolist(), n[2:].tolist())
+    negative = fit_response(a[:3].tolist(), n[:3].tolist())
+    positive_slope, negative_slope = float(positive.slope), float(negative.slope)
     denom = max(abs(positive_slope), abs(negative_slope))
     asymmetry = abs(positive_slope - negative_slope) / denom if denom > 1e-15 else 0.0
 
     return {
+        'regression':          regression,
+        'linear_reference':    linear_reference,
         'slope':               slope,
         'intercept':           intercept,
         'residuals':           res.tolist(),
         'r2':                  float(r2),
-        'inner_central_slope': float(inner_central_slope),
-        'outer_slope':         float(outer_slope),
+        'inner_central_slope': float(inner.slope),
+        'outer_slope':         float(outer.slope),
         'positive_slope':      float(positive_slope),
         'negative_slope':      float(negative_slope),
         'asymmetry':           float(asymmetry),
@@ -107,6 +127,147 @@ def fit_5point(alphas: List[float], occupations: List[float]) -> dict:
 # ─────────────────────────────────────────────────────────────────────────────
 # 3-point matrix builder
 # ─────────────────────────────────────────────────────────────────────────────
+
+_SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
+
+
+def response_observations_from_records(
+    records: Sequence[Mapping[str, Any]], *, n_sites: int,
+) -> list[ResponseObservation]:
+    """Convert receipt-backed legacy rows to complete shared analyzer inputs.
+
+    The stored alpha=0 BARE and SCREENED rows are common to all perturbation
+    columns. They must each occur once (with site index 0) and are expanded in
+    memory across columns. Nonzero observations must be unique per
+    site/alpha/mode. A verified REFERENCE row supplies the reference vector.
+    """
+    if isinstance(n_sites, bool) or not isinstance(n_sites, int) or n_sites < 1:
+        raise ValueError("n_sites must be a positive integer")
+    if not records:
+        raise ValueError("No legacy response observations were provided")
+
+    def require_sha(record: Mapping[str, Any], field: str) -> str:
+        value = record.get(field)
+        if not isinstance(value, str) or not _SHA256_RE.fullmatch(value):
+            raise ValueError(f"verified observation requires a valid {field}")
+        return value
+
+    def vector(record: Mapping[str, Any], label: str) -> list[float]:
+        values = record.get("occupation_vector")
+        if not isinstance(values, list) or len(values) != n_sites:
+            raise ValueError(f"{label} occupation_vector must contain exactly {n_sites} values")
+        try:
+            output = [float(value) for value in values]
+        except (TypeError, ValueError) as exc:
+            raise ValueError(f"{label} occupation_vector must be numeric") from exc
+        if not all(math.isfinite(value) for value in output):
+            raise ValueError(f"{label} occupation_vector must be finite")
+        return output
+
+    reference_rows: list[Mapping[str, Any]] = []
+    observations: dict[tuple[int, float, str], Mapping[str, Any]] = {}
+    atom_indices: list[int] | None = None
+    for index, record in enumerate(records):
+        mode = str(record.get("mode", "")).upper()
+        if mode not in {"REFERENCE", "BARE", "SCREENED"}:
+            raise ValueError(f"observation {index} has unsupported mode {mode!r}")
+        if not isinstance(record.get("identity_key"), str) or not record["identity_key"]:
+            raise ValueError(f"observation {index} has no completed-run identity receipt")
+        require_sha(record, "stdout_sha256")
+        require_sha(record, "fdf_sha256")
+        selected_index = record.get("selected_occurrence_index")
+        if isinstance(selected_index, bool) or not isinstance(selected_index, int) or selected_index < 0:
+            raise ValueError(f"observation {index} has no selected semantic event index")
+        if not record.get("selection_evidence"):
+            raise ValueError(f"observation {index} has no semantic selection evidence")
+        ids = record.get("atom_indices")
+        if not isinstance(ids, list) or len(ids) != n_sites or len(set(ids)) != n_sites:
+            raise ValueError(f"observation {index} atom_indices must identify exactly {n_sites} sites")
+        if atom_indices is None:
+            atom_indices = [int(value) for value in ids]
+        elif [int(value) for value in ids] != atom_indices:
+            raise ValueError("observation rows use inconsistent atom ordering")
+        vector(record, f"observation {index}")
+        try:
+            alpha = float(record["alpha"])
+        except (KeyError, TypeError, ValueError) as exc:
+            raise ValueError(f"observation {index} has no numeric alpha") from exc
+        if not math.isfinite(alpha):
+            raise ValueError(f"observation {index} alpha must be finite")
+        if mode == "REFERENCE":
+            if abs(alpha) > 1e-12:
+                raise ValueError("reference occupation row must be at alpha=0")
+            require_sha(record, "canonical_dm_sha256")
+            reference_rows.append(record)
+            continue
+        parent_sha = require_sha(record, "parent_dm_sha256")
+        site = record.get("perturbed_site")
+        if isinstance(site, bool) or not isinstance(site, int) or not 0 <= site < n_sites:
+            raise ValueError(f"observation {index} perturbed_site is outside [0, {n_sites})")
+        if abs(alpha) <= 1e-12:
+            if site != 0:
+                raise ValueError("shared alpha=0 response rows must be stored once at perturbed_site=0")
+            alpha = 0.0
+        key = (site, round(alpha, 12), mode)
+        if key in observations:
+            raise ValueError(f"duplicate response observation for site={site}, alpha={alpha}, mode={mode}")
+        observations[key] = record
+
+    if len(reference_rows) != 1:
+        raise ValueError(f"expected exactly one verified REFERENCE row, found {len(reference_rows)}")
+    reference = reference_rows[0]
+    reference_values = vector(reference, "REFERENCE")
+    reference_dm_sha = require_sha(reference, "canonical_dm_sha256")
+    if atom_indices is None:
+        raise ValueError("no response observation rows were supplied")
+
+    zero_rows: dict[str, Mapping[str, Any]] = {}
+    nonzero_alphas = sorted({key[1] for key in observations if abs(key[1]) > 1e-12})
+    for mode in ("BARE", "SCREENED"):
+        row = observations.get((0, 0.0, mode))
+        if row is None:
+            raise ValueError(f"missing shared alpha=0 {mode} response observation")
+        zero_rows[mode] = row
+    if not any(value < 0 for value in nonzero_alphas) or not any(value > 0 for value in nonzero_alphas):
+        raise ValueError("response observations must include negative and positive alpha")
+
+    expected_parent_hashes = {reference_dm_sha}
+    expected_parent_hashes.update(
+        str(row.get("parent_dm_sha256")) for row in observations.values()
+    )
+    if len(expected_parent_hashes) != 1:
+        raise ValueError("response rows do not share the verified reference DM")
+
+    per_column_alpha_sets: list[set[float]] = []
+    converted: list[ResponseObservation] = []
+    for site in range(n_sites):
+        alpha_values = [0.0, *nonzero_alphas]
+        per_column_alpha_sets.append(set(alpha_values))
+        for alpha in alpha_values:
+            source_site = 0 if alpha == 0.0 else site
+            bare = zero_rows["BARE"] if alpha == 0.0 else observations.get((source_site, round(alpha, 12), "BARE"))
+            screened = zero_rows["SCREENED"] if alpha == 0.0 else observations.get((source_site, round(alpha, 12), "SCREENED"))
+            if bare is None or screened is None:
+                missing_mode = "BARE" if bare is None else "SCREENED"
+                raise ValueError(f"missing {missing_mode} observation for site={site}, alpha={alpha}")
+            if bare.get("parent_dm_sha256") != screened.get("parent_dm_sha256"):
+                raise ValueError(f"BARE/SCREENED rows use different parent DMs for site={site}, alpha={alpha}")
+            converted.append(ResponseObservation(
+                perturbation_site=site,
+                alpha=alpha,
+                site_labels=list(range(n_sites)),
+                occupations_ref=reference_values,
+                occupations_bare=vector(bare, "BARE"),
+                occupations_screened=vector(screened, "SCREENED"),
+                parent_dm_sha256=reference_dm_sha,
+                bare_fdf_sha256=str(bare["fdf_sha256"]),
+                bare_out_sha256=str(bare["stdout_sha256"]),
+                screened_fdf_sha256=str(screened["fdf_sha256"]),
+                screened_out_sha256=str(screened["stdout_sha256"]),
+            ))
+    if any(values != per_column_alpha_sets[0] for values in per_column_alpha_sets[1:]):
+        raise ValueError("every perturbation column must cover the same alpha grid")
+    return converted
 
 def build_chi_matrix_3point(
     obs_dict: Dict[Tuple, List[float]],
@@ -178,9 +339,13 @@ def build_chi_matrix_5point(
     n_sites: int,
     delta: float,
     response_semantic: str,  # 'BARE' or 'SCREENED'
+    *,
+    fit_method: str = 'linear',
+    polynomial_degree: int = 3,
+    minimum_residual_dof: int = 1,
 ) -> dict:
     """
-    Build the N×N linear-response matrix from 5-point linear fits.
+    Build the N×N linear-response matrix from 5-point response fits.
 
     Parameters
     ----------
@@ -222,7 +387,13 @@ def build_chi_matrix_5point(
 
         for I in range(n_sites):
             occ_vals = [occs_per_alpha[alpha][I] for alpha in alphas_expected]
-            fit = fit_5point(alphas_expected, occ_vals)
+            fit = fit_5point(
+                alphas_expected,
+                occ_vals,
+                fit_method=fit_method,
+                polynomial_degree=polynomial_degree,
+                minimum_residual_dof=minimum_residual_dof,
+            )
             mat[I, J] = fit['slope']
             diagnostics[(I, J)] = fit
 
@@ -265,12 +436,12 @@ def compute_U_matrix(chi0: np.ndarray, chi: np.ndarray) -> dict:
     if chi0.shape != (N, N) or chi.shape != (N, N):
         raise ValueError(f"chi0 and chi must be square NxN, got {chi0.shape}, {chi.shape}")
 
-    # SVD of both matrices
-    sv0 = np.linalg.svd(chi0, compute_uv=False)
-    sv  = np.linalg.svd(chi,  compute_uv=False)
-
-    r_chi0 = int(np.linalg.matrix_rank(chi0))
-    r_chi  = int(np.linalg.matrix_rank(chi))
+    condition0 = analyze_matrix_condition(chi0)
+    condition = analyze_matrix_condition(chi)
+    sv0 = np.asarray(condition0.singular_values)
+    sv = np.asarray(condition.singular_values)
+    r_chi0 = condition0.rank
+    r_chi = condition.rank
 
     if r_chi0 < N:
         raise ValueError(
@@ -283,11 +454,11 @@ def compute_U_matrix(chi0: np.ndarray, chi: np.ndarray) -> dict:
             f"Singular values: {sv}. Direct inversion impossible."
         )
 
-    cond0 = float(sv0[0] / sv0[-1]) if sv0[-1] > 0 else float('inf')
-    cond  = float(sv[0]  / sv[-1])  if sv[-1]  > 0 else float('inf')
+    cond0 = condition0.condition_number
+    cond  = condition.condition_number
 
-    inv_chi0 = np.linalg.inv(chi0)
-    inv_chi  = np.linalg.inv(chi)
+    inv_chi0 = invert_response_matrix(chi0, condition0).inverse
+    inv_chi  = invert_response_matrix(chi, condition).inverse
 
     # Inversion residuals
     I = np.eye(N)
@@ -296,7 +467,7 @@ def compute_U_matrix(chi0: np.ndarray, chi: np.ndarray) -> dict:
     left_res_chi   = float(np.max(np.abs(chi  @ inv_chi  - I)))
     right_res_chi  = float(np.max(np.abs(inv_chi  @ chi  - I)))
 
-    U = inv_chi0 - inv_chi
+    U = compute_interaction_matrix(inv_chi0, inv_chi)
     U_antisym_norm = float(np.max(np.abs(U - U.T)))
 
     return {

@@ -1,0 +1,8 @@
+{
+  "campaign_id": "73a0a508-93df-41e2-b1bd-993c3dc7d94a",
+  "campaign_name": "nio-pbe-p5-20260928",
+  "distribution": "Ubuntu",
+  "manifest_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/campaign.v2.json",
+  "python_executable": "/home/jmc/.local/state/siestaflow/hubbard-response-env/bin/python",
+  "schema": "siestaflow.windows_campaign_pointer.v1"
+}

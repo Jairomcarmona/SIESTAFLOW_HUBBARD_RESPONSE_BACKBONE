@@ -144,6 +144,9 @@ def validate_calibration_result(result_path: Path, lock_path: Path, *, expected_
     modes = recipe["required_modes"]
     if not isinstance(modes, list) or any(not isinstance(mode, str) for mode in modes):
         raise OccupationNoiseCalibrationError("calibration lock required_modes is invalid")
+    control_alpha = _finite_number(recipe["control_alpha_ev"], "control_alpha_ev")
+    if control_alpha != 0.0:
+        raise OccupationNoiseCalibrationError("occupation noise controls must be preregistered at alpha=0")
     policy = OccupationNoiseCalibrationPolicy(
         replica_count=recipe["replica_count"],
         safety_factor=recipe["safety_factor"],
@@ -200,7 +203,22 @@ def validate_calibration_result(result_path: Path, lock_path: Path, *, expected_
                else derive_occupation_noise(values, policy))
     if result["occupation_noise_e"] != derived.occupation_noise_e or result["by_mode"] != derived.by_mode:
         raise OccupationNoiseCalibrationError("calibration result bound does not equal locked statistic")
-    return {"occupation_noise_e": derived.occupation_noise_e, "result_sha256": result_hash, "lock_sha256": lock_hash}
+    # Preserve the narrow scope in the validated receipt.  Current calibration
+    # contracts are zero-shift controls only; they do not establish that the
+    # same repeatability bound applies at non-zero response amplitudes.
+    observable = lock["observable"]
+    if not isinstance(observable, dict):
+        raise OccupationNoiseCalibrationError("calibration observable metadata is invalid")
+    return {
+        "validation_status": "VERIFIED_IMMUTABLE_CALIBRATION_RECEIPT",
+        "occupation_noise_e": derived.occupation_noise_e,
+        "result_sha256": result_hash,
+        "lock_sha256": lock_hash,
+        "campaign_id": lock["campaign_id"],
+        "control_alpha_eV": control_alpha,
+        "scope": "INDEPENDENT_ZERO_SHIFT_CONTROL_REPEATABILITY_ONLY",
+        "observable": observable,
+    }
 
 
 def derive_occupation_noise(

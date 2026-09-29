@@ -1,0 +1,12 @@
+diff --git a/Src/dftu.F b/Src/dftu.F
+--- a/Src/dftu.F
++++ b/Src/dftu.F
+@@ -539,7 +539,7 @@
+            enddo
+            if ( dftu_shift .and. Node == 0 ) then
+-              write(6,'(a,/,a,3f12.6)')
++              write(6,'(a,/,a,3f20.12)')
+      &             'hubbard_term: Total projector shell',
+      &             'Occupations: ', (oc(ispin),ispin=1,nspin)
+      &             ,sum(oc)
+            end if

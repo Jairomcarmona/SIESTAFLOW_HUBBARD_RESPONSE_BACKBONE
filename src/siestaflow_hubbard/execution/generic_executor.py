@@ -41,12 +41,15 @@ class NodeExecutor(Protocol):
 def dag_digest(dag: LRDag) -> str:
     """Stable identity that makes checkpoints incompatible after plan changes."""
     payload = [
-        {
+        ({
             "node_id": node.node_id,
             "kind": node.kind.value,
             "dependencies": node.dependencies,
             "perturbation": asdict(node.perturbation) if node.perturbation else None,
-        }
+        } | ({
+            "scf_level_id": node.scf_level_id,
+            "parent_dm_node_id": node.parent_dm_node_id,
+        } if node.scf_level_id is not None or node.parent_dm_node_id is not None else {}))
         for node in dag.nodes
     ]
     encoded = json.dumps(payload, sort_keys=True, separators=(",", ":"), default=str).encode()
@@ -98,7 +101,7 @@ class JsonDagCheckpoint:
 class GenericDagExecutor:
     """Advance executable nodes serially; preserve validated work on restart."""
 
-    def __init__(self, dag: LRDag, checkpoint_path: Path):
+    def __init__(self, dag: LRDag, checkpoint_path: Path, *, checkpoint_identity: str | None = None):
         self.dag = dag
         self._nodes = {node.node_id: node for node in dag.nodes}
         if len(self._nodes) != len(dag.nodes):
@@ -106,7 +109,7 @@ class GenericDagExecutor:
         unknown = [dep for node in dag.nodes for dep in node.dependencies if dep not in self._nodes]
         if unknown:
             raise ExecutionContractError(f"DAG has unknown dependencies: {sorted(set(unknown))}")
-        self.checkpoint = JsonDagCheckpoint(checkpoint_path, dag_digest(dag))
+        self.checkpoint = JsonDagCheckpoint(checkpoint_path, checkpoint_identity or dag_digest(dag))
 
     def runnable(self) -> tuple[LRDagNode, ...]:
         receipts = self.checkpoint.load()

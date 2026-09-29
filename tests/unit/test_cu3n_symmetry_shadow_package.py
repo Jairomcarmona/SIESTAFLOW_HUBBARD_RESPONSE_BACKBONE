@@ -40,7 +40,7 @@ def test_fdf_mutation_changes_only_the_declared_target_shift():
     original = _projector_shifts(template.read_text())
     assert original["CuLR00"] == -ALPHA
     for _, _, target, _, _ in SHADOWS:
-        rendered = shadow_fdf(template, "SHADOW_TEST", target, ALPHA)
+        rendered = shadow_fdf(template, "SHADOW_TEST", target, ALPHA, "BARE")
         shifts = _projector_shifts(rendered)
         assert len(shifts) == 24
         assert shifts[target] == ALPHA

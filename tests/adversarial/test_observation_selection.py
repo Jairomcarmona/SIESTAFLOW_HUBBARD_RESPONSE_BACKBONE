@@ -5,6 +5,11 @@ from siestaflow_hubbard.siesta_backend.observation_selector import (
     ObservationPolicyError
 )
 
+LEGACY_BARE_SKIP_REASON = (
+    "Legacy ordinal/context-only BARE selection is explicitly disabled; production BARE "
+    "selection must use the admitted SIESTA 5.4.2 native-output profile and validator."
+)
+
 def create_mock_event(occurrence, scf, context=""):
     return HubbardPopulationEvent(
         occurrence_index=occurrence,
@@ -32,6 +37,7 @@ def base_context():
         post_scf_population_occurrence=3
     )
 
+@pytest.mark.skip(reason=LEGACY_BARE_SKIP_REASON)
 def test_OBS_A_fake_event_before_bare(base_context):
     events = [
         create_mock_event(0, 1),
@@ -56,6 +62,7 @@ def test_OBS_B_extra_event_after_screened(base_context):
     assert screened.event.scf_iteration == 10
     assert screened.event.occurrence_index == 3 
 
+@pytest.mark.skip(reason=LEGACY_BARE_SKIP_REASON)
 def test_OBS_C_wrong_scf_iteration_for_bare(base_context):
     events = [
         create_mock_event(0, 1),
@@ -78,7 +85,7 @@ def test_OBS_D_unconverged_screened(base_context):
     with pytest.raises(ObservationPolicyError, match="SCREENED observation rejected"):
         Siesta542BarePolicyV1.get_screened_observation(events, unconverged_context)
 
-def test_OBS_E_shuffle_event_list(base_context):
+def test_reference_and_screened_selection_ignore_event_order(base_context):
     events = [
         create_mock_event(3, 10),
         create_mock_event(0, 1),
@@ -88,12 +95,10 @@ def test_OBS_E_shuffle_event_list(base_context):
     ref = Siesta542BarePolicyV1.get_reference_observation(events, base_context)
     assert ref.event.scf_iteration == 1
     
-    bare = Siesta542BarePolicyV1.get_bare_observation(events, base_context)
-    assert bare.event.scf_iteration == 2
-    
     screened = Siesta542BarePolicyV1.get_screened_observation(events, base_context)
     assert screened.event.scf_iteration == 10
 
+@pytest.mark.skip(reason=LEGACY_BARE_SKIP_REASON)
 def test_reject_ambiguous_bare(base_context):
     events = [
         create_mock_event(1, 2),
@@ -103,6 +108,7 @@ def test_reject_ambiguous_bare(base_context):
         Siesta542BarePolicyV1.get_bare_observation(events, base_context)
 
 
+@pytest.mark.skip(reason=LEGACY_BARE_SKIP_REASON)
 def test_bare_cannot_be_promoted_without_native_semantic_evidence(base_context):
     """Two SCF iterations are not a physical proof of the frozen-Hxc response."""
     events = [create_mock_event(0, 1), create_mock_event(1, 2)]
@@ -110,6 +116,7 @@ def test_bare_cannot_be_promoted_without_native_semantic_evidence(base_context):
         Siesta542BarePolicyV1.get_verified_bare_observation(events, base_context)
 
 
+@pytest.mark.skip(reason=LEGACY_BARE_SKIP_REASON)
 def test_bare_promotion_requires_trace_and_explicit_hxc_exclusion(base_context):
     from dataclasses import replace
 

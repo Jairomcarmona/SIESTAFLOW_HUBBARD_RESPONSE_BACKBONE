@@ -20,7 +20,12 @@ import hashlib
 import json
 import numpy as np
 
-from .matrix_lr import MatrixResponseResult, ResponseObservation, analyze_matrix_response_campaign
+from .matrix_lr import (
+    MatrixResponseResult,
+    ResponseFitPolicy,
+    ResponseObservation,
+    analyze_matrix_response_campaign,
+)
 
 
 # ─────────────────────────────────────────────
@@ -54,6 +59,10 @@ class LRScientificConfiguration:
     pao_basis_type: str = "split"
     alpha_grid: list[float] = field(default_factory=lambda: [-0.02, -0.01, 0.00, 0.01, 0.02])
     spin_configuration: str = "polarized"
+    response_fit_method: str = "linear"
+    response_polynomial_degree: int = 3
+    response_minimum_residual_dof: int = 1
+    response_alpha_window_ev: Optional[float] = None
 
     @property
     def projector_rc(self) -> float:
@@ -91,6 +100,10 @@ class LRScientificConfiguration:
             "pao_basis_type": self.pao_basis_type,
             "alpha_grid": [float(a) for a in self.alpha_grid],
             "spin_configuration": self.spin_configuration,
+            "response_fit_method": self.response_fit_method,
+            "response_polynomial_degree": self.response_polynomial_degree,
+            "response_minimum_residual_dof": self.response_minimum_residual_dof,
+            "response_alpha_window_ev": self.response_alpha_window_ev,
         }
         json_str = json.dumps(payload, sort_keys=True)
         return hashlib.sha256(json_str.encode("utf-8")).hexdigest()[:16]
@@ -163,6 +176,10 @@ class ConvergenceResult:
     # Computational cost
     scf_cost_siesta_runs: int
     scientific_status: str = "DIAGNOSTICS_ONLY"
+    response_fit_method: str = "linear"
+    response_polynomial_degree: Optional[int] = None
+    response_minimum_residual_dof: int = 1
+    response_alpha_window_ev: Optional[float] = None
 
 
 # ─────────────────────────────────────────────
@@ -346,7 +363,17 @@ def build_convergence_result_from_observations(
     Pass raw ResponseObservation list into the production NxN matrix engine
     and construct a ConvergenceResult.
     """
-    matrix_res: MatrixResponseResult = analyze_matrix_response_campaign(observations)
+    fit_policy = ResponseFitPolicy(
+        method=config.response_fit_method,
+        polynomial_degree=config.response_polynomial_degree,
+        minimum_residual_dof=config.response_minimum_residual_dof,
+        alpha_window_ev=config.response_alpha_window_ev,
+    )
+    fit_policy.validate()
+    matrix_res: MatrixResponseResult = analyze_matrix_response_campaign(
+        observations,
+        fit_policy=fit_policy,
+    )
     N = config.n_sites()
 
     chi0 = matrix_res.chi0_raw
@@ -394,4 +421,8 @@ def build_convergence_result_from_observations(
         cond_chi=matrix_res.condition_chi.condition_number,
         scf_cost_siesta_runs=scf_cost,
         scientific_status="DIAGNOSTICS_ONLY",
+        response_fit_method=matrix_res.response_fit_method,
+        response_polynomial_degree=matrix_res.response_polynomial_degree,
+        response_minimum_residual_dof=matrix_res.response_minimum_residual_dof,
+        response_alpha_window_ev=matrix_res.response_alpha_window_ev,
     )
