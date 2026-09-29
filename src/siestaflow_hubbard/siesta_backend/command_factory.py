@@ -93,6 +93,7 @@ class SiestaCampaignLayout:
     reference_dm: Path | None
     reference_dm_name: str
     static_artifacts: Mapping[str, Path] = field(default_factory=dict)
+    scf_level_overrides: Mapping[str, Mapping[str, object]] = field(default_factory=dict)
     fdf_name: str = "siesta.fdf"
     output_name: str = "siesta.out"
     error_name: str = "siesta.err"
@@ -109,6 +110,9 @@ class SiestaCampaignLayout:
             _relative_name(destination, "static artifact destination")
             if not isinstance(source, Path) or not source.is_file():
                 raise SiestaCommandFactoryError("static artifact source is missing")
+        for level_id, overrides in self.scf_level_overrides.items():
+            if not isinstance(level_id, str) or not level_id or not isinstance(overrides, Mapping) or not overrides:
+                raise SiestaCommandFactoryError("SCF level overrides must map non-empty level ids to non-empty mappings")
 
 
 class SiestaCommandFactory:
@@ -199,6 +203,10 @@ class SiestaCommandFactory:
                 # second immutable copy under its declared parent name; the
                 # active ``SystemLabel.DM`` copy remains the file SIESTA reads.
                 copy2(self.layout.reference_dm, run_dir / self.layout.reference_dm_name)
+            level_id = node.scf_level_id or "base"
+            overrides = self.layout.scf_level_overrides.get(level_id)
+            if overrides:
+                _apply_fdf_overrides(fdf_path, overrides)
             self.artifacts[node.node_id] = SiestaArtifactSpec(
                 fdf=self.layout.fdf_name,
                 output=self.layout.output_name,
@@ -229,3 +237,21 @@ class SiestaCommandFactory:
                 raise SiestaCommandFactoryError("static artifact escapes node directory") from exc
             target.parent.mkdir(parents=True, exist_ok=True)
             copy2(source, target)
+
+
+def _apply_fdf_overrides(path: Path, overrides: Mapping[str, object]) -> None:
+    """Set only predeclared scalar FDF controls on this materialized node."""
+    lines = path.read_text(encoding="utf-8").splitlines()
+    for key, value in overrides.items():
+        pattern = re.compile(rf"^(\s*){re.escape(str(key))}\b.*$", re.IGNORECASE)
+        matches = [index for index, line in enumerate(lines) if pattern.match(line)]
+        if len(matches) > 1:
+            raise SiestaCommandFactoryError(f"cannot apply SCF override to duplicate FDF key {key}")
+        replacement = f"{key} {value}"
+        if matches:
+            indent_match = pattern.match(lines[matches[0]])
+            indent = indent_match.group(1) if indent_match else ""
+            lines[matches[0]] = indent + replacement
+        else:
+            lines.append(replacement)
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")

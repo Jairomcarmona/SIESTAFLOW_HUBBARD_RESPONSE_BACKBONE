@@ -1061,10 +1061,40 @@ def cli_main(argv: Optional[List[str]] = None) -> int:
             sem_result  = verify_siesta_run_semantics(stdout_path, s.response_mode, s.mat_cfg)
 
             if rc == 0 and sem_result['passed']:
+                candidate_id = candidate_ground_state_id(s.mat_cfg, s.effective_params)
+                fdf_sha256 = sha256_nonempty_file(s.fdf_path)
                 meta = {
                     'return_code': 0,
                     'identity_key': s.identity_key,
                     'stdout_sha256': sem_result.get('stdout_sha256', ''),
+                    'fdf_sha256': fdf_sha256,
+                    'candidate_id': candidate_id,
+                    'response_mode': s.response_mode,
+                    'alpha': float(s.alpha),
+                    'perturbed_site': int(s.perturbed_site),
+                    'selected_occurrence_index': sem_result['selected_occurrence_index'],
+                    'selected_scf_iteration': sem_result['selected_scf_iteration'],
+                    'selection_role': sem_result['selection_role'],
+                    'selection_evidence': sem_result['selection_evidence'],
+                    'semantic_validation': 'PASSED',
+                }
+                observation = {
+                    'material': material,
+                    'candidate_id': candidate_id,
+                    'mode': s.response_mode,
+                    'perturbed_site': int(s.perturbed_site),
+                    'alpha': float(s.alpha),
+                    'identity_key': s.identity_key,
+                    'stdout_sha256': meta['stdout_sha256'],
+                    'fdf_sha256': fdf_sha256,
+                    'return_code': 0,
+                    'semantic_validation': 'PASSED',
+                    'selected_occurrence_index': sem_result['selected_occurrence_index'],
+                    'selected_scf_iteration': sem_result['selected_scf_iteration'],
+                    'atom_indices': sem_result['atom_indices'],
+                    'occupation_vector': sem_result['occupation_vector'],
+                    'selection_role': sem_result['selection_role'],
+                    'selection_evidence': sem_result['selection_evidence'],
                 }
                 if s.response_mode == 'REFERENCE':
                     dest_dm = s.canonical_dm_path
@@ -1083,22 +1113,21 @@ def cli_main(argv: Optional[List[str]] = None) -> int:
                         meta.update({'system_label': system_label, 'source_dm_sha256': source_sha,
                                      'canonical_dm_sha256': canonical_sha})
                         state.set_reference_dm(canonical_sha)
+                        observation.update({
+                            'mode': 'REFERENCE', 'perturbed_site': 0, 'alpha': 0.0,
+                            'canonical_dm_sha256': canonical_sha,
+                        })
                 else:
-                    from production_benchmarks.campaign_controller import persist_observation
-                    persist_observation(campaign_dir, {
-                        'material': material,
-                        'candidate_id': candidate_ground_state_id(s.mat_cfg, s.effective_params),
-                        'mode': s.response_mode,
-                        'perturbed_site': s.perturbed_site,
-                        'alpha': s.alpha,
-                        'parent_dm_sha256': hashlib.sha256(open(s.canonical_dm_path, 'rb').read()).hexdigest(),
-                        'selected_occurrence_index': sem_result['selected_occurrence_index'],
-                        'selected_scf_iteration': sem_result['selected_scf_iteration'],
-                        'atom_indices': sem_result['atom_indices'],
-                        'occupation_vector': sem_result['occupation_vector'],
-                        'selection_role': sem_result['selection_role'],
-                        'selection_evidence': sem_result['selection_evidence'],
-                    })
+                    parent_dm_sha256 = sha256_nonempty_file(s.canonical_dm_path)
+                    meta['parent_dm_sha256'] = parent_dm_sha256
+                    observation['parent_dm_sha256'] = parent_dm_sha256
+                from production_benchmarks.campaign_controller import (
+                    observation_receipt_digest, persist_observation,
+                )
+                payload_digest = observation_receipt_digest(observation)
+                observation['observation_payload_sha256'] = payload_digest
+                meta['observation_payload_sha256'] = payload_digest
+                persist_observation(campaign_dir, observation)
                 state.mark_complete(s.identity_key, meta)
                 return 0
             else:
@@ -1153,7 +1182,26 @@ def cli_main(argv: Optional[List[str]] = None) -> int:
         active_tasks.clear()
 
         print(f"COMPLETE: launched={launched} skipped={skipped} failed={failed}")
-        return 0 if failed == 0 else 1
+        if failed != 0:
+            return 1
+        normalized_node = dag_node.upper()
+        if normalized_node in {'SCREENING_3POINT', 'FINAL_5POINT_LR'}:
+            candidate_id = candidate_ground_state_id(
+                mat_cfg, run_specs[0].effective_params if run_specs else override_params,
+            )
+            try:
+                from production_benchmarks.campaign_controller import matrix_analysis
+                result_path = matrix_analysis(
+                    campaign_dir, material, candidate_id,
+                    run_specs[0].n_sites if run_specs else actual_correlated_site_count(mat_cfg, override_params),
+                    mode_5point=normalized_node == 'FINAL_5POINT_LR',
+                )
+            except Exception as exc:
+                print(f"MATRIX_ANALYSIS_FAILED: {exc}", file=sys.stderr)
+                return 1
+            print(f"MATRIX_ANALYSIS_COMPLETE: {result_path}")
+            print(f"LR_U_REPORT: {result_path.parent / candidate_id / 'LR_U_REPORT.md'}")
+        return 0
 
 
 def __main__():

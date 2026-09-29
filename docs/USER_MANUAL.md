@@ -1,119 +1,83 @@
-# SIESTAFLOW Hubbard Response Backbone v0.1.0 — Technical User Manual & Engineering Audit
+# SIESTAFLOW 0.1.2 — Technical User Manual
 
-Welcome to the **SIESTAFLOW** Technical User Manual. This document provides a transparent, physics-grounded, and software-engineered guide to using SIESTAFLOW for extracting Hubbard $U$ parameters via Linear Response Density Functional Theory (DFT+U) in SIESTA 5.4.2.
+SIESTAFLOW runs SIESTA linear-response charge campaigns and records their inputs, node receipts, analysis, and report. This manual describes the installed CLI in release 0.1.2. It does not promise a physically accepted or universal Hubbard parameter for every material.
 
----
+The completed P0–P6 product closure is recorded as `PRODUCT_BLOCKED`: the CLI
+and P5 campaign completed, while the NiO result remains
+`NUMERICAL_CANDIDATE_UNASSESSED` / `NOT_ESTABLISHED` for the scientific objective
+required by the user. See the [final execution record](P0_EXECUTION_20260928.md)
+and the [repository synchronization inventory](ESTADO_REPOSITORIO_Y_PUBLICACION_20260929.md).
 
-## 1. Executive Summary & Physical Foundations
+## Scientific quantity
 
-### What SIESTAFLOW Does
-SIESTAFLOW is an automated, cryptographically audited, and physically validated framework for determining ab-initio Hubbard $U$ parameters (and inter-site $V$ interactions) for localized atomic orbitals ($3d, 4f$). It bridges the gap between raw Density Functional Theory (DFT) calculations in SIESTA 5.4.2 and linear response theory without relying on black-box heuristics or ad-hoc fitting.
+For correlated sites `I` and perturbation sites `J`, the analysis forms
 
-### The Physics of Linear Response
-The Hubbard $U_{eff}$ parameter quantifies the unscreened local Coulomb repulsion within a localized orbital subspace $I$. Following the Cococcioni-de Gironcoli linear response formulation:
+\[
+\chi^0_{IJ}=\left.\partial n_I^{\mathrm{BARE}}/\partial\alpha_J\right|_0,
+\qquad
+\chi_{IJ}=\left.\partial n_I^{\mathrm{SCREENED}}/\partial\alpha_J\right|_0,
+\qquad
+U_I=[(\chi^0)^{-1}-\chi^{-1}]_{II}.
+\]
 
-$$U_{\text{eff}} = \left(\chi_0^{-1} - \chi^{-1}\right)_{II}$$
+The versioned result is `U_scalar_charge`, with the occupation source and projector convention stated in the JSON and Markdown report. It is not relabeled automatically as `Ueff_Dudarev`; SIESTA's collinear Dudarev input uses `U-J`, which needs its own physical contract. An off-diagonal matrix value is not automatically a functional's `V`.
 
-Where:
-* $\chi_0 = \frac{\partial n_I^{(0)}}{\partial \alpha_J}$ is the **bare (unscreened) susceptibility matrix**, representing the non-interacting response of orbital occupations $n_I$ to a localized potential shift $\alpha_J$ (computed by taking 2 SCF iterations with fixed density matrix).
-* $\chi = \frac{\partial n_I}{\partial \alpha_J}$ is the **screened susceptibility matrix**, representing the fully converged SCF response of orbital occupations $n_I$ to potential shift $\alpha_J$.
-* $\alpha_J$ is a localized potential shift applied via the `%block DFTU.proj` operator in SIESTA.
+Schema v3 uses `occupation_source=siesta_occupations_total` when the selected SIESTA `Occupations:` total is the adjusted observable. The rounding interval, matrix inversion, fit-window and model diagnostics, SCF state, branch/projection checks, and per-site result remain distinct fields. A missing scientific U tolerance yields `NUMERICAL_CANDIDATE_UNASSESSED`; that status can be a valid terminal campaign result and does not establish physical acceptance. Numerical output, convergence, and physical acceptance are separate claims.
 
----
+## Install and inspect an input
 
-## 2. SIESTA 5.4.2 Specifics & Syntactic Rules
+Install the release wheel in the Python environment that will run the CLI. For PowerShell → WSL, install it both in Windows Python and in the selected WSL distribution; the wheel does not include SIESTA or MPI.
 
-SIESTAFLOW handles the rigid formatting constraints of SIESTA 5.4.2's `DFTU.proj` block automatically:
-
-```fdf
-%block DFTU.proj
-  Cu1   1
-  3  2
-  1.7600  0.1000
-  0.0000  0.0200
-  0.0000
-%endblock DFTU.proj
+```powershell
+py -m pip install .\dist\siestaflow_hubbard-0.1.2-py3-none-any.whl
+siestaflow audit-fdf .\reference.fdf
 ```
 
-### Critical Syntax Constraints Handled:
-1. **5-Line Structure:** Line 1: `Species Shells` | Line 2: `n l` | Line 3: `rc width` (cutoff radius and broadening) | Line 4: `U alpha` | Line 5: `J`.
-2. **Column Order:** Line 4 MUST be `{u_val:.4f} {alpha:.4f}`. Inverting `alpha` and `U` causes SIESTA to interpret potential shifts as Hubbard interactions.
-3. **Unix Line Endings (LF):** SIESTA's Fortran list-directed parser chokes on Windows `\r\n` carriage returns. SIESTAFLOW strictly enforces LF line endings.
+The FDF audit parses the declared functional, spin mode, lattice, and DFTU projector information. It is not a substitute for validating the pseudopotentials, runtime, compatibility registry, projectors, or campaign policy. Use the [PowerShell → WSL quickstart](CLI_LOCAL_WSL_QUICKSTART.md) to prepare those inputs and a validated execution profile.
 
----
+## PowerShell → WSL campaign commands
 
-## 3. Command Line Interface (CLI) Usage Guide
+The profile declares a single-node local runtime, MPI ranks, SIESTA executable, and WSL workspace. `init` copies the scientific inputs into a separate WSL campaign directory, writes their SHA-256 inventory and returns a Windows pointer. Use the public commands with that pointer:
 
-SIESTAFLOW is executed via the `siestaflow` command line interface.
-
-### Step 1: Audit an FDF File (Coherence & Pre-flight Check)
-Inspect any arbitrary SIESTA input file without running expensive computations:
-```bash
-siestaflow audit-fdf Cu3N.fdf --verbose
-```
-* **Output:** Displays unit normalization (Ångströms), detected spin mode (`non-polarized`, `spin-polarized`), lattice symmetry, auto-calculated $K$-grid, and verifies fixed-geometry safeguards (`MD.NumCGsteps 0`).
-
-### Step 2: Initialize a Campaign
-Create an immutable campaign manifest (`campaign.json`):
-```bash
-siestaflow init Cu3N.fdf --name Cu3N_Production_Campaign
+```powershell
+siestaflow init .\reference.fdf --lr-config .\lr-config.json --profile .\local-wsl-profile.json --name material-lr
+siestaflow run .\material-lr.siestaflow.json
+siestaflow status .\material-lr.siestaflow.json
+siestaflow resume .\material-lr.siestaflow.json
+siestaflow report .\material-lr.siestaflow.json
+siestaflow stop .\material-lr.siestaflow.json
 ```
 
-### Step 3: Run Convergence & Optimize Parameters
-Run automatic $K$-point and `MeshCutoff` convergence checks:
-```bash
-siestaflow converge campaign.json
-```
-* Generates `Cu3N_converged.fdf` with verified optimal parameters ($8\times 8\times 8$ $K$-grid, $500\text{ Ry}$ cutoff) and updates the manifest state to `CONVERGED`.
+`run` starts the campaign worker. `status` reads durable state. `resume` revalidates prior receipts and reuses valid nodes, rerunning only missing/invalid nodes and descendants. `report` renders the saved analysis; it does not run SIESTA. `stop` requests a safe stop. The shared workspace lock serializes SIESTA nodes across local campaigns. Do not run separate workers outside this control plane.
 
-### Step 4: Run Linear Response Production Campaign
-Launch the 11 perturbation tasks ($\alpha \in [-0.02, -0.01, 0.00, +0.01, +0.02]\text{ eV}$) in parallel or locally:
-```bash
-siestaflow run campaign.json --hpc-scheduler slurm
-```
+## Linux and Slurm direct-manifest commands
 
-### Step 5: Resume Interrupted Computations (Fault Tolerance)
-If a cluster job expires or a node fails:
-```bash
-siestaflow resume campaign.json
-```
-* Reads SHA-256 sidecars of completed `.out` and `.DM` files, skips verified tasks, and resumes from the exact missing perturbation.
-
-### Step 6: Export Cryptographic Evidence Package
-Generate transparent Markdown and interactive HTML reports:
-```bash
-siestaflow report campaign.json --format md,html
-```
-
----
-
-## 4. Technical Debt Audit & Transparency Report
-
-In accordance with strict software engineering standards, here is the **Transparent Technical Debt Audit** for SIESTAFLOW v0.1.0:
-
-### 🟢 Resolved Technical Debt (Fixed in v0.1.0)
-1. **`DFTU.proj` Column Order Bug:** Fixed column inversion where `alpha` was written before `U`, preventing false electronic phase transitions.
-2. **WSL/Fortran Line Ending Issue:** Enforced `newline='\n'` in `FdfBuilder` to prevent Fortran parser failures on Windows/WSL.
-3. **Non-Polarized Spin Parser:** Enhanced `SiestaLRAdapter` regex to dynamically parse 1-column (non-polarized) and 2-column (spin-polarized) occupation matrices without trace mismatch errors.
-
-### 🟡 Open Technical Debt & Architectural Limitations
-
-| Item ID | Description | Impact | Current Workaround / Roadmap Status |
-| :--- | :--- | :--- | :--- |
-| **TD-001** | **Bijective Subspace Restriction ($P = N$)** | High | Currently, the backbone requires the number of perturbation channels $P$ to equal the number of target subspaces $N$. Non-bijective projections ($P \neq N$) are deferred (Open Decision OD-007) and will be implemented in v0.2.0 via $B$-transform $\chi = A R B$. |
-| **TD-002** | **Non-Collinear / SOC Spin Parser Handler** | Medium | `FdfValidator` detects `non-collinear` and `spin-orbit` flags, but `SiestaLRAdapter` currently supports $5\times 5$ matrices ($d$-shell) and $7\times 7$ matrices ($f$-shell) in collinear mode. Non-collinear $10\times 10$ complex block extraction is scheduled for v0.1.2. |
-| **TD-003** | **Remote SSH/SLURM Transport Driver** | Medium | `SiestaLRAdapter.run_siesta_slurm` currently executes local subprocess wrappers and WSL scripts. A native Paramiko/SSH remote queue manager is deferred to v0.2.0. |
-| **TD-004** | **Automatic Asymmetric Alpha Grid Selection for Filled Shells ($d^{10}$)** | Low | For filled shells ($d^{10}$), negative perturbations ($\alpha < 0$) give zero response due to Pauli exclusion. Currently, the user/campaign must specify positive-only grids ($\alpha > 0$) in `alpha_grid_plan`. Automated grid adaptation is planned for v0.1.1. |
-
----
-
-## 5. Verification & Test Suite Compliance
-
-SIESTAFLOW v0.1.0 includes a 100% green test suite consisting of **79 automated unit, algebraic, adversarial, and integration tests**:
+On Linux, the public CLI can initialize a direct `campaign.v2.json` manifest from a profile with `target="slurm"` inside an already granted Slurm allocation. The allocation/site profile must be validated for that installation. SIESTAFLOW uses the allocation's hosts and does not submit `sbatch`.
 
 ```bash
-python -m pytest tests/ -v
-# Status: 79 passed in 0.47s
+siestaflow audit-fdf ./reference.fdf
+siestaflow init ./reference.fdf --lr-config ./lr-config.json --profile ./slurm-profile.json --name material-lr --campaign-root /scratch/siestaflow-campaigns
+siestaflow run /scratch/siestaflow-campaigns/material-lr/campaign.v2.json
+siestaflow status /scratch/siestaflow-campaigns/material-lr/campaign.v2.json
+siestaflow resume /scratch/siestaflow-campaigns/material-lr/campaign.v2.json
+siestaflow report /scratch/siestaflow-campaigns/material-lr/campaign.v2.json
+siestaflow stop /scratch/siestaflow-campaigns/material-lr/campaign.v2.json
 ```
 
-All source code, schemas, and test suites are maintained under strict version control.
+This route expects an existing allocation and profile; it is not a generic remote-login or queue-submission client. See [HPC_SLURM_EXECUTION_CONTRACT.md](HPC_SLURM_EXECUTION_CONTRACT.md) for the site-neutral execution boundary.
+
+## Grid, budget, and interpretation
+
+For a fixed grid with `S` correlated sites and `A` nonzero α amplitudes, the run costs one shared reference plus one BARE and one SCREENED calculation per site and amplitude:
+
+\[
+N_{\mathrm{SIESTA}}=1+2SA.
+\]
+
+The frozen six-amplitude route therefore costs 13 nodes for one site and 25 for the two-site NiO alternative. A policy-driven adaptive run uses the explicit `total_siesta_node_budget` in its policy and counts new references and probes too. Freeze α values, fit windows, tolerances, projector, and criteria before execution; do not alter them to seek a preferred U.
+
+Reports distinguish workflow validation from a scientific conclusion. `NUMERICAL_CANDIDATE_UNASSESSED`, `NUMERICAL_CANDIDATE_SENSITIVE`, and a `NOT_ESTABLISHED` physical-acceptance state must be reported as-is. Literature agreement is not an algorithm acceptance criterion.
+
+## Supported scope and limitations
+
+The release scope is SIESTA 5.4.2 for the tested spin modes and BARE/SCREENED protocol. A campaign must pass the exact executable/compatibility gate; setting a version string alone does not admit a runtime. The software does not provide automatic `Ueff_Dudarev`, a computed `J`, generic off-diagonal `V` interpretation, non-collinear/SOC support, or universal material presets. See [CHANGELOG.md](../CHANGELOG.md) for release notes and the [project scope](00_governance/SCOPE.md) for broader boundaries.

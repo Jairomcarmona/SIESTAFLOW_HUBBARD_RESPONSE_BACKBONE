@@ -1,0 +1,43 @@
+{
+  "schema": "siestaflow.lr_config.v2",
+  "material": "NiO-AFMII-PBE-adaptive-20260928",
+  "functional": "PBE",
+  "sites": [
+    {
+      "site_id": "NiLR0",
+      "atom_index": 1,
+      "orbit_id": "NiLR0"
+    },
+    {
+      "site_id": "NiLR1",
+      "atom_index": 2,
+      "orbit_id": "NiLR1"
+    }
+  ],
+  "alpha_grid_ev": [
+    -0.06,
+    -0.04,
+    -0.02,
+    0.02,
+    0.04,
+    0.06
+  ],
+  "pseudopotentials": {
+    "NiLR0": "C:/Users/Jairo/Downloads/SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0/campaigns/nio_afmii_pbe_restart_v3_20260927/inputs/pseudopotentials/NiLR0.psml",
+    "NiLR1": "C:/Users/Jairo/Downloads/SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0/campaigns/nio_afmii_pbe_restart_v3_20260927/inputs/pseudopotentials/NiLR1.psml",
+    "O": "C:/Users/Jairo/Downloads/SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0/campaigns/nio_afmii_pbe_restart_v3_20260927/inputs/pseudopotentials/O.psml"
+  },
+  "static_artifacts": {},
+  "compatibility_registry": "C:/Users/Jairo/Downloads/SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0/campaigns/cu_one_atom_mode_centered_lr_v2/results/response-campaign/contracts/backend-compatibility.json",
+  "version_text_source": "C:/Users/Jairo/Downloads/SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0/campaigns/cu_one_atom_mode_centered_lr_v2/results/response-campaign/contracts/siesta-version.txt",
+  "declared_executable": "siesta",
+  "reference_dm_name": "NIO_PBE_REFERENCE.DM",
+  "analysis_policy": {
+    "estimator": "polynomial",
+    "polynomial_degree": 3,
+    "minimum_residual_dof": 1,
+    "matrix_for_inversion": "raw"
+  },
+  "magnetic_moment_tolerance_muB": 0.1,
+  "adaptive_alpha_policy": null
+}

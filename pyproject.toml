@@ -10,6 +10,9 @@ dependencies = [
     "jsonschema>=4.0.0,<5.0.0"
 ]
 
+[project.scripts]
+siestaflow = "siestaflow_hubbard.cli:main"
+
 [project.optional-dependencies]
 test = [
     "pytest>=7.0.0"

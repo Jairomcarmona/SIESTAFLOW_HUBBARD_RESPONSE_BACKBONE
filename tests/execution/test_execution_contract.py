@@ -58,3 +58,55 @@ def test_dag_refuses_partial_or_failed_scientific_descendants():
     assert not may_start([NodeState.FAILED_SCIENCE])
     assert may_analyze([NodeState.VALIDATED, NodeState.VALIDATED])
     assert not may_analyze([NodeState.VALIDATED, NodeState.FAILED_OUTPUT_VALIDATION])
+
+
+def test_local_wsl_profile_uses_configured_mpi_ranks_and_serializes_campaigns():
+    payload = {
+        "target": "local_wsl", "evidence": "VALIDATED_RUNTIME",
+        "wsl": {
+            "distribution": "Ubuntu", "python_executable": "/usr/bin/python3",
+            "workspace_root": "/home/user/campaigns",
+        },
+        "allocation": {
+            "nodes": 1, "total_cpus": 4, "memory": "8G", "walltime": "12:00:00",
+            "max_parallel_steps": 1, "shutdown_margin_seconds": 60,
+            "termination_grace_seconds": 30,
+        },
+        "runtime": {
+            "module_commands": [], "siesta_executable": "/opt/siesta/bin/siesta",
+            "exclusive": True, "environment": {"OMP_NUM_THREADS": "1"},
+            "launcher": {
+                "kind": "openmpi", "command": ["/usr/bin/mpiexec.openmpi"],
+                "bootstrap": "local", "processes_per_node": 4,
+            },
+        },
+        "task_policy": {"max_attempts": 1, "require_scf_converged": True},
+    }
+    profile = ExecutionProfile.from_mapping(payload)
+    assert profile.target == "local_wsl"
+    assert profile.wsl.distribution == "Ubuntu"
+    assert profile.allocation.max_parallel_steps == 1
+
+    ten_ranks = {**payload, "allocation": {**payload["allocation"], "total_cpus": 10}}
+    ten_ranks["runtime"] = {
+        **payload["runtime"],
+        "launcher": {**payload["runtime"]["launcher"], "processes_per_node": 10},
+    }
+    configured = ExecutionProfile.from_mapping(ten_ranks)
+    assert configured.allocation.total_cpus == 10
+    assert configured.runtime.launcher.processes_per_node == 10
+
+    too_many_jobs = {**payload, "allocation": {**payload["allocation"], "max_parallel_steps": 2}}
+    with pytest.raises(ProfileValidationError, match="max_parallel_steps=1"):
+        ExecutionProfile.from_mapping(too_many_jobs)
+
+    remote_bootstrap = {**payload, "runtime": {**payload["runtime"], "launcher": {
+        **payload["runtime"]["launcher"], "bootstrap": "ssh",
+    }}}
+    with pytest.raises(ProfileValidationError, match="bootstrap"):
+        ExecutionProfile.from_mapping(remote_bootstrap)
+
+
+def test_execution_profile_rejects_non_object_input_cleanly():
+    with pytest.raises(ProfileValidationError, match="JSON object"):
+        ExecutionProfile.from_mapping([])

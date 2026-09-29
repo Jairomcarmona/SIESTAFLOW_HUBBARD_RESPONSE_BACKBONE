@@ -216,7 +216,10 @@ archive_incomplete() {
     [[ -e "$directory/$file" ]] || continue
     mkdir -p "$archive"; mv "$directory/$file" "$archive/$file"
   done
-  [[ -d "$archive" ]] && echo "DAG_ARCHIVED_INCOMPLETE: $run -> $archive"
+  if [[ -d "$archive" ]]; then
+    echo "DAG_ARCHIVED_INCOMPLETE: $run -> $archive"
+  fi
+  return 0
 }
 
 stage_run() {

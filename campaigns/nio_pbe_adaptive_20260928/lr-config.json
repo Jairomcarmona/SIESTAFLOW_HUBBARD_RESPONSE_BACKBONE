@@ -1,0 +1,100 @@
+{
+  "schema": "siestaflow.lr_config.v2",
+  "material": "NiO-AFMII-PBE-adaptive-20260928",
+  "functional": "PBE",
+  "sites": [
+    {
+      "site_id": "NiLR0",
+      "atom_index": 1,
+      "orbit_id": "NiLR0"
+    },
+    {
+      "site_id": "NiLR1",
+      "atom_index": 2,
+      "orbit_id": "NiLR1"
+    }
+  ],
+  "alpha_grid_ev": [
+    -0.06,
+    -0.04,
+    -0.02,
+    0.02,
+    0.04,
+    0.06
+  ],
+  "pseudopotentials": {
+    "NiLR0": "C:/Users/Jairo/Downloads/SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0/campaigns/nio_afmii_pbe_restart_v3_20260927/inputs/pseudopotentials/NiLR0.psml",
+    "NiLR1": "C:/Users/Jairo/Downloads/SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0/campaigns/nio_afmii_pbe_restart_v3_20260927/inputs/pseudopotentials/NiLR1.psml",
+    "O": "C:/Users/Jairo/Downloads/SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0/campaigns/nio_afmii_pbe_restart_v3_20260927/inputs/pseudopotentials/O.psml"
+  },
+  "static_artifacts": {},
+  "compatibility_registry": "C:/Users/Jairo/Downloads/SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0/campaigns/cu_one_atom_mode_centered_lr_v2/results/response-campaign/contracts/backend-compatibility.json",
+  "version_text_source": "C:/Users/Jairo/Downloads/SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0/campaigns/cu_one_atom_mode_centered_lr_v2/results/response-campaign/contracts/siesta-version.txt",
+  "declared_executable": "siesta",
+  "reference_dm_name": "NIO_PBE_REFERENCE.DM",
+  "analysis_policy": {
+    "estimator": "polynomial",
+    "polynomial_degree": 3,
+    "minimum_residual_dof": 1,
+    "matrix_for_inversion": "raw"
+  },
+  "magnetic_moment_tolerance_muB": 0.1,
+  "adaptive_alpha_policy": {
+    "schema": "siestaflow.adaptive_alpha_policy.v1",
+    "h_eV": 0.02,
+    "alpha_seed_span_eV": 0.06,
+    "alpha_ceiling_eV": null,
+    "max_refinement_rounds": 2,
+    "max_alpha_points": 11,
+    "total_siesta_node_budget": 41,
+    "round_analysis": {
+      "initial": {
+        "active_window_eV": 0.06,
+        "estimator": "polynomial",
+        "polynomial_degree": 3,
+        "minimum_residual_dof": 1,
+        "matrix_for_inversion": "raw"
+      },
+      "shrink": [
+        {
+          "active_window_eV": 0.04,
+          "estimator": "polynomial",
+          "polynomial_degree": 3,
+          "minimum_residual_dof": 1,
+          "matrix_for_inversion": "raw"
+        },
+        {
+          "active_window_eV": 0.02,
+          "estimator": "polynomial",
+          "polynomial_degree": 3,
+          "minimum_residual_dof": 1,
+          "matrix_for_inversion": "raw"
+        }
+      ],
+      "expand": [
+        {
+          "active_window_eV": 0.06,
+          "estimator": "polynomial",
+          "polynomial_degree": 3,
+          "minimum_residual_dof": 1,
+          "matrix_for_inversion": "raw"
+        },
+        {
+          "active_window_eV": 0.06,
+          "estimator": "polynomial",
+          "polynomial_degree": 3,
+          "minimum_residual_dof": 1,
+          "matrix_for_inversion": "raw"
+        }
+      ]
+    },
+    "tol_abs_eV": 0.05,
+    "tol_rel": 0.01,
+    "truncation_threshold_eV": 0.001,
+    "sensitivity_delta_tolerance_eV": 0.05,
+    "probe_trigger_ratio": null,
+    "scf_materiality_ratio": null,
+    "rho_min": null,
+    "scf_probe_level": null
+  }
+}

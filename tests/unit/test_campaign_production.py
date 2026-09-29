@@ -1671,8 +1671,8 @@ def test_rc0_missing_occupations_rejected(tmp_path):
     assert 'occupation' in res['reason'].lower()
 
 
-def test_valid_bare_nonconverged_accepted(tmp_path):
-    """Test P: BARE mode with returncode 0 and occupation data is ACCEPTED even if SCF did not converge."""
+def test_bare_nonconverged_without_native_evidence_rejected(tmp_path):
+    """BARE occupations alone cannot authorize selection without native evidence."""
     out_file = tmp_path / 'siesta.out'
     out_file.write_text("""siesta: Normal completion
 SCF: NOT CONVERGED
@@ -1689,4 +1689,7 @@ recalculating Hamiltonian
 
     mat_cfg = {'spin_mode': 'collinear_polarized', 'n_correlated_sites': 2}
     res = verify_siesta_run_semantics(str(out_file), 'BARE', mat_cfg)
-    assert res['passed'] is True
+    assert res['passed'] is False
+    assert 'BARE semantic selection failed' in res['reason']
+    assert 'legacy ordinal BARE selection is disabled' in res['reason']
+    assert 'native output' in res['reason']

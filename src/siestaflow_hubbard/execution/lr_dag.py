@@ -10,12 +10,16 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
+from hashlib import sha256
+import re
+from typing import Any, Mapping, Sequence
 from math import isclose
 
 from siestaflow_hubbard.domain.adaptive_alpha import AdaptiveAlphaPolicy
 from siestaflow_hubbard.domain.symmetry_reduction import (
     PerturbationSpec,
     ReductionState,
+    ResponseMode,
     SymmetryReductionPlan,
 )
 
@@ -34,6 +38,8 @@ class LRDagNode:
     kind: LRNodeKind
     dependencies: tuple[str, ...]
     perturbation: PerturbationSpec | None = None
+    scf_level_id: str | None = None
+    parent_dm_node_id: str | None = None
 
 
 @dataclass(frozen=True)
@@ -65,6 +71,160 @@ def build_initial_lr_dag(plan: SymmetryReductionPlan) -> LRDag:
 def _alpha_tag(alpha_ev: float) -> str:
     sign = "p" if alpha_ev > 0.0 else "m"
     return f"{sign}{abs(alpha_ev):.12g}".replace(".", "p")
+
+
+def _node_part(value: str) -> str:
+    return re.sub(r"[^A-Za-z0-9_.-]+", "_", value).strip("_.")[:40] or "item"
+
+
+def _adaptive_response_node(
+    site: Mapping[str, Any], site_index: int, alpha_ev: float, mode: ResponseMode,
+    *, scf_level_id: str, parent_dm_node_id: str, dependencies: tuple[str, ...],
+    identity_prefix: str, round_index: int,
+    purpose: str,
+) -> LRDagNode:
+    run_id = (
+        f"lr_s{site_index:03d}_{_alpha_tag(alpha_ev)}_{mode.value.lower()}"
+        f"_scf_{_node_part(scf_level_id)}_parent_{_node_part(parent_dm_node_id)}"
+    )
+    spec = PerturbationSpec(
+        run_id=run_id, orbit_id=str(site.get("orbit_id", site["site_id"])),
+        site_index=site_index, site_id=str(site["site_id"]), mode=mode,
+        alpha_ev=float(alpha_ev), purpose=purpose,
+    )
+    node_id = f"response:{identity_prefix}:r{round_index}:{run_id}"
+    return LRDagNode(
+        node_id, LRNodeKind.PERTURBATION, dependencies, spec,
+        scf_level_id=scf_level_id, parent_dm_node_id=parent_dm_node_id,
+    )
+
+
+def build_adaptive_campaign_dag(
+    sites: Sequence[Mapping[str, Any]],
+    rounds: Sequence[Mapping[str, Any]],
+    *,
+    probe_plan: Mapping[str, Any] | None = None,
+    scf_reruns: Sequence[Mapping[str, Any]] = (),
+    campaign_id: str = "",
+    policy_digest: str = "",
+) -> tuple[LRDag, dict[str, PerturbationSpec], dict[str, dict[str, str]]]:
+    """Build the cumulative, resumable DAG described by durable round state.
+
+    A response is keyed by site, alpha, mode, SCF level and reference-DM node.
+    This makes strict-level probes reusable by a later consistent matrix pass
+    while keeping base/strict observations distinct.
+    """
+    if not sites or not rounds:
+        raise ValueError("adaptive DAG requires sites and at least the initial round")
+    nodes: list[LRDagNode] = []
+    specs: dict[str, PerturbationSpec] = {}
+    metadata: dict[str, dict[str, str]] = {}
+    identity_prefix = sha256(f"{campaign_id}\0{policy_digest}".encode()).hexdigest()[:16]
+    references: dict[str, str] = {}
+    response_nodes: dict[tuple[str, int, float, str], LRDagNode] = {}
+    previous_final_gate: str | None = None
+
+    def ensure_reference(level_id: str, after: str | None = None) -> str:
+        existing = references.get(level_id)
+        if existing is not None:
+            return existing
+        node_id = f"reference:adaptive:{identity_prefix}:{_node_part(level_id)}"
+        dependencies = (after,) if after else ()
+        nodes.append(LRDagNode(node_id, LRNodeKind.REFERENCE, dependencies, scf_level_id=level_id))
+        references[level_id] = node_id
+        return node_id
+
+    def ensure_response(
+        site_index: int, alpha: float, mode: ResponseMode, level_id: str,
+        after: str | None, purpose: str, round_index: int,
+    ) -> LRDagNode:
+        reference_id = ensure_reference(level_id, after)
+        key = (level_id, site_index, float(alpha), mode.value)
+        existing = response_nodes.get(key)
+        if existing is not None:
+            return existing
+        dependencies = (reference_id, after) if after and after != reference_id else (reference_id,)
+        node = _adaptive_response_node(
+            sites[site_index], site_index, float(alpha), mode,
+            scf_level_id=level_id, parent_dm_node_id=reference_id,
+            dependencies=dependencies, identity_prefix=identity_prefix,
+            round_index=round_index, purpose=purpose,
+        )
+        nodes.append(node)
+        response_nodes[key] = node
+        specs[node.node_id] = node.perturbation  # type: ignore[assignment]
+        metadata[node.node_id] = {"scf_level_id": level_id, "parent_dm_node_id": reference_id}
+        return node
+
+    for round_state in rounds:
+        round_index = int(round_state["round_index"])
+        alpha_grid = sorted({float(value) for value in round_state["alpha_grid_ev"]})
+        level_id = str(round_state.get("scf_level_id", "base"))
+        new_node_dependencies = previous_final_gate
+        response_ids: list[str] = []
+        for site_index in range(len(sites)):
+            for alpha in alpha_grid:
+                for mode in (ResponseMode.BARE, ResponseMode.SCREENED):
+                    response = ensure_response(
+                        site_index, alpha, mode, level_id, new_node_dependencies,
+                        "adaptive_alpha_round", round_index,
+                    )
+                    response_ids.append(response.node_id)
+        analysis_id = f"adaptive:round:{round_index}:analysis"
+        nodes.append(LRDagNode(analysis_id, LRNodeKind.MATRIX_ANALYSIS, tuple(dict.fromkeys(response_ids)), scf_level_id=level_id))
+        decision_id = f"adaptive:round:{round_index}:decision"
+        nodes.append(LRDagNode(decision_id, LRNodeKind.ALPHA_GATE, (analysis_id,), scf_level_id=level_id))
+        round_final_gate = decision_id
+
+        if probe_plan is not None and int(probe_plan.get("round_index", -1)) == round_index:
+            probe_level = str(probe_plan["scf_level_id"])
+            affected = sorted({int(index) for index in probe_plan["site_indices"]})
+            h_ev = float(probe_plan["h_eV"])
+            probe_response_ids: list[str] = []
+            for site_index in affected:
+                for alpha in (-h_ev, h_ev):
+                    for mode in (ResponseMode.BARE, ResponseMode.SCREENED):
+                        response = ensure_response(
+                            site_index, alpha, mode, probe_level, decision_id,
+                            "adaptive_scf_noise_probe", round_index,
+                        )
+                        probe_response_ids.append(response.node_id)
+            after_probe_id = f"adaptive:round:{round_index}:decision-after-probe"
+            nodes.append(LRDagNode(
+                after_probe_id, LRNodeKind.ALPHA_GATE,
+                tuple(dict.fromkeys(probe_response_ids)), scf_level_id=probe_level,
+            ))
+            round_final_gate = after_probe_id
+
+        for rerun in scf_reruns:
+            if int(rerun["round_index"]) != round_index:
+                continue
+            rerun_level = str(rerun["scf_level_id"])
+            rerun_grid = sorted({float(value) for value in rerun["alpha_grid_ev"]})
+            response_ids: list[str] = []
+            for site_index in range(len(sites)):
+                for alpha in rerun_grid:
+                    for mode in (ResponseMode.BARE, ResponseMode.SCREENED):
+                        response = ensure_response(
+                            site_index, alpha, mode, rerun_level, round_final_gate,
+                            "adaptive_scf_consistent_rerun", round_index,
+                        )
+                        response_ids.append(response.node_id)
+            rerun_analysis_id = f"adaptive:scf-rerun:{round_index}:analysis"
+            nodes.append(LRDagNode(
+                rerun_analysis_id, LRNodeKind.MATRIX_ANALYSIS,
+                tuple(dict.fromkeys(response_ids)), scf_level_id=rerun_level,
+            ))
+            rerun_decision_id = f"adaptive:scf-rerun:{round_index}:decision"
+            nodes.append(LRDagNode(
+                rerun_decision_id, LRNodeKind.ALPHA_GATE,
+                (rerun_analysis_id,), scf_level_id=rerun_level,
+            ))
+            round_final_gate = rerun_decision_id
+        previous_final_gate = round_final_gate
+
+    dag = LRDag(tuple(nodes), analysis_requires_authorization=False, alpha_requires_authorization=False)
+    return dag, specs, metadata
 
 
 def adaptive_alpha_perturbations(

@@ -1,0 +1,1729 @@
+{
+  "identity": {
+    "campaign_id": "73a0a508-93df-41e2-b1bd-993c3dc7d94a",
+    "dag_digest": "2b3b3cc3fd6a2845b4c28e9cede52acff3587dcfeb63e97b0314459845bf7aa3",
+    "input_identity": "8946c14d5d41176f441957627fd6fd290c1c7b740a9dba57c88ce92342b302df"
+  },
+  "nodes": {
+    "alpha-diagnostic-gate": {
+      "evidence_digest": "6da69eb55730b924b224dd62ae64455f1038dc911a30b7045f5f250a7253d1f2",
+      "evidence_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/gates/alpha-diagnostic.json",
+      "evidence_sha256": "6da69eb55730b924b224dd62ae64455f1038dc911a30b7045f5f250a7253d1f2",
+      "kind": "gate",
+      "recorded_epoch": 1790647172.3651826,
+      "state": "VALIDATED"
+    },
+    "matrix-analysis": {
+      "evidence_digest": "d9b76e3841c1da43e70a82a56fad9f69fb68ddd9726779a5643f0cf39b1860ba",
+      "evidence_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/results/lr_u_analysis.v3.json",
+      "evidence_sha256": "d9b76e3841c1da43e70a82a56fad9f69fb68ddd9726779a5643f0cf39b1860ba",
+      "kind": "analysis",
+      "numerical_status": "NUMERICAL_CANDIDATE_UNASSESSED",
+      "recorded_epoch": 1790647172.7514708,
+      "report_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/results/LR_U_REPORT.v3.md",
+      "report_sha256": "f52f370f1ee6b7198ac27e9c7dc5748261ae5df33c80bc943c975c7e34138f1d",
+      "state": "VALIDATED"
+    },
+    "reference": {
+      "adaptive_policy_digest": null,
+      "adaptive_round": null,
+      "artifact_spec": {
+        "dm": "NIO_PBE_REFERENCE.DM",
+        "executable": "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta",
+        "fdf": "siesta.fdf",
+        "output": "siesta.out",
+        "reference_dm": null
+      },
+      "command": {
+        "argv": [
+          "/usr/bin/orterun",
+          "--host",
+          "localhost:4",
+          "--map-by",
+          "ppr:4:node",
+          "-np",
+          "4",
+          "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta"
+        ],
+        "cwd": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/52367a6622b19f08825e/attempt-1790646750401132562-a3054c02/reference_52367a6622b1",
+        "stderr_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/52367a6622b19f08825e/attempt-1790646750401132562-a3054c02/reference_52367a6622b1/siesta.err",
+        "stdin_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/52367a6622b19f08825e/attempt-1790646750401132562-a3054c02/reference_52367a6622b1/siesta.fdf",
+        "stdout_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/52367a6622b19f08825e/attempt-1790646750401132562-a3054c02/reference_52367a6622b1/siesta.out"
+      },
+      "evidence_digest": "08076428b02c2bfe4ead3beb94fda377102a08ec0c8f02d6232da7f2ce38c10b",
+      "kind": "siesta",
+      "parent_dm_node_id": null,
+      "provenance": {
+        "artifacts": {
+          "dm": "f7fca191f941bbda5ee38eb361096aa8a802dfd410e12aaa680f39f3cf2193ef",
+          "fdf": "b4fb34e642d862be6949a5b2033a60c5b9fcae56119879583bb3eaf237620ee7",
+          "output": "b9c5066f28e241a565d8842213697b550a44ee15ff1636569f3aa402d47ac468"
+        },
+        "evidence_digest": "08076428b02c2bfe4ead3beb94fda377102a08ec0c8f02d6232da7f2ce38c10b",
+        "node": {
+          "dependencies": [],
+          "kind": "REFERENCE",
+          "node_id": "reference",
+          "parent_dm_node_id": null,
+          "perturbation": null,
+          "scf_level_id": null
+        },
+        "node_id": "reference",
+        "schema": "siestaflow-siesta-node-evidence-v1",
+        "semantic": {
+          "atom_count": 4,
+          "magnetic_parser": "siesta_5_4_final_collinear_mulliken_sz_v1",
+          "node_kind": "REFERENCE"
+        }
+      },
+      "recorded_epoch": 1790646794.9245987,
+      "reference_dm_sha256": null,
+      "scf_level_id": "base",
+      "state": "VALIDATED"
+    },
+    "response:lr_s000_m0p02_bare": {
+      "adaptive_policy_digest": null,
+      "adaptive_round": null,
+      "artifact_spec": {
+        "dm": "lr_s000_m0p02_bare.DM",
+        "executable": "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta",
+        "fdf": "siesta.fdf",
+        "output": "siesta.out",
+        "reference_dm": "NIO_PBE_REFERENCE.DM"
+      },
+      "command": {
+        "argv": [
+          "/usr/bin/orterun",
+          "--host",
+          "localhost:4",
+          "--map-by",
+          "ppr:4:node",
+          "-np",
+          "4",
+          "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta"
+        ],
+        "cwd": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/8119c375c5841b7b956a/attempt-1790646861293922741-53313280/response_lr_s000_m0p02_bare_8119c375c584",
+        "stderr_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/8119c375c5841b7b956a/attempt-1790646861293922741-53313280/response_lr_s000_m0p02_bare_8119c375c584/siesta.err",
+        "stdin_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/8119c375c5841b7b956a/attempt-1790646861293922741-53313280/response_lr_s000_m0p02_bare_8119c375c584/siesta.fdf",
+        "stdout_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/8119c375c5841b7b956a/attempt-1790646861293922741-53313280/response_lr_s000_m0p02_bare_8119c375c584/siesta.out"
+      },
+      "evidence_digest": "350a6438cebc7c3caf638f7f45a0f9847eadd5a6f1833921c77087a35bbbc95d",
+      "kind": "siesta",
+      "parent_dm_node_id": null,
+      "provenance": {
+        "artifacts": {
+          "dm": "e60238aca22ba9b827b3f29b07f8d6a9e8604286cb9bdc47ea9763e77cf3c2e6",
+          "fdf": "bfa49c6dfd9ea3bbbb3e9d176eef868b0fd3b854a014bea35ad162baff826a9b",
+          "output": "f9afc3aeb59a177f47fb56e3875aebf56f3e7cd67cc0d065805354364cceebce"
+        },
+        "evidence_digest": "350a6438cebc7c3caf638f7f45a0f9847eadd5a6f1833921c77087a35bbbc95d",
+        "node": {
+          "dependencies": [
+            "reference"
+          ],
+          "kind": "PERTURBATION",
+          "node_id": "response:lr_s000_m0p02_bare",
+          "parent_dm_node_id": null,
+          "perturbation": {
+            "alpha_ev": -0.02,
+            "mode": "BARE",
+            "orbit_id": "NiLR0",
+            "purpose": "explicit_fixed_grid",
+            "run_id": "lr_s000_m0p02_bare",
+            "site_id": "NiLR0",
+            "site_index": 0
+          },
+          "scf_level_id": null
+        },
+        "node_id": "response:lr_s000_m0p02_bare",
+        "schema": "siestaflow-siesta-node-evidence-v1",
+        "semantic": {
+          "bare_parent_occurrence": 0,
+          "bare_profile": "siesta-5.4.2-potential-shift-hamiltonian-v1",
+          "bare_response_occurrence": 1,
+          "node_kind": "PERTURBATION",
+          "reference_dm_sha256": "f7fca191f941bbda5ee38eb361096aa8a802dfd410e12aaa680f39f3cf2193ef",
+          "response_mode": "BARE"
+        }
+      },
+      "recorded_epoch": 1790646867.3834307,
+      "reference_dm_sha256": "f7fca191f941bbda5ee38eb361096aa8a802dfd410e12aaa680f39f3cf2193ef",
+      "scf_level_id": "base",
+      "state": "VALIDATED"
+    },
+    "response:lr_s000_m0p02_screened": {
+      "adaptive_policy_digest": null,
+      "adaptive_round": null,
+      "artifact_spec": {
+        "dm": "lr_s000_m0p02_screened.DM",
+        "executable": "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta",
+        "fdf": "siesta.fdf",
+        "output": "siesta.out",
+        "reference_dm": "NIO_PBE_REFERENCE.DM"
+      },
+      "command": {
+        "argv": [
+          "/usr/bin/orterun",
+          "--host",
+          "localhost:4",
+          "--map-by",
+          "ppr:4:node",
+          "-np",
+          "4",
+          "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta"
+        ],
+        "cwd": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/4f60f687d724e53d32ff/attempt-1790646867385626852-c3803113/response_lr_s000_m0p02_screened_4f60f687d724",
+        "stderr_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/4f60f687d724e53d32ff/attempt-1790646867385626852-c3803113/response_lr_s000_m0p02_screened_4f60f687d724/siesta.err",
+        "stdin_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/4f60f687d724e53d32ff/attempt-1790646867385626852-c3803113/response_lr_s000_m0p02_screened_4f60f687d724/siesta.fdf",
+        "stdout_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/4f60f687d724e53d32ff/attempt-1790646867385626852-c3803113/response_lr_s000_m0p02_screened_4f60f687d724/siesta.out"
+      },
+      "evidence_digest": "531be4333daa90744635350b48cd998cece829d360499628432380bd335e19ef",
+      "kind": "siesta",
+      "parent_dm_node_id": null,
+      "provenance": {
+        "artifacts": {
+          "dm": "16103bdbc15c1aeadc14c1dc500e2f207bb60fc2651f4d36d307be6bf850716e",
+          "fdf": "6b58dfc0a005de8af4c453b88f76bd2fc6a9cb77f04c34cadfd24ce523576c1f",
+          "output": "058efe74fcce9917c403332129cb51faa49fa4d42460f9c9a3b12ec57ed54950"
+        },
+        "evidence_digest": "531be4333daa90744635350b48cd998cece829d360499628432380bd335e19ef",
+        "node": {
+          "dependencies": [
+            "reference"
+          ],
+          "kind": "PERTURBATION",
+          "node_id": "response:lr_s000_m0p02_screened",
+          "parent_dm_node_id": null,
+          "perturbation": {
+            "alpha_ev": -0.02,
+            "mode": "SCREENED",
+            "orbit_id": "NiLR0",
+            "purpose": "explicit_fixed_grid",
+            "run_id": "lr_s000_m0p02_screened",
+            "site_id": "NiLR0",
+            "site_index": 0
+          },
+          "scf_level_id": null
+        },
+        "node_id": "response:lr_s000_m0p02_screened",
+        "schema": "siestaflow-siesta-node-evidence-v1",
+        "semantic": {
+          "node_kind": "PERTURBATION",
+          "reference_dm_sha256": "f7fca191f941bbda5ee38eb361096aa8a802dfd410e12aaa680f39f3cf2193ef",
+          "response_mode": "SCREENED"
+        }
+      },
+      "recorded_epoch": 1790646891.8929977,
+      "reference_dm_sha256": "f7fca191f941bbda5ee38eb361096aa8a802dfd410e12aaa680f39f3cf2193ef",
+      "scf_level_id": "base",
+      "state": "VALIDATED"
+    },
+    "response:lr_s000_m0p04_bare": {
+      "adaptive_policy_digest": null,
+      "adaptive_round": null,
+      "artifact_spec": {
+        "dm": "lr_s000_m0p04_bare.DM",
+        "executable": "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta",
+        "fdf": "siesta.fdf",
+        "output": "siesta.out",
+        "reference_dm": "NIO_PBE_REFERENCE.DM"
+      },
+      "command": {
+        "argv": [
+          "/usr/bin/orterun",
+          "--host",
+          "localhost:4",
+          "--map-by",
+          "ppr:4:node",
+          "-np",
+          "4",
+          "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta"
+        ],
+        "cwd": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/91a02247ffc2e934feaa/attempt-1790646829326164610-82b72952/response_lr_s000_m0p04_bare_91a02247ffc2",
+        "stderr_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/91a02247ffc2e934feaa/attempt-1790646829326164610-82b72952/response_lr_s000_m0p04_bare_91a02247ffc2/siesta.err",
+        "stdin_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/91a02247ffc2e934feaa/attempt-1790646829326164610-82b72952/response_lr_s000_m0p04_bare_91a02247ffc2/siesta.fdf",
+        "stdout_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/91a02247ffc2e934feaa/attempt-1790646829326164610-82b72952/response_lr_s000_m0p04_bare_91a02247ffc2/siesta.out"
+      },
+      "evidence_digest": "80587f3ddb2f8df21eb3bd94ef9e8427ca07377d160afa9e5be0e3ab620c297e",
+      "kind": "siesta",
+      "parent_dm_node_id": null,
+      "provenance": {
+        "artifacts": {
+          "dm": "6db29ec96415fa65032398ac0b60a47d77afa589c7d27995f3305d79c4c1e883",
+          "fdf": "e4c908b534a714bc1b1d3899a56456bdcb11f40088c01a4f8290272718df697c",
+          "output": "29f91fb8f91e0d6fadfaeacf3fcd16af7ff0f67f12f4b15e360abd76d6ec8286"
+        },
+        "evidence_digest": "80587f3ddb2f8df21eb3bd94ef9e8427ca07377d160afa9e5be0e3ab620c297e",
+        "node": {
+          "dependencies": [
+            "reference"
+          ],
+          "kind": "PERTURBATION",
+          "node_id": "response:lr_s000_m0p04_bare",
+          "parent_dm_node_id": null,
+          "perturbation": {
+            "alpha_ev": -0.04,
+            "mode": "BARE",
+            "orbit_id": "NiLR0",
+            "purpose": "explicit_fixed_grid",
+            "run_id": "lr_s000_m0p04_bare",
+            "site_id": "NiLR0",
+            "site_index": 0
+          },
+          "scf_level_id": null
+        },
+        "node_id": "response:lr_s000_m0p04_bare",
+        "schema": "siestaflow-siesta-node-evidence-v1",
+        "semantic": {
+          "bare_parent_occurrence": 0,
+          "bare_profile": "siesta-5.4.2-potential-shift-hamiltonian-v1",
+          "bare_response_occurrence": 1,
+          "node_kind": "PERTURBATION",
+          "reference_dm_sha256": "f7fca191f941bbda5ee38eb361096aa8a802dfd410e12aaa680f39f3cf2193ef",
+          "response_mode": "BARE"
+        }
+      },
+      "recorded_epoch": 1790646835.7266545,
+      "reference_dm_sha256": "f7fca191f941bbda5ee38eb361096aa8a802dfd410e12aaa680f39f3cf2193ef",
+      "scf_level_id": "base",
+      "state": "VALIDATED"
+    },
+    "response:lr_s000_m0p04_screened": {
+      "adaptive_policy_digest": null,
+      "adaptive_round": null,
+      "artifact_spec": {
+        "dm": "lr_s000_m0p04_screened.DM",
+        "executable": "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta",
+        "fdf": "siesta.fdf",
+        "output": "siesta.out",
+        "reference_dm": "NIO_PBE_REFERENCE.DM"
+      },
+      "command": {
+        "argv": [
+          "/usr/bin/orterun",
+          "--host",
+          "localhost:4",
+          "--map-by",
+          "ppr:4:node",
+          "-np",
+          "4",
+          "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta"
+        ],
+        "cwd": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/9c0863b8a961ad7b6d5b/attempt-1790646835729482643-c0fad5b2/response_lr_s000_m0p04_screened_9c0863b8a961",
+        "stderr_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/9c0863b8a961ad7b6d5b/attempt-1790646835729482643-c0fad5b2/response_lr_s000_m0p04_screened_9c0863b8a961/siesta.err",
+        "stdin_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/9c0863b8a961ad7b6d5b/attempt-1790646835729482643-c0fad5b2/response_lr_s000_m0p04_screened_9c0863b8a961/siesta.fdf",
+        "stdout_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/9c0863b8a961ad7b6d5b/attempt-1790646835729482643-c0fad5b2/response_lr_s000_m0p04_screened_9c0863b8a961/siesta.out"
+      },
+      "evidence_digest": "9a9b6fed60ccaa56db4b5ebceae12c1e484ba66f9c4b722beec2abd2cd29a203",
+      "kind": "siesta",
+      "parent_dm_node_id": null,
+      "provenance": {
+        "artifacts": {
+          "dm": "5faa9c5d9b69c86b3e502495f0a690f59a2047960c5d8f0302e0f4693743122d",
+          "fdf": "ced272c74909782c8c6d3c04941568154b5f2e838a46826e622047272a267150",
+          "output": "e04271a04d1663fc01623ca86bcc6d1735839c9053d82be91aee95e549fc0dbf"
+        },
+        "evidence_digest": "9a9b6fed60ccaa56db4b5ebceae12c1e484ba66f9c4b722beec2abd2cd29a203",
+        "node": {
+          "dependencies": [
+            "reference"
+          ],
+          "kind": "PERTURBATION",
+          "node_id": "response:lr_s000_m0p04_screened",
+          "parent_dm_node_id": null,
+          "perturbation": {
+            "alpha_ev": -0.04,
+            "mode": "SCREENED",
+            "orbit_id": "NiLR0",
+            "purpose": "explicit_fixed_grid",
+            "run_id": "lr_s000_m0p04_screened",
+            "site_id": "NiLR0",
+            "site_index": 0
+          },
+          "scf_level_id": null
+        },
+        "node_id": "response:lr_s000_m0p04_screened",
+        "schema": "siestaflow-siesta-node-evidence-v1",
+        "semantic": {
+          "node_kind": "PERTURBATION",
+          "reference_dm_sha256": "f7fca191f941bbda5ee38eb361096aa8a802dfd410e12aaa680f39f3cf2193ef",
+          "response_mode": "SCREENED"
+        }
+      },
+      "recorded_epoch": 1790646861.2916188,
+      "reference_dm_sha256": "f7fca191f941bbda5ee38eb361096aa8a802dfd410e12aaa680f39f3cf2193ef",
+      "scf_level_id": "base",
+      "state": "VALIDATED"
+    },
+    "response:lr_s000_m0p06_bare": {
+      "adaptive_policy_digest": null,
+      "adaptive_round": null,
+      "artifact_spec": {
+        "dm": "lr_s000_m0p06_bare.DM",
+        "executable": "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta",
+        "fdf": "siesta.fdf",
+        "output": "siesta.out",
+        "reference_dm": "NIO_PBE_REFERENCE.DM"
+      },
+      "command": {
+        "argv": [
+          "/usr/bin/orterun",
+          "--host",
+          "localhost:4",
+          "--map-by",
+          "ppr:4:node",
+          "-np",
+          "4",
+          "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta"
+        ],
+        "cwd": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/a9b894b5b55ba9409a6b/attempt-1790646794926391125-7f67d251/response_lr_s000_m0p06_bare_a9b894b5b55b",
+        "stderr_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/a9b894b5b55ba9409a6b/attempt-1790646794926391125-7f67d251/response_lr_s000_m0p06_bare_a9b894b5b55b/siesta.err",
+        "stdin_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/a9b894b5b55ba9409a6b/attempt-1790646794926391125-7f67d251/response_lr_s000_m0p06_bare_a9b894b5b55b/siesta.fdf",
+        "stdout_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/a9b894b5b55ba9409a6b/attempt-1790646794926391125-7f67d251/response_lr_s000_m0p06_bare_a9b894b5b55b/siesta.out"
+      },
+      "evidence_digest": "0b91baab8cfb2c1a3628b4dd528dbda2858a03a45f01bd780ada2ab9fba24924",
+      "kind": "siesta",
+      "parent_dm_node_id": null,
+      "provenance": {
+        "artifacts": {
+          "dm": "e1379da9efa06c715667e7175c9555f49860a0325668876b091c6bdc272a6b91",
+          "fdf": "8c456bf2107afacd44d21ac6596c536312d3fb569320d07ef319ef291bee277b",
+          "output": "d55db9f07de42b66e2e42c1ca94f4ba3e8b96e003526097ffaa6de2ec1dd2fb4"
+        },
+        "evidence_digest": "0b91baab8cfb2c1a3628b4dd528dbda2858a03a45f01bd780ada2ab9fba24924",
+        "node": {
+          "dependencies": [
+            "reference"
+          ],
+          "kind": "PERTURBATION",
+          "node_id": "response:lr_s000_m0p06_bare",
+          "parent_dm_node_id": null,
+          "perturbation": {
+            "alpha_ev": -0.06,
+            "mode": "BARE",
+            "orbit_id": "NiLR0",
+            "purpose": "explicit_fixed_grid",
+            "run_id": "lr_s000_m0p06_bare",
+            "site_id": "NiLR0",
+            "site_index": 0
+          },
+          "scf_level_id": null
+        },
+        "node_id": "response:lr_s000_m0p06_bare",
+        "schema": "siestaflow-siesta-node-evidence-v1",
+        "semantic": {
+          "bare_parent_occurrence": 0,
+          "bare_profile": "siesta-5.4.2-potential-shift-hamiltonian-v1",
+          "bare_response_occurrence": 1,
+          "node_kind": "PERTURBATION",
+          "reference_dm_sha256": "f7fca191f941bbda5ee38eb361096aa8a802dfd410e12aaa680f39f3cf2193ef",
+          "response_mode": "BARE"
+        }
+      },
+      "recorded_epoch": 1790646800.8061926,
+      "reference_dm_sha256": "f7fca191f941bbda5ee38eb361096aa8a802dfd410e12aaa680f39f3cf2193ef",
+      "scf_level_id": "base",
+      "state": "VALIDATED"
+    },
+    "response:lr_s000_m0p06_screened": {
+      "adaptive_policy_digest": null,
+      "adaptive_round": null,
+      "artifact_spec": {
+        "dm": "lr_s000_m0p06_screened.DM",
+        "executable": "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta",
+        "fdf": "siesta.fdf",
+        "output": "siesta.out",
+        "reference_dm": "NIO_PBE_REFERENCE.DM"
+      },
+      "command": {
+        "argv": [
+          "/usr/bin/orterun",
+          "--host",
+          "localhost:4",
+          "--map-by",
+          "ppr:4:node",
+          "-np",
+          "4",
+          "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta"
+        ],
+        "cwd": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/365d9074957c7d4a53a6/attempt-1790646800808360710-3c16445f/response_lr_s000_m0p06_screened_365d9074957c",
+        "stderr_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/365d9074957c7d4a53a6/attempt-1790646800808360710-3c16445f/response_lr_s000_m0p06_screened_365d9074957c/siesta.err",
+        "stdin_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/365d9074957c7d4a53a6/attempt-1790646800808360710-3c16445f/response_lr_s000_m0p06_screened_365d9074957c/siesta.fdf",
+        "stdout_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/365d9074957c7d4a53a6/attempt-1790646800808360710-3c16445f/response_lr_s000_m0p06_screened_365d9074957c/siesta.out"
+      },
+      "evidence_digest": "264b506f7b4a9d28be66839e6e05d9110f193a8541e2b4584f0d94ad509607c1",
+      "kind": "siesta",
+      "parent_dm_node_id": null,
+      "provenance": {
+        "artifacts": {
+          "dm": "6f5ce74b5141160721a502a4c35c08292e6031efd7640de43bdaf10ba47733bc",
+          "fdf": "5b9ec5f64ea05290f35c411280a69a304a20362ff7ed0ec8b90ad0ac0bf22f98",
+          "output": "a42e93536abc9ad05bd4a67f4531c00b71e385f9bd99035c47759694c07caa90"
+        },
+        "evidence_digest": "264b506f7b4a9d28be66839e6e05d9110f193a8541e2b4584f0d94ad509607c1",
+        "node": {
+          "dependencies": [
+            "reference"
+          ],
+          "kind": "PERTURBATION",
+          "node_id": "response:lr_s000_m0p06_screened",
+          "parent_dm_node_id": null,
+          "perturbation": {
+            "alpha_ev": -0.06,
+            "mode": "SCREENED",
+            "orbit_id": "NiLR0",
+            "purpose": "explicit_fixed_grid",
+            "run_id": "lr_s000_m0p06_screened",
+            "site_id": "NiLR0",
+            "site_index": 0
+          },
+          "scf_level_id": null
+        },
+        "node_id": "response:lr_s000_m0p06_screened",
+        "schema": "siestaflow-siesta-node-evidence-v1",
+        "semantic": {
+          "node_kind": "PERTURBATION",
+          "reference_dm_sha256": "f7fca191f941bbda5ee38eb361096aa8a802dfd410e12aaa680f39f3cf2193ef",
+          "response_mode": "SCREENED"
+        }
+      },
+      "recorded_epoch": 1790646829.3207755,
+      "reference_dm_sha256": "f7fca191f941bbda5ee38eb361096aa8a802dfd410e12aaa680f39f3cf2193ef",
+      "scf_level_id": "base",
+      "state": "VALIDATED"
+    },
+    "response:lr_s000_p0p02_bare": {
+      "adaptive_policy_digest": null,
+      "adaptive_round": null,
+      "artifact_spec": {
+        "dm": "lr_s000_p0p02_bare.DM",
+        "executable": "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta",
+        "fdf": "siesta.fdf",
+        "output": "siesta.out",
+        "reference_dm": "NIO_PBE_REFERENCE.DM"
+      },
+      "command": {
+        "argv": [
+          "/usr/bin/orterun",
+          "--host",
+          "localhost:4",
+          "--map-by",
+          "ppr:4:node",
+          "-np",
+          "4",
+          "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta"
+        ],
+        "cwd": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/8e7e82caf7897a723870/attempt-1790646891895386236-3d9ebee7/response_lr_s000_p0p02_bare_8e7e82caf789",
+        "stderr_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/8e7e82caf7897a723870/attempt-1790646891895386236-3d9ebee7/response_lr_s000_p0p02_bare_8e7e82caf789/siesta.err",
+        "stdin_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/8e7e82caf7897a723870/attempt-1790646891895386236-3d9ebee7/response_lr_s000_p0p02_bare_8e7e82caf789/siesta.fdf",
+        "stdout_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/8e7e82caf7897a723870/attempt-1790646891895386236-3d9ebee7/response_lr_s000_p0p02_bare_8e7e82caf789/siesta.out"
+      },
+      "evidence_digest": "64a4e40fe2e8260be59207ae13237912f9469cbcd7086171447f4eb54f6d8ea6",
+      "kind": "siesta",
+      "parent_dm_node_id": null,
+      "provenance": {
+        "artifacts": {
+          "dm": "bdab711fcf7985d0fb940d526d3188dc2deb213625e6035b1c5a7ee3aa9dcafc",
+          "fdf": "7db558879c3ef94b284ccbf1282c3906b47e8b14fbe360b7dcecf20e33ee6c3b",
+          "output": "36bc36cfd01533600614790b2930123000710895801662f4d0c4bf4b2d4932a7"
+        },
+        "evidence_digest": "64a4e40fe2e8260be59207ae13237912f9469cbcd7086171447f4eb54f6d8ea6",
+        "node": {
+          "dependencies": [
+            "reference"
+          ],
+          "kind": "PERTURBATION",
+          "node_id": "response:lr_s000_p0p02_bare",
+          "parent_dm_node_id": null,
+          "perturbation": {
+            "alpha_ev": 0.02,
+            "mode": "BARE",
+            "orbit_id": "NiLR0",
+            "purpose": "explicit_fixed_grid",
+            "run_id": "lr_s000_p0p02_bare",
+            "site_id": "NiLR0",
+            "site_index": 0
+          },
+          "scf_level_id": null
+        },
+        "node_id": "response:lr_s000_p0p02_bare",
+        "schema": "siestaflow-siesta-node-evidence-v1",
+        "semantic": {
+          "bare_parent_occurrence": 0,
+          "bare_profile": "siesta-5.4.2-potential-shift-hamiltonian-v1",
+          "bare_response_occurrence": 1,
+          "node_kind": "PERTURBATION",
+          "reference_dm_sha256": "f7fca191f941bbda5ee38eb361096aa8a802dfd410e12aaa680f39f3cf2193ef",
+          "response_mode": "BARE"
+        }
+      },
+      "recorded_epoch": 1790646898.3245661,
+      "reference_dm_sha256": "f7fca191f941bbda5ee38eb361096aa8a802dfd410e12aaa680f39f3cf2193ef",
+      "scf_level_id": "base",
+      "state": "VALIDATED"
+    },
+    "response:lr_s000_p0p02_screened": {
+      "adaptive_policy_digest": null,
+      "adaptive_round": null,
+      "artifact_spec": {
+        "dm": "lr_s000_p0p02_screened.DM",
+        "executable": "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta",
+        "fdf": "siesta.fdf",
+        "output": "siesta.out",
+        "reference_dm": "NIO_PBE_REFERENCE.DM"
+      },
+      "command": {
+        "argv": [
+          "/usr/bin/orterun",
+          "--host",
+          "localhost:4",
+          "--map-by",
+          "ppr:4:node",
+          "-np",
+          "4",
+          "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta"
+        ],
+        "cwd": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/bce88b1318147f2362e2/attempt-1790646898326949935-e9cdf277/response_lr_s000_p0p02_screened_bce88b131814",
+        "stderr_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/bce88b1318147f2362e2/attempt-1790646898326949935-e9cdf277/response_lr_s000_p0p02_screened_bce88b131814/siesta.err",
+        "stdin_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/bce88b1318147f2362e2/attempt-1790646898326949935-e9cdf277/response_lr_s000_p0p02_screened_bce88b131814/siesta.fdf",
+        "stdout_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/bce88b1318147f2362e2/attempt-1790646898326949935-e9cdf277/response_lr_s000_p0p02_screened_bce88b131814/siesta.out"
+      },
+      "evidence_digest": "b3153fbe4c8fd3034dc66749948eb802b9622da8d358b2675115594c81793cff",
+      "kind": "siesta",
+      "parent_dm_node_id": null,
+      "provenance": {
+        "artifacts": {
+          "dm": "ddf60564de46273bdab7406c97a2f98de38f38a39111bb3e0a2958af42c8639f",
+          "fdf": "b019668ecb18c45d0f0895c6fa0c40cb206c4c78dc5ee640d8283baf3c120dfb",
+          "output": "b57dfe5401b6b9ca660c6dc82b7319daa302d402e998a37d85ae49f740d9ad04"
+        },
+        "evidence_digest": "b3153fbe4c8fd3034dc66749948eb802b9622da8d358b2675115594c81793cff",
+        "node": {
+          "dependencies": [
+            "reference"
+          ],
+          "kind": "PERTURBATION",
+          "node_id": "response:lr_s000_p0p02_screened",
+          "parent_dm_node_id": null,
+          "perturbation": {
+            "alpha_ev": 0.02,
+            "mode": "SCREENED",
+            "orbit_id": "NiLR0",
+            "purpose": "explicit_fixed_grid",
+            "run_id": "lr_s000_p0p02_screened",
+            "site_id": "NiLR0",
+            "site_index": 0
+          },
+          "scf_level_id": null
+        },
+        "node_id": "response:lr_s000_p0p02_screened",
+        "schema": "siestaflow-siesta-node-evidence-v1",
+        "semantic": {
+          "node_kind": "PERTURBATION",
+          "reference_dm_sha256": "f7fca191f941bbda5ee38eb361096aa8a802dfd410e12aaa680f39f3cf2193ef",
+          "response_mode": "SCREENED"
+        }
+      },
+      "recorded_epoch": 1790646919.9831076,
+      "reference_dm_sha256": "f7fca191f941bbda5ee38eb361096aa8a802dfd410e12aaa680f39f3cf2193ef",
+      "scf_level_id": "base",
+      "state": "VALIDATED"
+    },
+    "response:lr_s000_p0p04_bare": {
+      "adaptive_policy_digest": null,
+      "adaptive_round": null,
+      "artifact_spec": {
+        "dm": "lr_s000_p0p04_bare.DM",
+        "executable": "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta",
+        "fdf": "siesta.fdf",
+        "output": "siesta.out",
+        "reference_dm": "NIO_PBE_REFERENCE.DM"
+      },
+      "command": {
+        "argv": [
+          "/usr/bin/orterun",
+          "--host",
+          "localhost:4",
+          "--map-by",
+          "ppr:4:node",
+          "-np",
+          "4",
+          "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta"
+        ],
+        "cwd": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/ba8edcc7ec7dc5665b5b/attempt-1790646919986518699-28407ba9/response_lr_s000_p0p04_bare_ba8edcc7ec7d",
+        "stderr_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/ba8edcc7ec7dc5665b5b/attempt-1790646919986518699-28407ba9/response_lr_s000_p0p04_bare_ba8edcc7ec7d/siesta.err",
+        "stdin_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/ba8edcc7ec7dc5665b5b/attempt-1790646919986518699-28407ba9/response_lr_s000_p0p04_bare_ba8edcc7ec7d/siesta.fdf",
+        "stdout_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/ba8edcc7ec7dc5665b5b/attempt-1790646919986518699-28407ba9/response_lr_s000_p0p04_bare_ba8edcc7ec7d/siesta.out"
+      },
+      "evidence_digest": "5f4ec55366120991258e5fde4986ebf2a5f3a97c042fdc3edb12a55441d364aa",
+      "kind": "siesta",
+      "parent_dm_node_id": null,
+      "provenance": {
+        "artifacts": {
+          "dm": "7a6e21bd0c2afdf1845d045e71ca72ebeccf872bd58c60cba950a475c8a39c7f",
+          "fdf": "c4a233cec7dced236bad89f8b5ddee1d61686ddac4619292e80dd32344064433",
+          "output": "f5011b95778cbd13616f79960db30af5879b118d075d704c356150a40ce59069"
+        },
+        "evidence_digest": "5f4ec55366120991258e5fde4986ebf2a5f3a97c042fdc3edb12a55441d364aa",
+        "node": {
+          "dependencies": [
+            "reference"
+          ],
+          "kind": "PERTURBATION",
+          "node_id": "response:lr_s000_p0p04_bare",
+          "parent_dm_node_id": null,
+          "perturbation": {
+            "alpha_ev": 0.04,
+            "mode": "BARE",
+            "orbit_id": "NiLR0",
+            "purpose": "explicit_fixed_grid",
+            "run_id": "lr_s000_p0p04_bare",
+            "site_id": "NiLR0",
+            "site_index": 0
+          },
+          "scf_level_id": null
+        },
+        "node_id": "response:lr_s000_p0p04_bare",
+        "schema": "siestaflow-siesta-node-evidence-v1",
+        "semantic": {
+          "bare_parent_occurrence": 0,
+          "bare_profile": "siesta-5.4.2-potential-shift-hamiltonian-v1",
+          "bare_response_occurrence": 1,
+          "node_kind": "PERTURBATION",
+          "reference_dm_sha256": "f7fca191f941bbda5ee38eb361096aa8a802dfd410e12aaa680f39f3cf2193ef",
+          "response_mode": "BARE"
+        }
+      },
+      "recorded_epoch": 1790646925.816409,
+      "reference_dm_sha256": "f7fca191f941bbda5ee38eb361096aa8a802dfd410e12aaa680f39f3cf2193ef",
+      "scf_level_id": "base",
+      "state": "VALIDATED"
+    },
+    "response:lr_s000_p0p04_screened": {
+      "adaptive_policy_digest": null,
+      "adaptive_round": null,
+      "artifact_spec": {
+        "dm": "lr_s000_p0p04_screened.DM",
+        "executable": "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta",
+        "fdf": "siesta.fdf",
+        "output": "siesta.out",
+        "reference_dm": "NIO_PBE_REFERENCE.DM"
+      },
+      "command": {
+        "argv": [
+          "/usr/bin/orterun",
+          "--host",
+          "localhost:4",
+          "--map-by",
+          "ppr:4:node",
+          "-np",
+          "4",
+          "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta"
+        ],
+        "cwd": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/ff40fe49cff9b19265a2/attempt-1790646925818815237-fbdb3285/response_lr_s000_p0p04_screened_ff40fe49cff9",
+        "stderr_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/ff40fe49cff9b19265a2/attempt-1790646925818815237-fbdb3285/response_lr_s000_p0p04_screened_ff40fe49cff9/siesta.err",
+        "stdin_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/ff40fe49cff9b19265a2/attempt-1790646925818815237-fbdb3285/response_lr_s000_p0p04_screened_ff40fe49cff9/siesta.fdf",
+        "stdout_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/ff40fe49cff9b19265a2/attempt-1790646925818815237-fbdb3285/response_lr_s000_p0p04_screened_ff40fe49cff9/siesta.out"
+      },
+      "evidence_digest": "15b653fe1be96ffcd2d083ff54be3a576794c2dbb2af3277e1e4751fb20db8d8",
+      "kind": "siesta",
+      "parent_dm_node_id": null,
+      "provenance": {
+        "artifacts": {
+          "dm": "d91813de393628eff586ab397b9b8cde4a0b3c60042393b8f9a474b0d71c365a",
+          "fdf": "0800a9ee7ba8adc3bae372457114abadccfd00322da32cf43dc344efd994f4fd",
+          "output": "dc38cf75401b4d600669abce24559e82f2d21cea9276eb928febcb3fffdc49cc"
+        },
+        "evidence_digest": "15b653fe1be96ffcd2d083ff54be3a576794c2dbb2af3277e1e4751fb20db8d8",
+        "node": {
+          "dependencies": [
+            "reference"
+          ],
+          "kind": "PERTURBATION",
+          "node_id": "response:lr_s000_p0p04_screened",
+          "parent_dm_node_id": null,
+          "perturbation": {
+            "alpha_ev": 0.04,
+            "mode": "SCREENED",
+            "orbit_id": "NiLR0",
+            "purpose": "explicit_fixed_grid",
+            "run_id": "lr_s000_p0p04_screened",
+            "site_id": "NiLR0",
+            "site_index": 0
+          },
+          "scf_level_id": null
+        },
+        "node_id": "response:lr_s000_p0p04_screened",
+        "schema": "siestaflow-siesta-node-evidence-v1",
+        "semantic": {
+          "node_kind": "PERTURBATION",
+          "reference_dm_sha256": "f7fca191f941bbda5ee38eb361096aa8a802dfd410e12aaa680f39f3cf2193ef",
+          "response_mode": "SCREENED"
+        }
+      },
+      "recorded_epoch": 1790646951.5683458,
+      "reference_dm_sha256": "f7fca191f941bbda5ee38eb361096aa8a802dfd410e12aaa680f39f3cf2193ef",
+      "scf_level_id": "base",
+      "state": "VALIDATED"
+    },
+    "response:lr_s000_p0p06_bare": {
+      "adaptive_policy_digest": null,
+      "adaptive_round": null,
+      "artifact_spec": {
+        "dm": "lr_s000_p0p06_bare.DM",
+        "executable": "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta",
+        "fdf": "siesta.fdf",
+        "output": "siesta.out",
+        "reference_dm": "NIO_PBE_REFERENCE.DM"
+      },
+      "command": {
+        "argv": [
+          "/usr/bin/orterun",
+          "--host",
+          "localhost:4",
+          "--map-by",
+          "ppr:4:node",
+          "-np",
+          "4",
+          "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta"
+        ],
+        "cwd": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/d839ffe229398f9de504/attempt-1790646951571157546-151ab95e/response_lr_s000_p0p06_bare_d839ffe22939",
+        "stderr_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/d839ffe229398f9de504/attempt-1790646951571157546-151ab95e/response_lr_s000_p0p06_bare_d839ffe22939/siesta.err",
+        "stdin_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/d839ffe229398f9de504/attempt-1790646951571157546-151ab95e/response_lr_s000_p0p06_bare_d839ffe22939/siesta.fdf",
+        "stdout_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/d839ffe229398f9de504/attempt-1790646951571157546-151ab95e/response_lr_s000_p0p06_bare_d839ffe22939/siesta.out"
+      },
+      "evidence_digest": "9980089eb9e7200654dac6c4dee0a827158cdb1a5a931819b02b95da3b644e42",
+      "kind": "siesta",
+      "parent_dm_node_id": null,
+      "provenance": {
+        "artifacts": {
+          "dm": "b31ae36c838d6ea88d4f6499c747d909c8816cb7e4613b4cd99600348c7de15d",
+          "fdf": "b1181a92d720ca273dfbadb34164ad53844490b4a3613667dfb470515b2bea12",
+          "output": "9c1429caabc9a9e43c1a67859597a2898976e8841229d5fd54689038f838f7f9"
+        },
+        "evidence_digest": "9980089eb9e7200654dac6c4dee0a827158cdb1a5a931819b02b95da3b644e42",
+        "node": {
+          "dependencies": [
+            "reference"
+          ],
+          "kind": "PERTURBATION",
+          "node_id": "response:lr_s000_p0p06_bare",
+          "parent_dm_node_id": null,
+          "perturbation": {
+            "alpha_ev": 0.06,
+            "mode": "BARE",
+            "orbit_id": "NiLR0",
+            "purpose": "explicit_fixed_grid",
+            "run_id": "lr_s000_p0p06_bare",
+            "site_id": "NiLR0",
+            "site_index": 0
+          },
+          "scf_level_id": null
+        },
+        "node_id": "response:lr_s000_p0p06_bare",
+        "schema": "siestaflow-siesta-node-evidence-v1",
+        "semantic": {
+          "bare_parent_occurrence": 0,
+          "bare_profile": "siesta-5.4.2-potential-shift-hamiltonian-v1",
+          "bare_response_occurrence": 1,
+          "node_kind": "PERTURBATION",
+          "reference_dm_sha256": "f7fca191f941bbda5ee38eb361096aa8a802dfd410e12aaa680f39f3cf2193ef",
+          "response_mode": "BARE"
+        }
+      },
+      "recorded_epoch": 1790646958.3083801,
+      "reference_dm_sha256": "f7fca191f941bbda5ee38eb361096aa8a802dfd410e12aaa680f39f3cf2193ef",
+      "scf_level_id": "base",
+      "state": "VALIDATED"
+    },
+    "response:lr_s000_p0p06_screened": {
+      "adaptive_policy_digest": null,
+      "adaptive_round": null,
+      "artifact_spec": {
+        "dm": "lr_s000_p0p06_screened.DM",
+        "executable": "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta",
+        "fdf": "siesta.fdf",
+        "output": "siesta.out",
+        "reference_dm": "NIO_PBE_REFERENCE.DM"
+      },
+      "command": {
+        "argv": [
+          "/usr/bin/orterun",
+          "--host",
+          "localhost:4",
+          "--map-by",
+          "ppr:4:node",
+          "-np",
+          "4",
+          "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta"
+        ],
+        "cwd": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/3fe519aeb5e10966f238/attempt-1790646958310970014-0aff1267/response_lr_s000_p0p06_screened_3fe519aeb5e1",
+        "stderr_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/3fe519aeb5e10966f238/attempt-1790646958310970014-0aff1267/response_lr_s000_p0p06_screened_3fe519aeb5e1/siesta.err",
+        "stdin_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/3fe519aeb5e10966f238/attempt-1790646958310970014-0aff1267/response_lr_s000_p0p06_screened_3fe519aeb5e1/siesta.fdf",
+        "stdout_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/3fe519aeb5e10966f238/attempt-1790646958310970014-0aff1267/response_lr_s000_p0p06_screened_3fe519aeb5e1/siesta.out"
+      },
+      "evidence_digest": "dce2a6ff40477d5dde5723d6c44f70fd781b0d8d7f7d34a571e4eec984fd61dd",
+      "kind": "siesta",
+      "parent_dm_node_id": null,
+      "provenance": {
+        "artifacts": {
+          "dm": "f86a700c1c107d601e941b991ecf57c95e7b031030066fcac8ca2e058ad638e1",
+          "fdf": "3d4645f1bc0f495240b6aeb8404cbfce4d792ea5fb86540cf204668de9828f70",
+          "output": "3fa86adb093714c8fc4ed5c79db6e23db4ced13c6e7cec19ddf6542daa96d173"
+        },
+        "evidence_digest": "dce2a6ff40477d5dde5723d6c44f70fd781b0d8d7f7d34a571e4eec984fd61dd",
+        "node": {
+          "dependencies": [
+            "reference"
+          ],
+          "kind": "PERTURBATION",
+          "node_id": "response:lr_s000_p0p06_screened",
+          "parent_dm_node_id": null,
+          "perturbation": {
+            "alpha_ev": 0.06,
+            "mode": "SCREENED",
+            "orbit_id": "NiLR0",
+            "purpose": "explicit_fixed_grid",
+            "run_id": "lr_s000_p0p06_screened",
+            "site_id": "NiLR0",
+            "site_index": 0
+          },
+          "scf_level_id": null
+        },
+        "node_id": "response:lr_s000_p0p06_screened",
+        "schema": "siestaflow-siesta-node-evidence-v1",
+        "semantic": {
+          "node_kind": "PERTURBATION",
+          "reference_dm_sha256": "f7fca191f941bbda5ee38eb361096aa8a802dfd410e12aaa680f39f3cf2193ef",
+          "response_mode": "SCREENED"
+        }
+      },
+      "recorded_epoch": 1790646981.4497256,
+      "reference_dm_sha256": "f7fca191f941bbda5ee38eb361096aa8a802dfd410e12aaa680f39f3cf2193ef",
+      "scf_level_id": "base",
+      "state": "VALIDATED"
+    },
+    "response:lr_s001_m0p02_bare": {
+      "adaptive_policy_digest": null,
+      "adaptive_round": null,
+      "artifact_spec": {
+        "dm": "lr_s001_m0p02_bare.DM",
+        "executable": "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta",
+        "fdf": "siesta.fdf",
+        "output": "siesta.out",
+        "reference_dm": "NIO_PBE_REFERENCE.DM"
+      },
+      "command": {
+        "argv": [
+          "/usr/bin/orterun",
+          "--host",
+          "localhost:4",
+          "--map-by",
+          "ppr:4:node",
+          "-np",
+          "4",
+          "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta"
+        ],
+        "cwd": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/d40fa0516e62855bdc5a/attempt-1790647052716799084-d98a8ded/response_lr_s001_m0p02_bare_d40fa0516e62",
+        "stderr_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/d40fa0516e62855bdc5a/attempt-1790647052716799084-d98a8ded/response_lr_s001_m0p02_bare_d40fa0516e62/siesta.err",
+        "stdin_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/d40fa0516e62855bdc5a/attempt-1790647052716799084-d98a8ded/response_lr_s001_m0p02_bare_d40fa0516e62/siesta.fdf",
+        "stdout_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/d40fa0516e62855bdc5a/attempt-1790647052716799084-d98a8ded/response_lr_s001_m0p02_bare_d40fa0516e62/siesta.out"
+      },
+      "evidence_digest": "b3404015217e676dfebe1cbc655441beb2bbf6e5720866d8e9eff13745b09e76",
+      "kind": "siesta",
+      "parent_dm_node_id": null,
+      "provenance": {
+        "artifacts": {
+          "dm": "82980021ae5c167e80ca45050ffa04b319b00b58cbcf14bf3aa6427ca81ac05e",
+          "fdf": "3ca1d004f9ff5369198ef5828a34ae12f076fc459a59f8c47e777cf223f45a6d",
+          "output": "98fdd62e66113840a21c5e25746ec717137d5d1f81285a0619a4d58a9addc089"
+        },
+        "evidence_digest": "b3404015217e676dfebe1cbc655441beb2bbf6e5720866d8e9eff13745b09e76",
+        "node": {
+          "dependencies": [
+            "reference"
+          ],
+          "kind": "PERTURBATION",
+          "node_id": "response:lr_s001_m0p02_bare",
+          "parent_dm_node_id": null,
+          "perturbation": {
+            "alpha_ev": -0.02,
+            "mode": "BARE",
+            "orbit_id": "NiLR1",
+            "purpose": "explicit_fixed_grid",
+            "run_id": "lr_s001_m0p02_bare",
+            "site_id": "NiLR1",
+            "site_index": 1
+          },
+          "scf_level_id": null
+        },
+        "node_id": "response:lr_s001_m0p02_bare",
+        "schema": "siestaflow-siesta-node-evidence-v1",
+        "semantic": {
+          "bare_parent_occurrence": 0,
+          "bare_profile": "siesta-5.4.2-potential-shift-hamiltonian-v1",
+          "bare_response_occurrence": 1,
+          "node_kind": "PERTURBATION",
+          "reference_dm_sha256": "f7fca191f941bbda5ee38eb361096aa8a802dfd410e12aaa680f39f3cf2193ef",
+          "response_mode": "BARE"
+        }
+      },
+      "recorded_epoch": 1790647058.3013463,
+      "reference_dm_sha256": "f7fca191f941bbda5ee38eb361096aa8a802dfd410e12aaa680f39f3cf2193ef",
+      "scf_level_id": "base",
+      "state": "VALIDATED"
+    },
+    "response:lr_s001_m0p02_screened": {
+      "adaptive_policy_digest": null,
+      "adaptive_round": null,
+      "artifact_spec": {
+        "dm": "lr_s001_m0p02_screened.DM",
+        "executable": "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta",
+        "fdf": "siesta.fdf",
+        "output": "siesta.out",
+        "reference_dm": "NIO_PBE_REFERENCE.DM"
+      },
+      "command": {
+        "argv": [
+          "/usr/bin/orterun",
+          "--host",
+          "localhost:4",
+          "--map-by",
+          "ppr:4:node",
+          "-np",
+          "4",
+          "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta"
+        ],
+        "cwd": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/8a60c8950b2acc786cdb/attempt-1790647058304226998-b9f728d9/response_lr_s001_m0p02_screened_8a60c8950b2a",
+        "stderr_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/8a60c8950b2acc786cdb/attempt-1790647058304226998-b9f728d9/response_lr_s001_m0p02_screened_8a60c8950b2a/siesta.err",
+        "stdin_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/8a60c8950b2acc786cdb/attempt-1790647058304226998-b9f728d9/response_lr_s001_m0p02_screened_8a60c8950b2a/siesta.fdf",
+        "stdout_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/8a60c8950b2acc786cdb/attempt-1790647058304226998-b9f728d9/response_lr_s001_m0p02_screened_8a60c8950b2a/siesta.out"
+      },
+      "evidence_digest": "902475fab9b631f3d5a91564ed9ceb5456f590ec133a3bc7a892021ecd9491ae",
+      "kind": "siesta",
+      "parent_dm_node_id": null,
+      "provenance": {
+        "artifacts": {
+          "dm": "fe9482298cdc879093e16dcc59edc05b0ed6cf96146f197131eb00baa2259819",
+          "fdf": "eaa2e7c7ec6fc4aac964df2b2d6a88e71402f89551987891b1e3a7f1c512cb95",
+          "output": "6750a80ee38782cf4f68d3591e25bfb89692c0569446b6965366a8b05c7cf15b"
+        },
+        "evidence_digest": "902475fab9b631f3d5a91564ed9ceb5456f590ec133a3bc7a892021ecd9491ae",
+        "node": {
+          "dependencies": [
+            "reference"
+          ],
+          "kind": "PERTURBATION",
+          "node_id": "response:lr_s001_m0p02_screened",
+          "parent_dm_node_id": null,
+          "perturbation": {
+            "alpha_ev": -0.02,
+            "mode": "SCREENED",
+            "orbit_id": "NiLR1",
+            "purpose": "explicit_fixed_grid",
+            "run_id": "lr_s001_m0p02_screened",
+            "site_id": "NiLR1",
+            "site_index": 1
+          },
+          "scf_level_id": null
+        },
+        "node_id": "response:lr_s001_m0p02_screened",
+        "schema": "siestaflow-siesta-node-evidence-v1",
+        "semantic": {
+          "node_kind": "PERTURBATION",
+          "reference_dm_sha256": "f7fca191f941bbda5ee38eb361096aa8a802dfd410e12aaa680f39f3cf2193ef",
+          "response_mode": "SCREENED"
+        }
+      },
+      "recorded_epoch": 1790647078.1742778,
+      "reference_dm_sha256": "f7fca191f941bbda5ee38eb361096aa8a802dfd410e12aaa680f39f3cf2193ef",
+      "scf_level_id": "base",
+      "state": "VALIDATED"
+    },
+    "response:lr_s001_m0p04_bare": {
+      "adaptive_policy_digest": null,
+      "adaptive_round": null,
+      "artifact_spec": {
+        "dm": "lr_s001_m0p04_bare.DM",
+        "executable": "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta",
+        "fdf": "siesta.fdf",
+        "output": "siesta.out",
+        "reference_dm": "NIO_PBE_REFERENCE.DM"
+      },
+      "command": {
+        "argv": [
+          "/usr/bin/orterun",
+          "--host",
+          "localhost:4",
+          "--map-by",
+          "ppr:4:node",
+          "-np",
+          "4",
+          "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta"
+        ],
+        "cwd": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/f920cfb21087d4d86fc4/attempt-1790647016726139652-03ee49b8/response_lr_s001_m0p04_bare_f920cfb21087",
+        "stderr_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/f920cfb21087d4d86fc4/attempt-1790647016726139652-03ee49b8/response_lr_s001_m0p04_bare_f920cfb21087/siesta.err",
+        "stdin_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/f920cfb21087d4d86fc4/attempt-1790647016726139652-03ee49b8/response_lr_s001_m0p04_bare_f920cfb21087/siesta.fdf",
+        "stdout_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/f920cfb21087d4d86fc4/attempt-1790647016726139652-03ee49b8/response_lr_s001_m0p04_bare_f920cfb21087/siesta.out"
+      },
+      "evidence_digest": "23d486cc6afa9d0568e81dd3c39dda6f3e004f3a7fccc7fbfae5f8535d8b6409",
+      "kind": "siesta",
+      "parent_dm_node_id": null,
+      "provenance": {
+        "artifacts": {
+          "dm": "82162441cfe73d7b46845dd1a79c8d7376bfc65ee65cf74a7ec18460a7b05748",
+          "fdf": "d6c1c06d42d96ea19ad17bffdd4468fe52bd657c8e436f53fb5738aea29cb4d7",
+          "output": "483dfa4d18b024b2c42f0cf03bfbc4749681b863a360300d4882839a3d75320c"
+        },
+        "evidence_digest": "23d486cc6afa9d0568e81dd3c39dda6f3e004f3a7fccc7fbfae5f8535d8b6409",
+        "node": {
+          "dependencies": [
+            "reference"
+          ],
+          "kind": "PERTURBATION",
+          "node_id": "response:lr_s001_m0p04_bare",
+          "parent_dm_node_id": null,
+          "perturbation": {
+            "alpha_ev": -0.04,
+            "mode": "BARE",
+            "orbit_id": "NiLR1",
+            "purpose": "explicit_fixed_grid",
+            "run_id": "lr_s001_m0p04_bare",
+            "site_id": "NiLR1",
+            "site_index": 1
+          },
+          "scf_level_id": null
+        },
+        "node_id": "response:lr_s001_m0p04_bare",
+        "schema": "siestaflow-siesta-node-evidence-v1",
+        "semantic": {
+          "bare_parent_occurrence": 0,
+          "bare_profile": "siesta-5.4.2-potential-shift-hamiltonian-v1",
+          "bare_response_occurrence": 1,
+          "node_kind": "PERTURBATION",
+          "reference_dm_sha256": "f7fca191f941bbda5ee38eb361096aa8a802dfd410e12aaa680f39f3cf2193ef",
+          "response_mode": "BARE"
+        }
+      },
+      "recorded_epoch": 1790647023.1197836,
+      "reference_dm_sha256": "f7fca191f941bbda5ee38eb361096aa8a802dfd410e12aaa680f39f3cf2193ef",
+      "scf_level_id": "base",
+      "state": "VALIDATED"
+    },
+    "response:lr_s001_m0p04_screened": {
+      "adaptive_policy_digest": null,
+      "adaptive_round": null,
+      "artifact_spec": {
+        "dm": "lr_s001_m0p04_screened.DM",
+        "executable": "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta",
+        "fdf": "siesta.fdf",
+        "output": "siesta.out",
+        "reference_dm": "NIO_PBE_REFERENCE.DM"
+      },
+      "command": {
+        "argv": [
+          "/usr/bin/orterun",
+          "--host",
+          "localhost:4",
+          "--map-by",
+          "ppr:4:node",
+          "-np",
+          "4",
+          "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta"
+        ],
+        "cwd": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/d1b788ec0f0198f1157a/attempt-1790647023122513815-734199ce/response_lr_s001_m0p04_screened_d1b788ec0f01",
+        "stderr_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/d1b788ec0f0198f1157a/attempt-1790647023122513815-734199ce/response_lr_s001_m0p04_screened_d1b788ec0f01/siesta.err",
+        "stdin_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/d1b788ec0f0198f1157a/attempt-1790647023122513815-734199ce/response_lr_s001_m0p04_screened_d1b788ec0f01/siesta.fdf",
+        "stdout_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/d1b788ec0f0198f1157a/attempt-1790647023122513815-734199ce/response_lr_s001_m0p04_screened_d1b788ec0f01/siesta.out"
+      },
+      "evidence_digest": "1a1384e35f1208d5700daebf335c08cd4b4e6eec942cf288624b9f9419a40c22",
+      "kind": "siesta",
+      "parent_dm_node_id": null,
+      "provenance": {
+        "artifacts": {
+          "dm": "dcad7c8e5877b40eb05a50ca08f366e4a1c0e8e2fbd41b3f172de272d846bd80",
+          "fdf": "21c2b330a501c742bb6abad377f8abea815a83a34e74fae7691fd008776a195e",
+          "output": "297cadfc23fa933afc7c76e9c7f3a2d8e8a099aaa79fb1474aea25704b22cf70"
+        },
+        "evidence_digest": "1a1384e35f1208d5700daebf335c08cd4b4e6eec942cf288624b9f9419a40c22",
+        "node": {
+          "dependencies": [
+            "reference"
+          ],
+          "kind": "PERTURBATION",
+          "node_id": "response:lr_s001_m0p04_screened",
+          "parent_dm_node_id": null,
+          "perturbation": {
+            "alpha_ev": -0.04,
+            "mode": "SCREENED",
+            "orbit_id": "NiLR1",
+            "purpose": "explicit_fixed_grid",
+            "run_id": "lr_s001_m0p04_screened",
+            "site_id": "NiLR1",
+            "site_index": 1
+          },
+          "scf_level_id": null
+        },
+        "node_id": "response:lr_s001_m0p04_screened",
+        "schema": "siestaflow-siesta-node-evidence-v1",
+        "semantic": {
+          "node_kind": "PERTURBATION",
+          "reference_dm_sha256": "f7fca191f941bbda5ee38eb361096aa8a802dfd410e12aaa680f39f3cf2193ef",
+          "response_mode": "SCREENED"
+        }
+      },
+      "recorded_epoch": 1790647052.7132387,
+      "reference_dm_sha256": "f7fca191f941bbda5ee38eb361096aa8a802dfd410e12aaa680f39f3cf2193ef",
+      "scf_level_id": "base",
+      "state": "VALIDATED"
+    },
+    "response:lr_s001_m0p06_bare": {
+      "adaptive_policy_digest": null,
+      "adaptive_round": null,
+      "artifact_spec": {
+        "dm": "lr_s001_m0p06_bare.DM",
+        "executable": "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta",
+        "fdf": "siesta.fdf",
+        "output": "siesta.out",
+        "reference_dm": "NIO_PBE_REFERENCE.DM"
+      },
+      "command": {
+        "argv": [
+          "/usr/bin/orterun",
+          "--host",
+          "localhost:4",
+          "--map-by",
+          "ppr:4:node",
+          "-np",
+          "4",
+          "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta"
+        ],
+        "cwd": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/8a7d4f4a323274cedc2a/attempt-1790646981452321622-d5483bd0/response_lr_s001_m0p06_bare_8a7d4f4a3232",
+        "stderr_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/8a7d4f4a323274cedc2a/attempt-1790646981452321622-d5483bd0/response_lr_s001_m0p06_bare_8a7d4f4a3232/siesta.err",
+        "stdin_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/8a7d4f4a323274cedc2a/attempt-1790646981452321622-d5483bd0/response_lr_s001_m0p06_bare_8a7d4f4a3232/siesta.fdf",
+        "stdout_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/8a7d4f4a323274cedc2a/attempt-1790646981452321622-d5483bd0/response_lr_s001_m0p06_bare_8a7d4f4a3232/siesta.out"
+      },
+      "evidence_digest": "06c78233ee889add103c70f6e8271160ac564f4d0f5b8277a7515a8f599e8698",
+      "kind": "siesta",
+      "parent_dm_node_id": null,
+      "provenance": {
+        "artifacts": {
+          "dm": "d8cb2dd508a16e467aa9c17d6c5841961358165d6ed196ad7eed20ca607f3019",
+          "fdf": "0cea98c3b2e7e428bef703931cb732e7aab11f39ce3fe8f7a83105565f8b00aa",
+          "output": "42935f17fab475c1995510d7a549923968ac85bd4e520ab0b206fac9b2785cd7"
+        },
+        "evidence_digest": "06c78233ee889add103c70f6e8271160ac564f4d0f5b8277a7515a8f599e8698",
+        "node": {
+          "dependencies": [
+            "reference"
+          ],
+          "kind": "PERTURBATION",
+          "node_id": "response:lr_s001_m0p06_bare",
+          "parent_dm_node_id": null,
+          "perturbation": {
+            "alpha_ev": -0.06,
+            "mode": "BARE",
+            "orbit_id": "NiLR1",
+            "purpose": "explicit_fixed_grid",
+            "run_id": "lr_s001_m0p06_bare",
+            "site_id": "NiLR1",
+            "site_index": 1
+          },
+          "scf_level_id": null
+        },
+        "node_id": "response:lr_s001_m0p06_bare",
+        "schema": "siestaflow-siesta-node-evidence-v1",
+        "semantic": {
+          "bare_parent_occurrence": 0,
+          "bare_profile": "siesta-5.4.2-potential-shift-hamiltonian-v1",
+          "bare_response_occurrence": 1,
+          "node_kind": "PERTURBATION",
+          "reference_dm_sha256": "f7fca191f941bbda5ee38eb361096aa8a802dfd410e12aaa680f39f3cf2193ef",
+          "response_mode": "BARE"
+        }
+      },
+      "recorded_epoch": 1790646988.1699626,
+      "reference_dm_sha256": "f7fca191f941bbda5ee38eb361096aa8a802dfd410e12aaa680f39f3cf2193ef",
+      "scf_level_id": "base",
+      "state": "VALIDATED"
+    },
+    "response:lr_s001_m0p06_screened": {
+      "adaptive_policy_digest": null,
+      "adaptive_round": null,
+      "artifact_spec": {
+        "dm": "lr_s001_m0p06_screened.DM",
+        "executable": "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta",
+        "fdf": "siesta.fdf",
+        "output": "siesta.out",
+        "reference_dm": "NIO_PBE_REFERENCE.DM"
+      },
+      "command": {
+        "argv": [
+          "/usr/bin/orterun",
+          "--host",
+          "localhost:4",
+          "--map-by",
+          "ppr:4:node",
+          "-np",
+          "4",
+          "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta"
+        ],
+        "cwd": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/cd98d0ad2b097309a007/attempt-1790646988173030696-10ba6dfa/response_lr_s001_m0p06_screened_cd98d0ad2b09",
+        "stderr_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/cd98d0ad2b097309a007/attempt-1790646988173030696-10ba6dfa/response_lr_s001_m0p06_screened_cd98d0ad2b09/siesta.err",
+        "stdin_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/cd98d0ad2b097309a007/attempt-1790646988173030696-10ba6dfa/response_lr_s001_m0p06_screened_cd98d0ad2b09/siesta.fdf",
+        "stdout_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/cd98d0ad2b097309a007/attempt-1790646988173030696-10ba6dfa/response_lr_s001_m0p06_screened_cd98d0ad2b09/siesta.out"
+      },
+      "evidence_digest": "81c949638add75b84eb314c1991674b8db53aae884975d1a09a970f6aafe32cc",
+      "kind": "siesta",
+      "parent_dm_node_id": null,
+      "provenance": {
+        "artifacts": {
+          "dm": "7dd3fcba65b0a4909285a8a65e6127651e165cc7015093bddd9077981033011e",
+          "fdf": "e747150758675410281a0539b0a1bdd0d37b86f8a4438769dbf06d23d8a266a9",
+          "output": "a66db26ca23d4456b6bba4eec31397c5d068e46562e6e74d1920d9e1bb5e9537"
+        },
+        "evidence_digest": "81c949638add75b84eb314c1991674b8db53aae884975d1a09a970f6aafe32cc",
+        "node": {
+          "dependencies": [
+            "reference"
+          ],
+          "kind": "PERTURBATION",
+          "node_id": "response:lr_s001_m0p06_screened",
+          "parent_dm_node_id": null,
+          "perturbation": {
+            "alpha_ev": -0.06,
+            "mode": "SCREENED",
+            "orbit_id": "NiLR1",
+            "purpose": "explicit_fixed_grid",
+            "run_id": "lr_s001_m0p06_screened",
+            "site_id": "NiLR1",
+            "site_index": 1
+          },
+          "scf_level_id": null
+        },
+        "node_id": "response:lr_s001_m0p06_screened",
+        "schema": "siestaflow-siesta-node-evidence-v1",
+        "semantic": {
+          "node_kind": "PERTURBATION",
+          "reference_dm_sha256": "f7fca191f941bbda5ee38eb361096aa8a802dfd410e12aaa680f39f3cf2193ef",
+          "response_mode": "SCREENED"
+        }
+      },
+      "recorded_epoch": 1790647016.7232325,
+      "reference_dm_sha256": "f7fca191f941bbda5ee38eb361096aa8a802dfd410e12aaa680f39f3cf2193ef",
+      "scf_level_id": "base",
+      "state": "VALIDATED"
+    },
+    "response:lr_s001_p0p02_bare": {
+      "adaptive_policy_digest": null,
+      "adaptive_round": null,
+      "artifact_spec": {
+        "dm": "lr_s001_p0p02_bare.DM",
+        "executable": "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta",
+        "fdf": "siesta.fdf",
+        "output": "siesta.out",
+        "reference_dm": "NIO_PBE_REFERENCE.DM"
+      },
+      "command": {
+        "argv": [
+          "/usr/bin/orterun",
+          "--host",
+          "localhost:4",
+          "--map-by",
+          "ppr:4:node",
+          "-np",
+          "4",
+          "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta"
+        ],
+        "cwd": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/dc07ce4a6f186716bf4f/attempt-1790647078177763974-b760eab5/response_lr_s001_p0p02_bare_dc07ce4a6f18",
+        "stderr_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/dc07ce4a6f186716bf4f/attempt-1790647078177763974-b760eab5/response_lr_s001_p0p02_bare_dc07ce4a6f18/siesta.err",
+        "stdin_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/dc07ce4a6f186716bf4f/attempt-1790647078177763974-b760eab5/response_lr_s001_p0p02_bare_dc07ce4a6f18/siesta.fdf",
+        "stdout_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/dc07ce4a6f186716bf4f/attempt-1790647078177763974-b760eab5/response_lr_s001_p0p02_bare_dc07ce4a6f18/siesta.out"
+      },
+      "evidence_digest": "77123be42779430725ca8ed6af982d4ae245dc1371bcfdab10d36baf5e32bf86",
+      "kind": "siesta",
+      "parent_dm_node_id": null,
+      "provenance": {
+        "artifacts": {
+          "dm": "0b7003ebd75c504a8e47ea6a703f6ce984053b47ac4d1332bc392c1026efaf5b",
+          "fdf": "757f2b41a2e02b53281563358e15576caa263ce1eb783d2ceac008328f09c255",
+          "output": "bf3c0f89bd1061e775be9d229057e8101053fec6077d18a3c7f65fe9335e3b1d"
+        },
+        "evidence_digest": "77123be42779430725ca8ed6af982d4ae245dc1371bcfdab10d36baf5e32bf86",
+        "node": {
+          "dependencies": [
+            "reference"
+          ],
+          "kind": "PERTURBATION",
+          "node_id": "response:lr_s001_p0p02_bare",
+          "parent_dm_node_id": null,
+          "perturbation": {
+            "alpha_ev": 0.02,
+            "mode": "BARE",
+            "orbit_id": "NiLR1",
+            "purpose": "explicit_fixed_grid",
+            "run_id": "lr_s001_p0p02_bare",
+            "site_id": "NiLR1",
+            "site_index": 1
+          },
+          "scf_level_id": null
+        },
+        "node_id": "response:lr_s001_p0p02_bare",
+        "schema": "siestaflow-siesta-node-evidence-v1",
+        "semantic": {
+          "bare_parent_occurrence": 0,
+          "bare_profile": "siesta-5.4.2-potential-shift-hamiltonian-v1",
+          "bare_response_occurrence": 1,
+          "node_kind": "PERTURBATION",
+          "reference_dm_sha256": "f7fca191f941bbda5ee38eb361096aa8a802dfd410e12aaa680f39f3cf2193ef",
+          "response_mode": "BARE"
+        }
+      },
+      "recorded_epoch": 1790647085.5728924,
+      "reference_dm_sha256": "f7fca191f941bbda5ee38eb361096aa8a802dfd410e12aaa680f39f3cf2193ef",
+      "scf_level_id": "base",
+      "state": "VALIDATED"
+    },
+    "response:lr_s001_p0p02_screened": {
+      "adaptive_policy_digest": null,
+      "adaptive_round": null,
+      "artifact_spec": {
+        "dm": "lr_s001_p0p02_screened.DM",
+        "executable": "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta",
+        "fdf": "siesta.fdf",
+        "output": "siesta.out",
+        "reference_dm": "NIO_PBE_REFERENCE.DM"
+      },
+      "command": {
+        "argv": [
+          "/usr/bin/orterun",
+          "--host",
+          "localhost:4",
+          "--map-by",
+          "ppr:4:node",
+          "-np",
+          "4",
+          "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta"
+        ],
+        "cwd": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/5844c04f7ade2a15396c/attempt-1790647085576389308-95df9cc5/response_lr_s001_p0p02_screened_5844c04f7ade",
+        "stderr_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/5844c04f7ade2a15396c/attempt-1790647085576389308-95df9cc5/response_lr_s001_p0p02_screened_5844c04f7ade/siesta.err",
+        "stdin_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/5844c04f7ade2a15396c/attempt-1790647085576389308-95df9cc5/response_lr_s001_p0p02_screened_5844c04f7ade/siesta.fdf",
+        "stdout_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/5844c04f7ade2a15396c/attempt-1790647085576389308-95df9cc5/response_lr_s001_p0p02_screened_5844c04f7ade/siesta.out"
+      },
+      "evidence_digest": "e867237475baad182d3d33ff0d7616e9e7e5a8e1e749c95291e2a702e18fcc03",
+      "kind": "siesta",
+      "parent_dm_node_id": null,
+      "provenance": {
+        "artifacts": {
+          "dm": "362404ed6d82321bd449df9c3009033f6b1155df3d3c8394852d805641c91102",
+          "fdf": "65c909c85914773b47ea3e2e770cc34ccd162633396ba200ed2e46cae672ed4e",
+          "output": "5e2c795418f81e4457139bc30bcb30c73845b77801c04daf86641243c80cb644"
+        },
+        "evidence_digest": "e867237475baad182d3d33ff0d7616e9e7e5a8e1e749c95291e2a702e18fcc03",
+        "node": {
+          "dependencies": [
+            "reference"
+          ],
+          "kind": "PERTURBATION",
+          "node_id": "response:lr_s001_p0p02_screened",
+          "parent_dm_node_id": null,
+          "perturbation": {
+            "alpha_ev": 0.02,
+            "mode": "SCREENED",
+            "orbit_id": "NiLR1",
+            "purpose": "explicit_fixed_grid",
+            "run_id": "lr_s001_p0p02_screened",
+            "site_id": "NiLR1",
+            "site_index": 1
+          },
+          "scf_level_id": null
+        },
+        "node_id": "response:lr_s001_p0p02_screened",
+        "schema": "siestaflow-siesta-node-evidence-v1",
+        "semantic": {
+          "node_kind": "PERTURBATION",
+          "reference_dm_sha256": "f7fca191f941bbda5ee38eb361096aa8a802dfd410e12aaa680f39f3cf2193ef",
+          "response_mode": "SCREENED"
+        }
+      },
+      "recorded_epoch": 1790647106.6379392,
+      "reference_dm_sha256": "f7fca191f941bbda5ee38eb361096aa8a802dfd410e12aaa680f39f3cf2193ef",
+      "scf_level_id": "base",
+      "state": "VALIDATED"
+    },
+    "response:lr_s001_p0p04_bare": {
+      "adaptive_policy_digest": null,
+      "adaptive_round": null,
+      "artifact_spec": {
+        "dm": "lr_s001_p0p04_bare.DM",
+        "executable": "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta",
+        "fdf": "siesta.fdf",
+        "output": "siesta.out",
+        "reference_dm": "NIO_PBE_REFERENCE.DM"
+      },
+      "command": {
+        "argv": [
+          "/usr/bin/orterun",
+          "--host",
+          "localhost:4",
+          "--map-by",
+          "ppr:4:node",
+          "-np",
+          "4",
+          "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta"
+        ],
+        "cwd": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/16b7f66f8f4a159ce519/attempt-1790647106641338750-baba7491/response_lr_s001_p0p04_bare_16b7f66f8f4a",
+        "stderr_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/16b7f66f8f4a159ce519/attempt-1790647106641338750-baba7491/response_lr_s001_p0p04_bare_16b7f66f8f4a/siesta.err",
+        "stdin_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/16b7f66f8f4a159ce519/attempt-1790647106641338750-baba7491/response_lr_s001_p0p04_bare_16b7f66f8f4a/siesta.fdf",
+        "stdout_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/16b7f66f8f4a159ce519/attempt-1790647106641338750-baba7491/response_lr_s001_p0p04_bare_16b7f66f8f4a/siesta.out"
+      },
+      "evidence_digest": "099bd5a9b93f55190115df690525588f18e156544a42bac4ed00db3561f13790",
+      "kind": "siesta",
+      "parent_dm_node_id": null,
+      "provenance": {
+        "artifacts": {
+          "dm": "9c29d80395e2e6b23df012afc45ce61a90a23b5f54f1cf7e23308b4aeb9e9e92",
+          "fdf": "e9e5d07fed4e2758265470a3507b1ee9e1cfc4bedfc431353b0cd94479755bb8",
+          "output": "5abc8b36a007acfd635796bc42784cef8a44b40fbe2ba30744d22f9de47b3912"
+        },
+        "evidence_digest": "099bd5a9b93f55190115df690525588f18e156544a42bac4ed00db3561f13790",
+        "node": {
+          "dependencies": [
+            "reference"
+          ],
+          "kind": "PERTURBATION",
+          "node_id": "response:lr_s001_p0p04_bare",
+          "parent_dm_node_id": null,
+          "perturbation": {
+            "alpha_ev": 0.04,
+            "mode": "BARE",
+            "orbit_id": "NiLR1",
+            "purpose": "explicit_fixed_grid",
+            "run_id": "lr_s001_p0p04_bare",
+            "site_id": "NiLR1",
+            "site_index": 1
+          },
+          "scf_level_id": null
+        },
+        "node_id": "response:lr_s001_p0p04_bare",
+        "schema": "siestaflow-siesta-node-evidence-v1",
+        "semantic": {
+          "bare_parent_occurrence": 0,
+          "bare_profile": "siesta-5.4.2-potential-shift-hamiltonian-v1",
+          "bare_response_occurrence": 1,
+          "node_kind": "PERTURBATION",
+          "reference_dm_sha256": "f7fca191f941bbda5ee38eb361096aa8a802dfd410e12aaa680f39f3cf2193ef",
+          "response_mode": "BARE"
+        }
+      },
+      "recorded_epoch": 1790647112.5975971,
+      "reference_dm_sha256": "f7fca191f941bbda5ee38eb361096aa8a802dfd410e12aaa680f39f3cf2193ef",
+      "scf_level_id": "base",
+      "state": "VALIDATED"
+    },
+    "response:lr_s001_p0p04_screened": {
+      "adaptive_policy_digest": null,
+      "adaptive_round": null,
+      "artifact_spec": {
+        "dm": "lr_s001_p0p04_screened.DM",
+        "executable": "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta",
+        "fdf": "siesta.fdf",
+        "output": "siesta.out",
+        "reference_dm": "NIO_PBE_REFERENCE.DM"
+      },
+      "command": {
+        "argv": [
+          "/usr/bin/orterun",
+          "--host",
+          "localhost:4",
+          "--map-by",
+          "ppr:4:node",
+          "-np",
+          "4",
+          "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta"
+        ],
+        "cwd": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/4b49380df8041040dffa/attempt-1790647112601448425-14fc57cc/response_lr_s001_p0p04_screened_4b49380df804",
+        "stderr_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/4b49380df8041040dffa/attempt-1790647112601448425-14fc57cc/response_lr_s001_p0p04_screened_4b49380df804/siesta.err",
+        "stdin_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/4b49380df8041040dffa/attempt-1790647112601448425-14fc57cc/response_lr_s001_p0p04_screened_4b49380df804/siesta.fdf",
+        "stdout_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/4b49380df8041040dffa/attempt-1790647112601448425-14fc57cc/response_lr_s001_p0p04_screened_4b49380df804/siesta.out"
+      },
+      "evidence_digest": "c55a43624c9776c7e03b50160da60ff7dd947422746cad294f7a21eb873f3f03",
+      "kind": "siesta",
+      "parent_dm_node_id": null,
+      "provenance": {
+        "artifacts": {
+          "dm": "242fed51e21ab314a4fc57921f37598a2d79e33deb81c4a29947b0a0ffdabee0",
+          "fdf": "dd3b000669cf92ddec455d1aeee12ee160730515655a7079134ba22cc951b280",
+          "output": "b0c670bb3216ed9e52ff95256453b6039870c3293edd40615098e29df7cbb9ce"
+        },
+        "evidence_digest": "c55a43624c9776c7e03b50160da60ff7dd947422746cad294f7a21eb873f3f03",
+        "node": {
+          "dependencies": [
+            "reference"
+          ],
+          "kind": "PERTURBATION",
+          "node_id": "response:lr_s001_p0p04_screened",
+          "parent_dm_node_id": null,
+          "perturbation": {
+            "alpha_ev": 0.04,
+            "mode": "SCREENED",
+            "orbit_id": "NiLR1",
+            "purpose": "explicit_fixed_grid",
+            "run_id": "lr_s001_p0p04_screened",
+            "site_id": "NiLR1",
+            "site_index": 1
+          },
+          "scf_level_id": null
+        },
+        "node_id": "response:lr_s001_p0p04_screened",
+        "schema": "siestaflow-siesta-node-evidence-v1",
+        "semantic": {
+          "node_kind": "PERTURBATION",
+          "reference_dm_sha256": "f7fca191f941bbda5ee38eb361096aa8a802dfd410e12aaa680f39f3cf2193ef",
+          "response_mode": "SCREENED"
+        }
+      },
+      "recorded_epoch": 1790647140.9474914,
+      "reference_dm_sha256": "f7fca191f941bbda5ee38eb361096aa8a802dfd410e12aaa680f39f3cf2193ef",
+      "scf_level_id": "base",
+      "state": "VALIDATED"
+    },
+    "response:lr_s001_p0p06_bare": {
+      "adaptive_policy_digest": null,
+      "adaptive_round": null,
+      "artifact_spec": {
+        "dm": "lr_s001_p0p06_bare.DM",
+        "executable": "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta",
+        "fdf": "siesta.fdf",
+        "output": "siesta.out",
+        "reference_dm": "NIO_PBE_REFERENCE.DM"
+      },
+      "command": {
+        "argv": [
+          "/usr/bin/orterun",
+          "--host",
+          "localhost:4",
+          "--map-by",
+          "ppr:4:node",
+          "-np",
+          "4",
+          "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta"
+        ],
+        "cwd": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/db6326ee96bee0a6337f/attempt-1790647140950990323-f998f45d/response_lr_s001_p0p06_bare_db6326ee96be",
+        "stderr_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/db6326ee96bee0a6337f/attempt-1790647140950990323-f998f45d/response_lr_s001_p0p06_bare_db6326ee96be/siesta.err",
+        "stdin_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/db6326ee96bee0a6337f/attempt-1790647140950990323-f998f45d/response_lr_s001_p0p06_bare_db6326ee96be/siesta.fdf",
+        "stdout_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/db6326ee96bee0a6337f/attempt-1790647140950990323-f998f45d/response_lr_s001_p0p06_bare_db6326ee96be/siesta.out"
+      },
+      "evidence_digest": "42d22195700791d35b206cab728b6412f39852a17ef7be63515db8c8e919eba0",
+      "kind": "siesta",
+      "parent_dm_node_id": null,
+      "provenance": {
+        "artifacts": {
+          "dm": "8a838694bd48ebfb7efdcd599beb3ebce15da710d6debe26d5c51daa0a5b149d",
+          "fdf": "6e377cd84f9a11691d5d86831e9cdafbbebcac317a913483adda307a218c31e9",
+          "output": "97e4b6007dd3bb1489ea487db4169999346c8dc9ab4d98a2849d491a27cb990f"
+        },
+        "evidence_digest": "42d22195700791d35b206cab728b6412f39852a17ef7be63515db8c8e919eba0",
+        "node": {
+          "dependencies": [
+            "reference"
+          ],
+          "kind": "PERTURBATION",
+          "node_id": "response:lr_s001_p0p06_bare",
+          "parent_dm_node_id": null,
+          "perturbation": {
+            "alpha_ev": 0.06,
+            "mode": "BARE",
+            "orbit_id": "NiLR1",
+            "purpose": "explicit_fixed_grid",
+            "run_id": "lr_s001_p0p06_bare",
+            "site_id": "NiLR1",
+            "site_index": 1
+          },
+          "scf_level_id": null
+        },
+        "node_id": "response:lr_s001_p0p06_bare",
+        "schema": "siestaflow-siesta-node-evidence-v1",
+        "semantic": {
+          "bare_parent_occurrence": 0,
+          "bare_profile": "siesta-5.4.2-potential-shift-hamiltonian-v1",
+          "bare_response_occurrence": 1,
+          "node_kind": "PERTURBATION",
+          "reference_dm_sha256": "f7fca191f941bbda5ee38eb361096aa8a802dfd410e12aaa680f39f3cf2193ef",
+          "response_mode": "BARE"
+        }
+      },
+      "recorded_epoch": 1790647150.0558517,
+      "reference_dm_sha256": "f7fca191f941bbda5ee38eb361096aa8a802dfd410e12aaa680f39f3cf2193ef",
+      "scf_level_id": "base",
+      "state": "VALIDATED"
+    },
+    "response:lr_s001_p0p06_screened": {
+      "adaptive_policy_digest": null,
+      "adaptive_round": null,
+      "artifact_spec": {
+        "dm": "lr_s001_p0p06_screened.DM",
+        "executable": "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta",
+        "fdf": "siesta.fdf",
+        "output": "siesta.out",
+        "reference_dm": "NIO_PBE_REFERENCE.DM"
+      },
+      "command": {
+        "argv": [
+          "/usr/bin/orterun",
+          "--host",
+          "localhost:4",
+          "--map-by",
+          "ppr:4:node",
+          "-np",
+          "4",
+          "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta"
+        ],
+        "cwd": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/0f345e8a7aa02280696e/attempt-1790647150059543036-c40d4901/response_lr_s001_p0p06_screened_0f345e8a7aa0",
+        "stderr_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/0f345e8a7aa02280696e/attempt-1790647150059543036-c40d4901/response_lr_s001_p0p06_screened_0f345e8a7aa0/siesta.err",
+        "stdin_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/0f345e8a7aa02280696e/attempt-1790647150059543036-c40d4901/response_lr_s001_p0p06_screened_0f345e8a7aa0/siesta.fdf",
+        "stdout_path": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/.siestaflow/attempts/0f345e8a7aa02280696e/attempt-1790647150059543036-c40d4901/response_lr_s001_p0p06_screened_0f345e8a7aa0/siesta.out"
+      },
+      "evidence_digest": "07b1dd71b0205ffa3004d761045d9cf4ce03019ac0f0783f75c176c3142660bd",
+      "kind": "siesta",
+      "parent_dm_node_id": null,
+      "provenance": {
+        "artifacts": {
+          "dm": "731aa0e6bdbf98f3b25adb553c594b3f66caed900afd2fa78b4c6719ba335d2a",
+          "fdf": "5d15274f023766b59bd54fcaee65a88e779fa3e44afc3cea5993222d4acc5940",
+          "output": "d42fb4b2aaae0d2709719fec616026c2c9aad1bd827988c758a6ccb438d9faf8"
+        },
+        "evidence_digest": "07b1dd71b0205ffa3004d761045d9cf4ce03019ac0f0783f75c176c3142660bd",
+        "node": {
+          "dependencies": [
+            "reference"
+          ],
+          "kind": "PERTURBATION",
+          "node_id": "response:lr_s001_p0p06_screened",
+          "parent_dm_node_id": null,
+          "perturbation": {
+            "alpha_ev": 0.06,
+            "mode": "SCREENED",
+            "orbit_id": "NiLR1",
+            "purpose": "explicit_fixed_grid",
+            "run_id": "lr_s001_p0p06_screened",
+            "site_id": "NiLR1",
+            "site_index": 1
+          },
+          "scf_level_id": null
+        },
+        "node_id": "response:lr_s001_p0p06_screened",
+        "schema": "siestaflow-siesta-node-evidence-v1",
+        "semantic": {
+          "node_kind": "PERTURBATION",
+          "reference_dm_sha256": "f7fca191f941bbda5ee38eb361096aa8a802dfd410e12aaa680f39f3cf2193ef",
+          "response_mode": "SCREENED"
+        }
+      },
+      "recorded_epoch": 1790647172.3619401,
+      "reference_dm_sha256": "f7fca191f941bbda5ee38eb361096aa8a802dfd410e12aaa680f39f3cf2193ef",
+      "scf_level_id": "base",
+      "state": "VALIDATED"
+    }
+  }
+}
