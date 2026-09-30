@@ -54,6 +54,7 @@ class FdfBuilder:
         projections: List[Dict],
         alpha: float = 0.0,
         *,
+        execution_mode: str,
         target_species: Optional[str] = None,
     ) -> str:
         """
@@ -64,6 +65,8 @@ class FdfBuilder:
         directly, either pass ``target_species`` or specify alpha/U on every
         projection; ambiguous fallbacks are rejected.
         """
+        if execution_mode != "DEVELOPMENT":
+            raise ValueError("generic FDF float serializer is DEVELOPMENT-only; production requires ValidatedURelease-bound materialization")
         if not projections:
             raise ValueError("at least one DFTU projector must be specified")
         if isinstance(alpha, bool) or not isinstance(alpha, (int, float)) or not float("-inf") < float(alpha) < float("inf"):
@@ -125,7 +128,7 @@ class FdfBuilder:
         lines = ["%block DFTU.proj"]
         for sp, projs in species_map.items():
             block = DftuProjectorBlock(species=sp, projectors=projs)
-            lines.append(block.serialize())
+            lines.append(block.serialize(execution_mode=execution_mode))
         lines.append("%endblock DFTU.proj")
         
         return "\n".join(lines)
@@ -158,12 +161,16 @@ class FdfBuilder:
         omega: float = 0.05,
         lambda_factor: Optional[float] = None,
         projections: Optional[List[Dict]] = None,
+        *,
+        execution_mode: str,
     ) -> str:
         """Modifies FDF text content for BARE or SCREENED response mode."""
         if str(response_mode).upper() == "BARE":
             raise LegacyBareMaterializationDisabledError(
                 "legacy BARE FDF materialization is disabled; use an admitted SIESTA runtime"
             )
+        if execution_mode != "DEVELOPMENT":
+            raise ValueError("legacy FDF float materialization is DEVELOPMENT-only; production requires ValidatedURelease-bound materialization")
         
         if run_name:
             content = self.replace_or_append_fdf_key(content, "SystemLabel", run_name)
@@ -186,7 +193,8 @@ class FdfBuilder:
         # non-zero shift is still enforced by construct_dftu_proj_block.
         explicit_shifts = all("alpha" in item or "U" in item for item in projections)
         proj_block_str = self.construct_dftu_proj_block(
-            projections, alpha, target_species=None if explicit_shifts else species
+            projections, alpha, execution_mode=execution_mode,
+            target_species=None if explicit_shifts else species
         )
 
         # Remove pre-existing DFTU.proj block if present (both LDAU and DFTU)
@@ -229,6 +237,8 @@ class FdfBuilder:
         omega: float = 0.05,
         lambda_factor: Optional[float] = None,
         projections: Optional[List[Dict]] = None,
+        *,
+        execution_mode: str,
     ) -> str:
         """Reads base FDF file, applies modifications, and writes target FDF file."""
         if str(response_mode).upper() == "BARE":
@@ -248,6 +258,7 @@ class FdfBuilder:
             omega=omega,
             lambda_factor=lambda_factor,
             projections=projections,
+            execution_mode=execution_mode,
         )
         self.write_fdf(target_fdf_path, modified_content)
         return modified_content
@@ -270,6 +281,8 @@ class FdfBuilder:
         target_fdf_path: str,
         alpha: float,
         run_name: Optional[str] = None,
+        *,
+        execution_mode: str,
         **kwargs,
     ) -> str:
         return self.prepare_fdf(
@@ -278,6 +291,7 @@ class FdfBuilder:
             alpha=alpha,
             run_name=run_name,
             response_mode="SCREENED",
+            execution_mode=execution_mode,
             **kwargs,
         )
 

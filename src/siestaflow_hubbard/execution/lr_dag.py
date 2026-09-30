@@ -30,6 +30,8 @@ class LRNodeKind(str, Enum):
     ALPHA_GATE = "ALPHA_GATE"
     SHADOW_GATE = "SHADOW_GATE"
     MATRIX_ANALYSIS = "MATRIX_ANALYSIS"
+    U_CERTIFICATION = "U_CERTIFICATION"
+    U_RELEASE_GATE = "U_RELEASE_GATE"
 
 
 @dataclass(frozen=True)
@@ -66,6 +68,17 @@ def build_initial_lr_dag(plan: SymmetryReductionPlan) -> LRDag:
         return LRDag((reference, *response_nodes, gate, analysis), True)
     analysis = LRDagNode("matrix-analysis", LRNodeKind.MATRIX_ANALYSIS, dependencies)
     return LRDag((reference, *response_nodes, analysis), False)
+
+
+def append_u_release_nodes(dag: LRDag, analysis_node_id: str = "matrix-analysis") -> LRDag:
+    """Append pure post-processing stages; neither stage launches SIESTA."""
+    analysis = dag.node(analysis_node_id)
+    certificate = LRDagNode("u-certification", LRNodeKind.U_CERTIFICATION, (analysis.node_id,))
+    release = LRDagNode("u-release-gate", LRNodeKind.U_RELEASE_GATE, (certificate.node_id,))
+    if any(node.node_id in {certificate.node_id, release.node_id} for node in dag.nodes):
+        raise ValueError("U certification/release stages are already present")
+    return LRDag((*dag.nodes, certificate, release), dag.analysis_requires_authorization,
+                 dag.alpha_requires_authorization)
 
 
 def _alpha_tag(alpha_ev: float) -> str:

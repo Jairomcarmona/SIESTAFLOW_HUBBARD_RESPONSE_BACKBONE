@@ -65,11 +65,35 @@ def sha256_nonempty_file(path: str) -> str:
 GROUND_STATE_DIMENSIONS = ('basis', 'energy_shift_ry', 'mesh_cutoff_ry', 'kgrid', 'supercell')
 
 
+def configured_correlated_species(mat_cfg: Dict[str, Any]) -> str:
+    """Resolve the correlated species from explicit metadata or generic geometry evidence."""
+    declared = mat_cfg.get('correlated_species')
+    if declared:
+        return str(declared)
+    coords = mat_cfg.get('base_fractional_coords', [])
+    counts: Dict[str, int] = {}
+    for coordinate in coords:
+        species = str(coordinate.get('species', coordinate.get('label', '')))
+        if species:
+            counts[species] = counts.get(species, 0) + 1
+    expected = mat_cfg.get('n_correlated_sites')
+    matches = [species for species, count in counts.items() if expected is not None and count == int(expected)]
+    if len(matches) == 1:
+        return matches[0]
+    magnetic = {
+        str(coordinate.get('species', coordinate.get('label', '')))
+        for coordinate in coords if float(coordinate.get('init_spin', 0.0)) != 0.0
+    }
+    if len(magnetic) == 1:
+        return next(iter(magnetic))
+    raise ValueError("campaign configuration must identify one correlated species")
+
+
 def candidate_ground_state_id(mat_cfg: Dict[str, Any], effective_params: Dict[str, Any]) -> str:
     """Stable identity for the electronic ground state which owns a reference DM."""
     payload = {key: effective_params.get(key, mat_cfg.get('candidate_baseline', {}).get(key))
                for key in GROUND_STATE_DIMENSIONS}
-    payload['material'] = mat_cfg.get('name', 'FeO')
+    payload['material'] = mat_cfg.get('name', 'benchmark')
     return hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()[:16]
 
 
@@ -77,9 +101,7 @@ def actual_correlated_site_count(mat_cfg: Dict[str, Any], effective_params: Dict
     """Count correlated atoms in the concrete candidate structure, never base metadata."""
     if not mat_cfg.get('base_fractional_coords'):
         return int(mat_cfg.get('n_correlated_sites', 0))
-    target = mat_cfg.get('correlated_species', {
-        'FeO': 'Fe', 'NiO': 'Ni', 'Cu2O': 'Cu', 'Cu3N': 'Cu',
-    }.get(mat_cfg.get('name', ''), ''))
+    target = mat_cfg.get('correlated_species', '')
     if not target:
         return int(mat_cfg.get('n_correlated_sites', 0))
     supercell = str(effective_params.get('supercell', 'small')).lower()
@@ -159,11 +181,11 @@ def build_base_fdf_from_material_cfg(
     """
     eff = effective_params or mat_cfg.get('candidate_baseline', {})
 
-    name     = mat_cfg.get('name', 'FeO')
+    name     = mat_cfg.get('name', 'benchmark')
     a        = mat_cfg.get('lattice_constant_ang', 4.177)
     lat_raw  = mat_cfg.get('lattice_vectors', None)
     if lat_raw is None:
-        if name in ('FeO', 'NiO'):
+        if mat_cfg.get('structure_type') == 'rocksalt_afm_ii':
             lat_raw = [[0.0, 1.0, 1.0], [0.5, 0.0, 0.5], [0.5, 0.5, 0.0]]
         else:
             lat_raw = [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]
@@ -182,7 +204,7 @@ def build_base_fdf_from_material_cfg(
     species_list = [c['species'] for c in coords]
     spins = [c.get('init_spin', 0.0) for c in coords]
 
-    target_species = mat_cfg.get('correlated_species', 'Fe' if name == 'FeO' else 'Ni' if name == 'NiO' else 'Cu')
+    target_species = configured_correlated_species(mat_cfg)
 
     if sc_val and str(sc_val).lower() != 'small':
         sc_mat = [[1,0,0],[0,1,0],[0,0,1]]
@@ -194,8 +216,8 @@ def build_base_fdf_from_material_cfg(
         fracs, labels, _, lat_vecs = build_supercell(
             fracs, labels, species_ids, lat_vecs, np.array(sc_mat)
         )
-        if name in ('FeO', 'NiO'):
-            mom = mat_cfg.get('initial_moment_up', 2.0 if name == 'NiO' else 4.0)
+        if mat_cfg.get('magnetic_ordering') == 'AFM-II':
+            mom = mat_cfg['initial_moment_up']
             spins = assign_afm_ordering(fracs, labels, target_species, mom, lat_vecs, np.array(mat_cfg['lattice_vectors']))
         else:
             spins = [0.0] * len(labels)
@@ -373,11 +395,11 @@ def compute_scientific_identity(
     pseudo_shas: Optional[Dict[str, str]] = None,
 ) -> CalculationIdentity:
     """Compute scientific fingerprint identity for calculation cache and paths."""
-    name     = mat_cfg.get('name', 'FeO')
+    name     = mat_cfg.get('name', 'benchmark')
     a        = mat_cfg.get('lattice_constant_ang', 4.177)
     lat_raw  = mat_cfg.get('lattice_vectors', None)
     if lat_raw is None:
-        if name in ('FeO', 'NiO'):
+        if mat_cfg.get('structure_type') == 'rocksalt_afm_ii':
             lat_raw = [[0.0, 1.0, 1.0], [0.5, 0.0, 0.5], [0.5, 0.5, 0.0]]
         else:
             lat_raw = [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]
@@ -451,7 +473,7 @@ def generate_lr_run_specs(
     - SCREENING_3POINT / FINAL_5POINT_LR: response calculations (HARD FAILS if reference.DM is missing).
     - Concrete convergence stage overrides (ENERGY_SHIFT_SCREEN, MESH_SCREEN, KPOINT_SCREEN, etc.).
     """
-    material = mat_cfg.get('name', 'FeO')
+    material = mat_cfg.get('name', 'benchmark')
     ps_dir   = pseudo_dir or os.path.join(campaign_dir, 'pseudos')
     pseudos  = mat_cfg.get('pseudopotentials', {})
 
@@ -514,10 +536,15 @@ def generate_lr_run_specs(
         ref_dm_sha = hashlib.sha256(fh.read()).hexdigest()
 
     if alphas is None:
-        if '5POINT' in dag_node.upper() or 'FINAL' in dag_node.upper():
-            alphas = [-0.02, -0.01, 0.0, 0.01, 0.02]
-        else:
-            alphas = [-0.01, 0.0, 0.01]
+        runner_policy_path = Path(__file__).with_name('runner_policy.json')
+        with runner_policy_path.open(encoding='utf-8') as policy_file:
+            runner_policy = json.load(policy_file)
+        step = float(effective_params.get('alpha_ev', runner_policy['default_alpha_step_eV']))
+        if not np.isfinite(step) or step <= 0:
+            raise ValueError("response alpha_ev must be a positive, finite value from the campaign configuration")
+        offset_key = 'five_point_offsets' if '5POINT' in dag_node.upper() or 'FINAL' in dag_node.upper() else 'three_point_offsets'
+        offsets = runner_policy[offset_key]
+        alphas = [float(offset) * step for offset in offsets]
 
     n_sites = actual_correlated_site_count(mat_cfg, effective_params)
 
@@ -629,7 +656,7 @@ def materialize_run_fdf(run_spec: RunSpec) -> str:
     mat_cfg = run_spec.mat_cfg
     name = mat_cfg['name']
 
-    target_species = mat_cfg.get('correlated_species', 'Fe' if name == 'FeO' else 'Ni' if name == 'NiO' else 'Cu')
+    target_species = configured_correlated_species(mat_cfg)
 
     base_fdf = build_base_fdf_from_material_cfg(mat_cfg, run_spec.effective_params)
 
@@ -661,6 +688,7 @@ def materialize_run_fdf(run_spec: RunSpec) -> str:
         run_name=run_spec.run_id,
         response_mode='SCREENED' if run_spec.response_mode == 'REFERENCE' else run_spec.response_mode,
         projections=projections,
+        execution_mode='DEVELOPMENT',
     )
 
     builder.write_fdf(run_spec.fdf_path, final_fdf)
@@ -890,7 +918,7 @@ def estimate_run_counts(material_config: Dict[str, Any],
                          convergence_dims: Optional[Dict[str, Any]] = None,
                          campaign_dir: str = "/tmp/dummy_campaign") -> dict:
     seq = convergence_dims or material_config.get('convergence_sequence', [])
-    material = material_config.get('name', 'FeO')
+    material = material_config.get('name', 'benchmark')
 
     counts: Dict[str, Any] = {'reference': 1, 'mpi_scaling': 3}
 
@@ -944,7 +972,8 @@ def _build_parser() -> argparse.ArgumentParser:
         description='Materialize and launch a SIESTA benchmark campaign node',
     )
     p.add_argument('--campaign-dir',   required=True)
-    p.add_argument('--material',       required=True, choices=['FeO','NiO','Cu2O','Cu3N'])
+    p.add_argument('--material',       required=True, type=str.lower,
+                   choices=sorted(path.parent.name for path in (Path(__file__).parent / 'materials').glob('*/material.json')))
     p.add_argument('--dag-node',       required=True)
     p.add_argument('--mpi-ranks',      type=int, default=20)
     p.add_argument('--max-concurrent', type=int, default=5)

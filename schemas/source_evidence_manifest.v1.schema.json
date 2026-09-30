@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "source_evidence_manifest.v1.schema.json",
+  "title": "Primary OUT and validated receipt evidence for LR response tokens",
+  "type": "object",
+  "required": ["schema_version", "campaign_uuid", "generation_version", "matrix_dimension", "polynomial_degree", "analysis_policy_sha256", "source_manifest_identity_sha256", "reference_calculation", "observations"],
+  "properties": {
+    "schema_version": {"const": "source_evidence_manifest.v1"},
+    "campaign_uuid": {"type": "string", "minLength": 1},
+    "generation_version": {"type": "string", "minLength": 1},
+    "matrix_dimension": {"type": "integer", "minimum": 1},
+    "polynomial_degree": {"type": "integer", "minimum": 1, "maximum": 3},
+    "analysis_policy_sha256": {"$ref": "#/$defs/hash"},
+    "source_manifest_identity_sha256": {"$ref": "#/$defs/hash"},
+    "reference_calculation": {"type": "object", "required": ["campaign_uuid", "reference_dm_path", "reference_dm_sha256", "node_id", "node_evidence_sha256", "receipt_path", "receipt_sha256"], "properties": {"campaign_uuid": {"type": "string", "minLength": 1}, "reference_dm_path": {"$ref": "#/$defs/relativePath"}, "reference_dm_sha256": {"$ref": "#/$defs/hash"}, "node_id": {"type": "string", "minLength": 1}, "node_evidence_sha256": {"$ref": "#/$defs/hash"}, "receipt_path": {"$ref": "#/$defs/relativePath"}, "receipt_sha256": {"$ref": "#/$defs/hash"}}, "additionalProperties": false},
+    "observations": {"type": "array", "minItems": 1, "items": {"type": "object", "required": ["node_id", "perturbed_site_index", "perturbed_site_id", "alpha_token", "mode", "out_path", "out_sha256", "receipt_path", "receipt_sha256", "node_evidence_sha256", "node_state", "parent_dm_path", "parent_dm_sha256", "backend_identity", "scientific_profile_id", "parser_id", "atom_indices"], "properties": {
+      "node_id": {"type": "string", "minLength": 1}, "perturbed_site_index": {"type": "integer", "minimum": 0}, "perturbed_site_id": {"type": "string", "minLength": 1},
+      "alpha_token": {"type": "string", "pattern": "^[+-]?(?:\\d+(?:\\.\\d*)?|\\.\\d+)(?:[eE][+-]?\\d+)?$"}, "mode": {"enum": ["BARE", "SCREENED"]},
+      "out_path": {"$ref": "#/$defs/relativePath"}, "out_sha256": {"$ref": "#/$defs/hash"}, "receipt_path": {"$ref": "#/$defs/relativePath"}, "receipt_sha256": {"$ref": "#/$defs/hash"}, "node_evidence_sha256": {"$ref": "#/$defs/hash"}, "node_state": {"const": "VALIDATED"}, "parent_dm_path": {"$ref": "#/$defs/relativePath"}, "parent_dm_sha256": {"$ref": "#/$defs/hash"}, "backend_identity": {"type": "string", "minLength": 1}, "scientific_profile_id": {"type": "string", "minLength": 1}, "parser_id": {"enum": ["siesta-5.4.2-bare-first-iteration-v1", "siesta-5.4.2-screened-dmout-v1"]}, "atom_indices": {"type": "array", "minItems": 1, "items": {"type": "integer", "minimum": 1}}
+    }, "additionalProperties": false}}
+  },
+  "$defs": {"hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"}, "relativePath": {"type": "string", "minLength": 1, "not": {"anyOf": [{"pattern": "^[/\\\\]"}, {"pattern": "^[A-Za-z]:"}, {"pattern": "(^|[/\\\\])\\.\\.([/\\\\]|$)"}]}}},
+  "additionalProperties": false
+}

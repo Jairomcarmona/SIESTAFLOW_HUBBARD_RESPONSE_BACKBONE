@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from decimal import Decimal
+from fractions import Fraction
 import math
 import re
 
@@ -18,6 +20,10 @@ class PrintedOccupation:
     total: float
     half_width: float
     decimal_places: int
+    printed_tokens: tuple[str, ...]
+    value_decimal: str
+    half_width_exact: str
+    certification_tokens: tuple[str, ...]
 
 
 @dataclass(frozen=True)
@@ -77,12 +83,24 @@ def read_printed_occupation_precision(
         if len(tokens) == 3:
             total = float(tokens[2])
             half_width, decimal_places = _half_step(tokens[2])
+            value_decimal = tokens[2]
+            certification_tokens = (tokens[2],)
+            mantissa, sep, exponent = tokens[2].lower().partition("e")
+            places = len(mantissa.split(".", 1)[1]) if "." in mantissa else 0
+            exact_half_width = Fraction(1, 2) * Fraction(10) ** ((int(exponent) if sep else 0) - places)
         elif len(tokens) == 2:
             total = float(tokens[0]) + float(tokens[1])
             first_width, first_places = _half_step(tokens[0])
             second_width, second_places = _half_step(tokens[1])
             half_width = first_width + second_width
             decimal_places = min(first_places, second_places)
+            value_decimal = format(sum((Decimal(token) for token in tokens), Decimal(0)), "f")
+            certification_tokens = tuple(tokens)
+            exact_half_width = Fraction(0)
+            for token in tokens:
+                mantissa, sep, exponent = token.lower().partition("e")
+                places = len(mantissa.split(".", 1)[1]) if "." in mantissa else 0
+                exact_half_width += Fraction(1, 2) * Fraction(10) ** ((int(exponent) if sep else 0) - places)
         else:
             raise ValueError(f"unsupported Occupations summary for atom {current_atom}")
         if minimum_decimal_places is not None and decimal_places < minimum_decimal_places:
@@ -92,7 +110,11 @@ def read_printed_occupation_precision(
             )
         if current_atom in found:
             raise ValueError(f"duplicate Occupations summary for atom {current_atom}")
-        found[current_atom] = PrintedOccupation(current_atom, total, half_width, decimal_places)
+        found[current_atom] = PrintedOccupation(
+            current_atom, total, half_width, decimal_places, tuple(tokens),
+            value_decimal, str(exact_half_width),
+            certification_tokens,
+        )
         current_atom = None
     expected = {atom.atom_index: atom for atom in event.atoms}
     if current_atom is not None or set(found) != set(expected):

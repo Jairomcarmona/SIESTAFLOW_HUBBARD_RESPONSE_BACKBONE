@@ -1,0 +1,6 @@
+{
+  "schema_version": "benchmark_runner_policy.v1",
+  "default_alpha_step_eV": "0.01",
+  "three_point_offsets": [-1, 0, 1],
+  "five_point_offsets": [-2, -1, 0, 1, 2]
+}

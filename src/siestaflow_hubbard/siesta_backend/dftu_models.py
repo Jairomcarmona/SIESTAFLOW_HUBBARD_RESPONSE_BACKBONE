@@ -16,7 +16,9 @@ class DftuProjector:
     omega: float
     lambda_factor: Optional[float] = None
 
-    def serialize(self) -> str:
+    def serialize(self, *, execution_mode: str) -> str:
+        if execution_mode != "DEVELOPMENT":
+            raise ValueError("generic DFTU float serialization is DEVELOPMENT-only; protected production requires ValidatedURelease")
         lines = [
             f"  {self.n}  {self.l}",
             f"  {self.U:.4f}  {self.J:.4f}",
@@ -48,10 +50,12 @@ class DftuProjectorBlock:
     species: str
     projectors: List[DftuProjector]
 
-    def serialize(self) -> str:
+    def serialize(self, *, execution_mode: str) -> str:
+        if execution_mode != "DEVELOPMENT":
+            raise ValueError("generic DFTU float serialization is DEVELOPMENT-only; protected production requires ValidatedURelease")
         lines = [f"  {self.species}   {len(self.projectors)}"]
         for p in self.projectors:
-            lines.append(p.serialize())
+            lines.append(p.serialize(execution_mode=execution_mode))
         return "\n".join(lines)
 
     def get_fingerprint(self) -> str:
