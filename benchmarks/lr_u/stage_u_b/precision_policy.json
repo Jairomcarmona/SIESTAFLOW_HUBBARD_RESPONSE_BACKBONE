@@ -1,0 +1,8 @@
+{
+  "schema": "stage_u_b_precision_policy.v1",
+  "scope": "prospective Stage U-B numerical repeatability evaluation",
+  "u_precision_tolerance_eV": "0.020",
+  "sensitivity_tolerance_eV": "0.020",
+  "independent_replica_count": 3,
+  "interpretation": "numerical protocol gate only; not physical accuracy or statistical confidence"
+}
