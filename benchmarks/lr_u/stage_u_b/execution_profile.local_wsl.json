@@ -1,0 +1,36 @@
+{
+  "target": "local_wsl",
+  "evidence": "VALIDATED_RUNTIME",
+  "wsl": {
+    "distribution": "Ubuntu",
+    "python_executable": "/home/jmc/.local/state/siestaflow/stage-ub-v4-20260930/bin/python",
+    "workspace_root": "/home/jmc/.local/state/siestaflow/stage-u-b-v6-20260930/campaigns"
+  },
+  "allocation": {
+    "nodes": 1,
+    "total_cpus": 4,
+    "memory": "4G",
+    "walltime": "01:00:00",
+    "max_parallel_steps": 1,
+    "shutdown_margin_seconds": 60,
+    "termination_grace_seconds": 30
+  },
+  "runtime": {
+    "module_commands": [],
+    "siesta_executable": "/home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta",
+    "exclusive": true,
+    "environment": {},
+    "launcher": {
+      "kind": "openmpi",
+      "command": [
+        "/usr/bin/mpiexec.openmpi"
+      ],
+      "bootstrap": "local",
+      "processes_per_node": 4
+    }
+  },
+  "task_policy": {
+    "max_attempts": 1,
+    "require_scf_converged": true
+  }
+}

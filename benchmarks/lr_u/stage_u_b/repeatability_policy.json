@@ -69,5 +69,10 @@
     "mpi_ranks": 4,
     "max_concurrent_siesta": 1
   },
-  "mnemonic": "A0 is a newly calculated, independently certified anchor; no historical campaign is an execution dependency."
+  "mnemonic": "A0 is a newly calculated, independently certified anchor; no historical campaign is an execution dependency.",
+  "scientific_input_contracts": {
+    "NiO": "materials/NiO/material.json",
+    "FeO": "materials/FeO/material.json",
+    "CoO": "materials/CoO/material.json"
+  }
 }

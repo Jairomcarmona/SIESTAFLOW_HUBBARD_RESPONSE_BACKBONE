@@ -1,0 +1,56 @@
+{
+  "schema": "siestaflow.lr_config.v2",
+  "material": "CoO-AFMII-PBE-Stage-U-B-V6",
+  "reference_fdf": "reference.fdf",
+  "functional": "PBE",
+  "sites": [
+    {
+      "atom_index": 1,
+      "orbit_id": "CoLR0",
+      "site_id": "CoLR0"
+    },
+    {
+      "atom_index": 2,
+      "orbit_id": "CoLR1",
+      "site_id": "CoLR1"
+    }
+  ],
+  "alpha_grid_ev": [
+    -0.06,
+    -0.04,
+    -0.02,
+    0.02,
+    0.04,
+    0.06
+  ],
+  "analysis_policy": {
+    "estimator": "polynomial",
+    "matrix_for_inversion": "raw",
+    "minimum_residual_dof": 1,
+    "polynomial_degree": 3,
+    "u_precision_tolerance_eV": 0.02,
+    "sensitivity_tolerance_eV": 0.02
+  },
+  "analysis_windows_eV": [
+    0.02,
+    0.04,
+    0.06
+  ],
+  "correlated_shell_projector_source": "reference.fdf#DFTU.proj",
+  "magnetic_state_source": "reference.fdf#Spin,DM.InitSpin",
+  "scf_policy_source": "reference.fdf#SCF,DM.*",
+  "pseudopotentials": {
+    "CoLR0": "pseudopotentials/CoLR0.psml",
+    "CoLR1": "pseudopotentials/CoLR1.psml",
+    "O": "pseudopotentials/O.psml"
+  },
+  "static_artifacts": {},
+  "compatibility_registry": "../../runtime/backend_compatibility.json",
+  "version_text_source": "../../runtime/siesta_version.txt",
+  "declared_executable": "siesta",
+  "reference_dm_name": "COO_PBE_REFERENCE.DM",
+  "adaptive_alpha_policy": null,
+  "alpha_selection_policy": null,
+  "magnetic_moment_tolerance_muB": 0.1,
+  "observables": []
+}
