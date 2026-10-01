@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pytest
 
-from siestaflow_hubbard.siesta_backend.bare_semantics_evidence import (
+from hubbardflow.siesta_backend.bare_semantics_evidence import (
     BareTraceExpectation,
     BareSemanticEvidenceError,
     verify_bare_semantics_evidence,

@@ -1,7 +1,8 @@
 import os
 import json
+from pathlib import Path
 
-base_dir = r"c:\Users\Jairo\Downloads\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\examples"
+base_dir = str(Path(__file__).resolve().parent)
 synth_dir = os.path.join(base_dir, "synthetic_campaign")
 
 os.makedirs(synth_dir, exist_ok=True)
@@ -19,9 +20,9 @@ def write_md(path, content):
         f.write(content)
 
 # 1. README.md
-write_md(os.path.join(base_dir, "README.md"), """# SIESTAFLOW Hubbard Response Backbone v0.1.0 - Examples
+write_md(os.path.join(base_dir, "README.md"), """# HubbardFlow examples
 
-This directory contains examples of the JSON schema instantiations for the SIESTAFLOW Hubbard Response Backbone.
+This directory contains JSON schema examples for HubbardFlow. The legacy direct-launch scripts under `tmo_campaigns` are historical SIESTA examples; use the current CLI quickstart for new campaigns.
 
 ## Synthetic Campaign (SYNTH_CAMPAIGN_001)
 

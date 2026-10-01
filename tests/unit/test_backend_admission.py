@@ -2,19 +2,19 @@ from pathlib import Path
 
 import pytest
 
-from siestaflow_hubbard.domain.backend_compatibility import (
+from hubbardflow.domain.backend_compatibility import (
     BackendCompatibilityRegistry,
     BackendIdentity,
     CompatibilityRecord,
     CompatibilityState,
     ScientificProfile,
 )
-from siestaflow_hubbard.siesta_backend.backend_admission import (
+from hubbardflow.siesta_backend.backend_admission import (
     BackendAdmissionError,
     admit_siesta542_potential_shift_hamiltonian,
 )
-from siestaflow_hubbard.siesta_backend.backend_identity import sha256_file
-from siestaflow_hubbard.siesta_backend.siesta542_bare_profile import (
+from hubbardflow.siesta_backend.backend_identity import sha256_file
+from hubbardflow.siesta_backend.siesta542_bare_profile import (
     Siesta542PotentialShiftHamiltonianProfile,
 )
 

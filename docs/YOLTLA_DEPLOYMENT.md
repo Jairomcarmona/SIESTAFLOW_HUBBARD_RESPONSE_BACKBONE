@@ -1,5 +1,12 @@
 # Guía de Despliegue y Ejecución en el Cluster Yoltla (UAM)
 
+> **Archivo histórico:** esta guía describe la interfaz y los scripts directos
+> de la versión 0.1.0. Sus comandos `siestaflow` no son la interfaz vigente.
+> Para instalaciones y campañas nuevas, sigue [`USER_MANUAL.md`](USER_MANUAL.md)
+> y [`CLI_LOCAL_WSL_QUICKSTART.md`](CLI_LOCAL_WSL_QUICKSTART.md), que usan el
+> CLI actual `hubbardflow`. Las rutas y los registros de este documento se
+> conservan como referencia histórica.
+
 Esta guía explica paso a paso cómo subir y ejecutar **SIESTAFLOW (v0.1.0)** en la supercomputadora **Yoltla**, utilizando el gestor de colas **SLURM**.
 
 ---

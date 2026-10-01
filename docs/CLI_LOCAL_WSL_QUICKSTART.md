@@ -7,14 +7,14 @@ This route creates a fixed-grid or policy-driven adaptive-α campaign in the pro
 Install the package in the Windows Python environment used by PowerShell and in the selected WSL distribution. The Windows installation provides the PowerShell-facing command; the WSL installation runs the detached worker.
 
 ```powershell
-py -m pip install -e C:\path\to\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0
+py -m pip install -e .
 ```
 
 ```bash
-python3 -m pip install -e /mnt/c/path/to/SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0
+python3 -m pip install -e .
 ```
 
-Replace both repository paths with the actual checkout paths. This package does not install SIESTA or MPI.
+Run these commands from the HubbardFlow checkout root. This package does not install SIESTA or MPI.
 
 ## Local WSL profile template
 
@@ -27,7 +27,7 @@ Save as `local-wsl-profile.json` and replace every `<...>` marker with the obser
   "wsl": {
     "distribution": "<wsl-distribution-name>",
     "python_executable": "/usr/bin/python3",
-    "workspace_root": "/home/<linux-user>/siestaflow-campaigns"
+    "workspace_root": "/home/<linux-user>/hubbardflow-campaigns"
   },
   "allocation": {
     "nodes": 1,
@@ -144,12 +144,12 @@ With the illustrated `h_eV = 0.05`, each `shrink` round adds the next symmetric 
 From PowerShell, with the profile and input files on Windows:
 
 ```powershell
-siestaflow init .\reference.fdf --lr-config .\lr-config.json --profile .\local-wsl-profile.json --name material-lr
-siestaflow run .\material-lr.siestaflow.json
-siestaflow status .\material-lr.siestaflow.json
-siestaflow resume .\material-lr.siestaflow.json
-siestaflow report .\material-lr.siestaflow.json
-siestaflow stop .\material-lr.siestaflow.json
+hubbardflow init .\reference.fdf --lr-config .\lr-config.json --profile .\local-wsl-profile.json --name material-lr
+hubbardflow run .\material-lr.siestaflow.json
+hubbardflow status .\material-lr.siestaflow.json
+hubbardflow resume .\material-lr.siestaflow.json
+hubbardflow report .\material-lr.siestaflow.json
+hubbardflow stop .\material-lr.siestaflow.json
 ```
 
 `init` creates the campaign directory and immutable input inventory under the WSL profile's `workspace_root`. It writes a small Windows pointer JSON beside the current PowerShell directory unless `--pointer` supplies another location. `run` returns after registering the detached worker. `report` shows the canonical Markdown report once matrix analysis completes; before that it shows campaign status. Resume revalidates completed node evidence and reruns only invalid/incomplete nodes and their descendants.
@@ -159,13 +159,13 @@ siestaflow stop .\material-lr.siestaflow.json
 The Linux public CLI can create and control a direct `campaign.v2.json` manifest for a profile with `target="slurm"`. Run it inside the already granted allocation with the site-validated profile. This interface uses the allocation's hosts; it does not submit `sbatch`.
 
 ```bash
-siestaflow audit-fdf ./reference.fdf
-siestaflow init ./reference.fdf --lr-config ./lr-config.json --profile ./slurm-profile.json --name material-lr --campaign-root /scratch/siestaflow-campaigns
-siestaflow run /scratch/siestaflow-campaigns/material-lr/campaign.v2.json
-siestaflow status /scratch/siestaflow-campaigns/material-lr/campaign.v2.json
-siestaflow resume /scratch/siestaflow-campaigns/material-lr/campaign.v2.json
-siestaflow report /scratch/siestaflow-campaigns/material-lr/campaign.v2.json
-siestaflow stop /scratch/siestaflow-campaigns/material-lr/campaign.v2.json
+hubbardflow audit-fdf ./reference.fdf
+hubbardflow init ./reference.fdf --lr-config ./lr-config.json --profile ./slurm-profile.json --name material-lr --campaign-root /scratch/hubbardflow-campaigns
+hubbardflow run /scratch/hubbardflow-campaigns/material-lr/campaign.v2.json
+hubbardflow status /scratch/hubbardflow-campaigns/material-lr/campaign.v2.json
+hubbardflow resume /scratch/hubbardflow-campaigns/material-lr/campaign.v2.json
+hubbardflow report /scratch/hubbardflow-campaigns/material-lr/campaign.v2.json
+hubbardflow stop /scratch/hubbardflow-campaigns/material-lr/campaign.v2.json
 ```
 
 The Slurm launcher, profile, and allocation must pass the existing runtime checks. This is not a generic SSH or queue-submission route. See [HPC_SLURM_EXECUTION_CONTRACT.md](HPC_SLURM_EXECUTION_CONTRACT.md).
@@ -174,4 +174,4 @@ The Slurm launcher, profile, and allocation must pass the existing runtime check
 
 For `S` correlated sites and `A` nonzero α amplitudes, a fixed-grid campaign uses `1 + 2 × S × A` SIESTA nodes: one shared reference and BARE plus SCREENED for every site/amplitude pair. The six-amplitude routes frozen for this release use 13 nodes for one site and 25 for the two-site NiO alternative. Adaptive campaigns require their own declared total node budget and policy; this example does not set adaptive defaults.
 
-The report may terminate with `NUMERICAL_CANDIDATE_UNASSESSED` when no scientific U tolerance is configured, and it keeps physical acceptance separate. SIESTAFLOW does not convert `U_scalar_charge` automatically to `Ueff_Dudarev`. Freeze α, tolerances, projectors, windows, and criteria before a campaign; do not tune them to obtain a preferred result.
+The report may terminate with `NUMERICAL_CANDIDATE_UNASSESSED` when no scientific U tolerance is configured, and it keeps physical acceptance separate. HubbardFlow does not convert `U_scalar_charge` automatically to `Ueff_Dudarev`. Freeze α, tolerances, projectors, windows, and criteria before a campaign; do not tune them to obtain a preferred result.

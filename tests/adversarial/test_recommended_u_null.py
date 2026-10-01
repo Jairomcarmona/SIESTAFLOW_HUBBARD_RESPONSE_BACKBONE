@@ -1,5 +1,5 @@
-from siestaflow_hubbard.domain.semantic_validation import SemanticValidator
-from siestaflow_hubbard.domain.campaign_manifest import CampaignManifest
+from hubbardflow.domain.semantic_validation import SemanticValidator
+from hubbardflow.domain.campaign_manifest import CampaignManifest
 import pytest
 
 def test_candidate_evaluation_recommended_null():

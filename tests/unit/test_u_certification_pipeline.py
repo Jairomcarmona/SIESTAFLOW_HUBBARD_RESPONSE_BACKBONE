@@ -7,18 +7,18 @@ from decimal import Decimal
 
 import pytest
 
-from siestaflow_hubbard.domain.u_certification import inverse
-from siestaflow_hubbard.execution.downstream_u_admission import (
+from hubbardflow.domain.u_certification import inverse
+from hubbardflow.execution.downstream_u_admission import (
     DownstreamUAdmissionError, load_verified_u_release,
 )
-from siestaflow_hubbard.execution.source_evidence import (
+from hubbardflow.execution.source_evidence import (
     extract_verified_response_tokens, scientific_tokens_sha256,
     source_manifest_identity_sha256,
 )
-from siestaflow_hubbard.execution.u_certification_node import (
+from hubbardflow.execution.u_certification_node import (
     UCertificationNodeError, _derive_boxes, certify_campaign, verify_certificate_source_chain, write_certificate,
 )
-from siestaflow_hubbard.execution.u_release_gate import (
+from hubbardflow.execution.u_release_gate import (
     UReleasePolicy, create_u_release, canonical_hash, write_u_release,
 )
 
@@ -29,7 +29,7 @@ def _hash(path: Path) -> str:
 
 def test_exact_u_boxes_follow_committed_active_grid_not_full_token_grid():
     """Regression: the nominal matrices use six active alphas from ten tokens."""
-    from siestaflow_hubbard.domain.u_certification import Interval
+    from hubbardflow.domain.u_certification import Interval
 
     full_grid = ["-0.05", "-0.04", "-0.03", "-0.02", "-0.01", "0.01", "0.02", "0.03", "0.04", "0.05"]
     active_grid = ["-0.03", "-0.02", "-0.01", "0.01", "0.02", "0.03"]
@@ -123,7 +123,7 @@ def test_n3_certificate_ignores_committedly_external_alpha_points(tmp_path: Path
 
 @pytest.mark.parametrize("mutation", ["active_grid", "campaign_uuid", "analysis_commitment", "token_digest"])
 def test_n3_committed_source_chain_rejects_individual_uncommitted_mutations(tmp_path: Path, mutation: str):
-    from siestaflow_hubbard.execution.u_certification_node import verify_certificate_source_chain
+    from hubbardflow.execution.u_certification_node import verify_certificate_source_chain
 
     _, _, _, _, certificate, _ = _full_n3_source_chain(tmp_path)
     if mutation == "active_grid":
@@ -148,7 +148,7 @@ def test_n3_committed_source_chain_rejects_individual_uncommitted_mutations(tmp_
 
 
 def test_legacy_full_grid_certificate_remains_reconstructable(tmp_path: Path):
-    from siestaflow_hubbard.execution.u_certification_node import verify_certificate_source_chain
+    from hubbardflow.execution.u_certification_node import verify_certificate_source_chain
 
     _, _, _, _, certificate, _ = _full_n3_source_chain(tmp_path)
     historical = dict(certificate)
@@ -188,7 +188,7 @@ def _full_n3_source_chain(
 ) -> tuple[Path, Path, Path, Path, dict, dict]:
     """Build a source-backed synthetic 3x3 chain without invoking SIESTA."""
     import json
-    from siestaflow_hubbard.execution.u_release_gate import canonical_hash
+    from hubbardflow.execution.u_release_gate import canonical_hash
 
     root.mkdir(parents=True, exist_ok=True)
     campaign = "synthetic-source-n3"
@@ -322,7 +322,7 @@ def _full_n3_source_chain(
 
 
 def test_n3_primary_evidence_certificate_release_chain_and_mutations(tmp_path: Path):
-    from siestaflow_hubbard.execution.u_certification_node import verify_certificate_source_chain
+    from hubbardflow.execution.u_certification_node import verify_certificate_source_chain
 
     manifest_path, tokens_path, analysis_path, certificate_path, certificate, policy = _full_n3_source_chain(tmp_path)
     verify_certificate_source_chain(certificate, tmp_path)

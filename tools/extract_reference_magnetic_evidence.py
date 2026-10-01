@@ -6,7 +6,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from siestaflow_hubbard.siesta_backend.reference_magnetic_evidence import build_reference_magnetic_evidence
+from hubbardflow.siesta_backend.reference_magnetic_evidence import build_reference_magnetic_evidence
 
 
 def main() -> None:

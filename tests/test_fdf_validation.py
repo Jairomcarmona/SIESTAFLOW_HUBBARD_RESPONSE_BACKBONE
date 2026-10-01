@@ -1,8 +1,8 @@
 import pytest
 import numpy as np
-from siestaflow_hubbard.siesta_backend.fdf_validator import FdfValidator, FdfParser
-from siestaflow_hubbard.domain.kgrid_builder import generate_kgrid, KGridBuilder
-from siestaflow_hubbard.siesta_backend.fdf_builder import FdfBuilder
+from hubbardflow.siesta_backend.fdf_validator import FdfValidator, FdfParser
+from hubbardflow.domain.kgrid_builder import generate_kgrid, KGridBuilder
+from hubbardflow.siesta_backend.fdf_builder import FdfBuilder
 
 def test_unit_conversion():
     parser = FdfParser("")

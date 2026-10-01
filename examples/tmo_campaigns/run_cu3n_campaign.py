@@ -13,12 +13,12 @@ if src_dir not in sys.path:
 if repo_dir not in sys.path:
     sys.path.insert(0, repo_dir)
 
-from src.siestaflow_hubbard.siesta_backend.adapter import SiestaLRAdapter
-from src.siestaflow_hubbard.siesta_backend.fdf_builder import FdfBuilder
-from siestaflow_hubbard.synthetic_backend.fit_engine import FitEngine, assemble_slope_matrix
-from siestaflow_hubbard.domain.cardinals import Cardinals
-from siestaflow_hubbard.domain.alpha_grid import AlphaGrid
-from siestaflow_hubbard.domain.matrix_pipeline import assemble_raw, invert_chi
+from src.hubbardflow.siesta_backend.adapter import SiestaLRAdapter
+from src.hubbardflow.siesta_backend.fdf_builder import FdfBuilder
+from hubbardflow.synthetic_backend.fit_engine import FitEngine, assemble_slope_matrix
+from hubbardflow.domain.cardinals import Cardinals
+from hubbardflow.domain.alpha_grid import AlphaGrid
+from hubbardflow.domain.matrix_pipeline import assemble_raw, invert_chi
 
 
 def prepare_cu3n_workspace():
@@ -86,7 +86,7 @@ SaveHS              F
 
 def run_cu3n_campaign():
     print("=" * 70)
-    print("SIESTAFLOW HUBBARD RESPONSE - Cu3N (Anti-ReO3) CAMPAIGN")
+    print("HUBBARDFLOW - Cu3N (Anti-ReO3) CAMPAIGN")
     print("Goal: Extract intra-site U for Cu(I) d^10 configuration")
     print("=" * 70)
 

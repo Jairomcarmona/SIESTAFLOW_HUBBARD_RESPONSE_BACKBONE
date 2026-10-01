@@ -33,7 +33,7 @@ run 00_REFERENCE; run 10_BARE_MINUS; run 11_BARE_PLUS; echo "DAG_COMPLETE: seman
 '''
 CERT='''import sys
 from pathlib import Path
-from siestaflow_hubbard.siesta_backend.bare_semantics_evidence import write_bare_semantics_sidecar
+from hubbardflow.siesta_backend.bare_semantics_evidence import write_bare_semantics_sidecar
 d=Path(sys.argv[1]); lines=d.joinpath("siesta.out").read_text(errors="replace").splitlines(); marker="TRACE: LR_BARE population_evaluated iscf=2 population_cycle=2"; i=next(i for i,x in enumerate(lines) if marker in x); h=max(j for j in range(i) if "hubbard_term: recalculating local occupations" in lines[j].lower())
 write_bare_semantics_sidecar(d/"bare_semantics.json",siesta_version="5.4.2",source_revision=sys.argv[4],executable_path=sys.argv[3],reference_dm_path=sys.argv[2],input_fdf_path=d/"siesta.fdf",output_path=d/"siesta.out",trace_path=d/"siesta.out",selected_event_lines=(h+1,h+1),selected_iscf=2,population_cycle=2)
 '''
@@ -48,7 +48,7 @@ def main():
  (d/'pseudopotentials').mkdir(exist_ok=True)
  for x in ('Mn.psml','O.psml'): shutil.copy2(ROOT/'examples'/x,d/'pseudopotentials'/x)
  (d/'slurm').mkdir();(d/'slurm'/'submit_dag.slurm').write_text(SLURM,newline='\n');(d/'scripts').mkdir();(d/'scripts'/'certify.py').write_text(CERT,newline='\n')
- shutil.copytree(ROOT/'src'/'siestaflow_hubbard',d/'src'/'siestaflow_hubbard'); (d/'siesta542_lr_bare_trace.patch').write_text(__import__('subprocess').check_output(['git','-C',str(a.audit_source),'diff','--','Src/m_new_dm.F90','Src/dftu.F','Src/setup_hamiltonian.F'],text=True))
+ shutil.copytree(ROOT/'src'/'hubbardflow',d/'src'/'hubbardflow'); (d/'siesta542_lr_bare_trace.patch').write_text(__import__('subprocess').check_output(['git','-C',str(a.audit_source),'diff','--','Src/m_new_dm.F90','Src/dftu.F','Src/setup_hamiltonian.F'],text=True))
  (d/'README.md').write_text('# BARE MPI integration\nRequires an instrumented SIESTA 5.4.2 binary. Set `SIESTA_BARE_AUDIT_BIN` and `SIESTA_BARE_AUDIT_SOURCE_REVISION`; then `sbatch slurm/submit_dag.slurm`. This validates semantics only and never computes U.\n',newline='\n')
  z=a.out/(NAME+'.zip');
  with zipfile.ZipFile(z,'w',zipfile.ZIP_DEFLATED) as h:

@@ -3,7 +3,7 @@ from itertools import product
 
 import pytest
 
-from siestaflow_hubbard.domain.u_certification import (
+from hubbardflow.domain.u_certification import (
     CertificationError, Interval, certify_inverse_diagonal_2x2,
     certify_u_2x2, exact_slope_weights, propagate_linear_tokens,
     interval_half_width, verified_krawczyk_inverse_diagonal, verified_neumann_inverse_diagonal,

@@ -1,6 +1,6 @@
 import pytest
 
-from siestaflow_hubbard.domain.backend_compatibility import (
+from hubbardflow.domain.backend_compatibility import (
     BackendCompatibilityError,
     BackendCompatibilityRegistry,
     BackendIdentity,

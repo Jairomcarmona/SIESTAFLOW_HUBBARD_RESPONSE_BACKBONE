@@ -3,21 +3,21 @@ from pathlib import Path
 
 import pytest
 
-from siestaflow_hubbard.domain.backend_compatibility import ScientificProfile
-from siestaflow_hubbard.domain.lr_campaign_contract import LinearResponseBareCampaignContract
-from siestaflow_hubbard.execution.execution_profile import ExecutionProfile
-from siestaflow_hubbard.execution.lr_dag import LRDagNode, LRNodeKind
-from siestaflow_hubbard.execution.runtime_adapters import NodeCommand
-from siestaflow_hubbard.domain.symmetry_reduction import PerturbationSpec, ResponseMode
-from siestaflow_hubbard.siesta_backend.backend_identity import sha256_file
-from siestaflow_hubbard.siesta_backend.command_factory import SiestaCampaignLayout
-from siestaflow_hubbard.siesta_backend.production_runtime import (
+from hubbardflow.domain.backend_compatibility import ScientificProfile
+from hubbardflow.domain.lr_campaign_contract import LinearResponseBareCampaignContract
+from hubbardflow.execution.execution_profile import ExecutionProfile
+from hubbardflow.execution.lr_dag import LRDagNode, LRNodeKind
+from hubbardflow.execution.runtime_adapters import NodeCommand
+from hubbardflow.domain.symmetry_reduction import PerturbationSpec, ResponseMode
+from hubbardflow.siesta_backend.backend_identity import sha256_file
+from hubbardflow.siesta_backend.command_factory import SiestaCampaignLayout
+from hubbardflow.siesta_backend.production_runtime import (
     AdmittedSiestaRuntime,
     SiestaProductionRuntimeError,
     build_admitted_siesta542_runtime,
 )
-from siestaflow_hubbard.siesta_backend.output_validator import SiestaOutputValidator, SiestaValidationPolicy
-from siestaflow_hubbard.siesta_backend.siesta542_bare_profile import (
+from hubbardflow.siesta_backend.output_validator import SiestaOutputValidator, SiestaValidationPolicy
+from hubbardflow.siesta_backend.siesta542_bare_profile import (
     Siesta542PotentialShiftHamiltonianProfile,
 )
 

@@ -1,6 +1,6 @@
 import pytest
-from siestaflow_hubbard.siesta_backend.fdf_builder import FdfBuilder, LegacyBareMaterializationDisabledError
-from siestaflow_hubbard.siesta_backend.dftu_models import DftuProjector, DftuProjectorBlock
+from hubbardflow.siesta_backend.fdf_builder import FdfBuilder, LegacyBareMaterializationDisabledError
+from hubbardflow.siesta_backend.dftu_models import DftuProjector, DftuProjectorBlock
 
 @pytest.fixture
 def dummy_base_fdf(tmp_path):

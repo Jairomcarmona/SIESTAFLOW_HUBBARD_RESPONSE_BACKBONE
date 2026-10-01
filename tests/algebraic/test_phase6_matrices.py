@@ -1,10 +1,10 @@
 import pytest
 import numpy as np
-from siestaflow_hubbard.domain.cardinals import Cardinals
-from siestaflow_hubbard.domain.alpha_grid import AlphaGrid
-from siestaflow_hubbard.domain.provenance import PerturbationIdentity, ObservableIdentity, ResponseMatrix
-from siestaflow_hubbard.synthetic_backend.matrix_assembler import assemble_provenance_matrix, transform_to_chi
-from siestaflow_hubbard.synthetic_backend.fit_engine import RegressionRecord
+from hubbardflow.domain.cardinals import Cardinals
+from hubbardflow.domain.alpha_grid import AlphaGrid
+from hubbardflow.domain.provenance import PerturbationIdentity, ObservableIdentity, ResponseMatrix
+from hubbardflow.synthetic_backend.matrix_assembler import assemble_provenance_matrix, transform_to_chi
+from hubbardflow.synthetic_backend.fit_engine import RegressionRecord
 
 def test_S6A_1x1_recovery():
     """Test S6-A: 1x1 scalar recovery test."""
@@ -126,7 +126,7 @@ def test_S6C_rectangular_matrix(A_2x4):
 
 def test_S6D_missing_records():
     """Test S6-D: Missing records should raise RecordCompletenessError."""
-    from siestaflow_hubbard.domain.exceptions import RecordCompletenessError
+    from hubbardflow.domain.exceptions import RecordCompletenessError
     grid = AlphaGrid([-0.1, 0.0, 0.1], 3, True, 1, 1, 1)
     cardinals = Cardinals(P=2, O=2, N=2, alpha_grids={"P0": grid, "P1": grid}, A=np.eye(2))
     
@@ -152,7 +152,7 @@ def test_S6D_missing_records():
 
 def test_S6E_duplicate_records():
     """Test S6-E: Duplicate records should raise RecordCompletenessError."""
-    from siestaflow_hubbard.domain.exceptions import RecordCompletenessError
+    from hubbardflow.domain.exceptions import RecordCompletenessError
     grid = AlphaGrid([-0.1, 0.0, 0.1], 3, True, 1, 1, 1)
     cardinals = Cardinals(P=1, O=1, N=1, alpha_grids={"P0": grid}, A=np.eye(1))
     

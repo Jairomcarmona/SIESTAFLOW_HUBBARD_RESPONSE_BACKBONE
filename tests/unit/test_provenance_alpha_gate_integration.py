@@ -2,8 +2,8 @@
 
 import numpy as np
 
-from siestaflow_hubbard.domain.alpha_selection import AlphaSelectionPolicy, select_common_alpha_window
-from siestaflow_hubbard.domain.observation_provenance import Observation, RunIdentity, validate_response_lot
+from hubbardflow.domain.alpha_selection import AlphaSelectionPolicy, select_common_alpha_window
+from hubbardflow.domain.observation_provenance import Observation, RunIdentity, validate_response_lot
 
 
 def _hash(character):

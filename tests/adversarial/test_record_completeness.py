@@ -1,5 +1,5 @@
-from siestaflow_hubbard.domain.semantic_validation import SemanticValidator
-from siestaflow_hubbard.domain.campaign_manifest import CampaignManifest
+from hubbardflow.domain.semantic_validation import SemanticValidator
+from hubbardflow.domain.campaign_manifest import CampaignManifest
 def test_correct_record_count():
     assert isinstance(SemanticValidator().validate_campaign(None), list)
 def test_missing_record_detected_by_semantic_validator():

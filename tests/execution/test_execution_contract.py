@@ -1,6 +1,6 @@
 import pytest
 
-from siestaflow_hubbard.execution import (
+from hubbardflow.execution import (
     EvidenceLevel, ExecutionProfile, NodeState, ProfileValidationError,
     SlurmEnvironment, build_hydra_launch, build_mpi_launch, may_analyze, may_start,
 )

@@ -5,17 +5,17 @@ from pathlib import Path
 
 import pytest
 
-from siestaflow_hubbard.siesta_backend.bare_semantics_evidence import (
+from hubbardflow.siesta_backend.bare_semantics_evidence import (
     BareTraceExpectation,
     BareSemanticEvidenceError,
     verify_bare_semantics_evidence,
     write_bare_semantics_sidecar,
 )
-from siestaflow_hubbard.siesta_backend.observation_selector import (
+from hubbardflow.siesta_backend.observation_selector import (
     ObservationPolicyError,
     Siesta542BarePolicyV1,
 )
-from siestaflow_hubbard.siesta_backend.parser_models import HubbardPopulationEvent, ObservationContext
+from hubbardflow.siesta_backend.parser_models import HubbardPopulationEvent, ObservationContext
 
 
 def _digest(path: Path) -> str:

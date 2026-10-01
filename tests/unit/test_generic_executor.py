@@ -2,14 +2,14 @@ from pathlib import Path
 
 import pytest
 
-from siestaflow_hubbard.execution.dag_contract import NodeState
-from siestaflow_hubbard.execution.generic_executor import (
+from hubbardflow.execution.dag_contract import NodeState
+from hubbardflow.execution.generic_executor import (
     ExecutionContractError,
     GenericDagExecutor,
     NodeReceipt,
 )
-from siestaflow_hubbard.execution.lr_dag import build_initial_lr_dag
-from siestaflow_hubbard.domain.symmetry_reduction import SymmetryReductionPolicy, build_symmetry_reduction_plan
+from hubbardflow.execution.lr_dag import build_initial_lr_dag
+from hubbardflow.domain.symmetry_reduction import SymmetryReductionPolicy, build_symmetry_reduction_plan
 from tests.support import certificate
 
 

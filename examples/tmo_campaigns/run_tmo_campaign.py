@@ -14,18 +14,18 @@ if repo_dir not in sys.path:
     sys.path.insert(0, repo_dir)
 
 # Imports from backbone
-from src.siestaflow_hubbard.siesta_backend.adapter import SiestaLRAdapter
-from src.siestaflow_hubbard.siesta_backend.fdf_builder import FdfBuilder
-from siestaflow_hubbard.synthetic_backend.fit_engine import fit_slopes, assemble_slope_matrix
-from siestaflow_hubbard.synthetic_backend.population_generator import OccupationRecord
-from siestaflow_hubbard.domain.cardinals import Cardinals
-from siestaflow_hubbard.domain.alpha_grid import AlphaGrid
-from siestaflow_hubbard.domain.matrix_pipeline import assemble_raw, invert_chi
+from src.hubbardflow.siesta_backend.adapter import SiestaLRAdapter
+from src.hubbardflow.siesta_backend.fdf_builder import FdfBuilder
+from hubbardflow.synthetic_backend.fit_engine import fit_slopes, assemble_slope_matrix
+from hubbardflow.synthetic_backend.population_generator import OccupationRecord
+from hubbardflow.domain.cardinals import Cardinals
+from hubbardflow.domain.alpha_grid import AlphaGrid
+from hubbardflow.domain.matrix_pipeline import assemble_raw, invert_chi
 
 
 def run_tmo_campaign():
     print("=" * 70)
-    print("SIESTAFLOW HUBBARD RESPONSE - TRANSITION METAL OXIDES (TMO) CAMPAIGN")
+    print("HUBBARDFLOW - TRANSITION METAL OXIDES (TMO) CAMPAIGN")
     print("Systems: FeO, CoO, NiO")
     print("=" * 70)
 

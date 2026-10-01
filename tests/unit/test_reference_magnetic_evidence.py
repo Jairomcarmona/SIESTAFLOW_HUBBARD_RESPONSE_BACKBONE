@@ -4,8 +4,8 @@ import json
 import numpy as np
 import pytest
 
-from siestaflow_hubbard.siesta_backend.fdf_symmetry_adapter import audit_fdf_symmetry
-from siestaflow_hubbard.siesta_backend.reference_magnetic_evidence import (
+from hubbardflow.siesta_backend.fdf_symmetry_adapter import audit_fdf_symmetry
+from hubbardflow.siesta_backend.reference_magnetic_evidence import (
     ReferenceMagneticEvidenceError,
     build_reference_magnetic_evidence,
     parse_final_collinear_mulliken_sz,

@@ -1,6 +1,6 @@
 import pytest
 
-from siestaflow_hubbard.execution.orchestrator import (
+from hubbardflow.execution.orchestrator import (
     CampaignOrchestrator,
     LegacyCampaignOrchestrationDisabledError,
 )

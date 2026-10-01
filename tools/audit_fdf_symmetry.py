@@ -6,7 +6,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from siestaflow_hubbard.siesta_backend.fdf_symmetry_adapter import audit_fdf_symmetry, audit_to_json
+from hubbardflow.siesta_backend.fdf_symmetry_adapter import audit_fdf_symmetry, audit_to_json
 
 
 def main() -> None:

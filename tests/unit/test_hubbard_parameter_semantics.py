@@ -8,11 +8,11 @@ from pathlib import Path
 
 import pytest
 
-from siestaflow_hubbard.domain.hubbard_parameter_semantics import (
+from hubbardflow.domain.hubbard_parameter_semantics import (
     HubbardParameterSemanticsError,
     require_dudarev_evidence,
 )
-from siestaflow_hubbard.reporting.evidence_exporter import EvidenceExporter
+from hubbardflow.reporting.evidence_exporter import EvidenceExporter
 
 
 ROOT = Path(__file__).resolve().parents[2]

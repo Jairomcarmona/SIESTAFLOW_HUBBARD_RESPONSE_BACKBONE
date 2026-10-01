@@ -1,6 +1,6 @@
 import pytest
 
-from siestaflow_hubbard.siesta_backend.adapter import (
+from hubbardflow.siesta_backend.adapter import (
     LegacySiestaExecutionDisabledError,
     SiestaLRAdapter,
 )

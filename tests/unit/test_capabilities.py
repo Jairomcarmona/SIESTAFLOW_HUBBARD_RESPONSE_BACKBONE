@@ -1,6 +1,6 @@
 import pytest
 
-from siestaflow_hubbard.domain.capabilities import (
+from hubbardflow.domain.capabilities import (
     CapabilityError,
     InteractionModel,
     LRPhysicsRequest,

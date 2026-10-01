@@ -1,6 +1,6 @@
 import numpy as np
-from siestaflow_hubbard.domain.semantic_validation import SemanticValidator
-from siestaflow_hubbard.domain.matrix_pipeline import symmetrize
+from hubbardflow.domain.semantic_validation import SemanticValidator
+from hubbardflow.domain.matrix_pipeline import symmetrize
 
 def test_matrix_constraints():
     assert isinstance(SemanticValidator().validate_campaign(None), list)

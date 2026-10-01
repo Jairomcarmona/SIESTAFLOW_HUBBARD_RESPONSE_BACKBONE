@@ -15,14 +15,14 @@ from typing import Dict, List, Tuple, Optional, Any, Mapping, Sequence
 
 import numpy as np
 
-from siestaflow_hubbard.domain.matrix_lr import (
+from hubbardflow.domain.matrix_lr import (
     ResponseObservation,
     analyze_matrix_condition,
     compute_interaction_matrix,
     fit_polynomial_response,
     invert_response_matrix,
 )
-from siestaflow_hubbard.domain.scalar_lr import fit_response
+from hubbardflow.domain.scalar_lr import fit_response
 
 
 # ─────────────────────────────────────────────────────────────────────────────

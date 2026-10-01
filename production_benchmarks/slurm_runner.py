@@ -27,7 +27,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 
-from siestaflow_hubbard.siesta_backend.fdf_builder import (
+from hubbardflow.siesta_backend.fdf_builder import (
     FdfBuilder, materialize_split_species_fdf
 )
 from production_benchmarks.canonical_dm import assert_campaign_dm_invariant
@@ -36,9 +36,9 @@ from production_benchmarks.supercell_builder import (
     build_supercell, assign_afm_ordering, get_afm_supercell_options
 )
 from production_benchmarks.geometry_validator import verify_rocksalt_afm, verify_afm_ii_ordering
-from siestaflow_hubbard.siesta_backend.event_parser import parse_hubbard_population_events
-from siestaflow_hubbard.siesta_backend.observation_selector import Siesta542BarePolicyV1
-from siestaflow_hubbard.siesta_backend.parser_models import ObservationContext
+from hubbardflow.siesta_backend.event_parser import parse_hubbard_population_events
+from hubbardflow.siesta_backend.observation_selector import Siesta542BarePolicyV1
+from hubbardflow.siesta_backend.parser_models import ObservationContext
 
 
 def system_label_from_materialized_fdf(fdf_path: str) -> str:

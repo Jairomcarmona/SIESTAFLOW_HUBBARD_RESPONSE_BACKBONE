@@ -1,17 +1,17 @@
 import pytest
 import numpy as np
 
-from siestaflow_hubbard.domain.cardinals import Cardinals
-from siestaflow_hubbard.domain.exceptions import (
+from hubbardflow.domain.cardinals import Cardinals
+from hubbardflow.domain.exceptions import (
     CardinalConstraintViolation,
     AggregationShapeViolation,
     IllConditionedMatrixError,
     SingularMatrixError,
     InversionResidualFailure,
     SelectionPolicyNotLocked,
-    SiestaflowError
+    HubbardFlowError
 )
-from siestaflow_hubbard.domain.matrix_pipeline import (
+from hubbardflow.domain.matrix_pipeline import (
     assemble_raw,
     compute_antisymmetry,
     symmetrize,
@@ -19,9 +19,9 @@ from siestaflow_hubbard.domain.matrix_pipeline import (
     compute_diagnostics,
     invert_matrix
 )
-from siestaflow_hubbard.domain.alpha_grid import AlphaGrid
+from hubbardflow.domain.alpha_grid import AlphaGrid
 
-from siestaflow_hubbard.synthetic_backend.recovery import recover_U
+from hubbardflow.synthetic_backend.recovery import recover_U
 
 def make_dummy_alpha_grids(p_count=2):
     grid = AlphaGrid(
@@ -126,5 +126,5 @@ def test_attack_corrupted_response_in_recovery():
     R_bare = np.array([[-0.50, -0.05], [-0.50, -0.05], [-0.05, -0.50], [-0.05, -0.50]])
     R_screened_corrupted = np.array([[-0.40, -0.40], [-0.40, -0.40], [-0.40, -0.40], [-0.40, -0.40]])
     
-    with pytest.raises((IllConditionedMatrixError, SingularMatrixError, SiestaflowError)):
+    with pytest.raises((IllConditionedMatrixError, SingularMatrixError, HubbardFlowError)):
         recover_U(R_bare, R_screened_corrupted, cardinals, condition_threshold=1000.0)

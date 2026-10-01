@@ -2,7 +2,7 @@ from hashlib import sha256
 
 import pytest
 
-from siestaflow_hubbard.siesta_backend.backend_identity import (
+from hubbardflow.siesta_backend.backend_identity import (
     BackendIdentityError,
     identify_backend,
     parse_siesta_version,

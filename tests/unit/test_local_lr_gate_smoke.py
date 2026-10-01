@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 
 from tools.local_lr_gate_smoke import centred_alphas, materialize_response_plan
-from siestaflow_hubbard.siesta_backend.fdf_builder import LegacyBareMaterializationDisabledError
+from hubbardflow.siesta_backend.fdf_builder import LegacyBareMaterializationDisabledError
 
 
 def test_centred_grid_has_exactly_the_required_seven_points():

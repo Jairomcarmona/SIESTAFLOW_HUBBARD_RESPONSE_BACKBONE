@@ -13,12 +13,12 @@ if src_dir not in sys.path:
 if repo_dir not in sys.path:
     sys.path.insert(0, repo_dir)
 
-from siestaflow_hubbard.siesta_backend.adapter import SiestaLRAdapter
-from siestaflow_hubbard.siesta_backend.fdf_builder import FdfBuilder
-from siestaflow_hubbard.synthetic_backend.fit_engine import FitEngine, assemble_slope_matrix
-from siestaflow_hubbard.domain.cardinals import Cardinals
-from siestaflow_hubbard.domain.alpha_grid import AlphaGrid
-from siestaflow_hubbard.domain.matrix_pipeline import assemble_raw, invert_chi
+from hubbardflow.siesta_backend.adapter import SiestaLRAdapter
+from hubbardflow.siesta_backend.fdf_builder import FdfBuilder
+from hubbardflow.synthetic_backend.fit_engine import FitEngine, assemble_slope_matrix
+from hubbardflow.domain.cardinals import Cardinals
+from hubbardflow.domain.alpha_grid import AlphaGrid
+from hubbardflow.domain.matrix_pipeline import assemble_raw, invert_chi
 
 
 def prepare_yoltla_cu3n_workspace(siesta_bin: str = "siesta"):
@@ -81,7 +81,7 @@ SaveHS              F
 
 def run_yoltla_cu3n_campaign(siesta_bin: str = "siesta", n_procs: int = 16):
     print("=" * 80)
-    print("SIESTAFLOW HUBBARD RESPONSE — YOLTLA HPC CLUSTER PRODUCTION CAMPAIGN")
+    print("HUBBARDFLOW — YOLTLA HPC CLUSTER PRODUCTION CAMPAIGN")
     print("Target: Cu3N (Anti-ReO3) | K-grid: 8x8x8 | MeshCutoff: 500 Ry | Basis: DZP")
     print("=" * 80)
 

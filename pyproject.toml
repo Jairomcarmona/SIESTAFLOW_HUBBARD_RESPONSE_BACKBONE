@@ -3,15 +3,16 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "siestaflow_hubbard"
+name = "hubbardflow"
 version = "0.1.2"
+description = "HubbardFlow — Reproducible workflows for first-principles Hubbard parameter determination and certification."
 dependencies = [
     "numpy>=1.20.0,<2.0.0",
     "jsonschema>=4.0.0,<5.0.0"
 ]
 
 [project.scripts]
-siestaflow = "siestaflow_hubbard.cli:main"
+hubbardflow = "hubbardflow.cli:main"
 
 [project.optional-dependencies]
 test = [

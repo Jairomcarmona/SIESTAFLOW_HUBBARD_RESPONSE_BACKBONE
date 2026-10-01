@@ -3,13 +3,13 @@ from pathlib import Path
 
 import pytest
 
-from siestaflow_hubbard.siesta_backend.fdf_symmetry_adapter import (
+from hubbardflow.siesta_backend.fdf_symmetry_adapter import (
     FdfSymmetryError,
     audit_fdf_symmetry,
     plan_fdf_symmetry_reduction,
     parse_fdf_symmetry_input,
 )
-from siestaflow_hubbard.domain.symmetry_reduction import ReductionState, SymmetryReductionPolicy
+from hubbardflow.domain.symmetry_reduction import ReductionState, SymmetryReductionPolicy
 
 
 ROOT = Path(__file__).resolve().parents[2]

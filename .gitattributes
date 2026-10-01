@@ -16,5 +16,5 @@ campaigns/nio_pbe_p5_20260928/results/** -text
 schemas/u_certificate.v1.schema.json -text
 schemas/response_tokens.v1.schema.json -text
 tests/unit/test_feo_band_postprocessor.py -text
-src/siestaflow_hubbard/execution/u_certification_node.py -text
+src/hubbardflow/execution/u_certification_node.py -text
 docs/history/SCIENTIFIC_BASELINE_V6.sha256 -text

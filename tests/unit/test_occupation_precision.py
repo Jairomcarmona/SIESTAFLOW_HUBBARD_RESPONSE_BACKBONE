@@ -1,11 +1,11 @@
 import pytest
 
-from siestaflow_hubbard.siesta_backend.event_parser import parse_hubbard_population_events
-from siestaflow_hubbard.siesta_backend.occupation_precision import (
+from hubbardflow.siesta_backend.event_parser import parse_hubbard_population_events
+from hubbardflow.siesta_backend.occupation_precision import (
     read_printed_matrix_trace_precision,
     read_printed_occupation_precision,
 )
-from siestaflow_hubbard.execution.campaign_runner import CampaignRunner
+from hubbardflow.execution.campaign_runner import CampaignRunner
 
 
 def _matrix_event(diagonal_token="0.10000", *, down_spin=True):

@@ -2,13 +2,13 @@ from dataclasses import replace
 from copy import deepcopy
 from pathlib import Path
 
-from siestaflow_hubbard.domain.adaptive_alpha_control import AdaptiveAlphaPolicy
-from siestaflow_hubbard.domain.symmetry_reduction import ResponseMode
-from siestaflow_hubbard.execution.campaign_runner import CampaignRunner
-from siestaflow_hubbard.execution import campaign_runner as runner_module
-from siestaflow_hubbard.execution.dag_contract import NodeState
-from siestaflow_hubbard.execution.generic_executor import GenericDagExecutor, NodeReceipt
-from siestaflow_hubbard.execution.lr_dag import (
+from hubbardflow.domain.adaptive_alpha_control import AdaptiveAlphaPolicy
+from hubbardflow.domain.symmetry_reduction import ResponseMode
+from hubbardflow.execution.campaign_runner import CampaignRunner
+from hubbardflow.execution import campaign_runner as runner_module
+from hubbardflow.execution.dag_contract import NodeState
+from hubbardflow.execution.generic_executor import GenericDagExecutor, NodeReceipt
+from hubbardflow.execution.lr_dag import (
     LRDag, LRDagNode, LRNodeKind, build_adaptive_campaign_dag,
 )
 

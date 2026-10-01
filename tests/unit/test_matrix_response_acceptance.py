@@ -1,6 +1,6 @@
 import numpy as np
 
-from siestaflow_hubbard.domain.matrix_response_acceptance import MatrixResponseAcceptancePolicy, accept_response_matrices
+from hubbardflow.domain.matrix_response_acceptance import MatrixResponseAcceptancePolicy, accept_response_matrices
 
 
 POLICY = MatrixResponseAcceptancePolicy(0.05, 1e4, 0.1)

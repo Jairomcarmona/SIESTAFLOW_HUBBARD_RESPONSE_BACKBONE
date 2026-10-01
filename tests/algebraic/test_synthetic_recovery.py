@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
-from siestaflow_hubbard.synthetic_backend.recovery import recover_U
-from siestaflow_hubbard.domain.cardinals import Cardinals
+from hubbardflow.synthetic_backend.recovery import recover_U
+from hubbardflow.domain.cardinals import Cardinals
 
 def test_synthetic_recovery():
     # Test recover_U without cardinals

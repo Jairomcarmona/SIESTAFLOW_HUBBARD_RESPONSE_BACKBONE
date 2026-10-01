@@ -1,19 +1,19 @@
 import pytest
 import numpy as np
 
-from siestaflow_hubbard.domain.cardinals import Cardinals
-from siestaflow_hubbard.domain.alpha_grid import AlphaGrid
-from siestaflow_hubbard.synthetic_backend.population_generator import (
+from hubbardflow.domain.cardinals import Cardinals
+from hubbardflow.domain.alpha_grid import AlphaGrid
+from hubbardflow.synthetic_backend.population_generator import (
     OccupationRecord,
     generate_populations,
 )
-from siestaflow_hubbard.synthetic_backend.fit_engine import (
+from hubbardflow.synthetic_backend.fit_engine import (
     FitEngine,
     assemble_slope_matrix,
     RegressionRecord,
 )
-from siestaflow_hubbard.synthetic_backend.recovery import recover_U
-from siestaflow_hubbard.domain.matrix_pipeline import invert_chi
+from hubbardflow.synthetic_backend.recovery import recover_U
+from hubbardflow.domain.matrix_pipeline import invert_chi
 
 
 def create_test_cardinals(A_2x4, alpha_values):
@@ -113,7 +113,7 @@ def test_roundtrip_noiseless_U_recovery(
     np.testing.assert_allclose(U_recovered, U_TRUE_C1, atol=1e-10)
 
 def test_weighted_fit_strategy():
-    from siestaflow_hubbard.synthetic_backend.fit_strategies import WeightedFitterStrategy
+    from hubbardflow.synthetic_backend.fit_strategies import WeightedFitterStrategy
     
     # create some noisy data with alpha values
     alpha_vals = np.array([-0.2, -0.1, 0.0, 0.1, 0.2])

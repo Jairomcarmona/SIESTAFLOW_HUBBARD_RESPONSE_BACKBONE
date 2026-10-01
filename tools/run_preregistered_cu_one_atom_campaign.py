@@ -20,19 +20,19 @@ import subprocess
 import sys
 from typing import Any
 
-from siestaflow_hubbard.domain.occupation_noise_calibration import (
+from hubbardflow.domain.occupation_noise_calibration import (
     OccupationNoiseCalibrationPolicy,
     derive_occupation_noise,
     load_strict_json,
     validate_calibration_result,
 )
-from siestaflow_hubbard.siesta_backend.event_parser import parse_hubbard_population_events
-from siestaflow_hubbard.siesta_backend.output_validator import (
+from hubbardflow.siesta_backend.event_parser import parse_hubbard_population_events
+from hubbardflow.siesta_backend.output_validator import (
     SiestaOutputValidationError,
     _normal_and_converged,
 )
-from siestaflow_hubbard.siesta_backend.siesta542_bare_profile import Siesta542PotentialShiftHamiltonianProfile
-from siestaflow_hubbard.siesta_backend.symmetry_materializer import _replace_key, _rewrite_projector_shifts
+from hubbardflow.siesta_backend.siesta542_bare_profile import Siesta542PotentialShiftHamiltonianProfile
+from hubbardflow.siesta_backend.symmetry_materializer import _replace_key, _rewrite_projector_shifts
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -193,9 +193,9 @@ def _verify_locks() -> dict[str, Any]:
     required_software = {
         "tools/run_preregistered_cu_one_atom_campaign.py", "tools/run_cu_noise_calibration_replica.py",
         "tools/run_siesta542_openmpi_slurm_full_campaign.py",
-        "src/siestaflow_hubbard/domain/occupation_noise_calibration.py",
-        "src/siestaflow_hubbard/execution/campaign_software_lock.py",
-        "src/siestaflow_hubbard/siesta_backend/output_validator.py",
+        "src/hubbardflow/domain/occupation_noise_calibration.py",
+        "src/hubbardflow/execution/campaign_software_lock.py",
+        "src/hubbardflow/siesta_backend/output_validator.py",
         "schemas/campaign/occupation_noise_calibration_lock.schema.json",
         "schemas/campaign/occupation_noise_calibration_result.schema.json",
         "campaigns/cu_one_atom_noise_calibrated_lr_v1/inputs/reference.fdf",

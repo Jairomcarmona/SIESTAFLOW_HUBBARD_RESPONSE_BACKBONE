@@ -253,7 +253,7 @@ def check_slurm_profile(campaign_dir: str, failures: List[str]) -> None:
 def check_canonical_dm_logic(failures: List[str]) -> None:
     """Verify the canonical DM logic is importable and functional."""
     try:
-        from siestaflow_hubbard.siesta_backend.adapter import prepare_canonical_dm
+        from hubbardflow.siesta_backend.adapter import prepare_canonical_dm
     except ImportError as e:
         failures.append(f"prepare_canonical_dm not importable: {e}")
         return

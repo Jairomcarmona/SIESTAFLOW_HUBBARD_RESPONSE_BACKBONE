@@ -40,7 +40,7 @@ def test_cli_resume_campaign(tmp_path):
     loaded = CampaignManifest.load_from_file(args.campaign_json)
     assert loaded.state == CampaignState.SUSPENDED
 
-@patch("siestaflow_hubbard.cli.EvidenceExporter")
+@patch("hubbardflow.cli.EvidenceExporter")
 def test_cli_report_campaign(mock_exporter_class, tmp_path):
     args = MagicMock()
     args.command = "report"

@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from siestaflow_hubbard.domain.quantized_response import (
+from hubbardflow.domain.quantized_response import (
     fit_centered_linear_response,
     hubbard_u_interval,
     inverse_rounding_bound,

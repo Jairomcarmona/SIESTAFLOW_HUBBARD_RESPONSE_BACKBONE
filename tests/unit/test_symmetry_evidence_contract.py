@@ -3,14 +3,14 @@ from pathlib import Path
 
 import pytest
 
-from siestaflow_hubbard.domain.symmetry_reduction import (
+from hubbardflow.domain.symmetry_reduction import (
     SymmetryEvidenceBundle,
     SymmetryPlanError,
     SymmetryReductionPolicy,
     build_symmetry_reduction_plan,
     filter_evidence_compatible_operations,
 )
-from siestaflow_hubbard.siesta_backend.symmetry_evidence import (
+from hubbardflow.siesta_backend.symmetry_evidence import (
     SymmetryEvidenceFormatError,
     load_symmetry_evidence,
 )

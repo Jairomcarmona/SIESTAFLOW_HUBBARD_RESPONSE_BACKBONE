@@ -4,14 +4,14 @@ from pathlib import Path
 
 import pytest
 
-from siestaflow_hubbard.execution.u_release_gate import (
+from hubbardflow.execution.u_release_gate import (
     UReleaseError, UReleasePolicy, canonical_hash, create_u_release, verify_u_release,
 )
-from siestaflow_hubbard.execution.lr_dag import LRDag, LRDagNode, LRNodeKind, append_u_release_nodes
-from siestaflow_hubbard.execution.downstream_u_admission import (
+from hubbardflow.execution.lr_dag import LRDag, LRDagNode, LRNodeKind, append_u_release_nodes
+from hubbardflow.execution.downstream_u_admission import (
     DownstreamUAdmissionError, ValidatedURelease, load_verified_u_release,
 )
-from siestaflow_hubbard.execution import u_certification_node, downstream_u_admission
+from hubbardflow.execution import u_certification_node, downstream_u_admission
 
 
 @pytest.fixture(autouse=True)

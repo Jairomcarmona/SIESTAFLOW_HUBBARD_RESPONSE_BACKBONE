@@ -10,7 +10,7 @@ import pytest
 import math
 import numpy as np
 
-from siestaflow_hubbard.domain.scalar_lr import (
+from hubbardflow.domain.scalar_lr import (
     ResponsePoint,
     LinearFit,
     NumericalLinearityPolicy,

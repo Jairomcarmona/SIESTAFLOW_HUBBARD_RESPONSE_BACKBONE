@@ -1,6 +1,6 @@
 import pytest
 import re
-from siestaflow_hubbard.siesta_backend.fdf_builder import FdfBuilder, LegacyBareMaterializationDisabledError
+from hubbardflow.siesta_backend.fdf_builder import FdfBuilder, LegacyBareMaterializationDisabledError
 
 
 BASE_FDF_MOCK = """SystemName MnO Test

@@ -1,10 +1,10 @@
 import sys
 from pathlib import Path
 
-from siestaflow_hubbard.execution.dag_contract import NodeState
-from siestaflow_hubbard.execution.lr_dag import LRDagNode, LRNodeKind
-from siestaflow_hubbard.execution.runtime_adapters import LocalSubprocessExecutor, NodeCommand
-from siestaflow_hubbard.execution.generic_executor import NodeReceipt
+from hubbardflow.execution.dag_contract import NodeState
+from hubbardflow.execution.lr_dag import LRDagNode, LRNodeKind
+from hubbardflow.execution.runtime_adapters import LocalSubprocessExecutor, NodeCommand
+from hubbardflow.execution.generic_executor import NodeReceipt
 
 
 class Factory:

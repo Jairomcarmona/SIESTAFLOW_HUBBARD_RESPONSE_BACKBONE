@@ -2,7 +2,7 @@ from dataclasses import replace
 
 import pytest
 
-from siestaflow_hubbard.domain.observation_provenance import Observation, RunIdentity, validate_response_lot
+from hubbardflow.domain.observation_provenance import Observation, RunIdentity, validate_response_lot
 
 
 H = "a" * 64

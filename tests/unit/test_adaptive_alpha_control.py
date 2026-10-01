@@ -1,6 +1,6 @@
 import pytest
 
-from siestaflow_hubbard.domain.adaptive_alpha_control import (
+from hubbardflow.domain.adaptive_alpha_control import (
     AdaptiveAlphaControlError,
     AdaptiveAlphaPolicy,
     AdaptiveDecision,

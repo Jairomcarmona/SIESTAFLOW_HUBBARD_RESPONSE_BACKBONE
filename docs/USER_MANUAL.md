@@ -1,6 +1,6 @@
-# SIESTAFLOW 0.1.2 — Technical User Manual
+# HubbardFlow 0.1.2 — Technical User Manual
 
-SIESTAFLOW runs SIESTA linear-response charge campaigns and records their inputs, node receipts, analysis, and report. This manual describes the installed CLI in release 0.1.2. It does not promise a physically accepted or universal Hubbard parameter for every material.
+HubbardFlow runs SIESTA linear-response charge campaigns and records their inputs, node receipts, analysis, and report. This manual describes the installed CLI in release 0.1.2. It does not promise a physically accepted or universal Hubbard parameter for every material.
 
 The completed P0–P6 product closure is recorded as `PRODUCT_BLOCKED`: the CLI
 and P5 campaign completed, while the NiO result remains
@@ -29,8 +29,8 @@ Schema v3 uses `occupation_source=siesta_occupations_total` when the selected SI
 Install the release wheel in the Python environment that will run the CLI. For PowerShell → WSL, install it both in Windows Python and in the selected WSL distribution; the wheel does not include SIESTA or MPI.
 
 ```powershell
-py -m pip install .\dist\siestaflow_hubbard-0.1.2-py3-none-any.whl
-siestaflow audit-fdf .\reference.fdf
+py -m pip install .\dist\hubbardflow-0.1.2-py3-none-any.whl
+hubbardflow audit-fdf .\reference.fdf
 ```
 
 The FDF audit parses the declared functional, spin mode, lattice, and DFTU projector information. It is not a substitute for validating the pseudopotentials, runtime, compatibility registry, projectors, or campaign policy. Use the [PowerShell → WSL quickstart](CLI_LOCAL_WSL_QUICKSTART.md) to prepare those inputs and a validated execution profile.
@@ -40,28 +40,28 @@ The FDF audit parses the declared functional, spin mode, lattice, and DFTU proje
 The profile declares a single-node local runtime, MPI ranks, SIESTA executable, and WSL workspace. `init` copies the scientific inputs into a separate WSL campaign directory, writes their SHA-256 inventory and returns a Windows pointer. Use the public commands with that pointer:
 
 ```powershell
-siestaflow init .\reference.fdf --lr-config .\lr-config.json --profile .\local-wsl-profile.json --name material-lr
-siestaflow run .\material-lr.siestaflow.json
-siestaflow status .\material-lr.siestaflow.json
-siestaflow resume .\material-lr.siestaflow.json
-siestaflow report .\material-lr.siestaflow.json
-siestaflow stop .\material-lr.siestaflow.json
+hubbardflow init .\reference.fdf --lr-config .\lr-config.json --profile .\local-wsl-profile.json --name material-lr
+hubbardflow run .\material-lr.siestaflow.json
+hubbardflow status .\material-lr.siestaflow.json
+hubbardflow resume .\material-lr.siestaflow.json
+hubbardflow report .\material-lr.siestaflow.json
+hubbardflow stop .\material-lr.siestaflow.json
 ```
 
 `run` starts the campaign worker. `status` reads durable state. `resume` revalidates prior receipts and reuses valid nodes, rerunning only missing/invalid nodes and descendants. `report` renders the saved analysis; it does not run SIESTA. `stop` requests a safe stop. The shared workspace lock serializes SIESTA nodes across local campaigns. Do not run separate workers outside this control plane.
 
 ## Linux and Slurm direct-manifest commands
 
-On Linux, the public CLI can initialize a direct `campaign.v2.json` manifest from a profile with `target="slurm"` inside an already granted Slurm allocation. The allocation/site profile must be validated for that installation. SIESTAFLOW uses the allocation's hosts and does not submit `sbatch`.
+On Linux, the public CLI can initialize a direct `campaign.v2.json` manifest from a profile with `target="slurm"` inside an already granted Slurm allocation. The allocation/site profile must be validated for that installation. HubbardFlow uses the allocation's hosts and does not submit `sbatch`.
 
 ```bash
-siestaflow audit-fdf ./reference.fdf
-siestaflow init ./reference.fdf --lr-config ./lr-config.json --profile ./slurm-profile.json --name material-lr --campaign-root /scratch/siestaflow-campaigns
-siestaflow run /scratch/siestaflow-campaigns/material-lr/campaign.v2.json
-siestaflow status /scratch/siestaflow-campaigns/material-lr/campaign.v2.json
-siestaflow resume /scratch/siestaflow-campaigns/material-lr/campaign.v2.json
-siestaflow report /scratch/siestaflow-campaigns/material-lr/campaign.v2.json
-siestaflow stop /scratch/siestaflow-campaigns/material-lr/campaign.v2.json
+hubbardflow audit-fdf ./reference.fdf
+hubbardflow init ./reference.fdf --lr-config ./lr-config.json --profile ./slurm-profile.json --name material-lr --campaign-root /scratch/hubbardflow-campaigns
+hubbardflow run /scratch/hubbardflow-campaigns/material-lr/campaign.v2.json
+hubbardflow status /scratch/hubbardflow-campaigns/material-lr/campaign.v2.json
+hubbardflow resume /scratch/hubbardflow-campaigns/material-lr/campaign.v2.json
+hubbardflow report /scratch/hubbardflow-campaigns/material-lr/campaign.v2.json
+hubbardflow stop /scratch/hubbardflow-campaigns/material-lr/campaign.v2.json
 ```
 
 This route expects an existing allocation and profile; it is not a generic remote-login or queue-submission client. See [HPC_SLURM_EXECUTION_CONTRACT.md](HPC_SLURM_EXECUTION_CONTRACT.md) for the site-neutral execution boundary.

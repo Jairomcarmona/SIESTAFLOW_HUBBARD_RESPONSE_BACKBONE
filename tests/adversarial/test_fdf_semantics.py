@@ -1,7 +1,7 @@
 import pytest
 import re
-from siestaflow_hubbard.siesta_backend.fdf_builder import FdfBuilder
-from siestaflow_hubbard.siesta_backend.dftu_models import DftuProjectorBlock, DftuProjector
+from hubbardflow.siesta_backend.fdf_builder import FdfBuilder
+from hubbardflow.siesta_backend.dftu_models import DftuProjectorBlock, DftuProjector
 
 @pytest.fixture
 def valid_block():

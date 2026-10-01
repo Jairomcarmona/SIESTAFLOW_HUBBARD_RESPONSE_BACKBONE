@@ -114,8 +114,8 @@ def _run(directory: Path, name: str, mode: str, target: str | None, alpha: float
 
 
 def _occupation(output: Path, target_index: int, bare: bool) -> float:
-    from siestaflow_hubbard.siesta_backend.event_parser import parse_hubbard_population_events
-    from siestaflow_hubbard.siesta_backend.siesta542_bare_profile import Siesta542PotentialShiftHamiltonianProfile
+    from hubbardflow.siesta_backend.event_parser import parse_hubbard_population_events
+    from hubbardflow.siesta_backend.siesta542_bare_profile import Siesta542PotentialShiftHamiltonianProfile
     events = parse_hubbard_population_events(output.read_text(encoding="utf-8", errors="replace"))
     _require(bool(events), f"no Hubbard projected population in {output}")
     event = Siesta542PotentialShiftHamiltonianProfile().select_response(output.read_text(encoding="utf-8", errors="replace")).response_event if bare else events[-1]

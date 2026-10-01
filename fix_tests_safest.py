@@ -3,7 +3,7 @@ import re
 
 test_dir = "tests"
 
-imports = "from siestaflow_hubbard.domain.semantic_validation import SemanticValidator\nfrom siestaflow_hubbard.domain.campaign_manifest import CampaignManifest\n"
+imports = "from hubbardflow.domain.semantic_validation import SemanticValidator\nfrom hubbardflow.domain.campaign_manifest import CampaignManifest\n"
 
 for root, _, files in os.walk(test_dir):
     for file in files:

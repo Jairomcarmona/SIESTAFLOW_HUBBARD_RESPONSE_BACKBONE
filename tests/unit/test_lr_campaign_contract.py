@@ -2,14 +2,14 @@ import json
 
 import pytest
 
-from siestaflow_hubbard.domain.backend_compatibility import (
+from hubbardflow.domain.backend_compatibility import (
     BackendCompatibilityRegistry,
     BackendIdentity,
     CompatibilityRecord,
     CompatibilityState,
     ScientificProfile,
 )
-from siestaflow_hubbard.domain.lr_campaign_contract import (
+from hubbardflow.domain.lr_campaign_contract import (
     LinearResponseBareCampaignContract,
     LinearResponseContractError,
 )

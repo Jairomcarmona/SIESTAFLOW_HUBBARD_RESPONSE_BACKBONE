@@ -1,5 +1,5 @@
 import pytest
-from siestaflow_hubbard.domain.interfaces import BaseBackendAdapter
+from hubbardflow.domain.interfaces import BaseBackendAdapter
 
 class MockAdapter(BaseBackendAdapter):
     def prepare_input(self, fdf_template: str, alpha: float, mode: str) -> str:

@@ -3,13 +3,13 @@ import json
 import numpy as np
 import pytest
 
-from siestaflow_hubbard.domain.lr_analysis_v2 import (
+from hubbardflow.domain.lr_analysis_v2 import (
     LRAnalysisPolicy,
     _slope_rounding_bound,
     analyze_verified_lr,
 )
-from siestaflow_hubbard.domain.matrix_lr import ResponseObservation
-from siestaflow_hubbard.reporting.lr_u_report import _matrix_table, render_lr_u_report
+from hubbardflow.domain.matrix_lr import ResponseObservation
+from hubbardflow.reporting.lr_u_report import _matrix_table, render_lr_u_report
 
 
 def _observations(alphas=(-0.15, -0.1, -0.05, 0.05, 0.1, 0.15)):
@@ -283,7 +283,7 @@ def test_markdown_report_renders_verified_dataset_math_and_source_lineage():
             "version_text_sha256": "4" * 64,
         },
         "analysis_implementation": {
-            "package": "siestaflow_hubbard",
+            "package": "hubbardflow",
             "package_version": "0.1.2",
             "schema": "siestaflow.lr_u_analysis.v2",
         },

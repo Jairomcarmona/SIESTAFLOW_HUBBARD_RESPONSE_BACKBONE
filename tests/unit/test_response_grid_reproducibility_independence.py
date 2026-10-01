@@ -3,14 +3,14 @@ from dataclasses import replace
 
 import pytest
 
-from siestaflow_hubbard.domain.response_grid_reproducibility import (
+from hubbardflow.domain.response_grid_reproducibility import (
     _VALIDATION_TOKEN,
     ValidatedResponseGridCalibration,
     ResponseGridCalibrationError,
     _validate_independent_execution_identities,
 )
-from siestaflow_hubbard.domain.lr_analysis_v2 import _response_grid_empirical_widths
-from siestaflow_hubbard.domain.matrix_lr import ResponseObservation
+from hubbardflow.domain.lr_analysis_v2 import _response_grid_empirical_widths
+from hubbardflow.domain.matrix_lr import ResponseObservation
 
 
 def _campaign(root: Path, campaign_id: str, attempt_id: str) -> dict[str, object]:

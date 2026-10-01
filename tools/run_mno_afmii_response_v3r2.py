@@ -65,7 +65,7 @@ def verify() -> dict[str, object]:
 
 
 def _frozen_wheel_wrapper(runtime: Path) -> str:
-    wheel = CAMPAIGN / "software/siestaflow_hubbard-0.1.0-py3-none-any.whl"
+    wheel = CAMPAIGN / "software/hubbardflow-0.1.0-py3-none-any.whl"
     python = Path(sys.executable)
     worker = ROOT / "tools/run_mno_afmii_response_v3r2.py"
     return "; ".join((
@@ -79,7 +79,7 @@ def _frozen_wheel_wrapper(runtime: Path) -> str:
 
 
 def foreground_command() -> list[str]:
-    from siestaflow_hubbard.execution.slurm_foreground import four_rank_foreground_command
+    from hubbardflow.execution.slurm_foreground import four_rank_foreground_command
     return four_rank_foreground_command(_frozen_wheel_wrapper(RESULTS.with_suffix(".runtime")))
 
 
@@ -123,8 +123,8 @@ def _ordered_occupations(values: dict[int, float], correlated_atom_indices: list
 
 
 def _occupations(output: Path, mode: str, correlated_atom_indices: list[int]) -> list[float]:
-    from siestaflow_hubbard.siesta_backend.event_parser import parse_hubbard_population_events
-    from siestaflow_hubbard.siesta_backend.siesta542_bare_profile import Siesta542PotentialShiftHamiltonianProfile
+    from hubbardflow.siesta_backend.event_parser import parse_hubbard_population_events
+    from hubbardflow.siesta_backend.siesta542_bare_profile import Siesta542PotentialShiftHamiltonianProfile
     text = output.read_text(encoding="utf-8", errors="replace")
     events = parse_hubbard_population_events(text)
     _require(bool(events), f"no Hubbard projected populations: {output}")
@@ -169,8 +169,8 @@ def worker() -> dict[str, object]:
 
 
 def analyze() -> dict[str, object]:
-    from siestaflow_hubbard.domain.alpha_selection import AlphaSelectionPolicy, select_common_alpha_window
-    from siestaflow_hubbard.domain.matrix_response_acceptance import MatrixResponseAcceptancePolicy, accept_response_matrices
+    from hubbardflow.domain.alpha_selection import AlphaSelectionPolicy, select_common_alpha_window
+    from hubbardflow.domain.matrix_response_acceptance import MatrixResponseAcceptancePolicy, accept_response_matrices
     core, config = _load_core(), _load("source-material.json")
     _require((RESULTS / "response-receipt.json").is_file(), "response receipt missing")
     receipt = json.loads((RESULTS / "response-receipt.json").read_text())
@@ -236,7 +236,7 @@ def main() -> int:
             verify(); command = foreground_command()
             if args.dry_run: output = {"status": "DRY_RUN", "command": command}
             else:
-                from siestaflow_hubbard.execution.slurm_foreground import submit_four_rank_foreground
+                from hubbardflow.execution.slurm_foreground import submit_four_rank_foreground
                 completed = submit_four_rank_foreground(command[-1], cwd=ROOT)
                 output = {"status": "COMPLETED", "slurm_job_id": completed.stdout.strip().split(";", 1)[0], "analysis": analyze()}
         print(json.dumps(output, indent=2, sort_keys=True)); return 0

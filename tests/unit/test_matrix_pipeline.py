@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from siestaflow_hubbard.domain.matrix_pipeline import (
+from hubbardflow.domain.matrix_pipeline import (
     assemble_raw,
     compute_antisymmetry,
     symmetrize,
@@ -9,7 +9,7 @@ from siestaflow_hubbard.domain.matrix_pipeline import (
     invert_matrix,
     invert_chi
 )
-from siestaflow_hubbard.domain.exceptions import (
+from hubbardflow.domain.exceptions import (
     IllConditionedMatrixError,
     SingularMatrixError,
     SelectionPolicyNotLocked,

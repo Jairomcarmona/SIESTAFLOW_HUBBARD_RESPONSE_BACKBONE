@@ -1,6 +1,6 @@
 import pytest
-from siestaflow_hubbard.siesta_backend.parser_models import HubbardPopulationEvent, ObservationRole, ObservationContext, ObservationSelection
-from siestaflow_hubbard.siesta_backend.observation_selector import (
+from hubbardflow.siesta_backend.parser_models import HubbardPopulationEvent, ObservationRole, ObservationContext, ObservationSelection
+from hubbardflow.siesta_backend.observation_selector import (
     Siesta542BarePolicyV1,
     ObservationPolicyError
 )

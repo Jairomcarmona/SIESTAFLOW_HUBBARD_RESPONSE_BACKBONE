@@ -228,7 +228,7 @@ def test_central_result_validator_rejects_floor_json_and_hash_forgery(tmp_path, 
 
 
 def test_strict_json_rejects_nonfinite_constants(tmp_path):
-    from siestaflow_hubbard.domain.occupation_noise_calibration import load_strict_json
+    from hubbardflow.domain.occupation_noise_calibration import load_strict_json
     bad = tmp_path / "bad.json"; bad.write_text('{"value": NaN}', encoding="utf-8")
     with pytest.raises(ValueError, match="non-finite JSON"):
         load_strict_json(bad)

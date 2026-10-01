@@ -25,22 +25,22 @@ import traceback
 
 import numpy as np
 
-from siestaflow_hubbard.domain.backend_compatibility import ScientificProfile
-from siestaflow_hubbard.domain.alpha_selection import AlphaSelectionPolicy, select_common_alpha_window
-from siestaflow_hubbard.domain.occupation_noise_calibration import validate_calibration_result
-from siestaflow_hubbard.domain.matrix_pipeline import compute_diagnostics, invert_matrix, select_matrix
-from siestaflow_hubbard.domain.lr_campaign_contract import LinearResponseBareCampaignContract
-from siestaflow_hubbard.domain.symmetry_reduction import PerturbationSpec, ResponseMode
-from siestaflow_hubbard.execution.execution_profile import ExecutionProfile
-from siestaflow_hubbard.execution.campaign_software_lock import verify_locked_software
-from siestaflow_hubbard.execution.generic_executor import GenericDagExecutor
-from siestaflow_hubbard.execution.lr_dag import LRDag, LRDagNode, LRNodeKind
-from siestaflow_hubbard.execution.runtime_adapters import SlurmAllocationExecutor
-from siestaflow_hubbard.siesta_backend.backend_identity import sha256_file
-from siestaflow_hubbard.siesta_backend.command_factory import SiestaCampaignLayout
-from siestaflow_hubbard.siesta_backend.event_parser import parse_hubbard_population_events
-from siestaflow_hubbard.siesta_backend.production_runtime import build_admitted_siesta542_runtime
-from siestaflow_hubbard.siesta_backend.siesta542_bare_profile import (
+from hubbardflow.domain.backend_compatibility import ScientificProfile
+from hubbardflow.domain.alpha_selection import AlphaSelectionPolicy, select_common_alpha_window
+from hubbardflow.domain.occupation_noise_calibration import validate_calibration_result
+from hubbardflow.domain.matrix_pipeline import compute_diagnostics, invert_matrix, select_matrix
+from hubbardflow.domain.lr_campaign_contract import LinearResponseBareCampaignContract
+from hubbardflow.domain.symmetry_reduction import PerturbationSpec, ResponseMode
+from hubbardflow.execution.execution_profile import ExecutionProfile
+from hubbardflow.execution.campaign_software_lock import verify_locked_software
+from hubbardflow.execution.generic_executor import GenericDagExecutor
+from hubbardflow.execution.lr_dag import LRDag, LRDagNode, LRNodeKind
+from hubbardflow.execution.runtime_adapters import SlurmAllocationExecutor
+from hubbardflow.siesta_backend.backend_identity import sha256_file
+from hubbardflow.siesta_backend.command_factory import SiestaCampaignLayout
+from hubbardflow.siesta_backend.event_parser import parse_hubbard_population_events
+from hubbardflow.siesta_backend.production_runtime import build_admitted_siesta542_runtime
+from hubbardflow.siesta_backend.siesta542_bare_profile import (
     Siesta542PotentialShiftHamiltonianProfile,
 )
 

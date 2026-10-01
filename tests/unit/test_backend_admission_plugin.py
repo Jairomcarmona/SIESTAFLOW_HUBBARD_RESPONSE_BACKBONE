@@ -3,16 +3,16 @@ from pathlib import Path
 
 import pytest
 
-from siestaflow_hubbard.siesta_backend.backend_admission import BackendAdmissionError
-from siestaflow_hubbard.siesta_backend.backend_admission_plugin import (
+from hubbardflow.siesta_backend.backend_admission import BackendAdmissionError
+from hubbardflow.siesta_backend.backend_admission_plugin import (
     admit_siesta542_from_campaign_contract,
     admit_siesta542_from_registry_file,
     load_backend_compatibility_registry,
 )
-from siestaflow_hubbard.domain.backend_compatibility import ScientificProfile
-from siestaflow_hubbard.domain.lr_campaign_contract import LinearResponseBareCampaignContract
-from siestaflow_hubbard.siesta_backend.backend_identity import sha256_file
-from siestaflow_hubbard.siesta_backend.siesta542_bare_profile import (
+from hubbardflow.domain.backend_compatibility import ScientificProfile
+from hubbardflow.domain.lr_campaign_contract import LinearResponseBareCampaignContract
+from hubbardflow.siesta_backend.backend_identity import sha256_file
+from hubbardflow.siesta_backend.siesta542_bare_profile import (
     Siesta542PotentialShiftHamiltonianProfile,
 )
 

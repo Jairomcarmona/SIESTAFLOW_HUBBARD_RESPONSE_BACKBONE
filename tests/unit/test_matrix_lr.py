@@ -18,7 +18,7 @@ import math
 import pytest
 import numpy as np
 
-from siestaflow_hubbard.domain.matrix_lr import (
+from hubbardflow.domain.matrix_lr import (
     ResponseObservation,
     ElementDiagnostics,
     MatrixConditionReport,
@@ -472,7 +472,7 @@ def test_element_diagnostics_r2_exact_linear():
 
 def test_split_species_fdf_materialization():
     """materialize_split_species_fdf must produce MnLR0 and MnLR1 with correct species labels and atom counts."""
-    from siestaflow_hubbard.siesta_backend.fdf_builder import materialize_split_species_fdf
+    from hubbardflow.siesta_backend.fdf_builder import materialize_split_species_fdf
     base_fdf = """
 SystemName Base Test
 SystemLabel Base
@@ -501,7 +501,7 @@ def test_split_species_ni_dminitspin_preserved():
     Regression: DM.InitSpin must be preserved exactly through a Ni->NiLR0/NiLR1 split.
     The splitter must NOT regenerate spin values from Mn assumptions or any atomic-number logic.
     """
-    from siestaflow_hubbard.siesta_backend.fdf_builder import materialize_split_species_fdf
+    from hubbardflow.siesta_backend.fdf_builder import materialize_split_species_fdf
     base_fdf = """
 SystemName NiO Test
 NumberOfAtoms 4
@@ -541,7 +541,7 @@ def test_split_species_arbitrary_atomic_number():
     Regression: materialize_split_species_fdf must work for any atomic number,
     not just Z=25 (Mn). Fe (Z=26) must split correctly.
     """
-    from siestaflow_hubbard.siesta_backend.fdf_builder import materialize_split_species_fdf
+    from hubbardflow.siesta_backend.fdf_builder import materialize_split_species_fdf
     base_fdf = """
 NumberOfAtoms 2
 NumberOfSpecies 2
@@ -672,7 +672,7 @@ def test_split_species_four_aliases():
     materialize_split_species_fdf must produce CuLR0..CuLR3 (4 aliases)
     for a system with 4 Cu atoms. Tests N=4 species splitting generically.
     """
-    from siestaflow_hubbard.siesta_backend.fdf_builder import materialize_split_species_fdf
+    from hubbardflow.siesta_backend.fdf_builder import materialize_split_species_fdf
     base_fdf = """
 NumberOfAtoms 6
 NumberOfSpecies 2
@@ -704,7 +704,7 @@ def test_nonpolarized_occupation_parse():
     Non-polarized Occupations: line has exactly 2 fields (up, total=2*up).
     trace_total must equal 2 * trace_up.
     """
-    from siestaflow_hubbard.siesta_backend.event_parser import parse_hubbard_population_events
+    from hubbardflow.siesta_backend.event_parser import parse_hubbard_population_events
 
     fake_nonpol_output = """
 hubbard_term: recalculating local occupations 1
@@ -766,7 +766,7 @@ def test_dm_invariant_stale_child_overwritten(tmp_path):
       child.DM content and SHA256 == reference.DM
     """
     import hashlib
-    from siestaflow_hubbard.siesta_backend.adapter import prepare_canonical_dm
+    from hubbardflow.siesta_backend.adapter import prepare_canonical_dm
 
     ref_dm   = tmp_path / "reference.DM"
     child_dm = tmp_path / "child.DM"
@@ -805,7 +805,7 @@ def test_dm_invariant_manifest_hash_is_prerun(tmp_path):
          but == canonical reference hash
     """
     import hashlib
-    from siestaflow_hubbard.siesta_backend.adapter import prepare_canonical_dm
+    from hubbardflow.siesta_backend.adapter import prepare_canonical_dm
 
     ref_dm   = tmp_path / "reference.DM"
     child_dm = tmp_path / "child.DM"
@@ -842,7 +842,7 @@ def test_dm_invariant_raises_on_corrupt_source(tmp_path):
     does not match the supplied reference_sha256 (source corruption guard).
     """
     import hashlib
-    from siestaflow_hubbard.siesta_backend.adapter import prepare_canonical_dm
+    from hubbardflow.siesta_backend.adapter import prepare_canonical_dm
 
     ref_dm   = tmp_path / "reference.DM"
     child_dm = tmp_path / "child.DM"

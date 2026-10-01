@@ -1,6 +1,6 @@
-# SIESTAFLOW Hubbard Response Backbone v0.1.0 - Examples
+# HubbardFlow examples
 
-This directory contains examples of the JSON schema instantiations for the SIESTAFLOW Hubbard Response Backbone.
+This directory contains JSON schema examples for HubbardFlow. The legacy direct-launch scripts under `tmo_campaigns` are historical SIESTA examples; use the current CLI quickstart for new campaigns.
 
 ## Synthetic Campaign (SYNTH_CAMPAIGN_001)
 

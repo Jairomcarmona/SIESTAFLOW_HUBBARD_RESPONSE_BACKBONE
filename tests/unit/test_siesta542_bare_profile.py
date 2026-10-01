@@ -3,7 +3,7 @@ import re
 
 import pytest
 
-from siestaflow_hubbard.siesta_backend.siesta542_bare_profile import (
+from hubbardflow.siesta_backend.siesta542_bare_profile import (
     Siesta542BareProfileError,
     Siesta542PotentialShiftHamiltonianProfile,
 )

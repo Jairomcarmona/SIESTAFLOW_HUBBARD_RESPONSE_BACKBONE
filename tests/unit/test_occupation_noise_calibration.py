@@ -1,6 +1,6 @@
 import pytest
 
-from siestaflow_hubbard.domain.occupation_noise_calibration import (
+from hubbardflow.domain.occupation_noise_calibration import (
     OccupationNoiseCalibrationError,
     OccupationNoiseCalibrationPolicy,
     derive_occupation_noise,
@@ -8,7 +8,7 @@ from siestaflow_hubbard.domain.occupation_noise_calibration import (
 
 
 def test_mode_centered_noise_excludes_inter_role_offset() -> None:
-    from siestaflow_hubbard.domain.occupation_noise_calibration import derive_mode_centered_occupation_noise
+    from hubbardflow.domain.occupation_noise_calibration import derive_mode_centered_occupation_noise
     policy = OccupationNoiseCalibrationPolicy(3, 2.0, 5e-5, 5e-5)
     result = derive_mode_centered_occupation_noise({
         "REFERENCE": [9.45436] * 3, "BARE": [9.45280] * 3, "SCREENED": [9.45100] * 3,

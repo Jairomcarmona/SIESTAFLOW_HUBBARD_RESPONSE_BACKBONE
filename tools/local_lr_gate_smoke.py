@@ -25,8 +25,8 @@ import subprocess
 import sys
 from typing import Iterable
 
-from siestaflow_hubbard.domain.alpha_selection import AlphaSelectionPolicy, select_common_alpha_window
-from siestaflow_hubbard.siesta_backend.fdf_builder import LegacyBareMaterializationDisabledError
+from hubbardflow.domain.alpha_selection import AlphaSelectionPolicy, select_common_alpha_window
+from hubbardflow.siesta_backend.fdf_builder import LegacyBareMaterializationDisabledError
 
 
 GRID_FACTORS = (-2.0, -1.0, -0.5, 0.0, 0.5, 1.0, 2.0)

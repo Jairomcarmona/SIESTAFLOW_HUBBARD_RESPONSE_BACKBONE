@@ -6,11 +6,11 @@ import re
 
 import pytest
 
-from siestaflow_hubbard.execution.source_evidence import (
+from hubbardflow.execution.source_evidence import (
     SourceEvidenceError, extract_verified_response_tokens, scientific_tokens_sha256,
     source_manifest_identity_sha256, validate_source_manifest,
 )
-from siestaflow_hubbard.siesta_backend.siesta542_bare_profile import Siesta542PotentialShiftHamiltonianProfile
+from hubbardflow.siesta_backend.siesta542_bare_profile import Siesta542PotentialShiftHamiltonianProfile
 
 
 def _manifest(root: Path) -> dict:
@@ -21,7 +21,7 @@ def _manifest(root: Path) -> dict:
     parent.write_bytes(b"reference dm fixture\n")
     text = target.read_text(encoding="utf-8", errors="replace")
     event = Siesta542PotentialShiftHamiltonianProfile().select_response(text).response_event
-    from siestaflow_hubbard.siesta_backend.occupation_precision import read_printed_occupation_precision
+    from hubbardflow.siesta_backend.occupation_precision import read_printed_occupation_precision
     atom_indices = sorted(read_printed_occupation_precision(text, event))
     out_hash = sha256(target.read_bytes()).hexdigest()
     parent_hash = sha256(parent.read_bytes()).hexdigest()

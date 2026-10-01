@@ -16,7 +16,7 @@ Tests cover:
 import pytest
 import numpy as np
 
-from siestaflow_hubbard.domain.convergence_engine import (
+from hubbardflow.domain.convergence_engine import (
     LRScientificConfiguration,
     ConvergenceResult,
     ConvergenceComparison,
@@ -25,7 +25,7 @@ from siestaflow_hubbard.domain.convergence_engine import (
     compare_convergence_results,
     build_convergence_result_from_observations,
 )
-from siestaflow_hubbard.domain.matrix_lr import ResponseObservation
+from hubbardflow.domain.matrix_lr import ResponseObservation
 
 
 # ─────────────────────────────────────────────

@@ -1,7 +1,7 @@
-from siestaflow_hubbard.domain.matrix_lr import ResponseObservation
-from siestaflow_hubbard.execution.campaign_runner import CampaignRunner, _build_dag, _build_verified_dataset
-from siestaflow_hubbard.execution.lr_dag import LRNodeKind
-from siestaflow_hubbard.domain.symmetry_reduction import ResponseMode
+from hubbardflow.domain.matrix_lr import ResponseObservation
+from hubbardflow.execution.campaign_runner import CampaignRunner, _build_dag, _build_verified_dataset
+from hubbardflow.execution.lr_dag import LRNodeKind
+from hubbardflow.domain.symmetry_reduction import ResponseMode
 
 
 def test_fixed_grid_dag_is_explicit_and_alpha_diagnostic_does_not_veto_analysis():

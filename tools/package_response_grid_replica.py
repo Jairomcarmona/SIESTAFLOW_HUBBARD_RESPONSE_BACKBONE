@@ -16,7 +16,7 @@ import re
 import sys
 from typing import Any, Mapping
 
-from siestaflow_hubbard.domain.response_grid_reproducibility import (
+from hubbardflow.domain.response_grid_reproducibility import (
     ResponseGridCalibrationError,
     _node_artifact_path,
     _execution_attempt,
@@ -25,20 +25,20 @@ from siestaflow_hubbard.domain.response_grid_reproducibility import (
     validate_response_grid_calibration,
     response_grid_source_campaign_context,
 )
-from siestaflow_hubbard.execution.campaign_v2 import (
+from hubbardflow.execution.campaign_v2 import (
     CampaignV2Error,
     load_campaign_v2,
 )
-from siestaflow_hubbard.domain.lr_analysis_v2 import (
+from hubbardflow.domain.lr_analysis_v2 import (
     LRAnalysisPolicy,
     analyze_verified_lr,
     write_lr_analysis_v2,
 )
-from siestaflow_hubbard.domain.matrix_lr import ResponseObservation
-from siestaflow_hubbard.siesta_backend.occupation_precision import read_printed_occupation_precision
-from siestaflow_hubbard.siesta_backend.siesta542_bare_profile import Siesta542PotentialShiftHamiltonianProfile
-from siestaflow_hubbard.siesta_backend.siesta542_screened_selection import select_converged_screened_event
-from siestaflow_hubbard.reporting.lr_u_report import write_lr_u_report
+from hubbardflow.domain.matrix_lr import ResponseObservation
+from hubbardflow.siesta_backend.occupation_precision import read_printed_occupation_precision
+from hubbardflow.siesta_backend.siesta542_bare_profile import Siesta542PotentialShiftHamiltonianProfile
+from hubbardflow.siesta_backend.siesta542_screened_selection import select_converged_screened_event
+from hubbardflow.reporting.lr_u_report import write_lr_u_report
 
 
 class PackagingError(ValueError):

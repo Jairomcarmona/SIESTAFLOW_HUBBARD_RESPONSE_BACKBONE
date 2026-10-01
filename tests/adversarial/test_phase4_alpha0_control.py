@@ -1,10 +1,10 @@
 import pytest
-from siestaflow_hubbard.siesta_backend.observation_selector import (
+from hubbardflow.siesta_backend.observation_selector import (
     Siesta542BarePolicyV1,
     ObservationContext,
     ObservationPolicyError
 )
-from siestaflow_hubbard.siesta_backend.parser_models import HubbardAtomPopulation, HubbardPopulationEvent
+from hubbardflow.siesta_backend.parser_models import HubbardAtomPopulation, HubbardPopulationEvent
 from scratch.phase4_method2_revalidation import (
     select_converged_reference_event,
     ReferenceSelectionAmbiguityError,

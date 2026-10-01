@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from siestaflow_hubbard.domain.semantic_validation import SemanticValidator
+from hubbardflow.domain.semantic_validation import SemanticValidator
 
 def test_no_pinv_in_source():
     src_dir = Path(__file__).resolve().parents[2] / "src"

@@ -8,9 +8,9 @@ import random
 
 import pytest
 
-from siestaflow_hubbard.domain.u_certification import CertificationError, certify_u_matrices
-from siestaflow_hubbard.domain.u_repeatability import repeatability_envelope
-from siestaflow_hubbard.execution.u_certification_node import UCertificationNodeError, _derive_boxes
+from hubbardflow.domain.u_certification import CertificationError, certify_u_matrices
+from hubbardflow.domain.u_repeatability import repeatability_envelope
+from hubbardflow.execution.u_certification_node import UCertificationNodeError, _derive_boxes
 
 
 ACTIVE = ["-0.037", "-0.014", "-0.006", "0.006", "0.014", "0.037"]
@@ -44,7 +44,7 @@ def _certify(dataset, active=ACTIVE):
 def test_arbitrary_synthetic_2x2_uses_only_the_six_committed_active_points(monkeypatch):
     dataset = _dataset(("X17", "Q42"), extra=("-0.091", "0.091"), external_shift="100")
     selected = []
-    from siestaflow_hubbard.execution import u_certification_node
+    from hubbardflow.execution import u_certification_node
     original = u_certification_node.exact_slope_weights
 
     def capture(alphas, degree):
@@ -90,7 +90,7 @@ def test_site_rename_preserves_matrices_and_changes_only_semantic_identity():
     named_boxes = _certify(named)
     renamed_boxes = _certify(renamed)
     assert named_boxes == renamed_boxes
-    from siestaflow_hubbard.execution.source_evidence import scientific_tokens_sha256
+    from hubbardflow.execution.source_evidence import scientific_tokens_sha256
     assert scientific_tokens_sha256(named) != scientific_tokens_sha256(renamed)
 
 
@@ -148,13 +148,13 @@ def test_policy_driven_repeatability_math_has_no_material_or_expected_u_assumpti
 def test_decision_engine_has_no_benchmark_material_or_u_literals():
     root = Path(__file__).resolve().parents[2]
     decision_modules = (
-        "src/siestaflow_hubbard/domain/u_certification.py",
-        "src/siestaflow_hubbard/domain/u_repeatability.py",
-        "src/siestaflow_hubbard/domain/lr_analysis_v2.py",
-        "src/siestaflow_hubbard/execution/u_certification_node.py",
-        "src/siestaflow_hubbard/execution/u_release_gate.py",
-        "src/siestaflow_hubbard/execution/campaign_runner.py",
-        "src/siestaflow_hubbard/execution/campaign_v2.py",
+        "src/hubbardflow/domain/u_certification.py",
+        "src/hubbardflow/domain/u_repeatability.py",
+        "src/hubbardflow/domain/lr_analysis_v2.py",
+        "src/hubbardflow/execution/u_certification_node.py",
+        "src/hubbardflow/execution/u_release_gate.py",
+        "src/hubbardflow/execution/campaign_runner.py",
+        "src/hubbardflow/execution/campaign_v2.py",
         "production_benchmarks/slurm_runner.py",
     )
     forbidden = re.compile(

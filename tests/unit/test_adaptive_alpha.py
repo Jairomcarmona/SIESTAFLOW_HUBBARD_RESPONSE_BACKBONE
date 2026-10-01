@@ -1,12 +1,12 @@
 import numpy as np
 import pytest
 
-from siestaflow_hubbard.domain.adaptive_alpha import (
+from hubbardflow.domain.adaptive_alpha import (
     AdaptiveAlphaPolicy,
     AlphaPlanError,
     authorize_alpha_window,
 )
-from siestaflow_hubbard.domain.alpha_selection import AlphaSelectionPolicy
+from hubbardflow.domain.alpha_selection import AlphaSelectionPolicy
 
 
 def _linear_observations():

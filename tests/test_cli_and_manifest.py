@@ -8,11 +8,11 @@ import pytest
 from unittest.mock import patch
 from subprocess import CompletedProcess
 
-from siestaflow_hubbard.domain.campaign_manifest import CampaignManifest, CampaignState
-from siestaflow_hubbard.execution.checkpoint_manager import CheckpointManager, CheckpointScientificAcceptanceDisabledError
-from siestaflow_hubbard.reporting.evidence_exporter import EvidenceExporter
-import siestaflow_hubbard.cli as cli
-from siestaflow_hubbard.execution import wsl_supervisor
+from hubbardflow.domain.campaign_manifest import CampaignManifest, CampaignState
+from hubbardflow.execution.checkpoint_manager import CheckpointManager, CheckpointScientificAcceptanceDisabledError
+from hubbardflow.reporting.evidence_exporter import EvidenceExporter
+import hubbardflow.cli as cli
+from hubbardflow.execution import wsl_supervisor
 
 
 def test_wsl_command_decodes_utf8_report_output(monkeypatch):
@@ -191,14 +191,14 @@ def test_cli_init_dispatches_to_wsl_without_running_scientific_work(monkeypatch,
         dispatched["argv"] = argv
         return '{"campaign_id":"synthetic"}'
 
-    with patch("siestaflow_hubbard.cli.windows_to_wsl_path", side_effect=lambda _d, p: f"/mnt/c/{cli.Path(p).name}"), \
-         patch("siestaflow_hubbard.cli.wsl_command", side_effect=fake_wsl_command):
+    with patch("hubbardflow.cli.windows_to_wsl_path", side_effect=lambda _d, p: f"/mnt/c/{cli.Path(p).name}"), \
+         patch("hubbardflow.cli.wsl_command", side_effect=fake_wsl_command):
         assert cli.main([
             "init", "/inputs/input.fdf", "--lr-config", "/inputs/lr.json",
             "--profile", profile_path, "--name", "my_campaign", "--pointer", "/win/my_campaign.json",
         ]) == 0
     assert dispatched["distribution"] == "Ubuntu"
-    assert dispatched["argv"][1:3] == ["-m", "siestaflow_hubbard.cli"]
+    assert dispatched["argv"][1:3] == ["-m", "hubbardflow.cli"]
     assert '"campaign_id":"synthetic"' in capsys.readouterr().out
 
 
@@ -222,7 +222,7 @@ def test_cli_rejects_legacy_campaign_without_v2_evidence(tmp_path, capsys):
 
 
 def test_public_direct_manifest_commands_route_to_shared_runner_and_report_is_non_executing(monkeypatch, capsys):
-    from siestaflow_hubbard.execution import campaign_runner
+    from hubbardflow.execution import campaign_runner
 
     manifest = "campaign.v2.json"
     class SyntheticPath:
@@ -270,8 +270,8 @@ def test_cli_init_accepts_slurm_profile_for_direct_linux_manifest(monkeypatch, c
         dispatched.update(kwargs)
         return {"campaign_id": "direct", "manifest_path": "/campaigns/direct/campaign.v2.json"}
 
-    monkeypatch.setattr("siestaflow_hubbard.execution.wsl_campaign_init.initialize_campaign", fake_initialize)
-    monkeypatch.setattr("siestaflow_hubbard.cli.sys.platform", "linux")
+    monkeypatch.setattr("hubbardflow.execution.wsl_campaign_init.initialize_campaign", fake_initialize)
+    monkeypatch.setattr("hubbardflow.cli.sys.platform", "linux")
     assert cli.main([
         "init", "/inputs/reference.fdf", "--lr-config", "/inputs/lr.json",
         "--profile", profile_path, "--name", "direct", "--campaign-root", "/campaigns",

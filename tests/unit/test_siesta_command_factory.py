@@ -2,8 +2,8 @@ from pathlib import Path
 
 import pytest
 
-from siestaflow_hubbard.execution.execution_profile import ExecutionProfile
-from siestaflow_hubbard.siesta_backend.command_factory import SiestaCampaignLayout, SiestaCommandFactory
+from hubbardflow.execution.execution_profile import ExecutionProfile
+from hubbardflow.siesta_backend.command_factory import SiestaCampaignLayout, SiestaCommandFactory
 
 
 def _profile(executable: Path) -> ExecutionProfile:

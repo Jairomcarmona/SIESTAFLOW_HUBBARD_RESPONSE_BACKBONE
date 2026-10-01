@@ -4,8 +4,8 @@ import re
 test_dir = "tests"
 
 test_template = """import pytest
-from siestaflow_hubbard.domain.semantic_validation import SemanticValidator
-from siestaflow_hubbard.domain.campaign_manifest import CampaignManifest
+from hubbardflow.domain.semantic_validation import SemanticValidator
+from hubbardflow.domain.campaign_manifest import CampaignManifest
 
 def test_{name}():
     validator = SemanticValidator()

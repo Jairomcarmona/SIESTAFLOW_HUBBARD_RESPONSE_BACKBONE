@@ -1,5 +1,5 @@
-from siestaflow_hubbard.domain.semantic_validation import SemanticValidator
-from siestaflow_hubbard.domain.campaign_manifest import CampaignManifest
+from hubbardflow.domain.semantic_validation import SemanticValidator
+from hubbardflow.domain.campaign_manifest import CampaignManifest
 import pytest
 @pytest.mark.parametrize("decision_type,required_field", [
     ("DEFER", None), ("REJECT", "rejection_reasons"), ("ACCEPT_FULL_MATRIX", "u_accepted_matrix_ev"),

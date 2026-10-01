@@ -16,7 +16,7 @@ SPEC = importlib.util.spec_from_file_location("nio_lru_v3_analyzer", ANALYZER_PA
 assert SPEC is not None and SPEC.loader is not None
 ANALYZER = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(ANALYZER)
-from siestaflow_hubbard.domain.matrix_lr import fit_polynomial_response  # noqa: E402
+from hubbardflow.domain.matrix_lr import fit_polynomial_response  # noqa: E402
 
 
 def test_cubic_fit_default_accepts_five_points_with_one_residual_degree_of_freedom():
@@ -139,7 +139,7 @@ def test_analysis_path_has_no_siesta_executor_or_backend_imports():
             imported.add(node.module)
 
     assert "subprocess" not in imported
-    assert not any(name.startswith("siestaflow_hubbard.siesta_backend") for name in imported)
+    assert not any(name.startswith("hubbardflow.siesta_backend") for name in imported)
     result = json.loads((CAMPAIGN / "results/analysis-v3.json").read_text(encoding="utf-8"))
     assert result["workflow_integration"]["automatic_dag_node"] is False
     assert "postprocessing_step_after_frozen_v2_analysis" in result["workflow_integration"]["kind"]

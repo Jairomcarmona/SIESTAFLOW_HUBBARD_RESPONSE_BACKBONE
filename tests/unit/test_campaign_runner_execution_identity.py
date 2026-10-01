@@ -2,9 +2,9 @@ from hashlib import sha256
 from pathlib import Path
 from types import SimpleNamespace
 
-from siestaflow_hubbard.execution.campaign_runner import CampaignRunner
-from siestaflow_hubbard.execution.dag_contract import NodeState
-from siestaflow_hubbard.execution.generic_executor import NodeReceipt
+from hubbardflow.execution.campaign_runner import CampaignRunner
+from hubbardflow.execution.dag_contract import NodeState
+from hubbardflow.execution.generic_executor import NodeReceipt
 
 
 class _Checkpoint:

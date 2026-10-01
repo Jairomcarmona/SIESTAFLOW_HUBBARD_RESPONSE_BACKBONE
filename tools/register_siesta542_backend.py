@@ -15,15 +15,15 @@ from pathlib import Path
 import sys
 from typing import Mapping
 
-from siestaflow_hubbard.domain.backend_compatibility import (
+from hubbardflow.domain.backend_compatibility import (
     BackendCompatibilityRegistry,
     BackendIdentity,
     CompatibilityRecord,
     CompatibilityState,
     ScientificProfile,
 )
-from siestaflow_hubbard.siesta_backend.backend_identity import identify_backend
-from siestaflow_hubbard.siesta_backend.siesta542_bare_profile import (
+from hubbardflow.siesta_backend.backend_identity import identify_backend
+from hubbardflow.siesta_backend.siesta542_bare_profile import (
     Siesta542PotentialShiftHamiltonianProfile,
 )
 

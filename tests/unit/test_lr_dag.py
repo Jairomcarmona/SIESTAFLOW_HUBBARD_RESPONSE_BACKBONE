@@ -1,4 +1,4 @@
-from siestaflow_hubbard.domain.symmetry_reduction import (
+from hubbardflow.domain.symmetry_reduction import (
     ReductionState,
     ShadowObservation,
     SymmetryReductionPolicy,
@@ -6,15 +6,15 @@ from siestaflow_hubbard.domain.symmetry_reduction import (
     build_symmetry_reduction_plan,
     explicit_expansion_specs,
 )
-from siestaflow_hubbard.execution.lr_dag import (
+from hubbardflow.execution.lr_dag import (
     LRNodeKind,
     adaptive_alpha_perturbations,
     append_explicit_fallback,
     build_adaptive_alpha_lr_dag,
     build_initial_lr_dag,
 )
-from siestaflow_hubbard.domain.adaptive_alpha import AdaptiveAlphaPolicy
-from siestaflow_hubbard.domain.alpha_selection import AlphaSelectionPolicy
+from hubbardflow.domain.adaptive_alpha import AdaptiveAlphaPolicy
+from hubbardflow.domain.alpha_selection import AlphaSelectionPolicy
 from tests.support import certificate
 
 

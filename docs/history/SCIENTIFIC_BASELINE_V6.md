@@ -8,6 +8,24 @@ The freeze is created now as a dedicated commit with message `freeze: scientific
 
 The Stage U-B V6 tag `stage-ub-v6-20260930` remains untouched and points to `03ccd5913abdc6dd0e9a2cb59c0bc7637562c267`. The source baseline authorized for this clean recovery began at `7dafe8c828d0c5155a15bd595ce6779bdfe9c133`; Stage U-B implementation history was transferred by cherry-pick into this isolated worktree. That recovery procedure does not assert that a cherry-picked commit is byte-identical to its source commit.
 
+Pre-rename identity and commit context:
+
+```text
+project = SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE
+distribution = siestaflow-hubbard (declared as siestaflow_hubbard in pyproject.toml)
+import_namespace = siestaflow_hubbard
+cli = siestaflow
+original_dirty_checkout_branch = codex/sync-product-20260929
+original_dirty_checkout_head = 7dafe8c828d0c5155a15bd595ce6779bdfe9c133
+freeze_worktree_branch = codex/hubbardflow-v6-freeze
+freeze_commit = 45cb53c5a98d9d55a163c05ca3b815a8ff9cfb7f
+freeze_tag = scientific-v6-final (annotated)
+tag_target_commit = 45cb53c5a98d9d55a163c05ca3b815a8ff9cfb7f
+SIESTA_version_in_recorded_evidence = 5.4.2
+```
+
+The original dirty checkout was not changed. The new identity branch starts from the verified freeze commit. This is the immutable pre-HubbardFlow scientific baseline; later changes to project branding and Python namespace do not change its scientific identity.
+
 ## Scientific terminal state
 
 The canonical final report is [`FINAL_SIESTA_VALIDATION_REPORT_V6.md`](../../FINAL_SIESTA_VALIDATION_REPORT_V6.md), and the machine-readable terminal table is [`observable_validation_v6.json`](../../validation_observables_v6/observable_validation_v6.json). Their recorded terminal state is:
@@ -23,6 +41,17 @@ READY_FOR_CONSOLIDATION_REVIEW = YES
 ```
 
 The observable-validation closure and the U qualification are separate axes. In particular, NiO observable validation is `COMPLETE`; the archived v3 response analysis says `NUMERICAL_CANDIDATE_UNASSESSED` / `physical_acceptance=NOT_ESTABLISHED`, while the V6 summary's `u_qualification=ACCEPTED` and the certificate's `CERTIFIED` describe their own recorded classifications. These records are preserved as authored. This freeze does not reinterpret one status as another or claim a physical acceptance threshold that the analysis did not establish.
+
+Canonical per-material validation table from the V6 machine-readable summary and final report:
+
+| Material | U qualification | Observable validation | U-interval sensitivity |
+|---|---|---|---|
+| NiO | `ACCEPTED` | `COMPLETE` | not executed |
+| FeO | `ACCEPTED` | `COMPLETE` | not executed |
+| CoO | `REVIEW` | `COMPLETE` | not executed |
+| MnO | `PROTOCOL_REVIEW_REQUIRED` | `COMPLETE` | quantified; same phase |
+
+These four rows match the final validation report and the machine-readable table. Observable completion does not promote or demote a U qualification.
 
 All reported SCF-mesh and Seekpath gaps are sampled values. Neither establishes a mathematical global gap over the continuous Brillouin zone. FeO's earlier apparent LR-U Fermi crossings were caused by subtracting the Fermi energy twice in postprocessing; corrected derived artifacts use eigenvalues already expressed relative to EF. No SIESTA recalculation was needed for that correction.
 
@@ -48,7 +77,7 @@ HISTORICAL_PROVENANCE_GAP:
     represented as the generating implementation.
 ```
 
-The certificates are preserved byte-for-byte. The current tracked [`u_certification_node.py`](../../src/siestaflow_hubbard/execution/u_certification_node.py) is included only as the current repository implementation, not as historical generator evidence. Recorded certificate SHA-256 values are CoO `C1EF6CBA648C0EC64619D018D7957428C710EF77BAE7BCBA125291A1041A1252` and MnO `14133690A65FD3CED84594C95B4BED8AADAB48C398B0AEEEDD5F5D40F2F17265`.
+The certificates are preserved byte-for-byte. At the V6 freeze, the tracked [`u_certification_node.py`](../../src/hubbardflow/execution/u_certification_node.py) snapshot had SHA-256 `C991E0C95CAC2687237A7636E9F4F76B9ABC386F3CE91DDFDA1606FD2461DA9F`; it was included only as the then-current repository implementation, not as historical generator evidence. That tagged pre-rename snapshot remains at its legacy path. The current HubbardFlow source is a namespace-migrated implementation and must not be represented by that older hash or as historical generator evidence. Recorded certificate SHA-256 values are CoO `C1EF6CBA648C0EC64619D018D7957428C710EF77BAE7BCBA125291A1041A1252` and MnO `14133690A65FD3CED84594C95B4BED8AADAB48C398B0AEEEDD5F5D40F2F17265`.
 
 ### Historical Git commit identity mismatch
 
@@ -86,7 +115,7 @@ EXISTING_STAGE_TAG_TARGET
 
 NEW_FREEZE_IDENTITY
   tag = scientific-v6-final
-  sha = the verified target recorded in HUBBARDFLOW_RENAME_VERIFICATION.md
+  sha = 45cb53c5a98d9d55a163c05ca3b815a8ff9cfb7f
 ```
 
 All 18 files identified with the absent historical SHA are listed in [`V6_ARTIFACT_INVENTORY.md`](V6_ARTIFACT_INVENTORY.md). They are not edited to replace that SHA.
@@ -99,6 +128,6 @@ Accordingly, the V6 baseline is **not fully historical-source-reconstructable**.
 
 ## Verification and artifact inventory
 
-The selected scientific payload is enumerated in [`V6_ARTIFACT_INVENTORY.md`](V6_ARTIFACT_INVENTORY.md) and covered by [`SCIENTIFIC_BASELINE_V6.sha256`](SCIENTIFIC_BASELINE_V6.sha256). The manifest covers the transferred V6 reports, data, campaign evidence, certificates, run records, inputs, schemas, and band-postprocessor regression test. It intentionally excludes transient caches and this self-describing documentation. The inventory records the preserved historical Git SHA and lists every affected artifact located during the scoped scan.
+The selected scientific payload is enumerated in [`V6_ARTIFACT_INVENTORY.md`](V6_ARTIFACT_INVENTORY.md). Its 484-entry SHA-256 manifest, [`SCIENTIFIC_BASELINE_V6.sha256`](SCIENTIFIC_BASELINE_V6.sha256), was generated and checked before the freeze commit, but the repository-wide `*.sha256` ignore rule kept that file out of the immutable `scientific-v6-final` tree. The manifest is carried as a tracked audit companion in the subsequent rename commit; each of its 484 hashes has been independently checked against the corresponding blob in `scientific-v6-final` (zero missing blobs, zero mismatches). It intentionally excludes transient caches and self-describing documentation. The inventory records the preserved historical Git SHA and lists every affected artifact located during the scoped scan. The rename commit does not alter the freeze tag.
 
-No SIESTA process was launched during this freeze. No PBE decoupling or unrelated architectural work was performed.
+Canonical non-SIESTA verification for freeze preparation: the backend-contract CI test selection plus the FeO postprocessor regression passed (94 tests and 4 subtests). A broader, unfiltered pytest discovery attempt was not canonical and failed during collection on root scratch scripts, an outdated root test API, a missing archived NiO analysis script, and a missing optional module; these are recorded in the rename verification report. No SIESTA process was launched during this freeze. No PBE decoupling or unrelated architectural work was performed.

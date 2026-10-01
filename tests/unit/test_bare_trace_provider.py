@@ -4,12 +4,12 @@ from pathlib import Path
 
 import pytest
 
-from siestaflow_hubbard.siesta_backend.bare_trace_provider import (
+from hubbardflow.siesta_backend.bare_trace_provider import (
     BareTraceProviderError,
     BareTraceRequest,
     NativeBareTraceProvider,
 )
-from siestaflow_hubbard.siesta_backend.bare_semantics_evidence import BareTraceExpectation
+from hubbardflow.siesta_backend.bare_semantics_evidence import BareTraceExpectation
 
 
 def _digest(path: Path) -> str:

@@ -1,10 +1,10 @@
 import pytest
 import numpy as np
 
-from siestaflow_hubbard.domain.cardinals import Cardinals
-from siestaflow_hubbard.domain.alpha_grid import AlphaGrid
-from siestaflow_hubbard.synthetic_backend.population_generator import generate_populations, OccupationRecord
-from siestaflow_hubbard.synthetic_backend.noise_injection import NoiseParams
+from hubbardflow.domain.cardinals import Cardinals
+from hubbardflow.domain.alpha_grid import AlphaGrid
+from hubbardflow.synthetic_backend.population_generator import generate_populations, OccupationRecord
+from hubbardflow.synthetic_backend.noise_injection import NoiseParams
 
 
 @pytest.fixture

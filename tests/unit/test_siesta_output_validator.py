@@ -5,24 +5,24 @@ from subprocess import CompletedProcess
 
 import pytest
 
-from siestaflow_hubbard.execution.lr_dag import LRDagNode, LRNodeKind
-from siestaflow_hubbard.execution.runtime_adapters import NodeCommand
-from siestaflow_hubbard.domain.symmetry_reduction import PerturbationSpec, ResponseMode
-from siestaflow_hubbard.siesta_backend.output_validator import (
+from hubbardflow.execution.lr_dag import LRDagNode, LRNodeKind
+from hubbardflow.execution.runtime_adapters import NodeCommand
+from hubbardflow.domain.symmetry_reduction import PerturbationSpec, ResponseMode
+from hubbardflow.siesta_backend.output_validator import (
     SiestaArtifactSpec,
     SiestaOutputValidationError,
     SiestaOutputValidator,
     SiestaValidationPolicy,
 )
-from siestaflow_hubbard.domain.backend_compatibility import (
+from hubbardflow.domain.backend_compatibility import (
     BackendCompatibilityRegistry, BackendIdentity, CompatibilityRecord,
     CompatibilityState, ScientificProfile,
 )
-from siestaflow_hubbard.siesta_backend.backend_admission import admit_siesta542_potential_shift_hamiltonian
-from siestaflow_hubbard.siesta_backend.backend_admission_plugin import admit_siesta542_from_campaign_contract
-from siestaflow_hubbard.siesta_backend.backend_identity import sha256_file
-from siestaflow_hubbard.domain.lr_campaign_contract import LinearResponseBareCampaignContract
-from siestaflow_hubbard.siesta_backend.siesta542_bare_profile import Siesta542PotentialShiftHamiltonianProfile
+from hubbardflow.siesta_backend.backend_admission import admit_siesta542_potential_shift_hamiltonian
+from hubbardflow.siesta_backend.backend_admission_plugin import admit_siesta542_from_campaign_contract
+from hubbardflow.siesta_backend.backend_identity import sha256_file
+from hubbardflow.domain.lr_campaign_contract import LinearResponseBareCampaignContract
+from hubbardflow.siesta_backend.siesta542_bare_profile import Siesta542PotentialShiftHamiltonianProfile
 
 
 def _digest(path: Path) -> str:

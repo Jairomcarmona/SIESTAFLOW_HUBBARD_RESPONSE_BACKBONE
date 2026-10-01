@@ -1,8 +1,8 @@
 import pytest
 import numpy as np
-from siestaflow_hubbard.domain.provenance import ResponseMatrix
-from siestaflow_hubbard.domain.u_matrix import NumericalPolicy, GaugeRankStatus
-from siestaflow_hubbard.synthetic_backend.u_calculator import (
+from hubbardflow.domain.provenance import ResponseMatrix
+from hubbardflow.domain.u_matrix import NumericalPolicy, GaugeRankStatus
+from hubbardflow.synthetic_backend.u_calculator import (
     compute_u_matrix, 
     InversionError, 
     LabelMismatchError, 

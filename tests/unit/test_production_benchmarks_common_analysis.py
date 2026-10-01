@@ -8,8 +8,8 @@ import pytest
 
 from production_benchmarks import campaign_controller as controller
 from production_benchmarks.lr_arithmetic import response_observations_from_records
-from siestaflow_hubbard.domain.lr_analysis_v2 import LRAnalysisPolicy, analyze_verified_lr
-from siestaflow_hubbard.reporting.lr_u_report import render_lr_u_report
+from hubbardflow.domain.lr_analysis_v2 import LRAnalysisPolicy, analyze_verified_lr
+from hubbardflow.reporting.lr_u_report import render_lr_u_report
 
 
 _DM = "a" * 64

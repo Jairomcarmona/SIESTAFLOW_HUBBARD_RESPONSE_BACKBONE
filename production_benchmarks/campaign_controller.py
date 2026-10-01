@@ -11,11 +11,11 @@ from typing import Any, Dict, List
 
 from production_benchmarks.campaign_state import CampaignState
 from production_benchmarks.lr_arithmetic import response_observations_from_records
-from siestaflow_hubbard.domain.lr_analysis_v2 import LRAnalysisPolicy, analyze_verified_lr, write_lr_analysis_v2
-from siestaflow_hubbard.reporting.lr_u_report import write_lr_u_report
-from siestaflow_hubbard.siesta_backend.event_parser import parse_hubbard_population_events
-from siestaflow_hubbard.siesta_backend.observation_selector import Siesta542BarePolicyV1
-from siestaflow_hubbard.siesta_backend.parser_models import ObservationContext
+from hubbardflow.domain.lr_analysis_v2 import LRAnalysisPolicy, analyze_verified_lr, write_lr_analysis_v2
+from hubbardflow.reporting.lr_u_report import write_lr_u_report
+from hubbardflow.siesta_backend.event_parser import parse_hubbard_population_events
+from hubbardflow.siesta_backend.observation_selector import Siesta542BarePolicyV1
+from hubbardflow.siesta_backend.parser_models import ObservationContext
 
 
 def select_semantic_observation(output_text: str, mode: str, context: ObservationContext) -> Dict[str, Any]:

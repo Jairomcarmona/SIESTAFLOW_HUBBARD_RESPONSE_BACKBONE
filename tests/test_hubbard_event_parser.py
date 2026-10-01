@@ -1,11 +1,11 @@
 import pytest
 import numpy as np
-from siestaflow_hubbard.siesta_backend.event_parser import (
+from hubbardflow.siesta_backend.event_parser import (
     parse_hubbard_population_events,
     ParseSemanticMismatch,
     UnsupportedSpinFormat
 )
-from siestaflow_hubbard.domain.exceptions import SiestaParserError
+from hubbardflow.domain.exceptions import SiestaParserError
 
 def test_single_atom_single_event():
     out = """

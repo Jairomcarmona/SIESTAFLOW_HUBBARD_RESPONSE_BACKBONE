@@ -8,11 +8,11 @@ from typing import List, Dict
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src")))
 
 from siesta_adapter import SiestaAdapter
-from siestaflow_hubbard.synthetic_backend.fit_engine import fit_slopes, assemble_slope_matrix
-from siestaflow_hubbard.synthetic_backend.population_generator import OccupationRecord
-from siestaflow_hubbard.domain.cardinals import Cardinals
-from siestaflow_hubbard.domain.alpha_grid import AlphaGrid
-from siestaflow_hubbard.domain.matrix_pipeline import assemble_raw, invert_chi
+from hubbardflow.synthetic_backend.fit_engine import fit_slopes, assemble_slope_matrix
+from hubbardflow.synthetic_backend.population_generator import OccupationRecord
+from hubbardflow.domain.cardinals import Cardinals
+from hubbardflow.domain.alpha_grid import AlphaGrid
+from hubbardflow.domain.matrix_pipeline import assemble_raw, invert_chi
 
 def prepare_fdf_bare(base_fdf: str, alpha: float, target_fdf: str, run_name: str):
     """
@@ -103,7 +103,7 @@ def extract_occupations(adapter: SiestaAdapter, out_path: str, response_mode: st
 
 def main():
     print("=" * 60)
-    print("SIESTAFLOW HUBBARD RESPONSE - BENCHMARK CAMPAIGN (MnO)")
+    print("HUBBARDFLOW - BENCHMARK CAMPAIGN (MnO)")
     print("=" * 60)
     
     # 1. Configuración de la campaña

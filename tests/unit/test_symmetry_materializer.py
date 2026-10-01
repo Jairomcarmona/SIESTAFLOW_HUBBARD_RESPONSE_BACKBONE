@@ -3,13 +3,13 @@ from pathlib import Path
 
 import pytest
 
-from siestaflow_hubbard.domain.symmetry_reduction import PerturbationSpec, ResponseMode
-from siestaflow_hubbard.siesta_backend.symmetry_materializer import (
+from hubbardflow.domain.symmetry_reduction import PerturbationSpec, ResponseMode
+from hubbardflow.siesta_backend.symmetry_materializer import (
     ResponseMaterializationError,
     materialize_response_fdf,
     write_materialized_response,
 )
-from siestaflow_hubbard.siesta_backend.siesta542_bare_profile import (
+from hubbardflow.siesta_backend.siesta542_bare_profile import (
     Siesta542PotentialShiftHamiltonianProfile,
 )
 

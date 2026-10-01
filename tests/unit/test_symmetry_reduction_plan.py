@@ -1,6 +1,6 @@
 import pytest
 
-from siestaflow_hubbard.domain.symmetry_reduction import (
+from hubbardflow.domain.symmetry_reduction import (
     ReductionState,
     ShadowObservation,
     SymmetryPlanError,

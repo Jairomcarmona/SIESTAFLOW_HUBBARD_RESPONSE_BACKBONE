@@ -1,27 +1,41 @@
-# SIESTAFLOW Hubbard Response Backbone
+# HubbardFlow
 
 **Release:** 0.1.2
 
-**Estado del cierre P0–P6:** `PRODUCT_BLOCKED`. Las puertas operativas y la
-campaña P5 terminaron, pero el U de NiO permanece
-`NUMERICAL_CANDIDATE_UNASSESSED` / `NOT_ESTABLISHED` frente al objetivo
-científico del usuario. Véase el [registro final](docs/P0_EXECUTION_20260928.md).
+> HubbardFlow is an independent research software project. It is not part of,
+> maintained by, or officially affiliated with the SIESTA project. The current
+> implementation uses SIESTA as the electronic-structure engine.
+
+**Estado del cierre P0–P6 de 2026-09-28:** `PRODUCT_BLOCKED`. Ese registro
+describe el objetivo de producto original y se conserva como antecedente;
+el estado científico V6 posterior está documentado por separado en
+[FINAL_SIESTA_VALIDATION_REPORT_V6.md](FINAL_SIESTA_VALIDATION_REPORT_V6.md).
+La tabla V6 registra:
+
+| Material | Calificación U | Validación de observables |
+|---|---|---|
+| NiO | `ACCEPTED` | `COMPLETE` |
+| FeO | `ACCEPTED` | `COMPLETE` |
+| CoO | `REVIEW` | `COMPLETE` |
+| MnO | `PROTOCOL_REVIEW_REQUIRED` | `COMPLETE` |
+
+Véase también el [registro histórico P0–P6](docs/P0_EXECUTION_20260928.md).
 El [inventario de sincronización](docs/ESTADO_REPOSITORIO_Y_PUBLICACION_20260929.md)
 explica la publicación en el [PR borrador #4](https://github.com/Jairomcarmona/SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE/pull/4)
 y la diferencia respecto de `main`.
 
-SIESTAFLOW runs finite-difference charge-response campaigns with SIESTA, records their inputs and outputs, analyzes the response matrices, and writes a versioned JSON result plus a Markdown report. Its result is `U_scalar_charge`; the software does not convert that value automatically to `Ueff_Dudarev` or declare physical acceptance without the required scientific contract.
+HubbardFlow runs finite-difference charge-response campaigns with SIESTA, records their inputs and outputs, analyzes the response matrices, and writes a versioned JSON result plus a Markdown report. Its result is `U_scalar_charge`; the software does not convert that value automatically to `Ueff_Dudarev` or declare physical acceptance without the required scientific contract.
 
 ## Install
 
 Install the built wheel in the Python environment used for the CLI. Install it separately in Windows Python and the selected WSL distribution when using PowerShell → WSL. The wheel does not install SIESTA or MPI.
 
 ```powershell
-py -m pip install .\dist\siestaflow_hubbard-0.1.2-py3-none-any.whl
+py -m pip install .\dist\hubbardflow-0.1.2-py3-none-any.whl
 ```
 
 ```bash
-python3 -m pip install ./dist/siestaflow_hubbard-0.1.2-py3-none-any.whl
+python3 -m pip install ./dist/hubbardflow-0.1.2-py3-none-any.whl
 ```
 
 ## PowerShell → WSL quickstart
@@ -29,20 +43,20 @@ python3 -m pip install ./dist/siestaflow_hubbard-0.1.2-py3-none-any.whl
 Prepare an FDF, an `lr-config.json`, and a validated `local_wsl` execution profile. Then use the public CLI:
 
 ```powershell
-siestaflow audit-fdf .\reference.fdf
-siestaflow init .\reference.fdf --lr-config .\lr-config.json --profile .\local-wsl-profile.json --name material-lr
-siestaflow run .\material-lr.siestaflow.json
-siestaflow status .\material-lr.siestaflow.json
-siestaflow resume .\material-lr.siestaflow.json
-siestaflow report .\material-lr.siestaflow.json
-siestaflow stop .\material-lr.siestaflow.json
+hubbardflow audit-fdf .\reference.fdf
+hubbardflow init .\reference.fdf --lr-config .\lr-config.json --profile .\local-wsl-profile.json --name material-lr
+hubbardflow run .\material-lr.siestaflow.json
+hubbardflow status .\material-lr.siestaflow.json
+hubbardflow resume .\material-lr.siestaflow.json
+hubbardflow report .\material-lr.siestaflow.json
+hubbardflow stop .\material-lr.siestaflow.json
 ```
 
 The detailed profile and configuration contract is in [CLI_LOCAL_WSL_QUICKSTART.md](docs/CLI_LOCAL_WSL_QUICKSTART.md). `init` freezes the input inventory; the worker runs one local SIESTA node at a time. `resume` validates saved node evidence and schedules only missing or invalid work. `report` does not launch SIESTA.
 
 ## Linux and Slurm
 
-The public Linux CLI accepts a direct `campaign.v2.json` manifest. The Slurm execution profile must describe a compatible runtime and an allocation that has already been granted; SIESTAFLOW does not submit `sbatch` jobs. See [HPC_SLURM_EXECUTION_CONTRACT.md](docs/HPC_SLURM_EXECUTION_CONTRACT.md) and the CLI section of the [technical user manual](docs/USER_MANUAL.md).
+The public Linux CLI accepts a direct `campaign.v2.json` manifest. The Slurm execution profile must describe a compatible runtime and an allocation that has already been granted; HubbardFlow does not submit `sbatch` jobs. See [HPC_SLURM_EXECUTION_CONTRACT.md](docs/HPC_SLURM_EXECUTION_CONTRACT.md) and the CLI section of the [technical user manual](docs/USER_MANUAL.md).
 
 ## Scientific meaning and limits
 

@@ -8,7 +8,7 @@ def main():
     adapter = SiestaAdapter(wsl_siesta_path="/home/jmc/.local/siesta-5.4.2-serial/bin/siesta")
     cwd = os.getcwd()
     
-    print("Starting SIESTAFLOW SiestaAdapter Smoke Test...")
+    print("Starting HubbardFlow SIESTA adapter smoke test...")
     print(f"Base FDF: {base_fdf}")
     print(f"Alpha grid: {alpha_grid}")
     

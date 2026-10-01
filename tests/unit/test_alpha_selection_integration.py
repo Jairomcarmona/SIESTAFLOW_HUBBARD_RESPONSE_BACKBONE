@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from siestaflow_hubbard.domain.alpha_selection import AlphaSelectionPolicy, select_common_alpha_window
+from hubbardflow.domain.alpha_selection import AlphaSelectionPolicy, select_common_alpha_window
 
 
 def _linear_data(scale=1.0):

@@ -14,12 +14,12 @@ import sys
 import numpy as np
 import pytest
 
-from siestaflow_hubbard.domain.hubbard_parameter_semantics import (
+from hubbardflow.domain.hubbard_parameter_semantics import (
     HubbardParameterSemanticsError,
     require_dudarev_evidence,
 )
-from siestaflow_hubbard.siesta_backend.fdf_builder import FdfBuilder
-from siestaflow_hubbard.siesta_backend.event_parser import parse_hubbard_population_events
+from hubbardflow.siesta_backend.fdf_builder import FdfBuilder
+from hubbardflow.siesta_backend.event_parser import parse_hubbard_population_events
 
 
 ROOT = Path(__file__).resolve().parents[2]

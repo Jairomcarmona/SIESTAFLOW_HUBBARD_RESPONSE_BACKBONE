@@ -1,6 +1,6 @@
 # V6 scientific artifact inventory and provenance coverage
 
-This inventory is part of the `scientific-v6-final` freeze. The file-level SHA-256 manifest is [`SCIENTIFIC_BASELINE_V6.sha256`](SCIENTIFIC_BASELINE_V6.sha256). The manifest represents only the listed V6 evidence scope, not the entire repository.
+This inventory is part of the `scientific-v6-final` freeze. The 484-entry file-level SHA-256 manifest is retained as a tracked audit companion in the subsequent HubbardFlow rename commit: the generic `*.sha256` ignore rule omitted the manifest from the immutable freeze tag, although the manifest itself was verified before that commit. Every entry has now been checked against the corresponding blob in `scientific-v6-final`; all 484 are present and match. The manifest represents only the listed V6 evidence scope, not the entire repository. The follow-up does not rewrite the freeze commit or tag.
 
 ## Included inventory scopes
 

@@ -15,7 +15,7 @@ import tempfile
 import numpy as np
 import pytest
 
-from siestaflow_hubbard.siesta_backend.fdf_builder import LegacyBareMaterializationDisabledError
+from hubbardflow.siesta_backend.fdf_builder import LegacyBareMaterializationDisabledError
 
 # ─── Path setup ─────────────────────────────────────────────────────────────
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
@@ -600,7 +600,7 @@ def test_campaign_state_changed_identity_not_reused(tmp_path):
 # ═══════════════════════════════════════════════════════════════════════════
 
 def test_dm_invariant_stale_child_overwritten(tmp_path):
-    from siestaflow_hubbard.siesta_backend.adapter import prepare_canonical_dm
+    from hubbardflow.siesta_backend.adapter import prepare_canonical_dm
     ref  = tmp_path / 'reference.DM'
     child= tmp_path / 'child.DM'
     canonical_bytes = b'canonical_dm_data_AAAA'
@@ -614,7 +614,7 @@ def test_dm_invariant_stale_child_overwritten(tmp_path):
 
 
 def test_dm_invariant_manifest_hash_is_prerun(tmp_path):
-    from siestaflow_hubbard.siesta_backend.adapter import prepare_canonical_dm
+    from hubbardflow.siesta_backend.adapter import prepare_canonical_dm
     ref   = tmp_path / 'reference.DM'
     child = tmp_path / 'child.DM'
     canonical_bytes = b'canonical_reference_dm_bytes'
@@ -629,7 +629,7 @@ def test_dm_invariant_manifest_hash_is_prerun(tmp_path):
 
 
 def test_dm_invariant_raises_on_corrupt_source(tmp_path):
-    from siestaflow_hubbard.siesta_backend.adapter import prepare_canonical_dm
+    from hubbardflow.siesta_backend.adapter import prepare_canonical_dm
     ref   = tmp_path / 'reference.DM'
     child = tmp_path / 'child.DM'
     ref.write_bytes(b'real_dm_content')
@@ -639,7 +639,7 @@ def test_dm_invariant_raises_on_corrupt_source(tmp_path):
 
 def test_resume_does_not_reuse_stale_dm(tmp_path):
     """On resume, stale child DM is overwritten from canonical reference."""
-    from siestaflow_hubbard.siesta_backend.adapter import prepare_canonical_dm
+    from hubbardflow.siesta_backend.adapter import prepare_canonical_dm
     ref   = tmp_path / 'ref.DM'
     child = tmp_path / 'child.DM'
     canonical = b'canonical_bytes_for_resume_test'
@@ -656,7 +656,7 @@ def test_resume_does_not_reuse_stale_dm(tmp_path):
 # ═══════════════════════════════════════════════════════════════════════════
 
 def test_feo_afm_species_split_preserves_spins():
-    from siestaflow_hubbard.siesta_backend.fdf_builder import materialize_split_species_fdf
+    from hubbardflow.siesta_backend.fdf_builder import materialize_split_species_fdf
     base_fdf = """
 NumberOfAtoms 8
 NumberOfSpecies 2
@@ -703,7 +703,7 @@ Spin polarized
 
 
 def test_nio_afm_species_split_preserves_spins():
-    from siestaflow_hubbard.siesta_backend.fdf_builder import materialize_split_species_fdf
+    from hubbardflow.siesta_backend.fdf_builder import materialize_split_species_fdf
     base_fdf = """
 NumberOfAtoms 8
 NumberOfSpecies 2

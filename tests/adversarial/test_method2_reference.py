@@ -2,7 +2,7 @@ import pytest
 import os
 import json
 import hashlib
-from siestaflow_hubbard.siesta_backend.fdf_builder import FdfBuilder, MaterializedDftuContract
+from hubbardflow.siesta_backend.fdf_builder import FdfBuilder, MaterializedDftuContract
 
 def get_fingerprint(proj_dict: dict) -> str:
     json_str = json.dumps(proj_dict, sort_keys=True)
@@ -99,7 +99,7 @@ from scratch.phase4_method2_revalidation import (
     ReferenceSelectionAmbiguityError,
     ReferenceSelectionNotFoundError
 )
-from siestaflow_hubbard.siesta_backend.parser_models import HubbardPopulationEvent, HubbardAtomPopulation, ObservationRole
+from hubbardflow.siesta_backend.parser_models import HubbardPopulationEvent, HubbardAtomPopulation, ObservationRole
 import numpy as np
 
 def make_mock_event(occurrence_index: int, scf_iteration: int, trace_total: float, is_post_scf: bool = False):

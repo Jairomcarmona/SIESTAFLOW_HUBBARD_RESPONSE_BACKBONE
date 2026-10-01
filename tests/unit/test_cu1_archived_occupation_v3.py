@@ -11,15 +11,15 @@ from pathlib import Path
 
 import pytest
 
-from siestaflow_hubbard.domain.matrix_lr import ResponseObservation
-from siestaflow_hubbard.execution.campaign_runner import (
+from hubbardflow.domain.matrix_lr import ResponseObservation
+from hubbardflow.execution.campaign_runner import (
     CampaignRunner,
     _build_verified_dataset,
 )
-from siestaflow_hubbard.siesta_backend.siesta542_bare_profile import (
+from hubbardflow.siesta_backend.siesta542_bare_profile import (
     Siesta542PotentialShiftHamiltonianProfile,
 )
-from siestaflow_hubbard.siesta_backend.siesta542_screened_selection import (
+from hubbardflow.siesta_backend.siesta542_screened_selection import (
     select_converged_screened_event,
 )
 
