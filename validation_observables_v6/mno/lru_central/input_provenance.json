@@ -1,0 +1,14 @@
+{
+  "method": "PBE+LR-U central",
+  "parent_pbe_directory": "../pbe",
+  "parent_dm": "../pbe/MNO_PBE_REFERENCE.DM",
+  "parent_dm_sha256": "4464c80fc23e17ffa8dc1546b3bdd7803e85edf506f2a68e1c99334a3506458d",
+  "pbe_reference_input_sha256": "6e3eaf10ed6f1c61192826cee43003878612df43f8347e563f277449da79c727",
+  "u_certificate": "../authoritative_u_inputs.json",
+  "input_fdf_sha256": "87d13f7bfdaaeaff29a6bda5439b05cd3500075a341c2c410487505f61feb48f",
+  "species_files": {
+    "MnLR0.psml": "0b97ccd71456e4a7b28316f78ddb30bb1f6a82d9aba386c7fde78090d31c0dc6",
+    "MnLR1.psml": "0b97ccd71456e4a7b28316f78ddb30bb1f6a82d9aba386c7fde78090d31c0dc6",
+    "O.psml": "5ca5d753a995bd054279007ba76be71d622b60460c6f9a0d9bb37d81bdf185fe"
+  }
+}

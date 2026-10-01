@@ -1,0 +1,23 @@
+{
+  "status": "PENDING_REVIEW; band postprocessing stopped",
+  "pbe": {
+    "ef_eig_vs_hsx_eV": 1.327415510843366e-09,
+    "MAX_ABS_RAW_DIFFERENCE_eV": 0.0001797030961085966,
+    "MEAN_RAW_DIFFERENCE_eV": -1.8870330824070578e-06,
+    "BEST_CONSTANT_OFFSET_DELTA_eV": -1.8870330824070578e-06,
+    "MAX_ABS_RESIDUAL_AFTER_OFFSET_eV": 0.0001778160630261895,
+    "RMS_RESIDUAL_AFTER_OFFSET_eV": 1.4797502836146769e-05,
+    "largest_residual": "kpoint 22, spin 1, band 62"
+  },
+  "pbe_lru": {
+    "ef_eig_vs_hsx_eV": 2.053396e-10,
+    "MAX_ABS_RAW_DIFFERENCE_eV": 0.00018007117505192127,
+    "MEAN_RAW_DIFFERENCE_eV": -1.8863246725550253e-06,
+    "BEST_CONSTANT_OFFSET_DELTA_eV": -1.8863246725550253e-06,
+    "MAX_ABS_RESIDUAL_AFTER_OFFSET_eV": 0.00017818485037936625,
+    "RMS_RESIDUAL_AFTER_OFFSET_eV": 1.4750556013518917e-05,
+    "largest_residual": "kpoint 22, spin 1, band 62"
+  },
+  "scf_fermi_energy_from_out_matches_eig_hsx": true,
+  "eigenvalue_reference_decision": "not finalized; auto-review rejected proceeding with a looser comparison criterion"
+}

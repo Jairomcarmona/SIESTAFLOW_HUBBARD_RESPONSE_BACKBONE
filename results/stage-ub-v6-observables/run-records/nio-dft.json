@@ -1,0 +1,48 @@
+{
+  "material": "NiO",
+  "method": "DFT",
+  "date_utc": "2026-10-01",
+  "campaign_folder": "/home/jmc/.local/state/siestaflow/stage-u-b-v6-20260930/observables/nio-dft",
+  "baseline_commit": "03ccd5913abdc6dd0e9e2cb59c0bc7637562c267",
+  "input_fdf": "/home/jmc/.local/state/siestaflow/stage-u-b-v6-20260930/observables/nio-dft/input.fdf",
+  "u_used_eV": {
+    "NiLR0": 0.0,
+    "NiLR1": 0.0
+  },
+  "u_mapping_rule": "direct LR-certified atom-index mapping: site 0 -> LR0, site 1 -> LR1; SIESTA effective U=U-J with J=0 eV; no averaging",
+  "siesta_version": "5.4.2",
+  "scf_status": "SCF_CONVERGED",
+  "observables": {
+    "total_energy_eV": -10107.202374,
+    "fermi_eV": -4.523249,
+    "correlated_site_moments_muB": {
+      "NiLR0": 1.426543,
+      "NiLR1": -1.426543
+    },
+    "total_moment_muB": 0.0,
+    "electronic_state_on_sampled_mesh": "insulator",
+    "vbm_eV": -5.01348651,
+    "vbm_kpoint_fractional": [
+      -0.199336,
+      0.199336,
+      -0.199336
+    ],
+    "vbm_spin_band": [
+      2,
+      24
+    ],
+    "cbm_eV": -4.03987099,
+    "cbm_kpoint_fractional": [
+      0.398671,
+      0.0,
+      0.0
+    ],
+    "cbm_spin_band": [
+      1,
+      25
+    ],
+    "sampled_indirect_gap_eV": 0.97361552,
+    "gap_method": "EIG eigenvalues and matching KP; extrema relative to reported Fermi level over all 23 irreducible SCF k-points; no sampled band crossing"
+  },
+  "scf_iterations": 16
+}

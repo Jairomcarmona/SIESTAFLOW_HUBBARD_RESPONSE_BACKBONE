@@ -1,0 +1,21 @@
+{
+  "material": "FeO",
+  "method": "DFT+LR-U continuation",
+  "date": "2026-10-01",
+  "folder": "/home/jmc/.local/state/siestaflow/stage-u-b-v6-20260930/observables/feo-dft-lru-continuation-25pct",
+  "input_fdf": "/home/jmc/.local/state/siestaflow/stage-u-b-v6-20260930/observables/feo-dft-lru-continuation-25pct/input.fdf",
+  "u_fraction": 0.25,
+  "u_eV": {
+    "FeLR0": "1.40957044156079425",
+    "FeLR1": "1.40957897095724575"
+  },
+  "siesta_version": "5.4.2",
+  "mpi": "Open MPI 4.1.6, 4 ranks",
+  "scf_status": "FAILED_NOT_CONVERGED",
+  "scf_iterations": 300,
+  "dm_source": "/home/jmc/.local/state/siestaflow/stage-u-b-v6-20260930/observables/feo-dft-seedDM/FEO_PBE_REFERENCE.DM",
+  "dm_use_save_dm": true,
+  "all_non_U_FDF_settings_preserved_from_v6_PBE_seed": true,
+  "next_stage_only_if_converged": true,
+  "status_note": "25 percent U-continuation stage did not converge under V6 SCF tolerances by MaxSCFIterations=300; stopping the authorized sequence because no converged DM exists for the next stage. No observables accepted."
+}

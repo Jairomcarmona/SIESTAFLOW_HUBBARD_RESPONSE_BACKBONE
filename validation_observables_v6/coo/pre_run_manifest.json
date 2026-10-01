@@ -1,0 +1,139 @@
+{
+  "material": "CoO",
+  "structure_source": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\benchmarks\\lr_u\\CoO\\reference.fdf",
+  "geometry_provenance": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\benchmarks\\lr_u\\CoO\\geometry_provenance.json",
+  "lattice_constant_A": 4.254,
+  "lattice_vectors_fractional_cubic_a": [
+    [
+      0,
+      1,
+      1
+    ],
+    [
+      0.5,
+      0,
+      0.5
+    ],
+    [
+      0.5,
+      0.5,
+      0
+    ]
+  ],
+  "atomic_coordinates_fractional": [
+    {
+      "site": "CoLR0",
+      "species": 1,
+      "coords": [
+        0,
+        0,
+        0
+      ],
+      "initial_spin_muB": 3.0
+    },
+    {
+      "site": "CoLR1",
+      "species": 2,
+      "coords": [
+        0.5,
+        0,
+        0
+      ],
+      "initial_spin_muB": -3.0
+    },
+    {
+      "site": "O_0",
+      "species": 3,
+      "coords": [
+        0.25,
+        0.5,
+        0.5
+      ],
+      "initial_spin_muB": 0.0
+    },
+    {
+      "site": "O_1",
+      "species": 3,
+      "coords": [
+        0.75,
+        0.5,
+        0.5
+      ],
+      "initial_spin_muB": 0.0
+    }
+  ],
+  "magnetic_order": "AFM-II [111], fixed four-atom cell",
+  "species_site_labels": [
+    "CoLR0",
+    "CoLR1",
+    "O"
+  ],
+  "pseudopotentials": [
+    {
+      "source_file": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\benchmarks\\lr_u\\CoO\\Co.psml",
+      "staged_species_files": [
+        "CoLR0.psml",
+        "CoLR1.psml"
+      ],
+      "sha256": "72c9cf0cea3652fe1f5da5bf59fbe321253c540d09548937468acd72d899f44f",
+      "xc_iexc": "4 (PBE, ONCVPSP input)"
+    },
+    {
+      "source_file": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\benchmarks\\lr_u\\CoO\\O.psml",
+      "staged_species_files": [
+        "O.psml"
+      ],
+      "sha256": "5ca5d753a995bd054279007ba76be71d622b60460c6f9a0d9bb37d81bdf185fe",
+      "xc_iexc": "4 (PBE, ONCVPSP input)"
+    }
+  ],
+  "xc": "PBE (GGA/PBE)",
+  "basis": "DZP; EnergyShift=0.005 Ry; SplitNorm=0.15; PAO.BasisType=split",
+  "MeshCutoff_Ry": 200,
+  "k_grid": [
+    2,
+    4,
+    4
+  ],
+  "electronic_temperature_K": 300,
+  "occupation": "Fermi-Dirac",
+  "DFTU_projector_method": 2,
+  "projectors": {
+    "CoLR0": {
+      "l": 2,
+      "rc_bohr": 3.0,
+      "omega_bohr": 0.05
+    },
+    "CoLR1": {
+      "l": 2,
+      "rc_bohr": 3.0,
+      "omega_bohr": 0.05
+    }
+  },
+  "site_resolved_U_eV": {
+    "CoLR0": 5.817148502021659,
+    "CoLR1": 5.815019855497104
+  },
+  "J_eV": {
+    "CoLR0": 0.0,
+    "CoLR1": 0.0
+  },
+  "U_qualification": "REVIEW; estimator sensitivity CoLR1=0.020261154312882113 eV vs fixed 0.020000000 eV limit",
+  "U_source": "results/stage-ub-v6-observables/coo-u-b-campaigns/stageubv6-coo-a0/lr_u_analysis.v3.json primary.U_by_site_eV",
+  "SIESTA_version": "5.4.2",
+  "MPI_ranks": 4,
+  "max_simultaneous_SIESTA_processes": 1,
+  "SCF_controls": {
+    "mix": "Hamiltonian",
+    "mixer": "Pulay",
+    "weight": 0.05,
+    "history": 8,
+    "DM_tolerance": 1e-05,
+    "H_tolerance_eV": 0.0001,
+    "DFTU.PopTol": 1e-05,
+    "MaxSCFIterations": 300,
+    "DFTU.PotentialShift": false,
+    "DFTU.FirstIteration": true
+  },
+  "existing_PBE_reuse_check": "campaign contains many copied parent DMs but inspected representative node is an LR-U response run using File.DM.Init; no standalone matching PBE siesta.out/EIG was found for authoritative reuse, so new PBE reference is staged."
+}

@@ -1,0 +1,305 @@
+{
+  "status": "COMPLETE",
+  "seekpath_version": "2.2.2",
+  "seekpath_api": "get_path_orig_cell",
+  "cell_source": "V6 NiO input.fdf, lattice constant 4.17 Ang, unchanged lattice vectors and fractional coordinates",
+  "symmetry_species_numbers": [
+    28,
+    29,
+    8,
+    8
+  ],
+  "symmetry_species_note": "28 and 29 are labels solely to distinguish AFM-II Ni sublattices during symmetry detection; both are physical Ni in the SIESTA FDF and PSML inputs.",
+  "spacegroup_number": 166,
+  "spacegroup_international": "R-3m",
+  "symprec": 1e-05,
+  "angle_tolerance": -1.0,
+  "with_time_reversal": true,
+  "bravais_lattice": "hR",
+  "path_segments": [
+    [
+      "GAMMA",
+      "T"
+    ],
+    [
+      "T",
+      "H_2"
+    ],
+    [
+      "H_0",
+      "L"
+    ],
+    [
+      "L",
+      "GAMMA"
+    ],
+    [
+      "GAMMA",
+      "S_0"
+    ],
+    [
+      "S_2",
+      "F"
+    ],
+    [
+      "F",
+      "GAMMA"
+    ]
+  ],
+  "point_coords_reciprocal_lattice_vectors": {
+    "GAMMA": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "T": [
+      0.5,
+      1.6979672601346742e-16,
+      -5.701955793324023e-17
+    ],
+    "L": [
+      0.5000000000000001,
+      1.0275914043972561e-16,
+      0.5000000000000001
+    ],
+    "L_2": [
+      0.49999999999999994,
+      0.49999999999999994,
+      0.5
+    ],
+    "L_4": [
+      -0.49999999999999983,
+      -0.49999999999999994,
+      6.591771537943988e-17
+    ],
+    "F": [
+      0.9999999999999999,
+      0.5,
+      0.49999999999999994
+    ],
+    "F_2": [
+      1.2832059007325648e-16,
+      -0.4999999999999998,
+      -9.522555083943224e-18
+    ],
+    "S_0": [
+      0.6875000000000001,
+      0.34375000000000006,
+      0.6875000000000001
+    ],
+    "S_2": [
+      1.0,
+      0.3437500000000001,
+      0.65625
+    ],
+    "S_4": [
+      1.2833492179359198e-16,
+      -0.3437499999999999,
+      0.3437500000000001
+    ],
+    "S_6": [
+      0.31250000000000006,
+      -0.34374999999999983,
+      0.31249999999999994
+    ],
+    "H_0": [
+      0.875,
+      0.37500000000000017,
+      0.6875000000000001
+    ],
+    "H_2": [
+      1.125,
+      0.3125000000000001,
+      0.6249999999999999
+    ],
+    "H_4": [
+      0.5,
+      -0.3124999999999998,
+      0.31249999999999994
+    ],
+    "H_6": [
+      0.12500000000000008,
+      -0.3749999999999998,
+      0.3125
+    ],
+    "M_0": [
+      0.875,
+      0.53125,
+      0.53125
+    ],
+    "M_2": [
+      1.125,
+      0.46875000000000017,
+      0.46874999999999994
+    ],
+    "M_4": [
+      0.8125000000000001,
+      2.0360206260429687e-16,
+      0.4687499999999999
+    ],
+    "M_6": [
+      0.18750000000000003,
+      -0.4687499999999998,
+      -5.413628074552831e-17
+    ],
+    "M_8": [
+      -0.18749999999999992,
+      -0.5312499999999998,
+      1.2536027165161104e-18
+    ]
+  },
+  "band_lines_block": "WriteKbands true\nWriteBands true\nBandLinesScale ReciprocalLatticeVectors\n%block BandLines\n  1  0.0000000000  0.0000000000  0.0000000000 GAMMA\n 40  0.5000000000  0.0000000000  0.0000000000 T\n 40  1.1250000000  0.3125000000  0.6250000000 H_2\n  1  0.8750000000  0.3750000000  0.6875000000 H_0\n 40  0.5000000000  0.0000000000  0.5000000000 L\n 40  0.0000000000  0.0000000000  0.0000000000 GAMMA\n 40  0.6875000000  0.3437500000  0.6875000000 S_0\n  1  1.0000000000  0.3437500000  0.6562500000 S_2\n 40  1.0000000000  0.5000000000  0.5000000000 F\n 40  0.0000000000  0.0000000000  0.0000000000 GAMMA\n%endblock BandLines",
+  "line_points_per_segment": 40,
+  "warning_messages": [],
+  "method_dft": "PBE",
+  "method_dftu": "PBE+LR-U",
+  "execution_results": {
+    "nio-bands-dft-prepared": {
+      "method": "PBE",
+      "scf_status": "SCF_CONVERGED",
+      "scf_iterations": 2,
+      "total_energy_eV": -10107.202374,
+      "fermi_eV": -4.523234670440639,
+      "electronic_state_on_seekpath": "insulator",
+      "vbm_path": {
+        "eV": -5.0136,
+        "band": 24,
+        "path_distance": 4.084743,
+        "segment": "F-GAMMA",
+        "kpoint_fractional_original_cell": [
+          0.5,
+          0.25,
+          0.25
+        ],
+        "spin_channels": [
+          1,
+          2
+        ],
+        "spin_degenerate": true
+      },
+      "cbm_path": {
+        "eV": -3.7883,
+        "band": 25,
+        "path_distance": 2.901412,
+        "segment": "GAMMA-S_0",
+        "kpoint_fractional_original_cell": [
+          0.4640625,
+          0.23203125,
+          0.4640625
+        ],
+        "spin_channels": [
+          1,
+          2
+        ],
+        "spin_degenerate": true
+      },
+      "seekpath_indirect_gap_eV": 1.2253,
+      "bands_file": "NIO_PBE_REFERENCE.bands",
+      "bands_kpoints": 283,
+      "bands_spins": 2,
+      "bands": "283 k-points, 64 bands, 2 spins; no sampled path band crosses EF",
+      "minimum_direct_gap_spin_channels": [
+        1,
+        2
+      ]
+    },
+    "nio-bands-dft_lru-prepared": {
+      "method": "PBE+LR-U",
+      "scf_status": "SCF_CONVERGED",
+      "scf_iterations": 10,
+      "total_energy_eV": -10104.152299,
+      "fermi_eV": -4.014395929612588,
+      "electronic_state_on_seekpath": "insulator",
+      "vbm_path": {
+        "eV": -5.8172,
+        "band": 24,
+        "path_distance": 0.345259,
+        "segment": "GAMMA-T",
+        "kpoint_fractional_original_cell": [
+          0.5,
+          0.0,
+          0.0
+        ],
+        "spin_channels": [
+          1,
+          2
+        ],
+        "spin_degenerate": true
+      },
+      "cbm_path": {
+        "eV": -2.6401,
+        "band": 25,
+        "path_distance": 0.0,
+        "segment": "GAMMA-T",
+        "kpoint_fractional_original_cell": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "spin_channels": [
+          1,
+          2
+        ],
+        "spin_degenerate": true
+      },
+      "seekpath_indirect_gap_eV": 3.1771,
+      "bands_file": "NIO_PBE_REFERENCE.bands",
+      "bands_kpoints": 283,
+      "bands_spins": 2,
+      "bands": "283 k-points, 64 bands, 2 spins; no sampled path band crosses EF",
+      "minimum_direct_gap_spin_channels": [
+        1,
+        2
+      ]
+    }
+  },
+  "band_figures": {
+    "PBE": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\results\\stage-ub-v6-observables\\figures\\NiO_PBE_SEEKPATH_BANDS.svg",
+    "PBE+LR-U": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\results\\stage-ub-v6-observables\\figures\\NiO_PBE_LRU_SEEKPATH_BANDS.svg"
+  },
+  "path_band_character": {
+    "PBE": {
+      "vbm_eV": -5.0136,
+      "vbm_spin_band": [
+        1,
+        2
+      ],
+      "vbm_path_distance": 4.084743,
+      "cbm_eV": -3.7883,
+      "cbm_spin_band": [
+        1,
+        2
+      ],
+      "cbm_path_distance": 2.901412,
+      "indirect_gap_path_eV": 1.2253000000000003,
+      "minimum_direct_gap_path_eV": 1.3168000000000002,
+      "minimum_direct_gap_location": [
+        2.901412,
+        1
+      ],
+      "spin_edge_note": "Both spin channels are exactly degenerate at the reported VBM and CBM energies."
+    },
+    "PBE+LR-U": {
+      "vbm_eV": -5.8172,
+      "vbm_spin_band": [
+        1,
+        2
+      ],
+      "vbm_path_distance": 0.345259,
+      "cbm_eV": -2.6401,
+      "cbm_spin_band": [
+        1,
+        2
+      ],
+      "cbm_path_distance": 0.0,
+      "indirect_gap_path_eV": 3.1771,
+      "minimum_direct_gap_path_eV": 3.9337,
+      "minimum_direct_gap_location": [
+        0.486211,
+        1
+      ],
+      "spin_edge_note": "Both spin channels are exactly degenerate at the reported VBM and CBM energies."
+    }
+  },
+  "spin_channel_convention": "SIESTA spin channels 1 and 2; plotted as separate traces, but exactly degenerate at the reported VBM/CBM energies."
+}

@@ -1,0 +1,64 @@
+{
+  "material": "NiO",
+  "method": "PBE",
+  "status": "COMPLETE",
+  "source_run": "/home/jmc/.local/state/siestaflow/stage-u-b-v6-20260930/observables/nio-gap-mesh-8x16x16-dft",
+  "input_fdf": "/home/jmc/.local/state/siestaflow/stage-u-b-v6-20260930/observables/nio-gap-mesh-16x32x32-dft/input.fdf",
+  "reciprocal_full_BZ_mesh": [
+    16,
+    32,
+    32
+  ],
+  "bandpoints_count": 16384,
+  "band_method": "full uniform BandPoints mesh; centered on Gamma in the V6 reciprocal cell",
+  "scf_kgrid_preserved": "2x4x4",
+  "comparison_gate_eV": 0.001,
+  "gate_rule": "compare VBM, CBM, and indirect gap between successive full-BZ meshes; accept refinement stability only if all changes are <= 1 meV",
+  "DFTU_settings_preserved": true,
+  "DM.UseSaveDM": true,
+  "SCF_tolerances_preserved": true,
+  "geometry_fixed": true,
+  "not_a_geometry_or_campaign_run": true,
+  "comparison_parent_mesh": [
+    8,
+    16,
+    16
+  ],
+  "scf_converged": true,
+  "fermi_eV": -4.523258236070569,
+  "band_edges": {
+    "vbm_eV": -5.0092,
+    "vbm_location": [
+      [
+        0.19934,
+        0.1495,
+        -0.19934
+      ],
+      1,
+      24,
+      7703
+    ],
+    "cbm_eV": -4.0573,
+    "cbm_location": [
+      [
+        0.37375,
+        -0.02492,
+        -0.02492
+      ],
+      1,
+      25,
+      7927
+    ],
+    "gap_eV": 0.9519000000000002,
+    "crossing_bands": []
+  },
+  "comparison_to_parent": {
+    "mesh": 2048,
+    "deltas": {
+      "vbm_eV": 0.0015999999999998238,
+      "cbm_eV": -0.017399999999999416,
+      "gap_eV": -0.01899999999999924
+    },
+    "all_within_1meV": false
+  }
+}

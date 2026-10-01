@@ -1,0 +1,106 @@
+{
+  "schema": "siestaflow.lr_config.v2",
+  "material": "CoO-ideal-cubic-AFMII-PBE-stage-U-A-20260930",
+  "functional": "PBE",
+  "sites": [
+    {
+      "site_id": "CoLR0",
+      "orbit_id": "CoLR0",
+      "atom_index": 1
+    },
+    {
+      "site_id": "CoLR1",
+      "orbit_id": "CoLR1",
+      "atom_index": 2
+    }
+  ],
+  "alpha_grid_ev": [
+    -0.06,
+    -0.04,
+    -0.02,
+    0.02,
+    0.04,
+    0.06
+  ],
+  "pseudopotentials": {
+    "O": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\benchmarks\\lr_u\\CoO\\O.psml",
+    "CoLR1": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\benchmarks\\lr_u\\CoO\\Co.psml",
+    "CoLR0": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\benchmarks\\lr_u\\CoO\\Co.psml"
+  },
+  "static_artifacts": {
+    "software/command_factory.py": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\src\\siestaflow_hubbard\\siesta_backend\\command_factory.py",
+    "software/dm_restart_evidence.py": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\src\\siestaflow_hubbard\\siesta_backend\\dm_restart_evidence.py",
+    "geometry/geometry_provenance.json": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\benchmarks\\lr_u\\CoO\\geometry_provenance.json",
+    "software/output_validator.py": "C:\\Users\\Jairo\\Downloads\\SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0\\src\\siestaflow_hubbard\\siesta_backend\\output_validator.py"
+  },
+  "compatibility_registry": "C:/Users/Jairo/Downloads/SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0/campaigns/cu_one_atom_mode_centered_lr_v2/results/response-campaign/contracts/backend-compatibility.json",
+  "version_text_source": "C:/Users/Jairo/Downloads/SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0/campaigns/cu_one_atom_mode_centered_lr_v2/results/response-campaign/contracts/siesta-version.txt",
+  "declared_executable": "siesta",
+  "reference_dm_name": "COO_PBE_REFERENCE.DM",
+  "analysis_policy": {
+    "estimator": "polynomial",
+    "polynomial_degree": 3,
+    "minimum_residual_dof": 1,
+    "matrix_for_inversion": "raw"
+  },
+  "magnetic_moment_tolerance_muB": 0.1,
+  "adaptive_alpha_policy": {
+    "schema": "siestaflow.adaptive_alpha_policy.v1",
+    "h_eV": 0.02,
+    "alpha_seed_span_eV": 0.06,
+    "alpha_ceiling_eV": null,
+    "max_refinement_rounds": 2,
+    "max_alpha_points": 11,
+    "total_siesta_node_budget": 41,
+    "round_analysis": {
+      "initial": {
+        "active_window_eV": 0.06,
+        "estimator": "polynomial",
+        "polynomial_degree": 3,
+        "minimum_residual_dof": 1,
+        "matrix_for_inversion": "raw"
+      },
+      "shrink": [
+        {
+          "active_window_eV": 0.04,
+          "estimator": "polynomial",
+          "polynomial_degree": 3,
+          "minimum_residual_dof": 1,
+          "matrix_for_inversion": "raw"
+        },
+        {
+          "active_window_eV": 0.02,
+          "estimator": "polynomial",
+          "polynomial_degree": 3,
+          "minimum_residual_dof": 1,
+          "matrix_for_inversion": "raw"
+        }
+      ],
+      "expand": [
+        {
+          "active_window_eV": 0.06,
+          "estimator": "polynomial",
+          "polynomial_degree": 3,
+          "minimum_residual_dof": 1,
+          "matrix_for_inversion": "raw"
+        },
+        {
+          "active_window_eV": 0.06,
+          "estimator": "polynomial",
+          "polynomial_degree": 3,
+          "minimum_residual_dof": 1,
+          "matrix_for_inversion": "raw"
+        }
+      ]
+    },
+    "tol_abs_eV": 0.05,
+    "tol_rel": 0.01,
+    "truncation_threshold_eV": 0.001,
+    "sensitivity_delta_tolerance_eV": 0.05,
+    "probe_trigger_ratio": null,
+    "scf_materiality_ratio": null,
+    "rho_min": null,
+    "scf_probe_level": null
+  },
+  "execution_mode": "DEVELOPMENT"
+}

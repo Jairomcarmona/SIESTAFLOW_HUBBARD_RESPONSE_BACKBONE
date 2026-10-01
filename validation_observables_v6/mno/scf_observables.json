@@ -1,0 +1,298 @@
+{
+  "material": "MnO",
+  "xc": "PBE",
+  "runs": {
+    "PBE": {
+      "directory": "pbe",
+      "system_label": "MNO_PBE_REFERENCE",
+      "convergence": {
+        "scf_converged": true,
+        "iterations": 13,
+        "dDmax": 5.1345e-06,
+        "dHmax_eV": 2.28926e-05,
+        "DFTU_population_change": 0.0005959088,
+        "total_energy_eV": -6865.561143,
+        "free_energy_eV": -6865.561143,
+        "fermi_energy_eV": -4.888531,
+        "mulliken_atoms": [
+          {
+            "atom": 1,
+            "charge_e": 0.844561,
+            "valence_e": 14.155439,
+            "moment_muB": 4.70933,
+            "species": "MnLR0"
+          },
+          {
+            "atom": 2,
+            "charge_e": 0.844561,
+            "valence_e": 14.155439,
+            "moment_muB": -4.70933,
+            "species": "MnLR1"
+          },
+          {
+            "atom": 3,
+            "charge_e": -0.844561,
+            "valence_e": 6.844561,
+            "moment_muB": -0.0,
+            "species": "O"
+          },
+          {
+            "atom": 4,
+            "charge_e": -0.844561,
+            "valence_e": 6.844561,
+            "moment_muB": -0.0,
+            "species": "O"
+          }
+        ],
+        "total_moment_muB": 0.0
+      },
+      "scf_mesh": {
+        "classification": "INSULATOR",
+        "kpoint_count": 23,
+        "number_of_bands": 64,
+        "fermi_crossing_bands": [],
+        "partially_occupied_bands_at_300K": [],
+        "max_occupied_energy_rel_Ef_eV": -0.46075847000000003,
+        "min_unoccupied_energy_rel_Ef_eV": 0.43621248999999995,
+        "occupation_weighted_electron_count": 42.00000000001528,
+        "temperature_K": 300.00000000001273,
+        "fermi_energy_EIG_eV": -4.88853116,
+        "occupation_aware_gap_eV": 0.89697096
+      },
+      "EIG_HSX_max_abs_diff_eV": 0.00012614467371463434,
+      "EIG_HSX_rms_diff_eV": 9.413028232351494e-06,
+      "EIG_spin_layout": {
+        "format": "kpoint-index + eigenvalues, spin-major",
+        "max_abs_candidate_error_ev": 0.00012614467371463434
+      },
+      "fermi_energy_EIG_eV": -4.88853116,
+      "fermi_energy_HSX_eV": -4.888531164535736,
+      "files_sha256": {
+        "MNO_PBE_REFERENCE.DM": "4464c80fc23e17ffa8dc1546b3bdd7803e85edf506f2a68e1c99334a3506458d",
+        "MNO_PBE_REFERENCE.HSX": "52e356a4bed68cbe569e4ddb5b2c00668c0ffde218c493da7a45191ac455639a",
+        "MNO_PBE_REFERENCE.EIG": "f064aebadf359f8b8d8e33d7aee34e254e257a3e7a2401003659093a154df0ad",
+        "MNO_PBE_REFERENCE.KP": "47cb799ce72396e1394227f9309c83004578c5f54a3e977916f205ed9d601b2d",
+        "input.fdf": "6e3eaf10ed6f1c61192826cee43003878612df43f8347e563f277449da79c727"
+      }
+    },
+    "PBE+LR-U central": {
+      "directory": "lru_central",
+      "system_label": "MNCL",
+      "convergence": {
+        "scf_converged": true,
+        "iterations": 13,
+        "dDmax": 7.5796e-06,
+        "dHmax_eV": 9.18511e-05,
+        "DFTU_population_change": 6.2186e-06,
+        "total_energy_eV": -6860.365334,
+        "free_energy_eV": -6860.365334,
+        "fermi_energy_eV": -5.222883,
+        "mulliken_atoms": [
+          {
+            "atom": 1,
+            "charge_e": 0.961264,
+            "valence_e": 14.038736,
+            "moment_muB": 5.063565,
+            "species": "MnLR0"
+          },
+          {
+            "atom": 2,
+            "charge_e": 0.961252,
+            "valence_e": 14.038748,
+            "moment_muB": -5.063542,
+            "species": "MnLR1"
+          },
+          {
+            "atom": 3,
+            "charge_e": -0.961258,
+            "valence_e": 6.961258,
+            "moment_muB": -1.1e-05,
+            "species": "O"
+          },
+          {
+            "atom": 4,
+            "charge_e": -0.961258,
+            "valence_e": 6.961258,
+            "moment_muB": -1.1e-05,
+            "species": "O"
+          }
+        ],
+        "total_moment_muB": 9.999999996621801e-07
+      },
+      "scf_mesh": {
+        "classification": "INSULATOR",
+        "kpoint_count": 23,
+        "number_of_bands": 64,
+        "fermi_crossing_bands": [],
+        "partially_occupied_bands_at_300K": [],
+        "max_occupied_energy_rel_Ef_eV": -1.4937019100000004,
+        "min_unoccupied_energy_rel_Ef_eV": 0.9548727699999997,
+        "occupation_weighted_electron_count": 42.0,
+        "temperature_K": 300.00000000001273,
+        "fermi_energy_EIG_eV": -5.22288342,
+        "occupation_aware_gap_eV": 2.44857468
+      },
+      "EIG_HSX_max_abs_diff_eV": 0.0001260649494270183,
+      "EIG_HSX_rms_diff_eV": 9.40125410307822e-06,
+      "EIG_spin_layout": {
+        "format": "kpoint-index + eigenvalues, spin-major",
+        "max_abs_candidate_error_ev": 0.0001260649494270183
+      },
+      "fermi_energy_EIG_eV": -5.22288342,
+      "fermi_energy_HSX_eV": -5.2228834192067,
+      "files_sha256": {
+        "MNCL.DM": "1447d6fa73983a0597eae1d193d174836abf6c1f43afe64a9c3ccc0b7ca01be2",
+        "MNCL.HSX": "5b253d4e4bd1a35ac41a22d042b3e26ecc5b49e5b435e6015b764bb4347a0951",
+        "MNCL.EIG": "f39c0acdc56a163f60d46f4ba430f886a4746810d3d5340df2e032efb2ac5305",
+        "MNCL.KP": "47cb799ce72396e1394227f9309c83004578c5f54a3e977916f205ed9d601b2d",
+        "input.fdf": "87d13f7bfdaaeaff29a6bda5439b05cd3500075a341c2c410487505f61feb48f"
+      }
+    },
+    "PBE+LR-U low": {
+      "directory": "lru_low",
+      "system_label": "MNLO",
+      "convergence": {
+        "scf_converged": true,
+        "iterations": 7,
+        "dDmax": 2.38e-07,
+        "dHmax_eV": 3.0721e-06,
+        "DFTU_population_change": 5.63e-06,
+        "total_energy_eV": -6860.382745,
+        "free_energy_eV": -6860.382745,
+        "fermi_energy_eV": -5.224991,
+        "mulliken_atoms": [
+          {
+            "atom": 1,
+            "charge_e": 0.960983,
+            "valence_e": 14.039017,
+            "moment_muB": 5.062935,
+            "species": "MnLR0"
+          },
+          {
+            "atom": 2,
+            "charge_e": 0.960971,
+            "valence_e": 14.039029,
+            "moment_muB": -5.062912,
+            "species": "MnLR1"
+          },
+          {
+            "atom": 3,
+            "charge_e": -0.960977,
+            "valence_e": 6.960977,
+            "moment_muB": -1.2e-05,
+            "species": "O"
+          },
+          {
+            "atom": 4,
+            "charge_e": -0.960977,
+            "valence_e": 6.960977,
+            "moment_muB": -1.2e-05,
+            "species": "O"
+          }
+        ],
+        "total_moment_muB": -9.999999994496426e-07
+      },
+      "scf_mesh": {
+        "classification": "INSULATOR",
+        "kpoint_count": 23,
+        "number_of_bands": 64,
+        "fermi_crossing_bands": [],
+        "partially_occupied_bands_at_300K": [],
+        "max_occupied_energy_rel_Ef_eV": -1.48903287,
+        "min_unoccupied_energy_rel_Ef_eV": 0.95646041,
+        "occupation_weighted_electron_count": 42.0,
+        "temperature_K": 300.00000000001273,
+        "fermi_energy_EIG_eV": -5.22499079,
+        "occupation_aware_gap_eV": 2.44549328
+      },
+      "EIG_HSX_max_abs_diff_eV": 0.00012637648933377932,
+      "EIG_HSX_rms_diff_eV": 9.400045978370723e-06,
+      "EIG_spin_layout": {
+        "format": "kpoint-index + eigenvalues, spin-major",
+        "max_abs_candidate_error_ev": 0.00012637648933377932
+      },
+      "fermi_energy_EIG_eV": -5.22499079,
+      "fermi_energy_HSX_eV": -5.224990786305187,
+      "files_sha256": {
+        "MNLO.DM": "30ae0925404564a4102ff6489de647d657d09463a301b13ac93f2a6335fa4b13",
+        "MNLO.HSX": "17d0432b37cd60018f1b3c08013ca9b0523e20405d1eb383104ede1f89d97274",
+        "MNLO.EIG": "013f42b5f81e380129653725c53b6ce785175a45d6b35f5f4d8024b74d304d53",
+        "MNLO.KP": "47cb799ce72396e1394227f9309c83004578c5f54a3e977916f205ed9d601b2d",
+        "input.fdf": "1ed220d3cd4dd74073afae865b4fcd5bc61758efd46b1ae9367023cbcb2cb75b"
+      }
+    },
+    "PBE+LR-U high": {
+      "directory": "lru_high",
+      "system_label": "MNHI",
+      "convergence": {
+        "scf_converged": true,
+        "iterations": 7,
+        "dDmax": 1.941e-07,
+        "dHmax_eV": 3.4237e-06,
+        "DFTU_population_change": 5.0327e-06,
+        "total_energy_eV": -6860.347866,
+        "free_energy_eV": -6860.347866,
+        "fermi_energy_eV": -5.220794,
+        "mulliken_atoms": [
+          {
+            "atom": 1,
+            "charge_e": 0.96155,
+            "valence_e": 14.03845,
+            "moment_muB": 5.064203,
+            "species": "MnLR0"
+          },
+          {
+            "atom": 2,
+            "charge_e": 0.961538,
+            "valence_e": 14.038462,
+            "moment_muB": -5.06418,
+            "species": "MnLR1"
+          },
+          {
+            "atom": 3,
+            "charge_e": -0.961544,
+            "valence_e": 6.961544,
+            "moment_muB": -1.1e-05,
+            "species": "O"
+          },
+          {
+            "atom": 4,
+            "charge_e": -0.961544,
+            "valence_e": 6.961544,
+            "moment_muB": -1.1e-05,
+            "species": "O"
+          }
+        ],
+        "total_moment_muB": 9.999999996621801e-07
+      },
+      "scf_mesh": {
+        "classification": "INSULATOR",
+        "kpoint_count": 23,
+        "number_of_bands": 64,
+        "fermi_crossing_bands": [],
+        "partially_occupied_bands_at_300K": [],
+        "max_occupied_energy_rel_Ef_eV": -1.4983305400000004,
+        "min_unoccupied_energy_rel_Ef_eV": 0.9533193899999999,
+        "occupation_weighted_electron_count": 42.0,
+        "temperature_K": 300.00000000001273,
+        "fermi_energy_EIG_eV": -5.22079381,
+        "occupation_aware_gap_eV": 2.4516499300000003
+      },
+      "EIG_HSX_max_abs_diff_eV": 0.00012635736126753727,
+      "EIG_HSX_rms_diff_eV": 9.404038583204814e-06,
+      "EIG_spin_layout": {
+        "format": "kpoint-index + eigenvalues, spin-major",
+        "max_abs_candidate_error_ev": 0.00012635736126753727
+      },
+      "fermi_energy_EIG_eV": -5.22079381,
+      "fermi_energy_HSX_eV": -5.220793808674528,
+      "files_sha256": {
+        "MNHI.DM": "e9d92e13167a7ee04eac9e3bf578b901e578971a12d8d334195310e5232d40d9",
+        "MNHI.HSX": "4dd596abcdd905679ff12a335ccdd01427703d48527c1425c1b0da70189387ee",
+        "MNHI.EIG": "117081280f3d4426351ce8347eaca4aba22da8d8f2c51f1821a746c78c8c41ee",
+        "MNHI.KP": "47cb799ce72396e1394227f9309c83004578c5f54a3e977916f205ed9d601b2d",
+        "input.fdf": "93d00451772750c3f0a792e764b42cf2e56fb5bae6fb5ae3a459663ea2abb6c7"
+      }
+    }
+  }
+}

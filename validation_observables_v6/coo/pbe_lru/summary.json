@@ -1,0 +1,49 @@
+{
+  "material": "CoO",
+  "xc": "PBE",
+  "u_qualification": "REVIEW",
+  "site_resolved_u_eV": {
+    "CoLR0": 5.817148502021659,
+    "CoLR1": 5.815019855497104
+  },
+  "j_eV": {
+    "CoLR0": 0.0,
+    "CoLR1": 0.0
+  },
+  "geometry_source": "benchmarks/lr_u/CoO/reference.fdf",
+  "sampled_mesh": [
+    2,
+    4,
+    4
+  ],
+  "electronic_temperature_K": 300,
+  "electron_count_from_occupations": 46.0,
+  "method": "PBE+LR-U",
+  "u_applied_eV": {
+    "CoLR0": 5.817148502021659,
+    "CoLR1": 5.815019855497104
+  },
+  "converged": true,
+  "iterations": 93,
+  "dDmax": 4.8134e-06,
+  "dHmax_eV": 4.78931e-05,
+  "DFTU_population_change": 4.0288e-06,
+  "total_energy_eV": -9222.33792,
+  "free_energy_eV": -9222.33792,
+  "fermi_energy_eV": -3.502153,
+  "local_moments_muB": {
+    "CoLR0": 2.819499,
+    "CoLR1": -2.81944
+  },
+  "total_moment_muB": 1e-06,
+  "scf_mesh_state": "INSULATOR",
+  "fermi_crossing_bands": {
+    "spin1": [],
+    "spin2": []
+  },
+  "occupation_weighted_electron_count": 46.000000000000966,
+  "vbm_rel_ef_eV": -2.07133977,
+  "cbm_rel_ef_eV": 0.64348301,
+  "scf_mesh_sampled_gap_eV": 2.71482278,
+  "seekpath_status": "ROUTE_GENERATED; BAND_EVALUATION_BLOCKED_PENDING_HSX_EIG_REVIEW"
+}

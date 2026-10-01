@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "u_certificate.v1.schema.json",
+  "title": "Certified LR-U interval evidence",
+  "type": "object",
+  "required": ["schema_version", "certificate_status", "campaign_uuid", "source_analysis_sha256", "analysis_artifact_sha256", "analysis_artifact_path", "response_dataset_sha256", "response_tokens_file_sha256", "response_tokens_path", "response_tokens_scientific_sha256", "source_evidence_manifest_sha256", "source_evidence_manifest_canonical_sha256", "source_manifest_identity_sha256", "source_evidence_manifest_path", "matrix_analysis_receipt_sha256", "matrix_analysis_commitment_file_sha256", "matrix_analysis_commitment_path", "node_evidence_sha256", "occupation_source", "exact_token_precision_contract", "analysis_policy_sha256", "nominal_u_by_site_eV", "matrix_dimension", "chi0_interval", "chi_interval", "regularity_certificates", "primary_method", "u_interval_by_site", "half_width_by_site", "cross_checks", "consistency_status", "assumptions", "implementation_version", "certificate_scientific_sha256", "physical_acceptance"],
+  "properties": {
+    "schema_version": {"const": "u_certificate.v1"},
+    "certificate_status": {"enum": ["CERTIFIED", "CERTIFIED_WITH_FALLBACK", "CERTIFICATE_NOT_ESTABLISHED", "INCONSISTENT_CERTIFIERS", "INVALID_SOURCE_EVIDENCE"]},
+    "campaign_uuid": {"type": "string", "minLength": 1},
+    "source_analysis_sha256": {"$ref": "#/$defs/hash"},
+    "response_dataset_sha256": {"$ref": "#/$defs/hash"},
+    "response_tokens_file_sha256": {"$ref": "#/$defs/hash"},
+    "response_tokens_scientific_sha256": {"$ref": "#/$defs/hash"},
+    "source_evidence_manifest_sha256": {"$ref": "#/$defs/hash"},
+    "source_evidence_manifest_canonical_sha256": {"$ref": "#/$defs/hash"},
+    "source_manifest_identity_sha256": {"$ref": "#/$defs/hash"},
+    "matrix_analysis_receipt_sha256": {"$ref": "#/$defs/hash"},
+    "matrix_analysis_commitment_file_sha256": {"$ref": "#/$defs/hash"},
+    "analysis_artifact_sha256": {"$ref": "#/$defs/hash"},
+    "certificate_scientific_sha256": {"$ref": "#/$defs/hash"},
+    "source_evidence_manifest_path": {"type": "string", "minLength": 1},
+    "response_tokens_path": {"type": "string", "minLength": 1},
+    "analysis_artifact_path": {"type": "string", "minLength": 1},
+    "matrix_analysis_commitment_path": {"type": "string", "minLength": 1},
+    "node_evidence_sha256": {"type": "array", "items": {"$ref": "#/$defs/hash"}},
+    "occupation_source": {"type": "string"},
+    "exact_token_precision_contract": {"type": "string"},
+    "analysis_policy_sha256": {"$ref": "#/$defs/hash"},
+    "nominal_u_by_site_eV": {"type": "array", "items": {"type": ["number", "null"]}},
+    "matrix_dimension": {"type": "integer", "minimum": 1},
+    "chi0_interval": {"type": "array", "items": {"type": "array", "items": {"$ref": "#/$defs/interval"}}},
+    "chi_interval": {"type": "array", "items": {"type": "array", "items": {"$ref": "#/$defs/interval"}}},
+    "regularity_certificates": {"type": "object"},
+    "primary_method": {"type": ["string", "null"], "enum": ["exact_rational_2x2", "verified_krawczyk", "verified_neumann_fallback", null]},
+    "u_interval_by_site": {"type": ["array", "null"], "items": {"$ref": "#/$defs/interval"}},
+    "half_width_by_site": {"type": ["array", "null"], "items": {"$ref": "#/$defs/rational"}},
+    "cross_checks": {"type": "array"},
+    "consistency_status": {"type": "string"},
+    "assumptions": {"type": "array"},
+    "implementation_version": {"type": "string"},
+    "physical_acceptance": {"const": "NOT_ESTABLISHED"}
+  },
+  "$defs": {
+    "hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "rational": {"type": "string", "pattern": "^-?\\d+(?:/\\d+)?$"},
+    "interval": {"type": "object", "required": ["lower", "upper"], "properties": {
+      "lower": {"$ref": "#/$defs/rational"}, "upper": {"$ref": "#/$defs/rational"}
+    }, "additionalProperties": false}
+  },
+  "additionalProperties": true
+}

@@ -1,3 +1,20 @@
 # Preserve the exact bytes of the frozen MnO campaign. Its manifests and
 # receipts contain SHA-256 hashes of the native SIESTA inputs and outputs.
 campaigns/mno_afmii_strict_lr_v3r2/** -text
+
+# Preserve the exact bytes represented by the Stage U-B V6 scientific freeze.
+FINAL_SIESTA_VALIDATION_REPORT_V6.md -text
+validation_observables_v6/** -text
+results/stage-ub-v6-observables/** -text
+FEO_SCF_DIAGNOSTIC_EXPORT_20261001/** -text
+benchmarks/lr_u/CoO/** -text
+benchmarks/lr_u/FeO/** -text
+benchmarks/lr_u/MnO/** -text
+benchmarks/lr_u/NiO/** -text
+benchmarks/lr_u/forensic_audit/** -text
+campaigns/nio_pbe_p5_20260928/results/** -text
+schemas/u_certificate.v1.schema.json -text
+schemas/response_tokens.v1.schema.json -text
+tests/unit/test_feo_band_postprocessor.py -text
+src/siestaflow_hubbard/execution/u_certification_node.py -text
+docs/history/SCIENTIFIC_BASELINE_V6.sha256 -text

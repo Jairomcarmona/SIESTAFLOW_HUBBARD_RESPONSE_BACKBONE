@@ -1,0 +1,20 @@
+{
+  "variant": "LOW",
+  "source_certificate_summary": "../authoritative_u_inputs.json",
+  "parent_dm": "../lru_central/MNCL.DM",
+  "parent_dm_sha256": "1447d6fa73983a0597eae1d193d174836abf6c1f43afe64a9c3ccc0b7ca01be2",
+  "input_fdf_sha256": "1ed220d3cd4dd74073afae865b4fcd5bc61758efd46b1ae9367023cbcb2cb75b",
+  "u_site_eV": {
+    "MnLR0": 11.068637186266534,
+    "MnLR1": 11.066234041923392
+  },
+  "u_site_fraction": {
+    "MnLR0": "17468118093120427662000/1578163399808070526477",
+    "MnLR1": "17464325538673626282000/1578163399808070526477"
+  },
+  "changes_from_central": [
+    "SystemName",
+    "SystemLabel",
+    "certified site-specific U endpoints"
+  ]
+}

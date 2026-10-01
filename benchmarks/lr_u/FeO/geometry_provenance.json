@@ -1,0 +1,79 @@
+{
+  "schema": "siestaflow.geometry_provenance.v1",
+  "model": "ideal stoichiometric rocksalt B1 AFM-II along [111], four-atom magnetic cell; two oppositely polarized Fe sites and two O sites",
+  "stoichiometry": "FeO ideal (not vacancy-bearing Fe1-xO)",
+  "lattice_constant_ang": 4.334,
+  "lattice_source": {
+    "reported": "rocksalt AFM-II calculations at experimentally reported FeO lattice parameter 4.334 Å",
+    "citation": "S. Mandal et al., Systematic beyond-DFT study of binary transition metal oxides, npj Computational Materials 5, 115 (2019), DOI 10.1038/s41524-019-0251-7",
+    "url": "https://www.nature.com/articles/s41524-019-0251-7"
+  },
+  "magnetic_model_source": {
+    "reported": "AFM-II along [111], with two transition-metal ions in the magnetic cell",
+    "citation": "S. Mandal et al., Systematic beyond-DFT study of binary transition metal oxides, npj Computational Materials 5, 115 (2019), DOI 10.1038/s41524-019-0251-7",
+    "url": "https://www.nature.com/articles/s41524-019-0251-7"
+  },
+  "stoichiometry_caveat": {
+    "reported": "near-stoichiometric Fe0.9347O diffraction; do not treat ideal FeO as a universal low-temperature phase",
+    "citation": "S. Stølen et al., On the Crystallographic and Magnetic Structures of Nearly Stoichiometric Iron Monoxide, Journal of Solid State Chemistry 124 (1996) 52-57, DOI 10.1006/jssc.1996.0206",
+    "url": "https://doi.org/10.1006/jssc.1996.0206"
+  },
+  "cell_vectors_fractional_of_cubic_a": [
+    [
+      0,
+      1,
+      1
+    ],
+    [
+      0.5,
+      0,
+      0.5
+    ],
+    [
+      0.5,
+      0.5,
+      0
+    ]
+  ],
+  "fractional_atoms": [
+    {
+      "initial_spin_muB": 4.0,
+      "fractional": [
+        0,
+        0,
+        0
+      ],
+      "role": "Fe_A"
+    },
+    {
+      "initial_spin_muB": -4.0,
+      "fractional": [
+        0.5,
+        0,
+        0
+      ],
+      "role": "Fe_B"
+    },
+    {
+      "initial_spin_muB": 0.0,
+      "fractional": [
+        0.25,
+        0.5,
+        0.5
+      ],
+      "role": "O_0"
+    },
+    {
+      "initial_spin_muB": 0.0,
+      "fractional": [
+        0.75,
+        0.5,
+        0.5
+      ],
+      "role": "O_1"
+    }
+  ],
+  "deviations": "Unrelaxed ideal stoichiometric rocksalt AFM-II transfer model. Real wüstite is commonly nonstoichiometric and near-stoichiometric low-temperature samples may show additional structural/magnetic complexity; this campaign does not model vacancy ordering or monoclinic distortions.",
+  "literature_u": "None used as an input, target, tuning parameter or acceptance criterion.",
+  "geometry_hash_basis": "This record and exact FDF are both in the campaign input inventory."
+}

@@ -1,0 +1,270 @@
+{
+  "material": "MnO",
+  "n_kpoints": 23,
+  "n_bands": 64,
+  "n_spin_channels": 2,
+  "methods": {
+    "PBE": {
+      "EF_EIG_eV": -4.88853116,
+      "EF_HSX_eV": -4.888531164535736,
+      "EF_OUT_eV": -4.888531,
+      "EF_EIG_HSX_abs_diff_eV": 4.535735342869884e-09,
+      "mean_EIG_minus_HSX_eV": 4.943895189301693e-07,
+      "max_abs_raw_diff_eV": 0.00012614467371463434,
+      "rms_raw_diff_eV": 9.413028232351494e-06,
+      "max_abs_residual_after_constant_offset_eV": 0.00012565028419570418,
+      "rms_residual_after_constant_offset_eV": 9.40003614389957e-06,
+      "maximum_location": {
+        "kpoint_index_1based": 13,
+        "k_fractional_original_cell": [
+          0.49999931540577086,
+          0.2499996577028854,
+          0.24999965770288543
+        ],
+        "k_cartesian_inverse_bohr": [
+          0.186982,
+          0.186982,
+          0.186982
+        ],
+        "spin_channel": 1,
+        "band_index": 64,
+        "E_EIG_eV": 132.278926,
+        "E_HSX_eV": 132.2787998553263,
+        "delta_eV": 0.00012614467371463434,
+        "E_EIG_minus_EF_eV": 137.16745716000003,
+        "E_HSX_minus_EF_eV": 137.16733101986205
+      },
+      "neighboring_bands_n_minus_2_to_n_plus_2": [
+        {
+          "band": 62,
+          "E_EIG_eV": 77.4748335,
+          "E_HSX_eV": 77.47484385850494,
+          "delta_eV": -1.0358504937357793e-05,
+          "E_EIG_minus_EF_eV": 82.36336466,
+          "E_HSX_minus_EF_eV": 82.36337502304067,
+          "EIG_spacing_to_next_eV": 28.746089499999997,
+          "HSX_spacing_to_next_eV": 28.74614052474527
+        },
+        {
+          "band": 63,
+          "E_EIG_eV": 106.220923,
+          "E_HSX_eV": 106.22098438325021,
+          "delta_eV": -6.138325021254332e-05,
+          "E_EIG_minus_EF_eV": 111.10945416,
+          "E_HSX_minus_EF_eV": 111.10951554778595,
+          "EIG_spacing_to_next_eV": 26.058003000000014,
+          "HSX_spacing_to_next_eV": 26.057815472076086
+        },
+        {
+          "band": 64,
+          "E_EIG_eV": 132.278926,
+          "E_HSX_eV": 132.2787998553263,
+          "delta_eV": 0.00012614467371463434,
+          "E_EIG_minus_EF_eV": 137.16745716000003,
+          "E_HSX_minus_EF_eV": 137.16733101986205,
+          "EIG_spacing_to_next_eV": null,
+          "HSX_spacing_to_next_eV": null
+        }
+      ],
+      "energy_windows": {
+        "within_1_eV_of_EF": {
+          "state_count": 88,
+          "max_abs_diff_eV": 5.569658636517261e-07,
+          "rms_diff_eV": 2.09768182563003e-07
+        },
+        "within_5_eV_of_EF": {
+          "state_count": 570,
+          "max_abs_diff_eV": 5.048219128833686e-06,
+          "rms_diff_eV": 7.831719648350451e-07
+        }
+      },
+      "classification_EIG": {
+        "classification": "INSULATOR",
+        "fermi_crossings": [],
+        "vbm": {
+          "energy_rel_Ef_eV": -0.46075847000000003,
+          "kpoint_index_1based": 4,
+          "spin_channel": 1,
+          "band_index": 21
+        },
+        "cbm": {
+          "energy_rel_Ef_eV": 0.43621248999999995,
+          "kpoint_index_1based": 3,
+          "spin_channel": 1,
+          "band_index": 22
+        },
+        "gap_eV": 0.89697096
+      },
+      "classification_HSX": {
+        "classification": "INSULATOR",
+        "fermi_crossings": [],
+        "vbm": {
+          "energy_rel_Ef_eV": -0.4607584702823182,
+          "kpoint_index_1based": 4,
+          "spin_channel": 1,
+          "band_index": 21
+        },
+        "cbm": {
+          "energy_rel_Ef_eV": 0.43621249257106687,
+          "kpoint_index_1based": 3,
+          "spin_channel": 2,
+          "band_index": 22
+        },
+        "gap_eV": 0.8969709628533851
+      },
+      "delta_vbm_EIG_minus_HSX_eV": 2.823181688427212e-10,
+      "delta_cbm_EIG_minus_HSX_eV": -2.5710669149248133e-09,
+      "delta_gap_EIG_minus_HSX_eV": -2.8533850837675345e-09,
+      "HSX_generalized_eigensystem_quality": {
+        "method": "numpy.linalg.eigh after Cholesky generalized-Hermitian reduction",
+        "normalized_residual_definition": "||Hc-ESc||2 / ((||H||2+|E| ||S||2)||c||2)",
+        "maximum_normalized_residual": 8.954386294419149e-16,
+        "rms_normalized_residual": 1.7958330875520207e-16,
+        "maximum_absolute_residual_Ry": 1.0810518658105787e-12,
+        "rms_absolute_residual_Ry": 7.725702238516879e-14,
+        "max_eigenvalue_delta_vs_current_HSX_diagonalizer_eV": 3.979039320256561e-13,
+        "rms_eigenvalue_delta_vs_current_HSX_diagonalizer_eV": 5.308497410921875e-14
+      },
+      "EIG_spin_layout": {
+        "format": "kpoint-index + eigenvalues, spin-major",
+        "max_abs_candidate_error_ev": 0.00012614467371463434
+      }
+    },
+    "PBE+LR-U": {
+      "EF_EIG_eV": -5.22288342,
+      "EF_HSX_eV": -5.2228834192067,
+      "EF_OUT_eV": -5.222883,
+      "EF_EIG_HSX_abs_diff_eV": 7.932996481940791e-10,
+      "mean_EIG_minus_HSX_eV": 4.952269026551917e-07,
+      "max_abs_raw_diff_eV": 0.0001260649494270183,
+      "rms_raw_diff_eV": 9.40125410307822e-06,
+      "max_abs_residual_after_constant_offset_eV": 0.0001255697225243631,
+      "rms_residual_after_constant_offset_eV": 9.388201586327999e-06,
+      "maximum_location": {
+        "kpoint_index_1based": 13,
+        "k_fractional_original_cell": [
+          0.49999931540577086,
+          0.2499996577028854,
+          0.24999965770288543
+        ],
+        "k_cartesian_inverse_bohr": [
+          0.186982,
+          0.186982,
+          0.186982
+        ],
+        "spin_channel": 1,
+        "band_index": 64,
+        "E_EIG_eV": 132.499845,
+        "E_HSX_eV": 132.49971893505057,
+        "delta_eV": 0.0001260649494270183,
+        "E_EIG_minus_EF_eV": 137.72272841999998,
+        "E_HSX_minus_EF_eV": 137.72260235425728
+      },
+      "neighboring_bands_n_minus_2_to_n_plus_2": [
+        {
+          "band": 62,
+          "E_EIG_eV": 77.8366161,
+          "E_HSX_eV": 77.83662654814431,
+          "delta_eV": -1.0448144308838891e-05,
+          "E_EIG_minus_EF_eV": 83.05949952,
+          "E_HSX_minus_EF_eV": 83.059509967351,
+          "EIG_spacing_to_next_eV": 28.6424229,
+          "HSX_spacing_to_next_eV": 28.642474158933652
+        },
+        {
+          "band": 63,
+          "E_EIG_eV": 106.479039,
+          "E_HSX_eV": 106.47910070707796,
+          "delta_eV": -6.170707796115948e-05,
+          "E_EIG_minus_EF_eV": 111.70192242,
+          "E_HSX_minus_EF_eV": 111.70198412628466,
+          "EIG_spacing_to_next_eV": 26.020805999999993,
+          "HSX_spacing_to_next_eV": 26.020618227972605
+        },
+        {
+          "band": 64,
+          "E_EIG_eV": 132.499845,
+          "E_HSX_eV": 132.49971893505057,
+          "delta_eV": 0.0001260649494270183,
+          "E_EIG_minus_EF_eV": 137.72272841999998,
+          "E_HSX_minus_EF_eV": 137.72260235425728,
+          "EIG_spacing_to_next_eV": null,
+          "HSX_spacing_to_next_eV": null
+        }
+      ],
+      "energy_windows": {
+        "within_1_eV_of_EF": {
+          "state_count": 2,
+          "max_abs_diff_eV": 3.600860942754025e-09,
+          "rms_diff_eV": 2.5485560259562896e-09
+        },
+        "within_5_eV_of_EF": {
+          "state_count": 274,
+          "max_abs_diff_eV": 4.181395830693546e-06,
+          "rms_diff_eV": 1.066951619926472e-06
+        }
+      },
+      "classification_EIG": {
+        "classification": "INSULATOR",
+        "fermi_crossings": [],
+        "vbm": {
+          "energy_rel_Ef_eV": -1.4937019100000004,
+          "kpoint_index_1based": 4,
+          "spin_channel": 2,
+          "band_index": 21
+        },
+        "cbm": {
+          "energy_rel_Ef_eV": 0.9548727699999997,
+          "kpoint_index_1based": 3,
+          "spin_channel": 2,
+          "band_index": 22
+        },
+        "gap_eV": 2.44857468
+      },
+      "classification_HSX": {
+        "classification": "INSULATOR",
+        "fermi_crossings": [],
+        "vbm": {
+          "energy_rel_Ef_eV": -1.4937019152509672,
+          "kpoint_index_1based": 4,
+          "spin_channel": 2,
+          "band_index": 21
+        },
+        "cbm": {
+          "energy_rel_Ef_eV": 0.9548727693618648,
+          "kpoint_index_1based": 3,
+          "spin_channel": 2,
+          "band_index": 22
+        },
+        "gap_eV": 2.448574684612832
+      },
+      "delta_vbm_EIG_minus_HSX_eV": 5.2509667725075815e-09,
+      "delta_cbm_EIG_minus_HSX_eV": 6.381348782724672e-10,
+      "delta_gap_EIG_minus_HSX_eV": -4.612831894235114e-09,
+      "HSX_generalized_eigensystem_quality": {
+        "method": "numpy.linalg.eigh after Cholesky generalized-Hermitian reduction",
+        "normalized_residual_definition": "||Hc-ESc||2 / ((||H||2+|E| ||S||2)||c||2)",
+        "maximum_normalized_residual": 7.300469737487568e-16,
+        "rms_normalized_residual": 1.765243978316007e-16,
+        "maximum_absolute_residual_Ry": 1.100473740366716e-12,
+        "rms_absolute_residual_Ry": 7.17865814619945e-14,
+        "max_eigenvalue_delta_vs_current_HSX_diagonalizer_eV": 4.689582056016661e-13,
+        "rms_eigenvalue_delta_vs_current_HSX_diagonalizer_eV": 5.388728001824536e-14
+      },
+      "EIG_spin_layout": {
+        "format": "kpoint-index + eigenvalues, spin-major",
+        "max_abs_candidate_error_ev": 0.0001260649494270183
+      }
+    }
+  },
+  "compatibility_gate": {
+    "same_energy_reference_for_each_method": true,
+    "same_classification_each_method": true,
+    "PBE_crossing_band_spin_pairs_match": true,
+    "LRU_edges_and_gap_invariant_sub_meV": true,
+    "maximum_discrepancy_isolated_high_energy_band": true,
+    "near_fermi_windows_show_no_sub_meV_distortion": true,
+    "generalized_eigensolver_residuals_sound": true,
+    "status": "HSX_EIG_SPECTRALLY_COMPATIBLE"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "campaign_id": "2eefb3e5-db29-4656-ad6a-99d2f0566038",
+  "campaign_name": "lr-u-mno-afmii-stage-u-a-20260930",
+  "distribution": "Ubuntu",
+  "manifest_path": "/home/jmc/.local/state/siestaflow/campaigns/lr-u-mno-afmii-stage-u-a-20260930/campaign.v2.json",
+  "python_executable": "/home/jmc/.local/state/siestaflow/hubbard-response-env/bin/python",
+  "schema": "siestaflow.windows_campaign_pointer.v1"
+}

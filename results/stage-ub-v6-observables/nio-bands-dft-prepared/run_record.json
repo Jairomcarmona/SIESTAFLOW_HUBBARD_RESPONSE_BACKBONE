@@ -1,0 +1,88 @@
+{
+  "material": "NiO",
+  "method": "DFT",
+  "status": "BANDS_COMPLETE",
+  "source_converged_run": "/home/jmc/.local/state/siestaflow/stage-u-b-v6-20260930/observables/nio-dft",
+  "input_fdf": "/home/jmc/.local/state/siestaflow/stage-u-b-v6-20260930/observables/nio-bands-dft-prepared/input.fdf",
+  "band_method": "Seekpath 2.2.2 get_path_orig_cell; AFM-II sublattices distinguished for symmetry; space group R-3m No. 166; 40 points per segment; mapped to original reciprocal cell",
+  "DM.UseSaveDM": true,
+  "note": "Post-SCF band-path follow-up only; not launched. Path does not replace full-Brillouin-zone mesh convergence.",
+  "seekpath_version": "2.2.2",
+  "seekpath_symprec": 1e-05,
+  "seekpath_angle_tolerance": -1.0,
+  "seekpath_with_time_reversal": true,
+  "seekpath_spacegroup": "R-3m (No. 166)",
+  "seekpath_path_segments": [
+    [
+      "GAMMA",
+      "T"
+    ],
+    [
+      "T",
+      "H_2"
+    ],
+    [
+      "H_0",
+      "L"
+    ],
+    [
+      "L",
+      "GAMMA"
+    ],
+    [
+      "GAMMA",
+      "S_0"
+    ],
+    [
+      "S_2",
+      "F"
+    ],
+    [
+      "F",
+      "GAMMA"
+    ]
+  ],
+  "seekpath_symmetry_species_note": "28 and 29 are labels solely to distinguish AFM-II Ni sublattices during symmetry detection; both are physical Ni in the SIESTA FDF and PSML inputs.",
+  "scf_status": "SCF_CONVERGED",
+  "scf_iterations": 2,
+  "observables": {
+    "method": "PBE",
+    "scf_status": "SCF_CONVERGED",
+    "scf_iterations": 2,
+    "total_energy_eV": -10107.202374,
+    "fermi_eV": -4.523234670440639,
+    "electronic_state_on_seekpath": "insulator",
+    "vbm_path": {
+      "eV": -5.0136,
+      "spin": 2,
+      "band": 24,
+      "path_distance": 4.084743,
+      "segment": "F-GAMMA",
+      "kpoint_fractional_original_cell": [
+        0.5,
+        0.25,
+        0.25
+      ]
+    },
+    "cbm_path": {
+      "eV": -3.7883,
+      "spin": 1,
+      "band": 25,
+      "path_distance": 2.901412,
+      "segment": "GAMMA-S_0",
+      "kpoint_fractional_original_cell": [
+        0.4640625,
+        0.23203125,
+        0.4640625
+      ]
+    },
+    "seekpath_indirect_gap_eV": 1.2253,
+    "bands_file": "NIO_PBE_REFERENCE.bands",
+    "bands_kpoints": 283,
+    "bands_spins": 2,
+    "bands": "283 k-points, 64 bands, 2 spins; no sampled path band crosses EF"
+  },
+  "bands_output": "/home/jmc/.local/state/siestaflow/stage-u-b-v6-20260930/observables/nio-bands-dft-prepared/NIO_PBE_REFERENCE.bands",
+  "siesta_version": "5.4.2",
+  "mpi_ranks": 4
+}

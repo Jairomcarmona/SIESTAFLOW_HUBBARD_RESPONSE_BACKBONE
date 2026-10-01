@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "response_tokens.v1.schema.json",
+  "title": "Lexical response occupations used for exact certification",
+  "type": "object",
+  "required": ["schema_version", "campaign_uuid", "matrix_dimension", "polynomial_degree", "status", "observations"],
+  "properties": {
+    "schema_version": {"const": "response_tokens.v1"},
+    "campaign_uuid": {"type": "string", "minLength": 1},
+    "matrix_dimension": {"type": "integer", "minimum": 1},
+    "polynomial_degree": {"type": "integer", "minimum": 1, "maximum": 3},
+    "status": {"enum": ["AVAILABLE", "CERTIFICATE_NOT_ESTABLISHED"]},
+    "reason": {"type": "string"},
+    "occupation_source": {"type": "string", "minLength": 1},
+    "response_tokens_scientific_sha256": {"$ref": "#/$defs/hash"},
+    "observations": {
+      "type": "array", "items": {
+        "type": "object", "required": ["mode", "perturbed_site_index", "alpha_token", "occupation_tokens", "source_out_path", "source_out_sha256", "node_evidence_sha256"],
+        "properties": {
+          "mode": {"enum": ["BARE", "SCREENED"]},
+          "perturbed_site_index": {"type": "integer", "minimum": 0},
+          "perturbed_site_id": {"type": "string", "minLength": 1},
+          "alpha_token": {"type": "string", "pattern": "^[+-]?(?:\\d+(?:\\.\\d*)?|\\.\\d+)(?:[eE][+-]?\\d+)?$"},
+          "occupation_tokens": {"type": "array", "minItems": 1, "items": {"type": "array", "minItems": 1, "items": {"type": "string", "pattern": "^[+-]?(?:\\d+(?:\\.\\d*)?|\\.\\d+)(?:[eE][+-]?\\d+)?$"}}},
+          "source_out_path": {"type": "string", "minLength": 1},
+          "source_out_sha256": {"$ref": "#/$defs/hash"},
+          "node_evidence_sha256": {"$ref": "#/$defs/hash"},
+          "node_id": {"type": "string", "minLength": 1},
+          "occupation_half_width_tokens": {"type": "array"},
+          "parent_dm_evidence": {
+            "type": "object",
+            "required": ["attempted", "loaded", "observed_basename", "source_parent_dm_sha256", "preserved_parent_copy_path", "preserved_parent_copy_sha256", "legacy_fdf_systemlabel", "legacy_seed_contract"],
+            "properties": {
+              "attempted": {"const": true},
+              "loaded": {"const": true},
+              "observed_basename": {"type": "string", "minLength": 1},
+              "source_parent_dm_sha256": {"$ref": "#/$defs/hash"},
+              "preserved_parent_copy_path": {"type": "string", "minLength": 1},
+              "preserved_parent_copy_sha256": {"$ref": "#/$defs/hash"},
+              "legacy_fdf_systemlabel": {"type": "string", "minLength": 1},
+              "legacy_seed_contract": {"type": "string", "minLength": 1}
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "$defs": {"hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"}},
+  "additionalProperties": false
+}

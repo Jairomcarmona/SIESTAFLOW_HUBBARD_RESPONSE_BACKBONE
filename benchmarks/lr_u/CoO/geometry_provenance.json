@@ -1,0 +1,79 @@
+{
+  "schema": "siestaflow.geometry_provenance.v1",
+  "model": "ideal rocksalt B1 AFM-II along [111] (R3m magnetic cell), four atoms; two oppositely polarized Co sites and two O sites",
+  "lattice_constant_ang": 4.254,
+  "lattice_source": {
+    "url": "https://www.nature.com/articles/s41524-019-0251-7",
+    "citation": "S. Mandal et al., Systematic beyond-DFT study of binary transition metal oxides, npj Computational Materials 5, 115 (2019), DOI 10.1038/s41524-019-0251-7",
+    "reported": "rocksalt AFM-II calculations at experimentally reported CoO lattice parameter 4.254 Å"
+  },
+  "magnetic_model_source": {
+    "url": "https://www.nature.com/articles/s41524-019-0251-7",
+    "citation": "S. Mandal et al., Systematic beyond-DFT study of binary transition metal oxides, npj Computational Materials 5, 115 (2019), DOI 10.1038/s41524-019-0251-7",
+    "reported": "AFM-II along [111], two transition-metal ions in the magnetic cell"
+  },
+  "low_temperature_caveat": {
+    "url": "https://doi.org/10.1103/PhysRevB.64.052102",
+    "citation": "W. Jauch et al., Crystallographic symmetry and magnetic structure of CoO, Physical Review B 64, 052102 (2001), DOI 10.1103/PhysRevB.64.052102",
+    "reported": "low-temperature antiferromagnetic CoO has monoclinic C2/m distortion; this model omits that distortion"
+  },
+  "cell_vectors_fractional_of_cubic_a": [
+    [
+      0,
+      1,
+      1
+    ],
+    [
+      0.5,
+      0,
+      0.5
+    ],
+    [
+      0.5,
+      0.5,
+      0
+    ]
+  ],
+  "fractional_atoms": [
+    {
+      "initial_spin_muB": 3.0,
+      "role": "Co_A",
+      "fractional": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "initial_spin_muB": -3.0,
+      "role": "Co_B",
+      "fractional": [
+        0.5,
+        0,
+        0
+      ]
+    },
+    {
+      "initial_spin_muB": 0.0,
+      "role": "O_0",
+      "fractional": [
+        0.25,
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "initial_spin_muB": 0.0,
+      "role": "O_1",
+      "fractional": [
+        0.75,
+        0.5,
+        0.5
+      ]
+    }
+  ],
+  "deviations": "Unrelaxed ideal cubic AFM-II transfer model at the cited lattice parameter; not an experimental low-temperature monoclinic structure or a validated CoO ground-state geometry.",
+  "projector": "Method 2, explicit rc=3.0 Bohr and omega=0.05 Bohr; fixed before execution, same explicit-radius projector definition used by NiO/FeO route.",
+  "literature_u": "None used as an input, target, tuning parameter or acceptance criterion.",
+  "geometry_hash_basis": "This record and exact FDF are both in campaign input inventory."
+}

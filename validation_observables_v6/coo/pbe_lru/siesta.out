@@ -1,0 +1,1756 @@
+Executable      : /home/jmc/.local/siesta-5.4.2-openmpi/bin/siesta
+Version         : 5.4.2
+Architecture    : x86_64
+Compiler version: GNU-13.3.0
+Compiler flags  : -fallow-argument-mismatch -O3 -march=native
+Parallelisations: MPI
+Lua support
+ELSI support. Solvers:
+   ELPA (internal) 
+   NTPoly
+   OMM
+DFT-D3 support
+
+Runtime information:
+* Directory : /mnt/c/Users/Jairo/Downloads/SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0/validation_observables_v6/coo/pbe_lru
+* Running on 4 nodes in parallel.
+>> Start of run:   1-OCT-2026  13:39:48
+
+                           *********************** 
+                           *  WELCOME TO SIESTA  * 
+                           *********************** 
+
+ NOTE: Siesta V5 introduces some new defaults for basis-set generation
+ NOTE: which might lead to slightly different numerical results.
+ NOTE: Please see the manual for full details and compatibility measures.
+
+
+reinit: Reading from standard input
+reinit: Dumping input in INPUT_TMP.72202
+************************** Dump of input data file ****************************
+SystemLabel COOLRU
+DFTU.PopTol 1.0e-5
+DM.UseSaveDM true
+SystemName CoO ideal AFM-II PBE V6 observable validation
+NumberOfAtoms 4
+NumberOfSpecies 3
+%block ChemicalSpeciesLabel
+  1 27 CoLR0
+  2 27 CoLR1
+  3 8 O
+%endblock ChemicalSpeciesLabel
+LatticeConstant 4.254 Ang
+%block LatticeVectors
+  0.0 1.0 1.0
+  0.5 0.0 0.5
+  0.5 0.5 0.0
+%endblock LatticeVectors
+AtomicCoordinatesFormat Fractional
+%block AtomicCoordinatesAndAtomicSpecies
+  0.00 0.00 0.00 1 # CoLR0 / AFM-II A
+  0.50 0.00 0.00 2 # CoLR1 / AFM-II B
+  0.25 0.50 0.50 3 # O
+  0.75 0.50 0.50 3 # O
+%endblock AtomicCoordinatesAndAtomicSpecies
+XC.Functional GGA
+XC.Authors PBE
+PAO.BasisSize DZP
+PAO.EnergyShift 0.005 Ry
+PAO.SplitNorm 0.15
+PAO.BasisType split
+MeshCutoff 200 Ry
+%block kgrid_Monkhorst_Pack
+  2 0 0 0.0
+  0 4 0 0.0
+  0 0 4 0.0
+%endblock kgrid_Monkhorst_Pack
+OccupationFunction FD
+ElectronicTemperature 300 K
+MaxSCFIterations 300
+Spin polarized
+%block DM.InitSpin
+  1 +3.0
+  2 -3.0
+  3 0.0
+  4 0.0
+%endblock DM.InitSpin
+DFTU.ProjectorGenerationMethod 2
+DFTU.PotentialShift false
+DFTU.FirstIteration true
+WriteMullikenPop 1
+WriteDM true
+MD.NumCGsteps 0
+SCF.MustConverge true
+SCF.Mix Hamiltonian
+SCF.Mixer.Method Pulay
+SCF.Mixer.Weight 0.05
+SCF.Mixer.History 8
+SCF.DM.Converge true
+SCF.H.Converge true
+SCF.DM.Tolerance 1.0e-5
+SCF.H.Tolerance 1.0e-4 eV
+%block DFTU.proj
+  CoLR0 1
+  3 2
+  5.817148502021659 0.000000000000000
+  3.0000 0.0500
+  CoLR1 1
+  3 2
+  5.815019855497104 0.000000000000000
+  3.0000 0.0500
+%endblock DFTU.proj
+************************** End of input data file *****************************
+
+reinit: -----------------------------------------------------------------------
+reinit: System Name: CoO ideal AFM-II PBE V6 observable validation
+reinit: -----------------------------------------------------------------------
+reinit: System Label: COOLRU
+reinit: -----------------------------------------------------------------------
+
+NOTE on units for spin output: 
+{S} is the spin magnetic moment, in units of the Bohr magneton,
+assuming a g-factor for the electron spin of exactly 2.
+The spin magnetic moment is then numerically equal to the charge inbalance,
+in units of electrons, between the spin-up and -down channels.
+
+
+initatom: Reading input for the pseudopotentials and atomic orbitals ----------
+Species number:   1 Atomic number:   27 Label: CoLR0
+Species number:   2 Atomic number:   27 Label: CoLR1
+Species number:   3 Atomic number:    8 Label: O
+
+Ground state valence configuration (from tables):   4s02  4p00  3d07  4f00
+Ground state valence configuration (from tables):   4s02  4p00  3d07  4f00
+Ground state valence configuration (from tables):   2s02  2p04  3d00  4f00
+
+---- Processing specs for species: CoLR0
+Reading pseudopotential information in PSML from:
+  CoLR0.psml
+PSML file version: 1.1
+Using libxc ids:  101 130
+GGA--PBE XC_GGA_X_PBE--XC_GGA_C_PBE pb
+PSML uuid: f8b06170-be41-11e7-7df2-e588fffddcf6
+Semicore shell(s) with  8 electrons included in the valence for CoLR0
+
+---- Processing specs for species: CoLR1
+Reading pseudopotential information in PSML from:
+  CoLR1.psml
+PSML file version: 1.1
+Using libxc ids:  101 130
+GGA--PBE XC_GGA_X_PBE--XC_GGA_C_PBE pb
+PSML uuid: f8b06170-be41-11e7-7df2-e588fffddcf6
+Semicore shell(s) with  8 electrons included in the valence for CoLR1
+
+---- Processing specs for species: O
+Reading pseudopotential information in PSML from:
+  O.psml
+PSML file version: 1.1
+Using libxc ids:  101 130
+GGA--PBE XC_GGA_X_PBE--XC_GGA_C_PBE pb
+PSML uuid: 3cff85a0-be41-11e7-6c5c-1b1fe64d18ef
+
+---- Pseudopotential check for Co
+
+Pseudized shells:
+3s( 2.00) rc: 1.26
+3p( 6.00) rc: 1.32
+3d( 7.00) rc: 1.66
+Valence configuration for ps generation: 3s:3p:3d:4s: Total charge:  17.000000
+Semicore shell(s): 3s 3p
+Fallback to non-perturbative polarization scheme for CoLR0
+Please see the manual if this is not desired in principle
+
+---- Pseudopotential check for Co
+
+Pseudized shells:
+3s( 2.00) rc: 1.26
+3p( 6.00) rc: 1.32
+3d( 7.00) rc: 1.66
+Valence configuration for ps generation: 3s:3p:3d:4s: Total charge:  17.000000
+Semicore shell(s): 3s 3p
+Fallback to non-perturbative polarization scheme for CoLR1
+Please see the manual if this is not desired in principle
+
+---- Pseudopotential check for O 
+
+Pseudized shells:
+2s( 2.00) rc: 1.36
+2p( 4.00) rc: 1.46
+3d( 0.00) rc: 1.26
+Valence configuration for ps generation: 2s:2p: Total charge:   6.000000
+For CoLR0, standard SIESTA heuristics set lmxkb to 3
+ (one more than the basis l, including polarization orbitals).
+Use PS.lmax or PS.KBprojectors blocks to override.
+For CoLR1, standard SIESTA heuristics set lmxkb to 3
+ (one more than the basis l, including polarization orbitals).
+Use PS.lmax or PS.KBprojectors blocks to override.
+For O, standard SIESTA heuristics set lmxkb to 3
+ (one more than the basis l, including polarization orbitals).
+Use PS.lmax or PS.KBprojectors blocks to override.
+CoLR0 pseudopotential only contains V_ls up to l=2 -- lmxkb reset.
+CoLR1 pseudopotential only contains V_ls up to l=2 -- lmxkb reset.
+O pseudopotential only contains V_ls up to l=2 -- lmxkb reset.
+
+<basis_specs>
+===============================================================================
+CoLR0                Z=  27    Mass=  58.933        Charge= 0.17977+309
+Lmxo=2 Lmxkb= 2    BasisType=split      Semic=T
+L=0  Nsemic=1  Cnfigmx=4
+          i=1  nzeta=1  polorb=0  (3s)  (semicore shell)
+            splnorm:   0.15000    
+               vcte:    40.000    
+               rinn:  -0.90000    
+               qcoe:    0.0000    
+               qyuk:    0.0000    
+               qwid:   0.10000E-01
+                rcs:    0.0000    
+            lambdas:    1.0000    
+          i=2  nzeta=2  polorb=0  (4s)  (to be polarized non-perturbatively)
+            splnorm:   0.15000    
+               vcte:    40.000    
+               rinn:  -0.90000    
+               qcoe:    0.0000    
+               qyuk:    0.0000    
+               qwid:   0.10000E-01
+                rcs:    0.0000      0.0000    
+            lambdas:    1.0000      1.0000    
+L=1  Nsemic=1  Cnfigmx=4
+          i=1  nzeta=1  polorb=0  (3p)  (semicore shell)
+            splnorm:   0.15000    
+               vcte:    40.000    
+               rinn:  -0.90000    
+               qcoe:    0.0000    
+               qyuk:    0.0000    
+               qwid:   0.10000E-01
+                rcs:    0.0000    
+            lambdas:    1.0000    
+          i=2  nzeta=1  polorb=0  (4p)  (non-perturbative polarization shell)
+            splnorm:   0.15000    
+               vcte:    40.000    
+               rinn:  -0.90000    
+               qcoe:    0.0000    
+               qyuk:    0.0000    
+               qwid:   0.10000E-01
+                rcs:    0.0000    
+            lambdas:    1.0000    
+L=2  Nsemic=0  Cnfigmx=3
+          i=1  nzeta=2  polorb=0  (3d)
+            splnorm:   0.15000    
+               vcte:    40.000    
+               rinn:  -0.90000    
+               qcoe:    0.0000    
+               qyuk:    0.0000    
+               qwid:   0.10000E-01
+                rcs:    0.0000      0.0000    
+            lambdas:    1.0000      1.0000    
+-------------------------------------------------------------------------------
+L=0  Nkbl=2  erefs: 0.17977+309 0.17977+309
+L=1  Nkbl=2  erefs: 0.17977+309 0.17977+309
+L=2  Nkbl=1  erefs: 0.17977+309
+-------------------------------------------------------------------------------
+L=2  n=3
+                  U:   0.42755    
+                  J:    0.0000    
+               rinn:  -0.90000    
+               vcte:    40.000    
+             lambda:    1.0000    
+              width:   0.50000E-01
+                 rc:    3.0000    
+            dnrm_rc:   0.90000    
+===============================================================================
+</basis_specs>
+
+Using PAO.SplitTailNorm
+atom: Called for CoLR0                 (Z =  27)
+Maximum radius (at nrval) set to   50.00000 8518
+
+read_vps: Pseudopotential generation method:
+read_vps: ONCVPSP-3.Hamann's oncvpsp                        
+Valence charge in pseudo generation:   17.00000
+
+read_vps: Pseudopotential includes a core correction:
+read_vps: Pseudo-core for xc-correction
+
+xc_check: Exchange-correlation functional:
+xc_check: GGA Perdew, Burke & Ernzerhof 1996
+Got Vlocal (oncv-fit) from psml data
+Choosing vlocal chloc cutoff:  3.116236
+qtot up to nchloc:   16.99989644
+atom: Maximum radius for chlocal:    3.11624
+atom: Maximum radius for r*vlocal+2*Zval:    3.11624
+Reading KB projs from CoLR0 psml data
+Using scalar-relativistic projectors in PSML file
+
+PSML: Kleinman-Bylander projectors: 
+   l= 0   rc=  1.277664   Ekb= 12.582293
+   l= 0   rc=  1.277664   Ekb= -1.354449
+   l= 1   rc=  1.339629   Ekb= -4.154993
+   l= 1   rc=  1.339629   Ekb= -0.182873
+   l= 2   rc=  1.680171   Ekb=-13.757846
+   l= 2   rc=  1.680171   Ekb= -5.028076
+
+PSML: Total number of  Kleinman-Bylander projectors:  18
+atom: -------------------------------------------------------------------------
+
+atom: SANKEY-TYPE ORBITALS:
+atom: Selected multiple-zeta basis: split     
+
+SPLIT: Orbitals with angular momentum L= 0
+
+SPLIT: Basis orbitals for state 3s
+
+SPLIT: PAO cut-off radius determined from an
+SPLIT: energy shift=  0.005000 Ry
+Split based on tail norm
+
+   izeta = 1
+                 lambda =    1.000000
+                     rc =    2.427151
+                 energy =   -7.521124
+                kinetic =    3.489347
+    potential(screened) =  -11.010472
+       potential(ionic) =  -41.344373
+
+SPLIT: Basis orbitals for state 4s
+
+SPLIT: PAO cut-off radius determined from an
+SPLIT: energy shift=  0.005000 Ry
+Split based on tail norm
+
+   izeta = 1
+                 lambda =    1.000000
+                     rc =    6.940613
+                 energy =   -0.468315
+                kinetic =    1.261009
+    potential(screened) =   -1.729324
+       potential(ionic) =  -16.054982
+
+   izeta = 2
+                 rmatch =    4.848986
+              splitnorm =    0.150000
+                 energy =   -0.335479
+                kinetic =    2.256999
+    potential(screened) =   -2.592478
+       potential(ionic) =  -19.771150
+
+SPLIT: Orbitals with angular momentum L= 1
+
+SPLIT: Basis orbitals for state 3p
+
+SPLIT: PAO cut-off radius determined from an
+SPLIT: energy shift=  0.005000 Ry
+Split based on tail norm
+
+   izeta = 1
+                 lambda =    1.000000
+                     rc =    2.699678
+                 energy =   -4.818694
+                kinetic =    8.596721
+    potential(screened) =  -13.415416
+       potential(ionic) =  -42.938043
+
+SPLIT: Basis orbitals for state 4p
+SPLIT: Non-perturbative polarization orbs for state 4s
+SPLIT: rc(1st zeta) (re)set to: 6.9406 (expansion factor: 1.0000)
+Split based on tail norm
+
+   izeta = 1
+                 lambda =    1.000000
+                     rc =    6.940613
+                 energy =   -0.036377
+                kinetic =    1.014925
+    potential(screened) =   -1.051301
+       potential(ionic) =  -12.135096
+
+SPLIT: Orbitals with angular momentum L= 2
+
+SPLIT: Basis orbitals for state 3d
+
+SPLIT: PAO cut-off radius determined from an
+SPLIT: energy shift=  0.005000 Ry
+Split based on tail norm
+
+   izeta = 1
+                 lambda =    1.000000
+                     rc =    4.342846
+                 energy =   -0.597490
+                kinetic =   10.885792
+    potential(screened) =  -11.483282
+       potential(ionic) =  -37.491769
+
+   izeta = 2
+                 rmatch =    2.552107
+              splitnorm =    0.150000
+                 energy =   -0.435418
+                kinetic =   13.177218
+    potential(screened) =  -13.612636
+       potential(ionic) =  -41.502565
+atom: Total number of Sankey-type orbitals: 19
+
+atm_pop: Valence configuration (for local Pseudopot. screening):
+ 3s( 2.00) 4s( 2.00)                                                  
+ 3p( 6.00) 4p( 0.00)                                                  
+ 3d( 7.00)                                                            
+Vna: chval, zval:   17.00000  17.00000
+
+Vna:  Cut-off radius for the neutral-atom potential:   6.940613
+comcore: Pseudo-core radius Rcore=  2.052316
+
+atom: _________________________________________________________________________
+Maximum radius (at nrval) set to   50.00000 8518
+
+DFTUprojs with principal quantum number n =  3
+DFTUprojs with angular momentum l =  2
+DFTUprojs with U        =      0.42755
+DFTUprojs with J        =      0.00000
+DFTUprojs with lambda   =      1.00000
+DFTUprojs with rc       =      3.00000
+DFTUprojs with nnodes   =     1
+DFTUprojs with nprin    =     3
+DFTUprojs with nrval    =  8517
+DFTUprojs with nrwf     =  8517
+DFTUprojs with nrmax    = 20000
+DFTUprojs with zval     =     17.00000
+DFTUprojs with a        =      0.00100
+DFTUprojs with b        =      0.01000
+dftu_proj_gen: updating the rc to     18.070424144561 Bohr
+
+<basis_specs>
+===============================================================================
+CoLR1                Z=  27    Mass=  58.933        Charge= 0.17977+309
+Lmxo=2 Lmxkb= 2    BasisType=split      Semic=T
+L=0  Nsemic=1  Cnfigmx=4
+          i=1  nzeta=1  polorb=0  (3s)  (semicore shell)
+            splnorm:   0.15000    
+               vcte:    40.000    
+               rinn:  -0.90000    
+               qcoe:    0.0000    
+               qyuk:    0.0000    
+               qwid:   0.10000E-01
+                rcs:    0.0000    
+            lambdas:    1.0000    
+          i=2  nzeta=2  polorb=0  (4s)  (to be polarized non-perturbatively)
+            splnorm:   0.15000    
+               vcte:    40.000    
+               rinn:  -0.90000    
+               qcoe:    0.0000    
+               qyuk:    0.0000    
+               qwid:   0.10000E-01
+                rcs:    0.0000      0.0000    
+            lambdas:    1.0000      1.0000    
+L=1  Nsemic=1  Cnfigmx=4
+          i=1  nzeta=1  polorb=0  (3p)  (semicore shell)
+            splnorm:   0.15000    
+               vcte:    40.000    
+               rinn:  -0.90000    
+               qcoe:    0.0000    
+               qyuk:    0.0000    
+               qwid:   0.10000E-01
+                rcs:    0.0000    
+            lambdas:    1.0000    
+          i=2  nzeta=1  polorb=0  (4p)  (non-perturbative polarization shell)
+            splnorm:   0.15000    
+               vcte:    40.000    
+               rinn:  -0.90000    
+               qcoe:    0.0000    
+               qyuk:    0.0000    
+               qwid:   0.10000E-01
+                rcs:    0.0000    
+            lambdas:    1.0000    
+L=2  Nsemic=0  Cnfigmx=3
+          i=1  nzeta=2  polorb=0  (3d)
+            splnorm:   0.15000    
+               vcte:    40.000    
+               rinn:  -0.90000    
+               qcoe:    0.0000    
+               qyuk:    0.0000    
+               qwid:   0.10000E-01
+                rcs:    0.0000      0.0000    
+            lambdas:    1.0000      1.0000    
+-------------------------------------------------------------------------------
+L=0  Nkbl=2  erefs: 0.17977+309 0.17977+309
+L=1  Nkbl=2  erefs: 0.17977+309 0.17977+309
+L=2  Nkbl=1  erefs: 0.17977+309
+-------------------------------------------------------------------------------
+L=2  n=3
+                  U:   0.42740    
+                  J:    0.0000    
+               rinn:  -0.90000    
+               vcte:    40.000    
+             lambda:    1.0000    
+              width:   0.50000E-01
+                 rc:    3.0000    
+            dnrm_rc:   0.90000    
+===============================================================================
+</basis_specs>
+
+Using PAO.SplitTailNorm
+atom: Called for CoLR1                 (Z =  27)
+Maximum radius (at nrval) set to   50.00000 8518
+
+read_vps: Pseudopotential generation method:
+read_vps: ONCVPSP-3.Hamann's oncvpsp                        
+Valence charge in pseudo generation:   17.00000
+
+read_vps: Pseudopotential includes a core correction:
+read_vps: Pseudo-core for xc-correction
+
+xc_check: Exchange-correlation functional:
+xc_check: GGA Perdew, Burke & Ernzerhof 1996
+Got Vlocal (oncv-fit) from psml data
+Choosing vlocal chloc cutoff:  3.116236
+qtot up to nchloc:   16.99989644
+atom: Maximum radius for chlocal:    3.11624
+atom: Maximum radius for r*vlocal+2*Zval:    3.11624
+Reading KB projs from CoLR1 psml data
+Using scalar-relativistic projectors in PSML file
+
+PSML: Kleinman-Bylander projectors: 
+   l= 0   rc=  1.277664   Ekb= 12.582293
+   l= 0   rc=  1.277664   Ekb= -1.354449
+   l= 1   rc=  1.339629   Ekb= -4.154993
+   l= 1   rc=  1.339629   Ekb= -0.182873
+   l= 2   rc=  1.680171   Ekb=-13.757846
+   l= 2   rc=  1.680171   Ekb= -5.028076
+
+PSML: Total number of  Kleinman-Bylander projectors:  18
+atom: -------------------------------------------------------------------------
+
+atom: SANKEY-TYPE ORBITALS:
+atom: Selected multiple-zeta basis: split     
+
+SPLIT: Orbitals with angular momentum L= 0
+
+SPLIT: Basis orbitals for state 3s
+
+SPLIT: PAO cut-off radius determined from an
+SPLIT: energy shift=  0.005000 Ry
+Split based on tail norm
+
+   izeta = 1
+                 lambda =    1.000000
+                     rc =    2.427151
+                 energy =   -7.521124
+                kinetic =    3.489347
+    potential(screened) =  -11.010472
+       potential(ionic) =  -41.344373
+
+SPLIT: Basis orbitals for state 4s
+
+SPLIT: PAO cut-off radius determined from an
+SPLIT: energy shift=  0.005000 Ry
+Split based on tail norm
+
+   izeta = 1
+                 lambda =    1.000000
+                     rc =    6.940613
+                 energy =   -0.468315
+                kinetic =    1.261009
+    potential(screened) =   -1.729324
+       potential(ionic) =  -16.054982
+
+   izeta = 2
+                 rmatch =    4.848986
+              splitnorm =    0.150000
+                 energy =   -0.335479
+                kinetic =    2.256999
+    potential(screened) =   -2.592478
+       potential(ionic) =  -19.771150
+
+SPLIT: Orbitals with angular momentum L= 1
+
+SPLIT: Basis orbitals for state 3p
+
+SPLIT: PAO cut-off radius determined from an
+SPLIT: energy shift=  0.005000 Ry
+Split based on tail norm
+
+   izeta = 1
+                 lambda =    1.000000
+                     rc =    2.699678
+                 energy =   -4.818694
+                kinetic =    8.596721
+    potential(screened) =  -13.415416
+       potential(ionic) =  -42.938043
+
+SPLIT: Basis orbitals for state 4p
+SPLIT: Non-perturbative polarization orbs for state 4s
+SPLIT: rc(1st zeta) (re)set to: 6.9406 (expansion factor: 1.0000)
+Split based on tail norm
+
+   izeta = 1
+                 lambda =    1.000000
+                     rc =    6.940613
+                 energy =   -0.036377
+                kinetic =    1.014925
+    potential(screened) =   -1.051301
+       potential(ionic) =  -12.135096
+
+SPLIT: Orbitals with angular momentum L= 2
+
+SPLIT: Basis orbitals for state 3d
+
+SPLIT: PAO cut-off radius determined from an
+SPLIT: energy shift=  0.005000 Ry
+Split based on tail norm
+
+   izeta = 1
+                 lambda =    1.000000
+                     rc =    4.342846
+                 energy =   -0.597490
+                kinetic =   10.885792
+    potential(screened) =  -11.483282
+       potential(ionic) =  -37.491769
+
+   izeta = 2
+                 rmatch =    2.552107
+              splitnorm =    0.150000
+                 energy =   -0.435418
+                kinetic =   13.177218
+    potential(screened) =  -13.612636
+       potential(ionic) =  -41.502565
+atom: Total number of Sankey-type orbitals: 19
+
+atm_pop: Valence configuration (for local Pseudopot. screening):
+ 3s( 2.00) 4s( 2.00)                                                  
+ 3p( 6.00) 4p( 0.00)                                                  
+ 3d( 7.00)                                                            
+Vna: chval, zval:   17.00000  17.00000
+
+Vna:  Cut-off radius for the neutral-atom potential:   6.940613
+comcore: Pseudo-core radius Rcore=  2.052316
+
+atom: _________________________________________________________________________
+Maximum radius (at nrval) set to   50.00000 8518
+
+DFTUprojs with principal quantum number n =  3
+DFTUprojs with angular momentum l =  2
+DFTUprojs with U        =      0.42740
+DFTUprojs with J        =      0.00000
+DFTUprojs with lambda   =      1.00000
+DFTUprojs with rc       =      3.00000
+DFTUprojs with nnodes   =     1
+DFTUprojs with nprin    =     3
+DFTUprojs with nrval    =  8517
+DFTUprojs with nrwf     =  8517
+DFTUprojs with nrmax    = 20000
+DFTUprojs with zval     =     17.00000
+DFTUprojs with a        =      0.00100
+DFTUprojs with b        =      0.01000
+dftu_proj_gen: updating the rc to     18.070424144561 Bohr
+
+<basis_specs>
+===============================================================================
+O                    Z=   8    Mass=  15.999        Charge= 0.17977+309
+Lmxo=2 Lmxkb= 2    BasisType=split      Semic=F
+L=0  Nsemic=0  Cnfigmx=2
+          i=1  nzeta=2  polorb=0  (2s)
+            splnorm:   0.15000    
+               vcte:    40.000    
+               rinn:  -0.90000    
+               qcoe:    0.0000    
+               qyuk:    0.0000    
+               qwid:   0.10000E-01
+                rcs:    0.0000      0.0000    
+            lambdas:    1.0000      1.0000    
+L=1  Nsemic=0  Cnfigmx=2
+          i=1  nzeta=2  polorb=1  (2p)  (to be polarized perturbatively)
+            splnorm:   0.15000    
+               vcte:    40.000    
+               rinn:  -0.90000    
+               qcoe:    0.0000    
+               qyuk:    0.0000    
+               qwid:   0.10000E-01
+                rcs:    0.0000      0.0000    
+            lambdas:    1.0000      1.0000    
+L=2  Nsemic=0  Cnfigmx=3
+          i=1  nzeta=0  polorb=0  (3d)  (perturbative polarization orbital) (from 2p)
+-------------------------------------------------------------------------------
+L=0  Nkbl=1  erefs: 0.17977+309
+L=1  Nkbl=1  erefs: 0.17977+309
+L=2  Nkbl=1  erefs: 0.17977+309
+===============================================================================
+</basis_specs>
+
+Using PAO.SplitTailNorm
+atom: Called for O                     (Z =   8)
+Maximum radius (at nrval) set to   50.00000 8518
+
+read_vps: Pseudopotential generation method:
+read_vps: ONCVPSP-3.Hamann's oncvpsp                        
+Valence charge in pseudo generation:    6.00000
+
+read_vps: Pseudopotential includes a core correction:
+read_vps: Pseudo-core for xc-correction
+
+xc_check: Exchange-correlation functional:
+xc_check: GGA Perdew, Burke & Ernzerhof 1996
+Got Vlocal (oncv-fit) from psml data
+Choosing vlocal chloc cutoff:  6.020499
+qtot up to nchloc:    6.00001015
+atom: Maximum radius for chlocal:    6.02050
+atom: Maximum radius for r*vlocal+2*Zval:    6.02050
+Reading KB projs from O psml data
+Using scalar-relativistic projectors in PSML file
+
+PSML: Kleinman-Bylander projectors: 
+   l= 0   rc=  1.372412   Ekb= 12.113471
+   l= 0   rc=  1.372412   Ekb=  1.648048
+   l= 1   rc=  1.474132   Ekb= -9.434259
+   l= 1   rc=  1.474132   Ekb= -2.298541
+   l= 2   rc=  1.277664   Ekb= -2.663910
+
+PSML: Total number of  Kleinman-Bylander projectors:  13
+atom: -------------------------------------------------------------------------
+
+atom: SANKEY-TYPE ORBITALS:
+atom: Selected multiple-zeta basis: split     
+
+SPLIT: Orbitals with angular momentum L= 0
+
+SPLIT: Basis orbitals for state 2s
+
+SPLIT: PAO cut-off radius determined from an
+SPLIT: energy shift=  0.005000 Ry
+Split based on tail norm
+
+   izeta = 1
+                 lambda =    1.000000
+                     rc =    3.812214
+                 energy =   -1.755505
+                kinetic =    1.565067
+    potential(screened) =   -3.320571
+       potential(ionic) =  -11.197533
+
+   izeta = 2
+                 rmatch =    2.355122
+              splitnorm =    0.150000
+                 energy =   -1.384920
+                kinetic =    2.635650
+    potential(screened) =   -4.020570
+       potential(ionic) =  -12.598076
+
+SPLIT: Orbitals with angular momentum L= 1
+
+SPLIT: Basis orbitals for state 2p
+
+SPLIT: PAO cut-off radius determined from an
+SPLIT: energy shift=  0.005000 Ry
+Split based on tail norm
+
+   izeta = 1
+                 lambda =    1.000000
+                     rc =    4.733759
+                 energy =   -0.658128
+                kinetic =    4.549080
+    potential(screened) =   -5.207209
+       potential(ionic) =  -12.802603
+
+   izeta = 2
+                 rmatch =    2.907800
+              splitnorm =    0.150000
+                 energy =   -0.492833
+                kinetic =    6.227844
+    potential(screened) =   -6.720677
+       potential(ionic) =  -15.043583
+
+POLgen: Perturbative polarization orbital with L=  2
+
+POLgen: Polarization orbital for state 2p
+Split based on tail norm
+
+   izeta = 1
+                     rc =    4.733759
+                 energy =    2.081852
+                kinetic =    3.902469
+    potential(screened) =   -1.820617
+       potential(ionic) =   -7.776987
+atom: Total number of Sankey-type orbitals: 13
+
+atm_pop: Valence configuration (for local Pseudopot. screening):
+ 2s( 2.00)                                                            
+ 2p( 4.00)                                                            
+ 3d( 0.00)                                                            
+Vna: chval, zval:    6.00000   6.00000
+
+Vna:  Cut-off radius for the neutral-atom potential:   4.733759
+comcore: Pseudo-core radius Rcore=  1.354557
+
+atom: _________________________________________________________________________
+
+prinput: Basis input 
+
+PAO.BasisType split     
+
+%block ChemicalSpeciesLabel
+    1   27 CoLR0                   # Species index, atomic number, species label
+    2   27 CoLR1                   # Species index, atomic number, species label
+    3    8 O                       # Species index, atomic number, species label
+%endblock ChemicalSpeciesLabel
+
+%block PAO.Basis                 # Define Basis set
+# WARNING: This information might be incomplete!
+CoLR0                 5                    # Species label, number of l-shells
+ n=3   0   1                         # n, l, Nzeta 
+   2.427   
+   1.000   
+ n=4   0   2                         # n, l, Nzeta 
+   6.941      4.849   
+   1.000      1.000   
+ n=3   1   1                         # n, l, Nzeta 
+   2.700   
+   1.000   
+ n=4   1   1                         # n, l, Nzeta 
+   6.941   
+   1.000   
+ n=3   2   2                         # n, l, Nzeta 
+   4.343      2.552   
+   1.000      1.000   
+CoLR1                 5                    # Species label, number of l-shells
+ n=3   0   1                         # n, l, Nzeta 
+   2.427   
+   1.000   
+ n=4   0   2                         # n, l, Nzeta 
+   6.941      4.849   
+   1.000      1.000   
+ n=3   1   1                         # n, l, Nzeta 
+   2.700   
+   1.000   
+ n=4   1   1                         # n, l, Nzeta 
+   6.941   
+   1.000   
+ n=3   2   2                         # n, l, Nzeta 
+   4.343      2.552   
+   1.000      1.000   
+O                     2                    # Species label, number of l-shells
+ n=2   0   2                         # n, l, Nzeta 
+   3.812      2.355   
+   1.000      1.000   
+ n=2   1   2 P   1                   # n, l, Nzeta, Polarization, NzetaPol
+   4.734      2.908   
+   1.000      1.000   
+%endblock PAO.Basis
+
+prinput: ----------------------------------------------------------------------
+
+coor:   Atomic-coordinates input format  =     Fractional
+
+siesta: Atomic coordinates (Bohr) and species
+siesta:      0.00000   0.00000   0.00000  1        1
+siesta:      0.00000   4.01945   4.01945  2        2
+siesta:      4.01945   4.01945   4.01945  3        3
+siesta:      4.01945   8.03889   8.03889  3        4
+
+siesta: System type = bulk      
+
+initatomlists: Number of atoms, orbitals, and projectors:      4    64    62
+
+siesta: ******************** Simulation parameters ****************************
+siesta:
+siesta: The following are some of the parameters of the simulation.
+siesta: A complete list of the parameters used, including default values,
+siesta: can be found in file out.fdf
+siesta:
+redata: Spin configuration                          = collinear
+redata: Number of spin components                   = 2
+redata: Time-Reversal Symmetry                      = T
+redata: Spin spiral                                 = F
+redata: Long output                                 =   F
+redata: Number of Atomic Species                    =        3
+redata: Charge density info will appear in .RHO file
+redata: Write Mulliken charges (when)               = geometry+end
+redata: Write Mulliken Pop.                         = Atomic and Orbital charges
+redata: Write Hirshfeld charges (when)              = none
+redata: Write Voronoi charges (when)                = none
+redata: Write spin charge (when)                    = scf
+redata: Matel table size (NRTAB)                    =     1024
+redata: Mesh Cutoff                                 =   200.0000 Ry
+redata: Net charge of the system                    =     0.0000 |e|
+redata: Min. number of SCF Iter                     =        0
+redata: Max. number of SCF Iter                     =      300
+redata: SCF convergence failure will abort job
+redata: SCF mix quantity                            = Hamiltonian
+redata: Mix DM or H after convergence               =   F
+redata: Recompute H after scf cycle                 =   F
+redata: Mix DM in first SCF step                    =   T
+redata: Write Pulay info on disk                    =   F
+redata: New DM Occupancy tolerance                  = 0.000000000001
+redata: No kicks to SCF
+redata: DM Mixing Weight for Kicks                  =     0.5000
+redata: Require Harris convergence for SCF          =   F
+redata: Harris energy tolerance for SCF             =     0.000100 eV
+redata: Require DM convergence for SCF              =   T
+redata: DM tolerance for SCF                        =     0.000010
+redata: Require EDM convergence for SCF             =   F
+redata: EDM tolerance for SCF                       =     0.001000 eV
+redata: Require H convergence for SCF               =   T
+redata: Hamiltonian tolerance for SCF               =     0.000100 eV
+redata: Require (free) Energy convergence for SCF   =   F
+redata: (free) Energy tolerance for SCF             =     0.000100 eV
+redata: Antiferro initial spin density              =   F
+redata: Using DFT-D3 dispersion                     =   F
+redata: Using Saved Data (generic)                  =   F
+redata: Use continuation files for DM               =   T
+redata: Neglect nonoverlap interactions             =   F
+redata: Method of Calculation                       = Diagonalization
+redata: Electronic Temperature                      =   300.0000 K
+redata: Fix the spin of the system                  =   F
+redata: Max. number of TDED Iter                    =        1
+redata: Number of TDED substeps                     =        3
+redata: Dynamics option                             = Single-point calculation
+mix.SCF: Pulay mixing                            = Pulay
+mix.SCF:    Variant                              = stable
+mix.SCF:    History steps                        = 8
+mix.SCF:    Linear mixing weight                 =     0.050000
+mix.SCF:    Mixing weight                        =     0.050000
+mix.SCF:    SVD condition                        = 0.1000E-07
+mix.SCF: Spin-component mixing                   all
+redata: ***********************************************************************
+
+%block SCF.Mixers
+  Pulay
+%endblock SCF.Mixers
+
+%block SCF.Mixer.Pulay
+  # Mixing method
+  method pulay
+  variant stable
+
+  # Mixing options
+  weight 0.0500
+  weight.linear 0.0500
+  history 8
+%endblock SCF.Mixer.Pulay
+
+DM_history_depth set to one: no extrapolation allowed by default for geometry relaxation
+Size of DM history Fstack: 1
+Total number of electrons:    46.000000
+Total ionic charge:    46.000000
+
+* ProcessorY, Blocksize:    2  17
+
+
+* Orbital distribution balance (max,min):    17    13
+
+k-point displ. along   1 input, could be:     0.00    0.50
+k-point displ. along   2 input, could be:     0.00    0.50
+k-point displ. along   3 input, could be:     0.00    0.50
+ Kpoints in:           24 . Kpoints trimmed:           23
+
+siesta: k-grid: Number of k-points = 23
+siesta: k-points from Monkhorst-Pack grid
+siesta: k-cutoff (effective) =     6.016 Ang
+siesta: k-point supercell and displacements
+siesta: k-grid:     2     0     0      0.000
+siesta: k-grid:     0     4     0      0.000
+siesta: k-grid:     0     0     4      0.000
+
+diag: Algorithm                                     = D&C
+diag: Parallel over k                               =   F
+diag: Use parallel 2D distribution                  =   T
+diag: Parallel block-size                           = 17
+diag: Parallel distribution                         =     2 x     2
+diag: Used triangular part                          = Lower
+diag: Absolute tolerance                            =  0.100E-15
+diag: Orthogonalization factor                      =  0.100E-05
+diag: Memory factor                                 =  1.0000
+
+superc: Internal auxiliary supercell:     5 x     9 x     9  =     405
+superc: Number of atoms, orbitals, and projectors:   1620  25920  25110
+
+
+ts: **************************************************************
+ts: Save H and S matrices                           =    F
+ts: Save TSHS files in MD/FC simulation             =    F
+ts: Save DM and EDM matrices                        =    F
+ts: Only save the overlap matrix S                  =    F
+ts: **************************************************************
+
+************************ Begin: TS CHECKS AND WARNINGS ************************
+************************ End: TS CHECKS AND WARNINGS **************************
+
+
+                     ====================================
+                        Single-point calculation
+                     ====================================
+
+superc: Internal auxiliary supercell:     5 x     9 x     9  =     405
+superc: Number of atoms, orbitals, and projectors:   1620  25920  25110
+
+outcell: Unit cell vectors (Ang):
+        0.000000    4.254000    4.254000
+        2.127000    0.000000    2.127000
+        2.127000    2.127000    0.000000
+
+outcell: Cell vector modules (Ang)   :    6.016064    3.008032    3.008032
+outcell: Cell angles (23,13,12) (deg):     60.0000     60.0000     60.0000
+outcell: Cell volume (Ang**3)        :     38.4913
+<dSpData1D:S at geom step 0
+  <sparsity:sparsity for geom step 0
+    nrows_g=64 nrows=17 sparsity=10.5295 nnzs=43129, refcount: 8>
+  <dData1D:(new from dSpData1D) n=43129, refcount: 1>
+refcount: 1>
+new_DM -- step:     1
+Initializing Density Matrix...
+
+Attempting to read DM from file... Succeeded...
+DM from file:
+<dSpData2D:IO-DM: COOLRU.DM
+  <sparsity:IO-DM: COOLRU.DM
+    nrows_g=64 nrows=17 sparsity=10.5295 nnzs=43129, refcount: 1>
+  <dData2D:(new from dSpData2D) n=43129 m=2, refcount: 1>
+refcount: 1>
+DM to be used:
+<dSpData2D:Re-structured SpM
+  <sparsity:sparsity for geom step 0
+    nrows_g=64 nrows=17 sparsity=10.5295 nnzs=43129, refcount: 9>
+  <dData2D:(new in restruct) n=43129 m=2, refcount: 1>
+refcount: 1>
+No. of atoms with KB's overlaping orbs in proc 0. Max # of overlaps:      33     249
+
+InitMesh: MESH = 48 x 24 x 24 = 27648
+InitMesh: Mesh cutoff (required, used) =   200.000   263.907 Ry
+New grid distribution [1]: sub = 2
+New grid distribution [2]: sub = 2
+New grid distribution [3]: sub = 2
+Setting up quadratic distribution...
+hubbard_term: recalculating local occupations    1
+hubbard_term: maximum change in local occup.    0.984147
+hubbard_term: recalculating Hamiltonian
+
+stepf: Fermi-Dirac step function
+hubbard_term: recalculating local occupations    1
+hubbard_term: maximum change in local occup.    0.202004
+hubbard_term: recalculating Hamiltonian
+
+siesta: Program's energy decomposition (eV):
+siesta: Ebs     =     -1486.580869
+siesta: Eions   =     11521.967608
+siesta: Ena     =       889.248594
+siesta: Ekin    =      4332.541161
+siesta: Enl     =     -1190.758594
+siesta: Eso     =         0.000000
+siesta: Edftu   =         2.685378
+siesta: DEna    =        20.379858
+siesta: DUscf   =         3.237919
+siesta: DUext   =         0.000000
+siesta: Ex      =     -1673.714413
+siesta: Ec      =       -83.511153
+siesta: Exc     =     -1757.225566
+siesta: EbV     =         0.000000
+siesta: eta*DQ  =         0.000000
+siesta: Emadel  =         0.000000
+siesta: Emeta   =         0.000000
+siesta: Emolmec =         0.000000
+siesta: Ekinion =         0.000000
+siesta: Eharris =     -9226.251847
+siesta: Etot    =     -9221.858857
+siesta: FreeEng =     -9221.858858
+
+        iscf     Eharris(eV)        E_KS(eV)     FreeEng(eV)     dDmax    Ef(eV) dHmax(eV)
+   scf:    1    -9226.251847    -9221.858857    -9221.858858  0.251677 -4.925181  1.205101
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+timer: Routine,Calls,Time,% = IterSCF        1      11.073  79.66
+hubbard_term: recalculating local occupations    2
+hubbard_term: maximum change in local occup.    0.003002
+hubbard_term: recalculating Hamiltonian
+   scf:    2    -9221.998865    -9221.929083    -9221.929083  0.006304 -4.903892  1.165908
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+   scf:    3    -9222.261070    -9222.059214    -9222.059214  0.037666 -4.636233  0.709016
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations    3
+hubbard_term: maximum change in local occup.    0.016257
+hubbard_term: recalculating Hamiltonian
+   scf:    4    -9222.291535    -9222.238865    -9222.238865  0.007199 -4.642157  0.605914
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+   scf:    5    -9222.262719    -9222.219380    -9222.219380  0.011060 -3.436156  0.260755
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations    4
+hubbard_term: maximum change in local occup.    0.011636
+hubbard_term: recalculating Hamiltonian
+   scf:    6    -9222.308665    -9222.296818    -9222.296818  0.004370 -3.453549  0.139088
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations    5
+hubbard_term: maximum change in local occup.    0.003450
+hubbard_term: recalculating Hamiltonian
+   scf:    7    -9222.309071    -9222.302892    -9222.302892  0.004208 -3.469925  0.123165
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations    6
+hubbard_term: maximum change in local occup.    0.007754
+hubbard_term: recalculating Hamiltonian
+   scf:    8    -9222.302757    -9222.304657    -9222.304657  0.007383 -3.552965  0.272964
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations    7
+hubbard_term: maximum change in local occup.    0.007498
+hubbard_term: recalculating Hamiltonian
+   scf:    9    -9222.333744    -9222.318877    -9222.318877  0.009731 -3.527736  0.151300
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations    8
+hubbard_term: maximum change in local occup.    0.004361
+hubbard_term: recalculating Hamiltonian
+   scf:   10    -9222.332086    -9222.325345    -9222.325345  0.005549 -3.504320  0.084831
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations    9
+hubbard_term: maximum change in local occup.    0.001751
+hubbard_term: recalculating Hamiltonian
+   scf:   11    -9222.324847    -9222.325601    -9222.325601  0.002775 -3.465568  0.133085
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+   scf:   12    -9222.289870    -9222.308676    -9222.308676  0.034591 -3.496580  0.168210
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   10
+hubbard_term: maximum change in local occup.    0.029853
+hubbard_term: recalculating Hamiltonian
+   scf:   13    -9222.337073    -9222.337195    -9222.337195  0.003605 -3.497111  0.037900
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   11
+hubbard_term: maximum change in local occup.    0.003108
+hubbard_term: recalculating Hamiltonian
+   scf:   14    -9222.338650    -9222.337743    -9222.337743  0.004005 -3.499573  0.025989
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   12
+hubbard_term: maximum change in local occup.    0.002890
+hubbard_term: recalculating Hamiltonian
+   scf:   15    -9222.337282    -9222.337345    -9222.337345  0.003703 -3.502359  0.018537
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   13
+hubbard_term: maximum change in local occup.    0.004236
+hubbard_term: recalculating Hamiltonian
+   scf:   16    -9222.339113    -9222.337890    -9222.337890  0.005441 -3.504506  0.004962
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   14
+hubbard_term: maximum change in local occup.    0.001133
+hubbard_term: recalculating Hamiltonian
+   scf:   17    -9222.337992    -9222.337916    -9222.337916  0.001454 -3.504245  0.005011
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   15
+hubbard_term: maximum change in local occup.    0.001047
+hubbard_term: recalculating Hamiltonian
+   scf:   18    -9222.337923    -9222.337899    -9222.337899  0.001342 -3.504074  0.003462
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   16
+hubbard_term: maximum change in local occup.    0.000409
+hubbard_term: recalculating Hamiltonian
+   scf:   19    -9222.337927    -9222.337910    -9222.337910  0.000536 -3.503474  0.004750
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   17
+hubbard_term: maximum change in local occup.    0.001588
+hubbard_term: recalculating Hamiltonian
+   scf:   20    -9222.337845    -9222.337830    -9222.337830  0.002038 -3.503726  0.005815
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   18
+hubbard_term: maximum change in local occup.    0.002552
+hubbard_term: recalculating Hamiltonian
+   scf:   21    -9222.338242    -9222.337912    -9222.337912  0.003286 -3.502481  0.007187
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   19
+hubbard_term: maximum change in local occup.    0.000682
+hubbard_term: recalculating Hamiltonian
+   scf:   22    -9222.337937    -9222.337917    -9222.337917  0.000872 -3.503194  0.002783
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   20
+hubbard_term: maximum change in local occup.    0.000037
+hubbard_term: recalculating Hamiltonian
+   scf:   23    -9222.337917    -9222.337917    -9222.337917  0.000044 -3.503222  0.003129
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   21
+hubbard_term: maximum change in local occup.    0.000083
+hubbard_term: recalculating Hamiltonian
+   scf:   24    -9222.337916    -9222.337916    -9222.337916  0.000103 -3.503226  0.002359
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   22
+hubbard_term: maximum change in local occup.    0.000234
+hubbard_term: recalculating Hamiltonian
+   scf:   25    -9222.337923    -9222.337919    -9222.337919  0.000310 -3.502787  0.001923
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   23
+hubbard_term: maximum change in local occup.    0.000028
+hubbard_term: recalculating Hamiltonian
+   scf:   26    -9222.337919    -9222.337919    -9222.337919  0.000064 -3.502577  0.001499
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   24
+hubbard_term: maximum change in local occup.    0.000015
+hubbard_term: recalculating Hamiltonian
+   scf:   27    -9222.337919    -9222.337919    -9222.337919  0.000035 -3.502444  0.001450
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   25
+hubbard_term: maximum change in local occup.    0.000027
+hubbard_term: recalculating Hamiltonian
+   scf:   28    -9222.337919    -9222.337919    -9222.337919  0.000058 -3.502209  0.000990
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   26
+hubbard_term: maximum change in local occup.    0.000050
+hubbard_term: recalculating Hamiltonian
+   scf:   29    -9222.337919    -9222.337919    -9222.337919  0.000062 -3.502162  0.000927
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   27
+hubbard_term: maximum change in local occup.    0.000032
+hubbard_term: recalculating Hamiltonian
+   scf:   30    -9222.337919    -9222.337919    -9222.337919  0.000041 -3.502165  0.000935
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   28
+hubbard_term: maximum change in local occup.    0.000106
+hubbard_term: recalculating Hamiltonian
+   scf:   31    -9222.337920    -9222.337919    -9222.337919  0.000139 -3.502131  0.000744
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   29
+hubbard_term: maximum change in local occup.    0.000017
+hubbard_term: recalculating Hamiltonian
+   scf:   32    -9222.337919    -9222.337919    -9222.337919  0.000022 -3.502122  0.000585
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   30
+hubbard_term: maximum change in local occup.    0.000024
+hubbard_term: recalculating Hamiltonian
+   scf:   33    -9222.337919    -9222.337919    -9222.337919  0.000032 -3.502112  0.000520
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   31
+hubbard_term: maximum change in local occup.    0.000022
+hubbard_term: recalculating Hamiltonian
+   scf:   34    -9222.337919    -9222.337919    -9222.337919  0.000029 -3.502099  0.000513
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   32
+hubbard_term: maximum change in local occup.    0.000015
+hubbard_term: recalculating Hamiltonian
+   scf:   35    -9222.337919    -9222.337919    -9222.337919  0.000023 -3.502121  0.000314
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   33
+hubbard_term: maximum change in local occup.    0.000002
+   scf:   36    -9222.337920    -9222.337920    -9222.337920  0.000002 -3.502124  0.000294
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   34
+hubbard_term: maximum change in local occup.    0.000027
+hubbard_term: recalculating Hamiltonian
+   scf:   37    -9222.337920    -9222.337919    -9222.337919  0.000028 -3.502139  0.000292
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   35
+hubbard_term: maximum change in local occup.    0.000017
+hubbard_term: recalculating Hamiltonian
+   scf:   38    -9222.337919    -9222.337919    -9222.337919  0.000020 -3.502133  0.000274
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   36
+hubbard_term: maximum change in local occup.    0.000008
+   scf:   39    -9222.337920    -9222.337920    -9222.337920  0.000009 -3.502137  0.000253
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   37
+hubbard_term: maximum change in local occup.    0.000024
+hubbard_term: recalculating Hamiltonian
+   scf:   40    -9222.337919    -9222.337919    -9222.337919  0.000025 -3.502144  0.000229
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   38
+hubbard_term: maximum change in local occup.    0.000011
+hubbard_term: recalculating Hamiltonian
+   scf:   41    -9222.337919    -9222.337919    -9222.337919  0.000014 -3.502134  0.000277
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   39
+hubbard_term: maximum change in local occup.    0.000004
+   scf:   42    -9222.337918    -9222.337918    -9222.337918  0.000005 -3.502133  0.000277
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   40
+hubbard_term: maximum change in local occup.    0.000008
+   scf:   43    -9222.337918    -9222.337918    -9222.337918  0.000007 -3.502134  0.000231
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   41
+hubbard_term: maximum change in local occup.    0.000020
+hubbard_term: recalculating Hamiltonian
+   scf:   44    -9222.337919    -9222.337919    -9222.337919  0.000029 -3.502132  0.000330
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   42
+hubbard_term: maximum change in local occup.    0.000029
+hubbard_term: recalculating Hamiltonian
+   scf:   45    -9222.337919    -9222.337919    -9222.337919  0.000037 -3.502138  0.000322
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   43
+hubbard_term: maximum change in local occup.    0.000005
+   scf:   46    -9222.337919    -9222.337919    -9222.337919  0.000006 -3.502124  0.000333
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   44
+hubbard_term: maximum change in local occup.    0.000006
+   scf:   47    -9222.337919    -9222.337919    -9222.337919  0.000007 -3.502140  0.000357
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   45
+hubbard_term: maximum change in local occup.    0.000054
+hubbard_term: recalculating Hamiltonian
+   scf:   48    -9222.337920    -9222.337919    -9222.337919  0.000071 -3.502132  0.000271
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   46
+hubbard_term: maximum change in local occup.    0.000026
+hubbard_term: recalculating Hamiltonian
+   scf:   49    -9222.337919    -9222.337919    -9222.337919  0.000032 -3.502143  0.000249
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   47
+hubbard_term: maximum change in local occup.    0.000022
+hubbard_term: recalculating Hamiltonian
+   scf:   50    -9222.337919    -9222.337919    -9222.337919  0.000029 -3.502135  0.000281
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   48
+hubbard_term: maximum change in local occup.    0.000012
+hubbard_term: recalculating Hamiltonian
+   scf:   51    -9222.337919    -9222.337919    -9222.337919  0.000016 -3.502133  0.000309
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   49
+hubbard_term: maximum change in local occup.    0.000011
+hubbard_term: recalculating Hamiltonian
+   scf:   52    -9222.337919    -9222.337919    -9222.337919  0.000013 -3.502130  0.000297
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   50
+hubbard_term: maximum change in local occup.    0.000018
+hubbard_term: recalculating Hamiltonian
+   scf:   53    -9222.337919    -9222.337919    -9222.337919  0.000020 -3.502139  0.000259
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   51
+hubbard_term: maximum change in local occup.    0.000047
+hubbard_term: recalculating Hamiltonian
+   scf:   54    -9222.337920    -9222.337919    -9222.337919  0.000058 -3.502147  0.000321
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   52
+hubbard_term: maximum change in local occup.    0.000033
+hubbard_term: recalculating Hamiltonian
+   scf:   55    -9222.337919    -9222.337919    -9222.337919  0.000043 -3.502110  0.000312
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   53
+hubbard_term: maximum change in local occup.    0.000013
+hubbard_term: recalculating Hamiltonian
+   scf:   56    -9222.337920    -9222.337919    -9222.337919  0.000013 -3.502139  0.000292
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   54
+hubbard_term: maximum change in local occup.    0.000013
+hubbard_term: recalculating Hamiltonian
+   scf:   57    -9222.337920    -9222.337919    -9222.337919  0.000015 -3.502141  0.000280
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   55
+hubbard_term: maximum change in local occup.    0.000021
+hubbard_term: recalculating Hamiltonian
+   scf:   58    -9222.337920    -9222.337920    -9222.337920  0.000025 -3.502142  0.000269
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   56
+hubbard_term: maximum change in local occup.    0.000027
+hubbard_term: recalculating Hamiltonian
+   scf:   59    -9222.337920    -9222.337920    -9222.337920  0.000033 -3.502147  0.000230
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   57
+hubbard_term: maximum change in local occup.    0.000009
+   scf:   60    -9222.337920    -9222.337919    -9222.337919  0.000011 -3.502148  0.000164
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   58
+hubbard_term: maximum change in local occup.    0.000008
+   scf:   61    -9222.337920    -9222.337920    -9222.337920  0.000010 -3.502142  0.000196
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   59
+hubbard_term: maximum change in local occup.    0.000055
+hubbard_term: recalculating Hamiltonian
+   scf:   62    -9222.337920    -9222.337920    -9222.337920  0.000060 -3.502146  0.000195
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   60
+hubbard_term: maximum change in local occup.    0.000017
+hubbard_term: recalculating Hamiltonian
+   scf:   63    -9222.337920    -9222.337920    -9222.337920  0.000022 -3.502144  0.000202
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   61
+hubbard_term: maximum change in local occup.    0.000010
+hubbard_term: recalculating Hamiltonian
+   scf:   64    -9222.337920    -9222.337920    -9222.337920  0.000013 -3.502144  0.000201
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   62
+hubbard_term: maximum change in local occup.    0.000010
+   scf:   65    -9222.337920    -9222.337920    -9222.337920  0.000013 -3.502149  0.000163
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   63
+hubbard_term: maximum change in local occup.    0.000005
+   scf:   66    -9222.337920    -9222.337920    -9222.337920  0.000018 -3.502147  0.000223
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   64
+hubbard_term: maximum change in local occup.    0.000015
+hubbard_term: recalculating Hamiltonian
+   scf:   67    -9222.337920    -9222.337920    -9222.337920  0.000022 -3.502143  0.000217
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   65
+hubbard_term: maximum change in local occup.    0.000064
+hubbard_term: recalculating Hamiltonian
+   scf:   68    -9222.337920    -9222.337920    -9222.337920  0.000082 -3.502133  0.000290
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   66
+hubbard_term: maximum change in local occup.    0.000016
+hubbard_term: recalculating Hamiltonian
+   scf:   69    -9222.337919    -9222.337919    -9222.337919  0.000021 -3.502131  0.000304
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   67
+hubbard_term: maximum change in local occup.    0.000031
+hubbard_term: recalculating Hamiltonian
+   scf:   70    -9222.337919    -9222.337919    -9222.337919  0.000040 -3.502126  0.000325
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   68
+hubbard_term: maximum change in local occup.    0.000054
+hubbard_term: recalculating Hamiltonian
+   scf:   71    -9222.337920    -9222.337920    -9222.337920  0.000070 -3.502137  0.000271
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   69
+hubbard_term: maximum change in local occup.    0.000048
+hubbard_term: recalculating Hamiltonian
+   scf:   72    -9222.337919    -9222.337919    -9222.337919  0.000058 -3.502130  0.000314
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   70
+hubbard_term: maximum change in local occup.    0.000002
+   scf:   73    -9222.337920    -9222.337920    -9222.337920  0.000003 -3.502127  0.000302
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   71
+hubbard_term: maximum change in local occup.    0.000135
+hubbard_term: recalculating Hamiltonian
+   scf:   74    -9222.337921    -9222.337920    -9222.337920  0.000172 -3.502142  0.000201
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   72
+hubbard_term: maximum change in local occup.    0.000034
+hubbard_term: recalculating Hamiltonian
+   scf:   75    -9222.337920    -9222.337920    -9222.337920  0.000043 -3.502133  0.000204
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   73
+hubbard_term: maximum change in local occup.    0.000040
+hubbard_term: recalculating Hamiltonian
+   scf:   76    -9222.337920    -9222.337920    -9222.337920  0.000048 -3.502146  0.000231
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   74
+hubbard_term: maximum change in local occup.    0.000001
+   scf:   77    -9222.337919    -9222.337919    -9222.337919  0.000001 -3.502146  0.000231
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   75
+hubbard_term: maximum change in local occup.    0.000017
+hubbard_term: recalculating Hamiltonian
+   scf:   78    -9222.337920    -9222.337920    -9222.337920  0.000021 -3.502145  0.000227
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   76
+hubbard_term: maximum change in local occup.    0.000124
+hubbard_term: recalculating Hamiltonian
+   scf:   79    -9222.337920    -9222.337920    -9222.337920  0.000151 -3.502128  0.000202
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   77
+hubbard_term: maximum change in local occup.    0.000031
+hubbard_term: recalculating Hamiltonian
+   scf:   80    -9222.337920    -9222.337920    -9222.337920  0.000041 -3.502144  0.000188
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   78
+hubbard_term: maximum change in local occup.    0.000098
+hubbard_term: recalculating Hamiltonian
+   scf:   81    -9222.337920    -9222.337920    -9222.337920  0.000120 -3.502124  0.000216
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   79
+hubbard_term: maximum change in local occup.    0.000056
+hubbard_term: recalculating Hamiltonian
+   scf:   82    -9222.337920    -9222.337920    -9222.337920  0.000069 -3.502151  0.000180
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   80
+hubbard_term: maximum change in local occup.    0.000102
+hubbard_term: recalculating Hamiltonian
+   scf:   83    -9222.337920    -9222.337920    -9222.337920  0.000122 -3.502133  0.000241
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   81
+hubbard_term: maximum change in local occup.    0.000061
+hubbard_term: recalculating Hamiltonian
+   scf:   84    -9222.337920    -9222.337920    -9222.337920  0.000075 -3.502141  0.000250
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   82
+hubbard_term: maximum change in local occup.    0.000083
+hubbard_term: recalculating Hamiltonian
+   scf:   85    -9222.337920    -9222.337920    -9222.337920  0.000101 -3.502143  0.000265
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   83
+hubbard_term: maximum change in local occup.    0.000262
+hubbard_term: recalculating Hamiltonian
+   scf:   86    -9222.337922    -9222.337920    -9222.337920  0.000316 -3.502125  0.000160
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   84
+hubbard_term: maximum change in local occup.    0.000242
+hubbard_term: recalculating Hamiltonian
+   scf:   87    -9222.337922    -9222.337920    -9222.337920  0.000291 -3.502121  0.000123
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   85
+hubbard_term: maximum change in local occup.    0.000051
+hubbard_term: recalculating Hamiltonian
+   scf:   88    -9222.337920    -9222.337920    -9222.337920  0.000061 -3.502123  0.000111
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   86
+hubbard_term: maximum change in local occup.    0.000120
+hubbard_term: recalculating Hamiltonian
+   scf:   89    -9222.337921    -9222.337920    -9222.337920  0.000143 -3.502140  0.000061
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   87
+hubbard_term: maximum change in local occup.    0.000017
+hubbard_term: recalculating Hamiltonian
+   scf:   90    -9222.337920    -9222.337920    -9222.337920  0.000020 -3.502143  0.000060
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   88
+hubbard_term: maximum change in local occup.    0.000099
+hubbard_term: recalculating Hamiltonian
+   scf:   91    -9222.337921    -9222.337920    -9222.337920  0.000120 -3.502160  0.000059
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   89
+hubbard_term: maximum change in local occup.    0.000087
+hubbard_term: recalculating Hamiltonian
+   scf:   92    -9222.337921    -9222.337920    -9222.337920  0.000106 -3.502154  0.000047
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+hubbard_term: recalculating local occupations   90
+hubbard_term: maximum change in local occup.    0.000004
+   scf:   93    -9222.337920    -9222.337920    -9222.337920  0.000005 -3.502153  0.000048
+     spin moment: {S} , |S| = {        0.0        0.0   -0.00000 }    -0.00000
+
+SCF Convergence by DM+H criterion
+max |DM_out - DM_in|         :     0.0000048134
+max |H_out - H_in|      (eV) :     0.0000478931
+DFT+U population converged by dTol_pop criteria:
+max |pop(DFT+U)_i - pop(DFT+U)_j|:     0.0000040288
+SCF cycle converged after 93 iterations
+
+Using DM_out to compute the final energy and forces
+No. of atoms with KB's overlaping orbs in proc 0. Max # of overlaps:      33     249
+hubbard_term: recalculating local occupations   91
+hubbard_term: maximum change in local occup.    0.000004
+hubbard_term: recalculating Hamiltonian and forces
+
+siesta: E_KS(eV) =            -9222.3379
+
+siesta: E_KS - E_eggbox =     -9222.3379
+
+siesta: Atomic forces (eV/Ang):
+----------------------------------------
+   Tot   -0.000000   -0.000000    0.000000
+----------------------------------------
+   Max    0.000046
+   Res    0.000032    sqrt( Sum f_i^2 / 3N )
+----------------------------------------
+   Max    0.000046    constrained
+
+Stress tensor Voigt[x,y,z,yz,xz,xy] (kbar):     -127.84     -128.84     -128.84        2.46       -9.67       -9.67
+(Free)E + p*V (eV/cell)    -9219.2506
+Target enthalpy (eV/cell)    -9222.3379
+
+mulliken: Atomic and Orbital Populations:
+
+mulliken: Spin UP 
+
+Species: CoLR0               
+Atom  Qatom  Qorb
+               3s      4s      4s      3py     3pz     3px     4py     4pz     
+               4px     3dxy    3dyz    3dz2    3dxz    3dx2-y2 3dxy    3dyz    
+               3dz2    3dxz    3dx2-y2 
+   1  9.458   0.994   0.350  -0.133   1.000   1.000   1.000   0.092   0.092
+              0.092   0.994   0.994   0.971   0.994   0.971  -0.003  -0.003
+
+              0.028  -0.003   0.028
+
+Species: CoLR1               
+Atom  Qatom  Qorb
+               3s      4s      4s      3py     3pz     3px     4py     4pz     
+               4px     3dxy    3dyz    3dz2    3dxz    3dx2-y2 3dxy    3dyz    
+               3dz2    3dxz    3dx2-y2 
+   2  6.638   1.002   0.316  -0.123   1.000   1.000   1.001   0.081   0.081
+              0.081   0.698   0.693   0.150   0.698   0.149  -0.057  -0.057
+
+             -0.008  -0.057  -0.008
+
+Species: O                   
+Atom  Qatom  Qorb
+               2s      2s      2py     2pz     2px     2py     2pz     2px     
+               3Pdxy   3Pdyz   3Pdz2   3Pdxz   3Pdx2-y2
+   3  3.452   0.910  -0.019   1.026   1.026   1.026  -0.179  -0.179  -0.179
+              0.004   0.004   0.004   0.004   0.004
+   4  3.452   0.910  -0.019   1.026   1.026   1.026  -0.179  -0.179  -0.179
+              0.004   0.004   0.004   0.004   0.004
+
+mulliken: Qtot =       23.000
+
+mulliken: Spin DOWN 
+
+Species: CoLR0               
+Atom  Qatom  Qorb
+               3s      4s      4s      3py     3pz     3px     4py     4pz     
+               4px     3dxy    3dyz    3dz2    3dxz    3dx2-y2 3dxy    3dyz    
+               3dz2    3dxz    3dx2-y2 
+   1  6.638   1.002   0.316  -0.123   1.000   1.000   1.001   0.081   0.081
+              0.081   0.698   0.693   0.150   0.698   0.149  -0.057  -0.057
+
+             -0.008  -0.057  -0.008
+
+Species: CoLR1               
+Atom  Qatom  Qorb
+               3s      4s      4s      3py     3pz     3px     4py     4pz     
+               4px     3dxy    3dyz    3dz2    3dxz    3dx2-y2 3dxy    3dyz    
+               3dz2    3dxz    3dx2-y2 
+   2  9.458   0.994   0.350  -0.133   1.000   1.000   1.000   0.092   0.092
+              0.092   0.994   0.994   0.971   0.994   0.971  -0.003  -0.003
+
+              0.028  -0.003   0.028
+
+Species: O                   
+Atom  Qatom  Qorb
+               2s      2s      2py     2pz     2px     2py     2pz     2px     
+               3Pdxy   3Pdyz   3Pdz2   3Pdxz   3Pdx2-y2
+   3  3.452   0.910  -0.019   1.026   1.026   1.026  -0.179  -0.179  -0.179
+              0.004   0.004   0.004   0.004   0.004
+   4  3.452   0.910  -0.019   1.026   1.026   1.026  -0.179  -0.179  -0.179
+              0.004   0.004   0.004   0.004   0.004
+
+mulliken: Qtot =       23.000
+
+Mulliken Atomic Populations:
+Atom #   charge [q] valence [e]      Sz [e]  Species
+     1     0.903880   16.096120    2.819499  CoLR0
+     2     0.903872   16.096128   -2.819440  CoLR1
+     3    -0.903876    6.903876   -0.000029  O
+     4    -0.903876    6.903876   -0.000029  O
+-------------------------------------------
+ Total    -0.000000               -0.000000
+
+siesta: Program's energy decomposition (eV):
+siesta: Ebs     =     -1485.180739
+siesta: Eions   =     11521.967608
+siesta: Ena     =       889.248594
+siesta: Ekin    =      4332.027349
+siesta: Enl     =     -1190.547336
+siesta: Eso     =         0.000000
+siesta: Edftu   =         2.031629
+siesta: DEna    =        21.265871
+siesta: DUscf   =         2.857046
+siesta: DUext   =         0.000000
+siesta: Ex      =     -1673.726909
+siesta: Ec      =       -83.526557
+siesta: Exc     =     -1757.253466
+siesta: EbV     =         0.000000
+siesta: eta*DQ  =         0.000000
+siesta: Emadel  =         0.000000
+siesta: Emeta   =         0.000000
+siesta: Emolmec =         0.000000
+siesta: Ekinion =         0.000000
+siesta: Eharris =     -9222.337920
+siesta: Etot    =     -9222.337920
+siesta: FreeEng =     -9222.337920
+
+siesta: Final energy (eV):
+siesta:  Band Struct. =   -1485.180739
+siesta:       Kinetic =    4332.027349
+siesta:       Hartree =    2478.442977
+siesta:         Edftu =       2.031629
+siesta:       Eso     =       0.000000
+siesta:    Ext. field =       0.000000
+siesta:         Exch. =   -1673.726909
+siesta:         Corr. =     -83.526557
+siesta:     Bulk bias =       0.000000
+siesta:   Exch.-corr. =   -1757.253466
+siesta:  Ion-electron =   -9332.992386
+siesta:       Ion-ion =   -4944.594024
+siesta:       Ekinion =       0.000000
+siesta: D3 dispersion =       0.000000
+siesta:         Total =   -9222.337920
+siesta:         Fermi =      -3.502153
+
+siesta: Stress tensor (static) (eV/Ang**3):
+siesta:    -0.079793   -0.006045   -0.006045
+siesta:    -0.006037   -0.080415    0.001536
+siesta:    -0.006037    0.001536   -0.080415
+
+siesta: Cell volume =         38.491290 Ang**3
+
+siesta: Pressure (static):
+siesta:                Solid            Molecule  Units
+siesta:           0.00087357          0.00087359  Ry/Bohr**3
+siesta:           0.08020747          0.08020915  eV/Ang**3
+siesta:         128.50653069        128.50922622  kBar
+
+Basis Enthalpy Calculation:
+    Basis Pressure for species 1(CoLR0) :      0.2000000 GPa
+    Basis Pressure for species 2(CoLR1) :      0.2000000 GPa
+    Basis Pressure for species 3(O) :      0.2000000 GPa
+
+    Orbital volume contribution        =           1.891242 eV
+    (Free)E + p_basis*V_orbitals       =       -9220.446678 eV
+    (Free)Eharris+ p_basis*V_orbitals  =       -9220.446678 eV
+WARNING: BASIS_ENTHALPY and BASIS_HARRIS_ENTHALPY files are deprecated. They will be removed in future releases.
+Please use system_label.BASIS_ENTHALPY in your scripts instead.
+
+mulliken: Atomic and Orbital Populations:
+
+mulliken: Spin UP 
+
+Species: CoLR0               
+Atom  Qatom  Qorb
+               3s      4s      4s      3py     3pz     3px     4py     4pz     
+               4px     3dxy    3dyz    3dz2    3dxz    3dx2-y2 3dxy    3dyz    
+               3dz2    3dxz    3dx2-y2 
+   1  9.458   0.994   0.350  -0.133   1.000   1.000   1.000   0.092   0.092
+              0.092   0.994   0.994   0.971   0.994   0.971  -0.003  -0.003
+
+              0.028  -0.003   0.028
+
+Species: CoLR1               
+Atom  Qatom  Qorb
+               3s      4s      4s      3py     3pz     3px     4py     4pz     
+               4px     3dxy    3dyz    3dz2    3dxz    3dx2-y2 3dxy    3dyz    
+               3dz2    3dxz    3dx2-y2 
+   2  6.638   1.002   0.316  -0.123   1.000   1.000   1.001   0.081   0.081
+              0.081   0.698   0.693   0.150   0.698   0.149  -0.057  -0.057
+
+             -0.008  -0.057  -0.008
+
+Species: O                   
+Atom  Qatom  Qorb
+               2s      2s      2py     2pz     2px     2py     2pz     2px     
+               3Pdxy   3Pdyz   3Pdz2   3Pdxz   3Pdx2-y2
+   3  3.452   0.910  -0.019   1.026   1.026   1.026  -0.179  -0.179  -0.179
+              0.004   0.004   0.004   0.004   0.004
+   4  3.452   0.910  -0.019   1.026   1.026   1.026  -0.179  -0.179  -0.179
+              0.004   0.004   0.004   0.004   0.004
+
+mulliken: Qtot =       23.000
+
+mulliken: Spin DOWN 
+
+Species: CoLR0               
+Atom  Qatom  Qorb
+               3s      4s      4s      3py     3pz     3px     4py     4pz     
+               4px     3dxy    3dyz    3dz2    3dxz    3dx2-y2 3dxy    3dyz    
+               3dz2    3dxz    3dx2-y2 
+   1  6.638   1.002   0.316  -0.123   1.000   1.000   1.001   0.081   0.081
+              0.081   0.698   0.693   0.150   0.698   0.149  -0.057  -0.057
+
+             -0.008  -0.057  -0.008
+
+Species: CoLR1               
+Atom  Qatom  Qorb
+               3s      4s      4s      3py     3pz     3px     4py     4pz     
+               4px     3dxy    3dyz    3dz2    3dxz    3dx2-y2 3dxy    3dyz    
+               3dz2    3dxz    3dx2-y2 
+   2  9.458   0.994   0.350  -0.133   1.000   1.000   1.000   0.092   0.092
+              0.092   0.994   0.994   0.971   0.994   0.971  -0.003  -0.003
+
+              0.028  -0.003   0.028
+
+Species: O                   
+Atom  Qatom  Qorb
+               2s      2s      2py     2pz     2px     2py     2pz     2px     
+               3Pdxy   3Pdyz   3Pdz2   3Pdxz   3Pdx2-y2
+   3  3.452   0.910  -0.019   1.026   1.026   1.026  -0.179  -0.179  -0.179
+              0.004   0.004   0.004   0.004   0.004
+   4  3.452   0.910  -0.019   1.026   1.026   1.026  -0.179  -0.179  -0.179
+              0.004   0.004   0.004   0.004   0.004
+
+mulliken: Qtot =       23.000
+
+Mulliken Atomic Populations:
+Atom #   charge [q] valence [e]      Sz [e]  Species
+     1     0.903880   16.096120    2.819499  CoLR0
+     2     0.903872   16.096128   -2.819440  CoLR1
+     3    -0.903876    6.903876   -0.000029  O
+     4    -0.903876    6.903876   -0.000029  O
+-------------------------------------------
+ Total    -0.000000               -0.000000
+
+cite: Please indicate the Siesta version in published work: 5.4.2
+cite: This calculation has made use of features in the following articles
+cite: which we encourage you to cite in published work.
+cite: (Please see "COOLRU.bib" for a BibTeX file.)
+        Primary SIESTA paper
+          DOI: www.doi.org/10.1088/0953-8984/14/11/302
+        LDA+U implementation
+          DOI: www.doi.org/10.1103/PhysRevB.57.1505
+        PSML pseudopotential format
+          DOI: www.doi.org/10.1016/j.cpc.2018.02.011
+
+
+>> End of run:   1-OCT-2026  13:42:21
+Job completed

@@ -1,0 +1,132 @@
+{
+  "material": "CoO",
+  "status": "PARTIAL_SCF_COMPLETE_BAND_VALIDATION_BLOCKED",
+  "pbe": {
+    "material": "CoO",
+    "xc": "PBE",
+    "u_qualification": "REVIEW",
+    "site_resolved_u_eV": {
+      "CoLR0": 5.817148502021659,
+      "CoLR1": 5.815019855497104
+    },
+    "j_eV": {
+      "CoLR0": 0.0,
+      "CoLR1": 0.0
+    },
+    "geometry_source": "benchmarks/lr_u/CoO/reference.fdf",
+    "sampled_mesh": [
+      2,
+      4,
+      4
+    ],
+    "electronic_temperature_K": 300,
+    "electron_count_from_occupations": 46.0,
+    "method": "PBE",
+    "u_applied_eV": {
+      "CoLR0": 0.0,
+      "CoLR1": 0.0
+    },
+    "converged": true,
+    "iterations": 22,
+    "dDmax": 5.7784e-06,
+    "dHmax_eV": 4.50683e-05,
+    "DFTU_population_change": 4.7408e-06,
+    "total_energy_eV": -9225.172943,
+    "free_energy_eV": -9225.186411,
+    "fermi_energy_eV": -4.21147,
+    "local_moments_muB": {
+      "CoLR0": 2.534298,
+      "CoLR1": -2.534297
+    },
+    "total_moment_muB": 1e-06,
+    "scf_mesh_state": "METAL",
+    "fermi_crossing_bands": {
+      "spin1": [
+        23,
+        24
+      ],
+      "spin2": [
+        23,
+        24
+      ]
+    },
+    "occupation_weighted_electron_count": 46.00000000749155,
+    "occupation_aware_gap_eV": 0.0,
+    "seekpath_status": "ROUTE_GENERATED; BAND_EVALUATION_BLOCKED_PENDING_HSX_EIG_REVIEW"
+  },
+  "pbe_lru": {
+    "material": "CoO",
+    "xc": "PBE",
+    "u_qualification": "REVIEW",
+    "site_resolved_u_eV": {
+      "CoLR0": 5.817148502021659,
+      "CoLR1": 5.815019855497104
+    },
+    "j_eV": {
+      "CoLR0": 0.0,
+      "CoLR1": 0.0
+    },
+    "geometry_source": "benchmarks/lr_u/CoO/reference.fdf",
+    "sampled_mesh": [
+      2,
+      4,
+      4
+    ],
+    "electronic_temperature_K": 300,
+    "electron_count_from_occupations": 46.0,
+    "method": "PBE+LR-U",
+    "u_applied_eV": {
+      "CoLR0": 5.817148502021659,
+      "CoLR1": 5.815019855497104
+    },
+    "converged": true,
+    "iterations": 93,
+    "dDmax": 4.8134e-06,
+    "dHmax_eV": 4.78931e-05,
+    "DFTU_population_change": 4.0288e-06,
+    "total_energy_eV": -9222.33792,
+    "free_energy_eV": -9222.33792,
+    "fermi_energy_eV": -3.502153,
+    "local_moments_muB": {
+      "CoLR0": 2.819499,
+      "CoLR1": -2.81944
+    },
+    "total_moment_muB": 1e-06,
+    "scf_mesh_state": "INSULATOR",
+    "fermi_crossing_bands": {
+      "spin1": [],
+      "spin2": []
+    },
+    "occupation_weighted_electron_count": 46.000000000000966,
+    "vbm_rel_ef_eV": -2.07133977,
+    "cbm_rel_ef_eV": 0.64348301,
+    "scf_mesh_sampled_gap_eV": 2.71482278,
+    "seekpath_status": "ROUTE_GENERATED; BAND_EVALUATION_BLOCKED_PENDING_HSX_EIG_REVIEW"
+  },
+  "band_energy_reference_check": {
+    "status": "PENDING_REVIEW; band postprocessing stopped",
+    "pbe": {
+      "ef_eig_vs_hsx_eV": 1.327415510843366e-09,
+      "MAX_ABS_RAW_DIFFERENCE_eV": 0.0001797030961085966,
+      "MEAN_RAW_DIFFERENCE_eV": -1.8870330824070578e-06,
+      "BEST_CONSTANT_OFFSET_DELTA_eV": -1.8870330824070578e-06,
+      "MAX_ABS_RESIDUAL_AFTER_OFFSET_eV": 0.0001778160630261895,
+      "RMS_RESIDUAL_AFTER_OFFSET_eV": 1.4797502836146769e-05,
+      "largest_residual": "kpoint 22, spin 1, band 62"
+    },
+    "pbe_lru": {
+      "ef_eig_vs_hsx_eV": 2.053396e-10,
+      "MAX_ABS_RAW_DIFFERENCE_eV": 0.00018007117505192127,
+      "MEAN_RAW_DIFFERENCE_eV": -1.8863246725550253e-06,
+      "BEST_CONSTANT_OFFSET_DELTA_eV": -1.8863246725550253e-06,
+      "MAX_ABS_RESIDUAL_AFTER_OFFSET_eV": 0.00017818485037936625,
+      "RMS_RESIDUAL_AFTER_OFFSET_eV": 1.4750556013518917e-05,
+      "largest_residual": "kpoint 22, spin 1, band 62"
+    },
+    "scf_fermi_energy_from_out_matches_eig_hsx": true,
+    "eigenvalue_reference_decision": "not finalized; auto-review rejected proceeding with a looser comparison criterion"
+  },
+  "seekpath_route": "bands/seekpath_route.json",
+  "final_report_updated": false
+}
+

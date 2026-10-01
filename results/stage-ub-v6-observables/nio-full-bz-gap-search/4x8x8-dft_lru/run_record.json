@@ -1,0 +1,50 @@
+{
+  "material": "NiO",
+  "method": "PBE+LR-U",
+  "status": "COMPLETE",
+  "source_run": "/home/jmc/.local/state/siestaflow/stage-u-b-v6-20260930/observables/nio-bands-dft_lru-prepared",
+  "input_fdf": "/home/jmc/.local/state/siestaflow/stage-u-b-v6-20260930/observables/nio-gap-mesh-4x8x8-dft_lru/input.fdf",
+  "reciprocal_full_BZ_mesh": [
+    4,
+    8,
+    8
+  ],
+  "bandpoints_count": 256,
+  "band_method": "full uniform BandPoints mesh; centered on Gamma in the V6 reciprocal cell",
+  "scf_kgrid_preserved": "2x4x4",
+  "comparison_gate_eV": 0.001,
+  "gate_rule": "compare VBM, CBM, and indirect gap between successive full-BZ meshes; accept refinement stability only if all changes are <= 1 meV",
+  "DFTU_settings_preserved": true,
+  "DM.UseSaveDM": true,
+  "SCF_tolerances_preserved": true,
+  "geometry_fixed": true,
+  "not_a_geometry_or_campaign_run": true,
+  "scf_converged": true,
+  "fermi_eV": -4.014416564029604,
+  "band_edges": {
+    "vbm_eV": -5.8173,
+    "vbm_location": [
+      [
+        0.19934,
+        -0.19934,
+        -0.19934
+      ],
+      1,
+      24,
+      36
+    ],
+    "cbm_eV": -2.6401,
+    "cbm_location": [
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      1,
+      25,
+      164
+    ],
+    "gap_eV": 3.1772000000000005,
+    "crossing_bands": []
+  }
+}

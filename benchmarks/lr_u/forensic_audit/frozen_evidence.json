@@ -1,0 +1,184 @@
+{
+  "materials": [
+    {
+      "adaptive_state": {
+        "file_sha256": "c9828d4c7b4281fd0ac8fd4854debf731c29f592580e278c2b16caffb0360e1b",
+        "path": ".siestaflow/adaptive-alpha-state.json"
+      },
+      "campaign_root": "/home/jmc/.local/state/siestaflow/campaigns/lr-u-nio-restart-canary-r3-20260930",
+      "campaign_uuid": "d6d58dfd-8525-4d7f-b72c-5bbe679ec95f",
+      "certificate": {
+        "file_sha256": "3bf45c30ef2106df25261cd0a9a335fbe2dac17b8472a05e474509669740b26d",
+        "path": "u_certificate.v1.json",
+        "scientific_digest": "5064647ac55a6c894c9bdda57281eb45f3e6ab6c66de0f37eaf4b82c44130cb7",
+        "status": "CERTIFIED"
+      },
+      "material": "NiO",
+      "matrix_analysis": {
+        "all_commitment_fields_match": true,
+        "analysis_policy_sha256": "03430098e7143a1ee32f54ecacc4f893672af375c8bdeb896f1b92c37be37dc1",
+        "commitment_file_sha256": "25a50c2275943acd86518d2a8b6698ab8dc20a2ce442618b5db6b7bf4ec2aefd",
+        "commitment_path": "results/alpha_rounds/round-01/matrix_analysis_commitment.v1.json",
+        "declared_analysis_policy_sha256": "03430098e7143a1ee32f54ecacc4f893672af375c8bdeb896f1b92c37be37dc1",
+        "declared_commitment_file_sha256": "25a50c2275943acd86518d2a8b6698ab8dc20a2ce442618b5db6b7bf4ec2aefd",
+        "declared_file_sha256": "6b5293eddeecd30459b5de6591c681eb279adbad4d2e85f0b47c316f1516ef0f",
+        "file_sha256": "6b5293eddeecd30459b5de6591c681eb279adbad4d2e85f0b47c316f1516ef0f",
+        "path": "results/alpha_rounds/round-01/analysis.v3.json",
+        "receipt_in_checkpoint": true,
+        "receipt_sha256": "c4c0dbd87117e1115002e1b533caa96dc4ddbe51135795af0eb891ced7ab3936",
+        "receipt_state": "VALIDATED"
+      },
+      "response_tokens": {
+        "declared_file_sha256": "457a23b348b2555b640a8a9ab16e81796f151e9cc0774b306a3a38eaa338ebb7",
+        "declared_scientific_digest": "76ea04e755d9634201277552b98e8fe9cb0f4ce950465a32fbeb640552ee7c78",
+        "file_sha256": "457a23b348b2555b640a8a9ab16e81796f151e9cc0774b306a3a38eaa338ebb7",
+        "path": "results/alpha_rounds/round-01/response_tokens.v1.json",
+        "scientific_digest": "76ea04e755d9634201277552b98e8fe9cb0f4ce950465a32fbeb640552ee7c78"
+      },
+      "source_evidence_manifest": {
+        "canonical_digest": "0ff1eca5a1f371e47f841d0d53706bdf319111975e606680e615c578a10715ee",
+        "declared_canonical_digest": "0ff1eca5a1f371e47f841d0d53706bdf319111975e606680e615c578a10715ee",
+        "declared_file_sha256": "747b7a5268c798e9d3b481e381fd3827c0880d11302f5a10732e2315b0d24879",
+        "declared_semantic_identity": "31badde98549df954cfdcc8eb31fc15f95a9a8d010de2d1d22823c9bd7314891",
+        "file_sha256": "747b7a5268c798e9d3b481e381fd3827c0880d11302f5a10732e2315b0d24879",
+        "path": "results/alpha_rounds/round-01/source_evidence_manifest.v1.json",
+        "semantic_identity": "31badde98549df954cfdcc8eb31fc15f95a9a8d010de2d1d22823c9bd7314891"
+      }
+    },
+    {
+      "adaptive_state": {
+        "file_sha256": "55b924d451958335b1a5c61eb33b02321494994949bc6efe2b492ec661840524",
+        "path": ".siestaflow/adaptive-alpha-state.json"
+      },
+      "campaign_root": "/home/jmc/.local/state/siestaflow/campaigns/lr-u-mno-afmii-stage-u-a-20260930",
+      "campaign_uuid": "2eefb3e5-db29-4656-ad6a-99d2f0566038",
+      "certificate": {
+        "file_sha256": "a97bb63623ef8b47a8d9057adf773af3c5081a10401cf4956d57803b5c43c146",
+        "path": "u_certificate.v1.json",
+        "scientific_digest": "852ce7298eb5980df3a627794db2b01f5eaa890ee1b1a1555cdfbdd531b956ef",
+        "status": "CERTIFICATE_NOT_ESTABLISHED"
+      },
+      "material": "MnO",
+      "matrix_analysis": {
+        "all_commitment_fields_match": true,
+        "analysis_policy_sha256": "03430098e7143a1ee32f54ecacc4f893672af375c8bdeb896f1b92c37be37dc1",
+        "commitment_file_sha256": "f3641eb4803dbf40775fef875f4e30a00e382dcbb7081ce7f04691b25da85af7",
+        "commitment_path": "results/alpha_rounds/round-02/matrix_analysis_commitment.v1.json",
+        "declared_analysis_policy_sha256": "03430098e7143a1ee32f54ecacc4f893672af375c8bdeb896f1b92c37be37dc1",
+        "declared_commitment_file_sha256": "f3641eb4803dbf40775fef875f4e30a00e382dcbb7081ce7f04691b25da85af7",
+        "declared_file_sha256": "a1c74ee2c22741907961c9e67eecff73f85d91a4c9281c01eaf6c8f4efb34aff",
+        "file_sha256": "a1c74ee2c22741907961c9e67eecff73f85d91a4c9281c01eaf6c8f4efb34aff",
+        "path": "results/alpha_rounds/round-02/analysis.v3.json",
+        "receipt_in_checkpoint": true,
+        "receipt_sha256": "ab834e36574c1250830bb787fa8fde3735f38c27f08be7168fb88ba6e33a10a9",
+        "receipt_state": "VALIDATED"
+      },
+      "response_tokens": {
+        "declared_file_sha256": "72e56ea529fdaf8ceb9085f89ad40daeceab033403094ee90d1d981ed22f2962",
+        "declared_scientific_digest": "4203f1aef647eaa22dde5bf0b6a410afdd150b6197a22622e49113fa430055e6",
+        "file_sha256": "72e56ea529fdaf8ceb9085f89ad40daeceab033403094ee90d1d981ed22f2962",
+        "path": "results/alpha_rounds/round-02/response_tokens.v1.json",
+        "scientific_digest": "4203f1aef647eaa22dde5bf0b6a410afdd150b6197a22622e49113fa430055e6"
+      },
+      "source_evidence_manifest": {
+        "canonical_digest": "6f6227e28cdb48cefbf209ce30423185f66f9941e59d91e1bc0ac7535ca87276",
+        "declared_canonical_digest": "6f6227e28cdb48cefbf209ce30423185f66f9941e59d91e1bc0ac7535ca87276",
+        "declared_file_sha256": "254355e97cda37bca1605823848b77bd8774acd976231221195aab64882a2f45",
+        "declared_semantic_identity": "22651667deaeec41c7d294a033af77432ea97eb61b4a1b35a5dd9c51edf775a8",
+        "file_sha256": "254355e97cda37bca1605823848b77bd8774acd976231221195aab64882a2f45",
+        "path": "results/alpha_rounds/round-02/source_evidence_manifest.v1.json",
+        "semantic_identity": "22651667deaeec41c7d294a033af77432ea97eb61b4a1b35a5dd9c51edf775a8"
+      }
+    },
+    {
+      "adaptive_state": {
+        "file_sha256": "2566ca9fcecf58ebb300a05315e45154dda9db241533ac03d79437c723fb7ac4",
+        "path": ".siestaflow/adaptive-alpha-state.json"
+      },
+      "campaign_root": "/home/jmc/.local/state/siestaflow/campaigns/lr-u-feo-ideal-afmii-stage-u-a-20260930",
+      "campaign_uuid": "d1697a97-dd54-40d3-98c7-a17ed8de82dc",
+      "certificate": {
+        "file_sha256": "f83c3e34a01708734c3ba3e6be837b611c04fac71d95d8a29909b8658ade3c0f",
+        "path": "u_certificate.v1.json",
+        "scientific_digest": "c04997b0c4753048c68a42ee999ef3bf0b9fb0273c0fc51b1e9d901080e1a8a5",
+        "status": "CERTIFIED"
+      },
+      "material": "FeO",
+      "matrix_analysis": {
+        "all_commitment_fields_match": true,
+        "analysis_policy_sha256": "03430098e7143a1ee32f54ecacc4f893672af375c8bdeb896f1b92c37be37dc1",
+        "commitment_file_sha256": "fb58103a99a9a34cc057cbc4153c33fa926ccf96d88a75b6658b2ad207a8fb42",
+        "commitment_path": "results/alpha_rounds/round-00/matrix_analysis_commitment.v1.json",
+        "declared_analysis_policy_sha256": "03430098e7143a1ee32f54ecacc4f893672af375c8bdeb896f1b92c37be37dc1",
+        "declared_commitment_file_sha256": "fb58103a99a9a34cc057cbc4153c33fa926ccf96d88a75b6658b2ad207a8fb42",
+        "declared_file_sha256": "ac4d67aa1047d2c47bf729dcb146848b550f30c4184c50f4dc68f90acc6c37af",
+        "file_sha256": "ac4d67aa1047d2c47bf729dcb146848b550f30c4184c50f4dc68f90acc6c37af",
+        "path": "results/alpha_rounds/round-00/analysis.v3.json",
+        "receipt_in_checkpoint": true,
+        "receipt_sha256": "b0fffe7d9e9852b494ce87f0c368d744187b9f5bee660ecf23848d7304eb1d07",
+        "receipt_state": "VALIDATED"
+      },
+      "response_tokens": {
+        "declared_file_sha256": "dd80460efff83bd6ac1dd04c658f1e78f52a1aadf6381498f780ca45722b7ed9",
+        "declared_scientific_digest": "d7feeffa49cd9dfbaa66e89979b637089042ab18ccd3b27588d247269934bb4d",
+        "file_sha256": "dd80460efff83bd6ac1dd04c658f1e78f52a1aadf6381498f780ca45722b7ed9",
+        "path": "results/alpha_rounds/round-00/response_tokens.v1.json",
+        "scientific_digest": "d7feeffa49cd9dfbaa66e89979b637089042ab18ccd3b27588d247269934bb4d"
+      },
+      "source_evidence_manifest": {
+        "canonical_digest": "d6b3cda9200acf62ae3f1602fa5df9f587a3e131532edb85c0f2715ed2ef4703",
+        "declared_canonical_digest": "d6b3cda9200acf62ae3f1602fa5df9f587a3e131532edb85c0f2715ed2ef4703",
+        "declared_file_sha256": "eb7d0074bdf2f9e5d5bd1102419b173e1204696ee2156980405b61edf0d344ca",
+        "declared_semantic_identity": "44da93cffdea842817728ab7ee7375522fdd15c66bd831fe5ab7bf21861b6f35",
+        "file_sha256": "eb7d0074bdf2f9e5d5bd1102419b173e1204696ee2156980405b61edf0d344ca",
+        "path": "results/alpha_rounds/round-00/source_evidence_manifest.v1.json",
+        "semantic_identity": "44da93cffdea842817728ab7ee7375522fdd15c66bd831fe5ab7bf21861b6f35"
+      }
+    },
+    {
+      "adaptive_state": {
+        "file_sha256": "04965e694c6b1be76a9ad5af18583b7ad134da5ca5d12b96eaa4d8b8a66552b0",
+        "path": ".siestaflow/adaptive-alpha-state.json"
+      },
+      "campaign_root": "/home/jmc/.local/state/siestaflow/campaigns/lr-u-coo-ideal-afmii-stage-u-a-20260930",
+      "campaign_uuid": "ae62285c-268f-48f9-9c0a-8b2064a3f192",
+      "certificate": {
+        "file_sha256": "cb9d24bc2522516846a725d9de3d6ec77d1ca188a28ae04d528b966de09aa326",
+        "path": "u_certificate.v1.json",
+        "scientific_digest": "5d6cf40d341f34df71efc3ea7e2e9264e49e68badeff1b53f061a7557982db73",
+        "status": "CERTIFICATE_NOT_ESTABLISHED"
+      },
+      "material": "CoO",
+      "matrix_analysis": {
+        "all_commitment_fields_match": true,
+        "analysis_policy_sha256": "03430098e7143a1ee32f54ecacc4f893672af375c8bdeb896f1b92c37be37dc1",
+        "commitment_file_sha256": "bfc71b92f753f3a4aafde0b52da75c1b45c3ad83709b7c3afa1613689fb72b25",
+        "commitment_path": "results/alpha_rounds/round-02/matrix_analysis_commitment.v1.json",
+        "declared_analysis_policy_sha256": "03430098e7143a1ee32f54ecacc4f893672af375c8bdeb896f1b92c37be37dc1",
+        "declared_commitment_file_sha256": "bfc71b92f753f3a4aafde0b52da75c1b45c3ad83709b7c3afa1613689fb72b25",
+        "declared_file_sha256": "74dda029f764d8499b7be5f16b553892ffbbd044673b3742994eb553d9035de3",
+        "file_sha256": "74dda029f764d8499b7be5f16b553892ffbbd044673b3742994eb553d9035de3",
+        "path": "results/alpha_rounds/round-02/analysis.v3.json",
+        "receipt_in_checkpoint": true,
+        "receipt_sha256": "d87e766c619bf8836c8a1ed808998243e7611f843df990b7fe6a9d388f22a8c3",
+        "receipt_state": "VALIDATED"
+      },
+      "response_tokens": {
+        "declared_file_sha256": "d77195df2b49a2c14c5d4987d13f65d2ca26f894af53fd689c3ed1fdad224a44",
+        "declared_scientific_digest": "226a43426f86da9569b43919f0e322260fbf03dab1748a222f791ba38f58c465",
+        "file_sha256": "d77195df2b49a2c14c5d4987d13f65d2ca26f894af53fd689c3ed1fdad224a44",
+        "path": "results/alpha_rounds/round-02/response_tokens.v1.json",
+        "scientific_digest": "226a43426f86da9569b43919f0e322260fbf03dab1748a222f791ba38f58c465"
+      },
+      "source_evidence_manifest": {
+        "canonical_digest": "598c4f715ed05d3e545aa25557c72dd1c8979b3cd21916da8ec1e2d76c643b49",
+        "declared_canonical_digest": "598c4f715ed05d3e545aa25557c72dd1c8979b3cd21916da8ec1e2d76c643b49",
+        "declared_file_sha256": "431679fdc044cf0530f6964e24121641a179daa7af6b0f8416d151969aa34185",
+        "declared_semantic_identity": "80a6fe9fa05840ec3999a1a07008451a9d5b4f376f6f6c7890284c793524778f",
+        "file_sha256": "431679fdc044cf0530f6964e24121641a179daa7af6b0f8416d151969aa34185",
+        "path": "results/alpha_rounds/round-02/source_evidence_manifest.v1.json",
+        "semantic_identity": "80a6fe9fa05840ec3999a1a07008451a9d5b4f376f6f6c7890284c793524778f"
+      }
+    }
+  ]
+}

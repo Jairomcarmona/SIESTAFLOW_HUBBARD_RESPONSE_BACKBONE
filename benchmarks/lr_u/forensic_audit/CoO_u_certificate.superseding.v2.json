@@ -1,0 +1,202 @@
+{
+  "artifact_type": "superseding_u_certificate",
+  "certificate": {
+    "analysis_artifact_path": "results/alpha_rounds/round-02/analysis.v3.json",
+    "analysis_artifact_sha256": "74dda029f764d8499b7be5f16b553892ffbbd044673b3742994eb553d9035de3",
+    "analysis_policy_sha256": "03430098e7143a1ee32f54ecacc4f893672af375c8bdeb896f1b92c37be37dc1",
+    "assumptions": [
+      "BARE and SCREENED token sets are independent"
+    ],
+    "campaign_uuid": "ae62285c-268f-48f9-9c0a-8b2064a3f192",
+    "certificate_scientific_sha256": "7b949a9b800c24f761a36618de8a258e3a98e709b185387eed1025a107957653",
+    "certificate_status": "CERTIFIED",
+    "certification_alpha_grid_eV": [
+      -0.02,
+      -0.01,
+      -0.005,
+      0.005,
+      0.01,
+      0.02
+    ],
+    "chi0_interval": [
+      [
+        {
+          "lower": "-9677729/7140000",
+          "upper": "-9676523/7140000"
+        },
+        {
+          "lower": "2869283/2380000",
+          "upper": "4823/4000"
+        }
+      ],
+      [
+        {
+          "lower": "573871/476000",
+          "upper": "2869757/2380000"
+        },
+        {
+          "lower": "-9677513/7140000",
+          "upper": "-9676307/7140000"
+        }
+      ]
+    ],
+    "chi_interval": [
+      [
+        {
+          "lower": "-24601/210000",
+          "upper": "-208807/1785000"
+        },
+        {
+          "lower": "4817/140000",
+          "upper": "82291/2380000"
+        }
+      ],
+      [
+        {
+          "lower": "4817/140000",
+          "upper": "82291/2380000"
+        },
+        {
+          "lower": "-24601/210000",
+          "upper": "-208807/1785000"
+        }
+      ]
+    ],
+    "consistency_status": "CONSISTENT",
+    "cross_checks": [
+      {
+        "contraction_bound": "335800975101383/297500000000000000",
+        "matrix": "chi0",
+        "method": "verified_krawczyk",
+        "preconditioner_rational_grid": "1000000000000",
+        "status": "CONSISTENT",
+        "strict_inclusion": true
+      },
+      {
+        "beta": "5513166891/4884343024681",
+        "matrix": "chi0",
+        "method": "verified_neumann_fallback",
+        "status": "CONSISTENT",
+        "strict_beta_lt_one": true
+      },
+      {
+        "contraction_bound": "859147738751909/420000000000000000",
+        "matrix": "chi",
+        "method": "verified_krawczyk",
+        "preconditioner_rational_grid": "1000000000000",
+        "status": "CONSISTENT",
+        "strict_inclusion": true
+      },
+      {
+        "beta": "1206/589561",
+        "matrix": "chi",
+        "method": "verified_neumann_fallback",
+        "status": "CONSISTENT",
+        "strict_beta_lt_one": true
+      }
+    ],
+    "exact_token_precision_contract": "decimal lexical token \u00b1 half printed unit; all certified operations use fractions.Fraction",
+    "half_width_by_site": [
+      "37035880609136402416531462849949273/2289098178001764424189000000000000000",
+      "18518042168366855703800282792451149/1144549089000882212094500000000000000"
+    ],
+    "implementation_version": "u-certification-rational-active-grid-v2",
+    "matrix_analysis_commitment_file_sha256": "bfc71b92f753f3a4aafde0b52da75c1b45c3ad83709b7c3afa1613689fb72b25",
+    "matrix_analysis_commitment_path": "results/alpha_rounds/round-02/matrix_analysis_commitment.v1.json",
+    "matrix_analysis_receipt_sha256": "d87e766c619bf8836c8a1ed808998243e7611f843df990b7fe6a9d388f22a8c3",
+    "matrix_dimension": 2,
+    "node_evidence_sha256": [
+      "0c1950311cefa8cbb1f676fcadc296a89f518848b4104b84441657f8037b2a9e",
+      "89936ffd95356afd43ad19f7374f097b81c480109ed4e3304e200914fbc82a61",
+      "68885e1efdd1ec3950ee9af95b9aee972cea474210974c721e88c54a1e144a5d",
+      "e852e26481cc98ae8316a4e3096f46765d2b082c04f7000811d57dc2fd0976d1",
+      "b65a03330f75847528154876221a1774048f98b2a3ec0ac47e1b0eb9b923e3bb",
+      "cd02f0a3f68fc87b26dfac9e51840aaf2bd6eba0a935a674b8f86e410bb093e1",
+      "ea5d249bfe0aab42041d899f5347b4418d1dea09e53477507869f6d6e9ef1b8e",
+      "99782caf3b9b3a3781dfb88e0fe8318f4948b9068ecdd72175d714ed302e8c23",
+      "e93b307e6657d6962a1275b8c950468828d4fda72084fbdb123325e2eeccad50",
+      "6300079bf455945c7b0c96e37da3975fca68b4aa4d20dd2a3fc16d491ed217fb",
+      "b7ad0aa5b685cffaf7dd5914024bd21c53517a66f3286b0f585505bad3088586",
+      "76d204e281ed3291c41731e76504968faed4f4c9b6ab5aa7cf31c493cf326c60",
+      "29c0db7e9e04cf8a21b60f998b53cf64271684c079204f161bed66e8c3473c06",
+      "b3c2dee5e832e707e8c2b130e671a0167b365324218f044533da8d4c33127378",
+      "66d1518004b8daeaad61622bc004a8a660a96f11b3a4474d240c13ef6600365f",
+      "d9b92224960a5046c4c2de0f037d9181c7f7dfdc8d3f21d0a7e6131f470fdfc9",
+      "a45128162a01d5c07bc461327a58f87d9b6fa2546127f7aba2f0ed1512e8e2e3",
+      "6a66c515b333704dc7518dfe337c89d035ac904bbaf7cf19fc45c7ab22252d22",
+      "9e28ffb15b2072ed5a93f0892bc253af01abc86b6e38ac34b14173a76c23eb5a",
+      "e03f3ac739cd68d3c665be3a6d530bc0176b0a7d2623322b456635cdd153e9db",
+      "032077a4c6b649c76214e92df0d0294d697456118387d432ae8fe188649ab205",
+      "6b298898966202003acb86d6e2ab8fe84b1c238f2fc0a59c5cfbe3e4c3342818",
+      "ac801950032147f105cf4631caf193c7479f4e66a256d839357314633fecdd70",
+      "6fc98166f1b1bda98de8bc5b1c0dfb2a0a5fea4579616a5930581255c58fb860",
+      "763a36a60c2e621605608f53f084ef56a7b61f299194851d824e4a0a51cf1f14",
+      "90f8d006212503ef4f433a10251fbd294da0abeeb6963d52749fb23965ae9f34",
+      "cf7c8e723d9ef7aacb2df1d1a7c4968a4cf7a56703c6e448ff8666ed87bbe7ff",
+      "b70bac65da085c1a94132fc307dbfd4cd728b3fdea0ed47025aa870f31a93ec7",
+      "5e825d6c79fcb33b9840a36ff3fafa541b83271a547bacddab09d1946c4e3de3",
+      "fd13d9f34bdef92d07d51ca7ac64df707bc56649d830b9d88c0cebe494426741",
+      "f1ff313eaf0ed07e4e47ed55883fcc5e7618626bc229f4b3bfdfb6eb1fdf1c78",
+      "e721d60af358549ac68e2de22124295bbccad79309baee2d24159c3213041d09",
+      "7bfb85a690dee5515354c22beed327e1c0ecadd4d5805f9d268c1ff6514a8d8f",
+      "3219163cb038bd1ad70ec8a3c16931affda1d3749bcb42e400c3c63a89ff2bc6",
+      "818e872fe7412b25fda6052cd6bb3af682096e1767262cd97708bfede3a2b25e",
+      "a1d6bc5ca1e99d9139e8cc19466aedffb817caab41e310c7366198a51e39e786",
+      "bc21fd6451197e2525a6e48a43627708fd7d3a61c9cfddbaf1250d1bb3e65883",
+      "9ea3cf950157f5c90f0ebd699cc01b33436acfaefca36dcb6b514d1b96fbc9f0",
+      "23c535ce9b48b24cd56332130a30b327398f97b8ab2c31f1379cc1716334ef6a",
+      "eef6f99f577887ec97d31de663434fce97098072f2ce9e4aac7d49ab85f49ec2"
+    ],
+    "nominal_u_by_site_eV": [
+      5.818030435715443,
+      5.817951497770718
+    ],
+    "occupation_source": "reextracted_from_hash_verified_primary_OUT",
+    "physical_acceptance": "NOT_ESTABLISHED",
+    "primary_method": "exact_rational_2x2",
+    "regularity_certificates": {
+      "chi": {
+        "determinant_vertices_max": "2212005403/176400000000",
+        "determinant_vertices_min": "7490112163/599760000000",
+        "method": "exact_rational_2x2",
+        "regularity": "CERTIFIED"
+      },
+      "chi0": {
+        "determinant_vertices_max": "305616007903/796556250000",
+        "determinant_vertices_min": "2439414961457/6372450000000",
+        "method": "exact_rational_2x2",
+        "regularity": "CERTIFIED"
+      }
+    },
+    "response_dataset_file": "response_tokens.v1.json",
+    "response_dataset_sha256": "d77195df2b49a2c14c5d4987d13f65d2ca26f894af53fd689c3ed1fdad224a44",
+    "response_tokens_file_sha256": "d77195df2b49a2c14c5d4987d13f65d2ca26f894af53fd689c3ed1fdad224a44",
+    "response_tokens_path": "results/alpha_rounds/round-02/response_tokens.v1.json",
+    "response_tokens_scientific_sha256": "226a43426f86da9569b43919f0e322260fbf03dab1748a222f791ba38f58c465",
+    "schema_version": "u_certificate.v1",
+    "source_analysis_sha256": "74dda029f764d8499b7be5f16b553892ffbbd044673b3742994eb553d9035de3",
+    "source_evidence_manifest_canonical_sha256": "598c4f715ed05d3e545aa25557c72dd1c8979b3cd21916da8ec1e2d76c643b49",
+    "source_evidence_manifest_path": "results/alpha_rounds/round-02/source_evidence_manifest.v1.json",
+    "source_evidence_manifest_sha256": "431679fdc044cf0530f6964e24121641a179daa7af6b0f8416d151969aa34185",
+    "source_manifest_identity_sha256": "80a6fe9fa05840ec3999a1a07008451a9d5b4f376f6f6c7890284c793524778f",
+    "u_interval_by_site": [
+      {
+        "lower": "31307011168775173387500/5395999074901920752171",
+        "upper": "26710157501128337147625/4578196356003528848378"
+      },
+      {
+        "lower": "31306584738373583047500/5395999074901920752171",
+        "upper": "26709796515172641362625/4578196356003528848378"
+      }
+    ]
+  },
+  "code_identity": {
+    "git_head": "ed01208883187338f4725cf24141985e7fe325e9",
+    "working_tree_file": "src/siestaflow_hubbard/execution/u_certification_node.py",
+    "working_tree_file_sha256": "611c8ff2b42349bfd4c6a16b56a265bb22553be64489a1f3edcecc227abf1184"
+  },
+  "new_scientific_digest": "7b949a9b800c24f761a36618de8a258e3a98e709b185387eed1025a107957653",
+  "old_scientific_digest": "5d6cf40d341f34df71efc3ea7e2e9264e49e68badeff1b53f061a7557982db73",
+  "reason": "Reconstructed certified boxes from the six MATRIX_ANALYSIS active-grid alphas; the prior implementation incorrectly fitted every alpha in the full token dataset.",
+  "supersedes": "5d6cf40d341f34df71efc3ea7e2e9264e49e68badeff1b53f061a7557982db73"
+}

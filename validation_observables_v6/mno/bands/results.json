@@ -1,0 +1,400 @@
+{
+  "status": "COMPLETE",
+  "material": "MnO",
+  "hsx_eig_compatibility": "HSX_EIG_SPECTRALLY_COMPATIBLE",
+  "seekpath_route_file": "seekpath_route.json",
+  "seekpath_version": "2.2.2",
+  "symprec_A": 1e-05,
+  "spacegroup": "R-3m",
+  "spacegroup_number": 166,
+  "ordered_path": [
+    [
+      "GAMMA",
+      "T"
+    ],
+    [
+      "T",
+      "H_2"
+    ],
+    [
+      "H_0",
+      "L"
+    ],
+    [
+      "L",
+      "GAMMA"
+    ],
+    [
+      "GAMMA",
+      "S_0"
+    ],
+    [
+      "S_2",
+      "F"
+    ],
+    [
+      "F",
+      "GAMMA"
+    ]
+  ],
+  "special_point_coordinates": {
+    "GAMMA": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "T": [
+      0.5000000000000003,
+      -9.85652650398896e-17,
+      1.9474391337622905e-16
+    ],
+    "L": [
+      0.5000000000000003,
+      -5.263256184871113e-17,
+      0.5000000000000001
+    ],
+    "L_2": [
+      0.49999999999999994,
+      0.49999999999999994,
+      0.5
+    ],
+    "L_4": [
+      -0.5000000000000001,
+      -0.49999999999999994,
+      -1.4294927120963102e-16
+    ],
+    "F": [
+      1.0000000000000002,
+      0.49999999999999994,
+      0.5000000000000002
+    ],
+    "F_2": [
+      2.9996644872828026e-16,
+      -0.5,
+      3.21569257270896e-17
+    ],
+    "S_0": [
+      0.6875000000000002,
+      0.3437499999999999,
+      0.6875000000000002
+    ],
+    "S_2": [
+      1.0000000000000007,
+      0.34374999999999994,
+      0.6562500000000003
+    ],
+    "S_4": [
+      1.6212543946271183e-16,
+      -0.34374999999999994,
+      0.34374999999999994
+    ],
+    "S_6": [
+      0.31250000000000044,
+      -0.34374999999999994,
+      0.31250000000000017
+    ],
+    "H_0": [
+      0.8750000000000001,
+      0.37499999999999994,
+      0.6875000000000001
+    ],
+    "H_2": [
+      1.1250000000000004,
+      0.31249999999999994,
+      0.6250000000000003
+    ],
+    "H_4": [
+      0.5000000000000004,
+      -0.3125000000000001,
+      0.3125000000000003
+    ],
+    "H_6": [
+      0.12500000000000017,
+      -0.37500000000000006,
+      0.3125
+    ],
+    "M_0": [
+      0.8750000000000001,
+      0.5312499999999999,
+      0.5312500000000001
+    ],
+    "M_2": [
+      1.1250000000000002,
+      0.46874999999999983,
+      0.46875000000000033
+    ],
+    "M_4": [
+      0.8125000000000004,
+      -4.065723832529664e-17,
+      0.46875000000000033
+    ],
+    "M_6": [
+      0.18750000000000022,
+      -0.46875000000000017,
+      1.0342208141137684e-16
+    ],
+    "M_8": [
+      -0.18749999999999983,
+      -0.53125,
+      -3.517229353888654e-17
+    ]
+  },
+  "route_kpoint_count": 283,
+  "energy_window_relative_to_Ef_eV": [
+    -8.0,
+    8.0
+  ],
+  "methods": {
+    "PBE": {
+      "method": "PBE",
+      "route_classification": "INSULATOR",
+      "fermi_crossing_bands_spin": [],
+      "fermi_crossings": [],
+      "fermi_energy_HSX_eV": -4.888531164535736,
+      "route_kpoints": 283,
+      "number_of_bands": 64,
+      "number_of_spin_channels": 2,
+      "scf_mesh": {
+        "classification": "INSULATOR",
+        "kpoint_count": 23,
+        "number_of_bands": 64,
+        "fermi_crossing_bands": [],
+        "partially_occupied_bands_at_300K": [],
+        "max_occupied_energy_rel_Ef_eV": -0.46075847000000003,
+        "min_unoccupied_energy_rel_Ef_eV": 0.43621248999999995,
+        "occupation_weighted_electron_count": 42.00000000001528,
+        "temperature_K": 300.00000000001273,
+        "fermi_energy_EIG_eV": -4.88853116,
+        "occupation_aware_gap_eV": 0.89697096
+      },
+      "scf_convergence": {
+        "scf_converged": true,
+        "iterations": 13,
+        "dDmax": 5.1345e-06,
+        "dHmax_eV": 2.28926e-05,
+        "DFTU_population_change": 0.0005959088,
+        "total_energy_eV": -6865.561143,
+        "free_energy_eV": -6865.561143,
+        "fermi_energy_eV": -4.888531,
+        "mulliken_atoms": [
+          {
+            "atom": 1,
+            "charge_e": 0.844561,
+            "valence_e": 14.155439,
+            "moment_muB": 4.70933,
+            "species": "MnLR0"
+          },
+          {
+            "atom": 2,
+            "charge_e": 0.844561,
+            "valence_e": 14.155439,
+            "moment_muB": -4.70933,
+            "species": "MnLR1"
+          },
+          {
+            "atom": 3,
+            "charge_e": -0.844561,
+            "valence_e": 6.844561,
+            "moment_muB": -0.0,
+            "species": "O"
+          },
+          {
+            "atom": 4,
+            "charge_e": -0.844561,
+            "valence_e": 6.844561,
+            "moment_muB": -0.0,
+            "species": "O"
+          }
+        ],
+        "total_moment_muB": 0.0
+      },
+      "source_dm": "MNO_PBE_REFERENCE.DM",
+      "source_dm_sha256": "4464c80fc23e17ffa8dc1546b3bdd7803e85edf506f2a68e1c99334a3506458d",
+      "source_hsx": "MNO_PBE_REFERENCE.HSX",
+      "source_hsx_sha256": "52e356a4bed68cbe569e4ddb5b2c00668c0ffde218c493da7a45191ac455639a",
+      "source_eig": "MNO_PBE_REFERENCE.EIG",
+      "source_eig_sha256": "f064aebadf359f8b8d8e33d7aee34e254e257a3e7a2401003659093a154df0ad",
+      "hsx_eig_consistency": {
+        "max_abs_raw_diff_eV": 0.00012614467371463434,
+        "mean_EIG_minus_HSX_eV": 4.943895189301693e-07,
+        "max_abs_residual_after_offset_eV": 0.00012565028419570418
+      },
+      "vbm": {
+        "relative_to_Ef_eV": -0.4607584702794538,
+        "band_index": 21,
+        "spin_channel": 1,
+        "route_kpoint_index": 40,
+        "k_fractional": [
+          0.5000000000000003,
+          -9.85652650398896e-17,
+          1.9474391337622905e-16
+        ]
+      },
+      "cbm": {
+        "relative_to_Ef_eV": 0.43621249257106687,
+        "band_index": 22,
+        "spin_channel": 2,
+        "route_kpoint_index": 0,
+        "k_fractional": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "indirect_gap_eV": 0.8969709628505207,
+      "minimum_direct_gap": {
+        "gap_eV": 1.4219659345224152,
+        "route_kpoint_index": 121,
+        "spin_channel": 1,
+        "vbm_band": 21,
+        "cbm_band": 22,
+        "k_fractional": [
+          0.5000000000000003,
+          -5.263256184871113e-17,
+          0.5000000000000001
+        ]
+      },
+      "bands_csv": "MnO_PBE_seekpath_bands.csv",
+      "figure_svg": "MnO_PBE_SEEKPATH_BANDS.svg",
+      "spectrum_sha256": "4aaa0a0295dd2340a0f6c865467e6b2bf9369ff9e5573f69877b7c42d608089c",
+      "artifact_validation": {
+        "rows": 36224,
+        "expected_rows": 36224,
+        "max_csv_rel_array_abs_diff_eV": 4.999733960175945e-11,
+        "max_csv_abs_array_abs_diff_eV": 4.999733960175945e-11,
+        "route_gap_interval_eigenvalue_count": 0,
+        "svg_energy_reference": "E-EF",
+        "svg_fermi_line_at_zero": true,
+        "svg_metadata_matches_array_and_source": true,
+        "svg_spectrum_sha256": "4aaa0a0295dd2340a0f6c865467e6b2bf9369ff9e5573f69877b7c42d608089c",
+        "svg_source_hsx_sha256": "52e356a4bed68cbe569e4ddb5b2c00668c0ffde218c493da7a45191ac455639a"
+      }
+    },
+    "PBE+LR-U": {
+      "method": "PBE+LR-U",
+      "route_classification": "INSULATOR",
+      "fermi_crossing_bands_spin": [],
+      "fermi_crossings": [],
+      "fermi_energy_HSX_eV": -5.2228834192067,
+      "route_kpoints": 283,
+      "number_of_bands": 64,
+      "number_of_spin_channels": 2,
+      "scf_mesh": {
+        "classification": "INSULATOR",
+        "kpoint_count": 23,
+        "number_of_bands": 64,
+        "fermi_crossing_bands": [],
+        "partially_occupied_bands_at_300K": [],
+        "max_occupied_energy_rel_Ef_eV": -1.4937019100000004,
+        "min_unoccupied_energy_rel_Ef_eV": 0.9548727699999997,
+        "occupation_weighted_electron_count": 42.0,
+        "temperature_K": 300.00000000001273,
+        "fermi_energy_EIG_eV": -5.22288342,
+        "occupation_aware_gap_eV": 2.44857468
+      },
+      "scf_convergence": {
+        "scf_converged": true,
+        "iterations": 13,
+        "dDmax": 7.5796e-06,
+        "dHmax_eV": 9.18511e-05,
+        "DFTU_population_change": 6.2186e-06,
+        "total_energy_eV": -6860.365334,
+        "free_energy_eV": -6860.365334,
+        "fermi_energy_eV": -5.222883,
+        "mulliken_atoms": [
+          {
+            "atom": 1,
+            "charge_e": 0.961264,
+            "valence_e": 14.038736,
+            "moment_muB": 5.063565,
+            "species": "MnLR0"
+          },
+          {
+            "atom": 2,
+            "charge_e": 0.961252,
+            "valence_e": 14.038748,
+            "moment_muB": -5.063542,
+            "species": "MnLR1"
+          },
+          {
+            "atom": 3,
+            "charge_e": -0.961258,
+            "valence_e": 6.961258,
+            "moment_muB": -1.1e-05,
+            "species": "O"
+          },
+          {
+            "atom": 4,
+            "charge_e": -0.961258,
+            "valence_e": 6.961258,
+            "moment_muB": -1.1e-05,
+            "species": "O"
+          }
+        ],
+        "total_moment_muB": 9.999999996621801e-07
+      },
+      "source_dm": "MNCL.DM",
+      "source_dm_sha256": "1447d6fa73983a0597eae1d193d174836abf6c1f43afe64a9c3ccc0b7ca01be2",
+      "source_hsx": "MNCL.HSX",
+      "source_hsx_sha256": "5b253d4e4bd1a35ac41a22d042b3e26ecc5b49e5b435e6015b764bb4347a0951",
+      "source_eig": "MNCL.EIG",
+      "source_eig_sha256": "f39c0acdc56a163f60d46f4ba430f886a4746810d3d5340df2e032efb2ac5305",
+      "hsx_eig_consistency": {
+        "max_abs_raw_diff_eV": 0.0001260649494270183,
+        "mean_EIG_minus_HSX_eV": 4.952269026551917e-07,
+        "max_abs_residual_after_offset_eV": 0.0001255697225243631
+      },
+      "vbm": {
+        "relative_to_Ef_eV": -1.4937019152494022,
+        "band_index": 21,
+        "spin_channel": 2,
+        "route_kpoint_index": 40,
+        "k_fractional": [
+          0.5000000000000003,
+          -9.85652650398896e-17,
+          1.9474391337622905e-16
+        ]
+      },
+      "cbm": {
+        "relative_to_Ef_eV": 0.9548727693618648,
+        "band_index": 22,
+        "spin_channel": 2,
+        "route_kpoint_index": 0,
+        "k_fractional": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "indirect_gap_eV": 2.448574684611267,
+      "minimum_direct_gap": {
+        "gap_eV": 2.9574091292120865,
+        "route_kpoint_index": 0,
+        "spin_channel": 2,
+        "vbm_band": 21,
+        "cbm_band": 22,
+        "k_fractional": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "bands_csv": "MnO_PBE+LR-U_seekpath_bands.csv",
+      "figure_svg": "MnO_PBE+LR-U_SEEKPATH_BANDS.svg",
+      "spectrum_sha256": "eb08ae6c6e8ecc461af4397366d492b44bea2e73f377adb2ccb31cdb9e30a0b7",
+      "artifact_validation": {
+        "rows": 36224,
+        "expected_rows": 36224,
+        "max_csv_rel_array_abs_diff_eV": 5.000089231543825e-11,
+        "max_csv_abs_array_abs_diff_eV": 5.000089231543825e-11,
+        "route_gap_interval_eigenvalue_count": 0,
+        "svg_energy_reference": "E-EF",
+        "svg_fermi_line_at_zero": true,
+        "svg_metadata_matches_array_and_source": true,
+        "svg_spectrum_sha256": "eb08ae6c6e8ecc461af4397366d492b44bea2e73f377adb2ccb31cdb9e30a0b7",
+        "svg_source_hsx_sha256": "5b253d4e4bd1a35ac41a22d042b3e26ecc5b49e5b435e6015b764bb4347a0951"
+      }
+    }
+  },
+  "gap_scope": "SCF-mesh and Seekpath-route values are sampled; neither proves the continuous global Brillouin-zone gap."
+}

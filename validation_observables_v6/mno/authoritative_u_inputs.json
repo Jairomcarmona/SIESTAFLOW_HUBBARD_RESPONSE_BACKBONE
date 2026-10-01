@@ -1,0 +1,49 @@
+{
+  "artifact_path": "benchmarks/lr_u/forensic_audit/MnO_u_certificate.superseding.v2.json",
+  "artifact_sha256": "14133690a65fd3ced84594c95b4bed8aadab48c398b0aeeedd5f5d40f2f17265",
+  "campaign_uuid": "2eefb3e5-db29-4656-ad6a-99d2f0566038",
+  "certificate_status": "CERTIFIED",
+  "consistency_status": "CONSISTENT",
+  "physical_acceptance": "NOT_ESTABLISHED",
+  "qualification_state": "PROTOCOL_REVIEW_REQUIRED",
+  "site_labels": [
+    "MnLR0",
+    "MnLR1"
+  ],
+  "central_u_eV": {
+    "MnLR0": 11.117477005325092,
+    "MnLR1": 11.115065146109803
+  },
+  "u_interval_by_site": {
+    "MnLR0": {
+      "lower_fraction": "17468118093120427662000/1578163399808070526477",
+      "upper_fraction": "1446103338170942598000/129503001829576515949",
+      "lower_eV": 11.068637186266534,
+      "upper_eV": 11.166562301574963
+    },
+    "MnLR1": {
+      "lower_fraction": "17464325538673626282000/1578163399808070526477",
+      "upper_fraction": "1445789858344771338000/129503001829576515949",
+      "lower_eV": 11.066234041923392,
+      "upper_eV": 11.16414166404732
+    }
+  },
+  "certificate_half_width_field_eV": [
+    0.0490852962498711,
+    0.049076517937515815
+  ],
+  "interval_geometric_half_width_eV": [
+    0.048962557654214756,
+    0.04895381106196339
+  ],
+  "estimator_sensitivity_eV": [
+    0.02117671547611,
+    0.03073848245487
+  ],
+  "window_sensitivity_eV": [
+    0.013125851,
+    0.020275758
+  ],
+  "source_analysis_sha256": "a1c74ee2c22741907961c9e67eecff73f85d91a4c9281c01eaf6c8f4efb34aff",
+  "source_evidence_manifest_sha256": "254355e97cda37bca1605823848b77bd8774acd976231221195aab64882a2f45"
+}

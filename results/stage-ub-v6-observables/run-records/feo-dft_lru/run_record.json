@@ -1,0 +1,19 @@
+{
+  "material": "FeO",
+  "method": "DFT+LR-U",
+  "date_utc": "2026-10-01",
+  "campaign_folder": "/home/jmc/.local/state/siestaflow/stage-u-b-v6-20260930/observables/feo-dft_lru",
+  "baseline_commit": "03ccd5913abdc6dd0e9e2cb59c0bc7637562c267",
+  "input_fdf": "/home/jmc/.local/state/siestaflow/stage-u-b-v6-20260930/observables/feo-dft_lru/input.fdf",
+  "u_used_eV": {
+    "FeLR0": 5.638281766243177,
+    "FeLR1": 5.638315883828983
+  },
+  "u_mapping_rule": "direct LR-certified atom-index mapping: site 0 -> LR0, site 1 -> LR1; SIESTA effective U=U-J with J=0 eV; no averaging",
+  "siesta_version": "5.4.2",
+  "scf_status": "FAILED_NOT_CONVERGED",
+  "observables": {},
+  "scf_iterations": 300,
+  "retry_folder": "/home/jmc/.local/state/siestaflow/stage-u-b-v6-20260930/observables/feo-dft_lru-mix001",
+  "status_note": "SCF did not converge in 300 iterations; no observables accepted."
+}

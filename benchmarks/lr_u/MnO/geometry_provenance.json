@@ -1,0 +1,72 @@
+{
+  "schema": "siestaflow.geometry_provenance.v1",
+  "model": "ideal rocksalt B1 AFM-II along [111], four-atom magnetic cell, two oppositely polarized Mn sites and two O sites",
+  "lattice_constant_ang": 4.4455,
+  "lattice_constant_source": {
+    "citation": "A. P. Kantor et al., Phase transitions in MnO and FeO at low temperatures: A neutron powder diffraction study, Journal of Alloys and Compounds 402 (2005) 42-45, DOI 10.1016/j.jallcom.2005.04.155",
+    "reported": "room-temperature MnO powder X-ray lattice parameter 4.4455(4) Å",
+    "url": "https://doi.org/10.1016/j.jallcom.2005.04.155"
+  },
+  "magnetic_model_source": {
+    "citation": "S. Mandal et al., Systematic beyond-DFT study of binary transition metal oxides, npj Computational Materials 5, 115 (2019), DOI 10.1038/s41524-019-0251-7",
+    "reported": "AFM-II along [111]; two transition-metal ions in the magnetic cell",
+    "url": "https://www.nature.com/articles/s41524-019-0251-7"
+  },
+  "cell_vectors_fractional_of_cubic_a": [
+    [
+      0,
+      1,
+      1
+    ],
+    [
+      0.5,
+      0,
+      0.5
+    ],
+    [
+      0.5,
+      0.5,
+      0
+    ]
+  ],
+  "fractional_atoms": [
+    {
+      "role": "Mn_A",
+      "fractional": [
+        0,
+        0,
+        0
+      ],
+      "initial_spin_muB": 5.0
+    },
+    {
+      "role": "Mn_B",
+      "fractional": [
+        0.5,
+        0,
+        0
+      ],
+      "initial_spin_muB": -5.0
+    },
+    {
+      "role": "O_0",
+      "fractional": [
+        0.25,
+        0.5,
+        0.5
+      ],
+      "initial_spin_muB": 0.0
+    },
+    {
+      "role": "O_1",
+      "fractional": [
+        0.75,
+        0.5,
+        0.5
+      ],
+      "initial_spin_muB": 0.0
+    }
+  ],
+  "deviations": "Unrelaxed ideal AFM-II cell at measured room-temperature cubic lattice parameter; lower-temperature rhombohedral magnetostriction is not included. Fixed-geometry LR-U qualification model, not an observable benchmark.",
+  "geometry_hash_basis": "This record and the exact FDF are both included in the campaign input inventory."
+}
