@@ -1,0 +1,73 @@
+{
+  "schema": "stage_u_b_repeatability_policy.v2",
+  "scope": "self-contained prospective Stage U-B",
+  "materials": [
+    "NiO",
+    "FeO",
+    "CoO"
+  ],
+  "excluded_materials": {
+    "MnO": "PROTOCOL_REVIEW_REQUIRED"
+  },
+  "runs_per_material": [
+    "A0",
+    "B1",
+    "B2",
+    "B3"
+  ],
+  "comparator_run": "A0",
+  "replica_runs": [
+    "B1",
+    "B2",
+    "B3"
+  ],
+  "run_order": [
+    "NiO A0",
+    "NiO B1",
+    "NiO B2",
+    "NiO B3",
+    "FeO A0",
+    "FeO B1",
+    "FeO B2",
+    "FeO B3",
+    "CoO A0",
+    "CoO B1",
+    "CoO B2",
+    "CoO B3"
+  ],
+  "nodes_per_run": 25,
+  "campaign_independence": [
+    "new_campaign_uuid",
+    "new_campaign_root",
+    "new_reference",
+    "new_parent_dm",
+    "new_response_attempts",
+    "new_matrix_analysis",
+    "new_u_certification"
+  ],
+  "repeatability": {
+    "delta": "abs(U_Bj[s] - U_A0[s])",
+    "R": "max(delta_B1, delta_B2, delta_B3)",
+    "envelope": "[U_A0[s] - R[s], U_A0[s] + R[s]]",
+    "calculate_only_after_all_four_certificates": true
+  },
+  "gates": {
+    "certificate_half_width_eV": "precision_policy.u_precision_tolerance_eV",
+    "estimator_sensitivity_eV": "precision_policy.sensitivity_tolerance_eV",
+    "window_sensitivity_eV": "precision_policy.sensitivity_tolerance_eV",
+    "repeatability_R_eV": "precision_policy.u_precision_tolerance_eV"
+  },
+  "dag": [
+    "REFERENCE",
+    "RESPONSE_GRID",
+    "alpha-diagnostic-gate",
+    "MATRIX_ANALYSIS",
+    "U_CERTIFICATION"
+  ],
+  "execution": {
+    "backend": "LOCAL_WSL",
+    "mpi_ranks": 4,
+    "max_concurrent_siesta": 1
+  },
+  "mnemonic": "A0 is a newly calculated, independently certified anchor; no historical campaign is an execution dependency."
+}
