@@ -153,7 +153,7 @@ available.
 
 ## TASK 16 — Calibrated amplitudes and deterministic rounds
 
-**RESUELTO: D3/D4 software core; commit pending orchestrator integration**, on
+**RESUELTO: D3/D4 software core; commit 8e44282**, on
 `fdebq/r2-task16-calibrated-rounds`. `MatrixBox` already accepts one independent
 `Interval` per element; the certification module is unchanged. The versioned
 protocol records the common representable lattice, seeds of at least four
