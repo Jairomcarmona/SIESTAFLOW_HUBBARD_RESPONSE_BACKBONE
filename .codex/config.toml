@@ -1,0 +1,14 @@
+# Codex project configuration for HubbardFlow (repo-only; requires the project to be trusted).
+# Layers: this file overrides the user-level ~/.codex/config.toml for this repo.
+# Sandbox and approval policy are intentionally NOT set here: they are inherited from the
+# user config so that push / PR creation keeps working without prompts. V6 protection is
+# enforced by tools/check_v6_integrity.sh (run by the git pre-commit hook), not by the sandbox.
+
+model = "gpt-6-luna"
+model_reasoning_effort = "high"
+
+[agents]
+enabled = true
+max_concurrent_threads_per_session = 3
+default_subagent_model = "gpt-6-luna"
+default_subagent_reasoning_effort = "medium"
