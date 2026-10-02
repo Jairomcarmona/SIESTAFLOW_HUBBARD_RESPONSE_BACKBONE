@@ -6,7 +6,7 @@ The specification blockers are RESUELTO by author amendments D1/D2 in
 `9a60d78` (`docs/fdebq/AMENDMENTS_2.md`). The implementation provides a pure
 `CoverageQualification`, a single-output reference-admission adapter, diagnostic
 JSON/Markdown reports, and deterministic golden contracts in `task10_reports/`.
-The implementation commit is recorded by the orchestrator in PHASE2_SUMMARY.md.
+Coverage qualification, single-output reference admission, diagnostic reporting and D2 savings are implemented in commit `1bba765`.
 
 CoO/NiO/FeO examples and the available frozen V6 outputs produce
 `REFERENCE_NOT_ADMISSIBLE -> ALL_SUBSPACES` with `EVIDENCE_INCOMPLETE`.
@@ -162,3 +162,4 @@ and TASK 14 are blocked. Adding CLI commands without these contracts would
 create a second, incomplete production path and could not satisfy the READY
 gate, provenance, resume, or V6 golden requirements. No product commands were
 added. Revisit after the upstream contracts and validations are resolved.
+
