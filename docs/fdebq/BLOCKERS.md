@@ -205,7 +205,7 @@ threshold, pseudoinverse, regularization or SIESTA campaign was introduced.
 
 ## TASK 17 — SCF tolerance ladder (D5 blockers RESUELTOS)
 
-Branch: `fdebq/r2-task17-scf-ladder`. Commit: PENDING_ORCHESTRATOR_COMMIT.
+Branch: `fdebq/r2-task17-scf-ladder`. Commit: e2a7a88.
 The author resolves the two scientific gaps in `AMENDMENTS_2.md` D5. The
 implementation uses the exact eta plus/minus print intervals and contraction
 formula. Under-resolution, including two zero differences, uses the declared
