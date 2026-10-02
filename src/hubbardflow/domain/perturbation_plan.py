@@ -58,6 +58,12 @@ class AlphaStrategy(str, Enum):
     CALIBRATED_GRID = "CALIBRATED_GRID"
 
 
+class EggBoxQuantification(str, Enum):
+    """D7 supplies no quantified state until a real rotation-specific V2 exists."""
+
+    NOT_QUANTIFIED = "NOT_QUANTIFIED"
+
+
 class CalibrationStatus(str, Enum):
     NOT_ASSESSED = "NOT_ASSESSED"
     QUALIFIED = "QUALIFIED"
@@ -215,6 +221,7 @@ class ResolvedPerturbationPlan:
     tau_u_ev: float | None
     status: PlanStatus
     reason_codes: tuple[PlanReason, ...]
+    egg_box_quantification: EggBoxQuantification = EggBoxQuantification.NOT_QUANTIFIED
 
     def __post_init__(self) -> None:
         try:
@@ -227,6 +234,8 @@ class ResolvedPerturbationPlan:
     def _validate(self) -> None:
         if self.schema != SCHEMA:
             raise PerturbationPlanError(f"schema must be {SCHEMA}")
+        if not isinstance(self.egg_box_quantification, EggBoxQuantification):
+            raise PerturbationPlanError("egg_box_quantification must be an EggBoxQuantification")
         for digest in (self.source_fdf_sha256, self.effective_fdf_sha256):
             require_sha256(digest, "FDF identity")
         for name in ("protocol_version", "planner_version", "backend_identity"):
@@ -339,6 +348,10 @@ class ResolvedPerturbationPlan:
             or not self.reference.state.normal_completion_verified
             or not self.reference.state.scf_converged
             or any(c.status is CoverageStatus.CANDIDATE_PENDING_SHADOW for c in self.coverage.classes)
+            or (
+                self.coverage.user_policy.enabled
+                and (self.coverage.policy.allow_spin_flip or self.coverage.policy.allow_rotations)
+            )
         ):
             raise PerturbationPlanError(
                 "READY requires resolved inventory, admissible reference, parent DM and proven omissions"
@@ -376,6 +389,7 @@ class ResolvedPerturbationPlan:
             "tau_u_ev": self.tau_u_ev,
             "status": self.status.value,
             "reason_codes": [r.value for r in self.reason_codes],
+            "egg_box_quantification": self.egg_box_quantification.value,
         }
 
     @property
@@ -417,9 +431,14 @@ class ResolvedPerturbationPlan:
                 cast(float | None, row["tau_u_ev"]),
                 PlanStatus(cast(str, row["status"])),
                 tuple(PlanReason(r) for r in cast(Sequence[str], row["reason_codes"])),
+                EggBoxQuantification(cast(str, row.get("egg_box_quantification", "NOT_QUANTIFIED"))),
             )
+            # Older v1 snapshots carry no egg-box claim. Read them conservatively;
+            # their new digest intentionally invalidates an old campaign lock.
+            canonical_row = dict(row)
+            canonical_row.setdefault("egg_box_quantification", "NOT_QUANTIFIED")
             if json.dumps(result.to_mapping(), sort_keys=True, allow_nan=False) != json.dumps(
-                row, sort_keys=True, allow_nan=False
+                canonical_row, sort_keys=True, allow_nan=False
             ):
                 raise PerturbationPlanError(
                     "serialized fields, bands or estimator weights disagree with the resolved evidence"

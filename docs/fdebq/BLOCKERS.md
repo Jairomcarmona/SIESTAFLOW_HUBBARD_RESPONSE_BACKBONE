@@ -241,27 +241,31 @@ task. No real result file/hash is manufactured; CALIBRATED admission and the
 existing planner REVIEW cap remain intact. Pure model qualification does not
 claim production READY. Frozen V6 and direct-inversion certification are intact.
 
-## TASK 18 — Spin flip, rotations, and V3 controls (blocked)
+## TASK 18 — Spin flip, rotations, and V3 controls
 
-The isolated TASK 9 candidate classifier already has digest-bound
-`allow_spin_flip` and `allow_rotations` flags (both default false), and tests
-synthetic F5/F6/F7 counterexamples. TASK 18 requires end-to-end flag admission,
-candidate classes, reconstruction, and mandatory shadows. Those require
-`CoverageQualification` (TASK 10), the frozen plan (TASK 12), campaign wiring
-(TASK 13), and shadow execution (TASK 14), all blocked above. There is no
-contract here to promote `OperationClassification.accepted` from a candidate
-to a reduction decision; it explicitly is not PROVEN.
+**RESUELTO: implementation gaps under AMENDMENTS_2 D7. Commit pending
+orchestrator integration on `fdebq/r2-task18-spin-rotations`.**
 
-TASK 18 also requires explicit egg-box quantification in the plan for
-`EXACT_IN_CONTINUUM_ONLY` rotations. The current operation model records only
-that exactness label and TASK 12's plan schema is unavailable. Finally, V2
-prospective shadows, V3 real negative controls, and V4 holdout are user-run
-validation gates; their result digests do not exist and cannot be fabricated
-for `VALIDATION_GATES.md`. CoO's approved TASK 8 evidence leaves F7
-`NOT_AVAILABLE`/`AMBIGUOUS`, and the V1 MnO permutation is not F1–F8 evidence.
+Both flags now traverse config normalization, CoveragePolicy, diagnostic
+coverage, the frozen plan/digest and campaign locks. They default false;
+conflicting top-level/nested declarations fail closed. Existing F5/F6/F7 spin
+swap and scalar permutation rules are retained. Rotation shadows use TASK14's
+additive budgets and expand the whole class on egg-box discrepancy. Synthetic
+negative controls cover flags on/off, ferrimagnet, orbital order, slab/defect,
+gray-band geometry, differing bases, SOC/noncollinear and equal-|m|/different
+environment. Plan v1 records `egg_box_quantification=NOT_QUANTIFIED`; old v1
+snapshots read conservatively but their locks invalidate because provenance
+changed. No thresholds or fictitious result hashes were introduced.
 
-Existing classifier candidate tests are retained as TASK 9 coverage. No
-end-to-end acceptance or flag-enablement claim is made; flags remain off.
+**ABIERTA / NOT_ESTABLISHED: prospective V2, real V3, V4 and runtime I.5.**
+`VALIDATION_GATES.md` records the exact scientific gates and artifact/digest
+requirements. Their production admission API is incomplete. **decisión del
+implementador (conservadora)**: explicit true permits diagnostic candidates,
+expands feature classes in the plan and caps the enabled policy at REVIEW;
+incomplete reference evidence remains NOT_ESTABLISHED. Passing a synthetic
+shadow does not establish real validation or grant PROVEN for these features.
+The product defaults stay off, shadows mandatory; CALIBRATED keeps TASK16/17's
+existing fail-closed admission. No SIESTA campaigns were started.
 
 ## TASK 19 — Product CLI and final report (blocked)
 

@@ -17,6 +17,7 @@ from ..domain.scientific_profile import (
 )
 from .execution_profile import ExecutionProfile, ProfileValidationError
 from .campaign_plan import CampaignCoverage, CampaignPlanError, inventory_sites
+from .campaign_coverage_policy import CampaignCoveragePolicyError, campaign_coverage_policy
 from ..domain.perturbation_plan import AlphaStrategy, ResolvedPerturbationPlan
 from ..domain.subspace_inventory import CorrelatedSubspaceInventory
 
@@ -202,6 +203,10 @@ def validate_psml(path: Path, expected_label: str, expected_z: int, functional: 
 def validate_lr_config(payload: Mapping[str, Any], fdf_species: Mapping[str, int], projector_sites: list[str], atom_count: int, *, inventory: CorrelatedSubspaceInventory | None = None) -> dict[str, Any]:
     if payload.get("schema") != CONFIG_SCHEMA:
         raise CampaignV2Error(f"lr-config schema must be {CONFIG_SCHEMA!r}")
+    try:
+        coverage_policy = campaign_coverage_policy(payload)
+    except CampaignCoveragePolicyError as exc:
+        raise CampaignV2Error(str(exc)) from exc
     auto_split = payload.get("auto_split_species", False)
     if type(auto_split) is not bool:
         raise CampaignV2Error("auto_split_species must be a boolean")
@@ -375,7 +380,9 @@ def validate_lr_config(payload: Mapping[str, Any], fdf_species: Mapping[str, int
         "xc_profile": xc_profile.to_mapping(),
         "sites": normalized_sites,
         "coverage": coverage.value,
-        "coverage_policy": payload.get("coverage_policy"),
+        "coverage_policy": coverage_policy.to_mapping(),
+        "allow_spin_flip": coverage_policy.allow_spin_flip,
+        "allow_rotations": coverage_policy.allow_rotations,
         "alpha_strategy": alpha_strategy.value,
         "auto_split_species": auto_split,
         **planning_files,

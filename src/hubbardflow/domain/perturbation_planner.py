@@ -125,17 +125,22 @@ def _resolve(
         reasons.add(PlanReason.PARENT_DM_NOT_ESTABLISHED)
         status = PlanStatus.NOT_ESTABLISHED
     bypass = explicit_sites is not None or not coverage.user_policy.enabled
-    features = any(
-        c.reduced
-        and any(
+
+    def feature_class(c: CoverageClass) -> bool:
+        return c.reduced and any(
             coverage.operations[i].operation.eps != 1
             or coverage.operations[i].operation.rotation_int != IDENTITY
             for _, i in c.ops_rep_to_member
         )
-        for c in coverage.classes
-    )
-    if bypass or features:
-        reason = CoverageReason.DISABLED_OR_FIXED if bypass else CoverageReason.UNSUPPORTED_SYNTAX
+
+    if coverage.user_policy.enabled and (coverage.policy.allow_spin_flip or coverage.policy.allow_rotations):
+        # No recorded prospective V2/V3 contract or runtime I.5 producer exists.
+        # An opt-in records candidates but cannot grant production readiness.
+        reasons.add(PlanReason.FEATURES_NOT_ENABLED)
+        if status is PlanStatus.READY:
+            status = PlanStatus.REVIEW
+    if bypass:
+        reason = CoverageReason.DISABLED_OR_FIXED
         coverage = replace(
             coverage,
             classes=tuple(
@@ -144,17 +149,25 @@ def _resolve(
             strategy=CoverageStrategy.ALL_SUBSPACES,
             reasons=tuple(sorted(set(coverage.reasons) | {reason}, key=lambda r: r.value)),
         )
-        if bypass:
-            reasons.add(PlanReason.DISABLED_OR_FIXED)
-        if features and not bypass:
-            reasons.add(PlanReason.FEATURES_NOT_ENABLED)
-            if status is PlanStatus.READY:
-                status = PlanStatus.REVIEW
+        reasons.add(PlanReason.DISABLED_OR_FIXED)
     else:
+        rejected = CoverageReason.FEATURE_VALIDATION_NOT_ESTABLISHED
+        features = any(feature_class(c) for c in coverage.classes)
         coverage = replace(
-            coverage, classes=tuple(sorted(coverage.classes, key=lambda c: sites.index(c.representative)))
+            coverage,
+            classes=tuple(
+                replace(c, status=CoverageStatus.REJECTED_EXPANDED, reasons=(rejected,))
+                if feature_class(c)
+                else c
+                for c in sorted(coverage.classes, key=lambda c: sites.index(c.representative))
+            ),
+            reasons=tuple(
+                sorted(set(coverage.reasons) | ({rejected} if features else set()), key=lambda r: r.value)
+            ),
         )
         reduced = [c for c in coverage.classes if c.reduced]
+        if not reduced:
+            coverage = replace(coverage, strategy=CoverageStrategy.ALL_SUBSPACES)
         if reduced and len(reduced) == len(coverage.classes) and not coverage.user_policy.declared_classes:
             coverage = replace(coverage, strategy=CoverageStrategy.SYMMETRY_REDUCED)
         if any(c.status is CoverageStatus.CANDIDATE_PENDING_SHADOW for c in reduced):

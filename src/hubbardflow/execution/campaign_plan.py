@@ -37,10 +37,9 @@ from hubbardflow.domain.subspace_inventory import (
     build_inventory,
 )
 from hubbardflow.domain.symmetry_operation_models import (
-    CoveragePolicy,
     bind_symmetry_model,
-    coverage_policy_v1,
 )
+from hubbardflow.execution.campaign_coverage_policy import campaign_coverage_policy
 
 
 class CampaignPlanError(ValueError):
@@ -152,14 +151,7 @@ def _resolve_campaign_planning(fdf: Path, config: Mapping[str, object]) -> Campa
             reference, parent_dm_sha256=sha256(Path(cast(str, parent)).read_bytes()).hexdigest()
         )
     mode = CampaignCoverage(cast(str, config.get("coverage", CampaignCoverage.DIAGNOSTIC.value)))
-    raw_policy = config.get("coverage_policy")
-    policy = (
-        coverage_policy_v1()
-        if raw_policy is None
-        else CoveragePolicy.from_mapping(cast(Mapping[str, object], raw_policy))
-    )
-    if policy.allow_spin_flip or policy.allow_rotations:
-        raise CampaignPlanError("spin flip and rotations require TASK 18 campaign admission")
+    policy = campaign_coverage_policy(config)
     coverage = qualify_coverage(
         inventory,
         reference,

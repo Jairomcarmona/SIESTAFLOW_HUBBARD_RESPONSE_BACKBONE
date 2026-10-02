@@ -1,7 +1,8 @@
-"""Mandatory translation shadows falsify coverage using additive print bounds.
+"""Mandatory scalar shadows falsify coverage using additive print bounds.
 
-Only a supplied F1–F8 qualification can propose an orbit. A passed shadow
-authorizes its scalar reconstruction, never an error qualification of U.
+Only a supplied F1–F8 qualification can propose an orbit. A passed translation
+shadow authorizes scalar reconstruction. Spin flips and rotations additionally
+require prospective validation; the incomplete admission API fails closed.
 """
 
 from __future__ import annotations
@@ -39,6 +40,7 @@ class ShadowReason(str, Enum):
     INCOMPLETE_RESPONSE_EVIDENCE = "INCOMPLETE_RESPONSE_EVIDENCE"
     PREVIOUSLY_REJECTED_CLASS = "PREVIOUSLY_REJECTED_CLASS"
     SCF_ESTIMATE_NOT_ESTABLISHED = "SCF_ESTIMATE_NOT_ESTABLISHED"
+    FEATURE_VALIDATION_NOT_ESTABLISHED = "FEATURE_VALIDATION_NOT_ESTABLISHED"
 
 
 @dataclass(frozen=True)
@@ -177,10 +179,17 @@ def qualify_shadows(
             continue
         if group.shadow is None:
             raise ResponseShadowError("a reduced class must declare its shadow")
+        features = False
         for _, op_id in group.ops_rep_to_member:
-            op = plan.coverage.operations[op_id].operation
-            if op.eps != 1 or op.rotation_int != IDENTITY:
-                raise ResponseShadowError("TASK 14 supports epsilon=+1 translations only")
+            classification = plan.coverage.operations[op_id]
+            op = classification.operation
+            if (
+                not classification.accepted
+                or (op.eps == -1 and not plan.coverage.policy.allow_spin_flip)
+                or (op.rotation_int != IDENTITY and not plan.coverage.policy.allow_rotations)
+            ):
+                raise ResponseShadowError("shadow operation requires F1–F8 and its explicit policy flag")
+            features |= op.eps == -1 or op.rotation_int != IDENTITY
         for mode in ResponseMode:
             rep = columns[(group.representative, mode)]
             shadow = columns[(group.shadow, mode)]
@@ -226,6 +235,8 @@ def qualify_shadows(
             if not scf_complete
             else ShadowReason.OUTSIDE_PRINT_BOUNDS
             if not all(c.passed for c in comparisons)
+            else ShadowReason.FEATURE_VALIDATION_NOT_ESTABLISHED
+            if features
             else ShadowReason.WITHIN_PRINT_BOUNDS
         )
         outcomes.append(
@@ -257,6 +268,12 @@ def reconstruction_classes(
     identity_id = len(plan.coverage.operations)
     for group in plan.coverage.classes:
         if group.reduced and by_rep[group.representative].status is CoverageStatus.PROVEN:
+            if any(
+                plan.coverage.operations[i].operation.eps == -1
+                or plan.coverage.operations[i].operation.rotation_int != IDENTITY
+                for _, i in group.ops_rep_to_member
+            ):
+                raise ResponseShadowError("feature reconstruction requires recorded prospective validation")
             outcome = by_rep[group.representative]
             expected = {(s, m) for s in sites for m in ResponseMode}
             keys = [(c.site_observed, c.mode) for c in outcome.comparisons]

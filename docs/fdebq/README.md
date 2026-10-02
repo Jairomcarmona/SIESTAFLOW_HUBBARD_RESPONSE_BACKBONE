@@ -7,5 +7,6 @@ This directory contains the FD-EBQ methodology, task plans, and implementation n
 - [`CODEX_TASKS.md`](CODEX_TASKS.md): phase 1 implementation tasks.
 - [`HUBBARDFLOW_PERTURBATION_PLANNING_REVIEW.md`](HUBBARDFLOW_PERTURBATION_PLANNING_REVIEW.md): authoritative phase 2 review for automatic perturbation planning.
 - [`CODEX_TASKS_PHASE2.md`](CODEX_TASKS_PHASE2.md): phase 2 task sequence and completion checklist.
+- [`VALIDATION_GATES.md`](VALIDATION_GATES.md): feature flags, prospective evidence/digests, and fail-closed TASK18 admission.
 - [`LEGACY_ALPHA_MECHANISMS.md`](LEGACY_ALPHA_MECHANISMS.md): existing alpha-selection mechanisms marked as legacy.
 - [`reference/`](reference/): supplied reference scripts and synthetic symmetry fixtures for phase 2.
