@@ -16,7 +16,31 @@ hubbardflow = "hubbardflow.cli:main"
 
 [project.optional-dependencies]
 test = [
-    "pytest>=7.0.0"
+    "pytest>=7.0.0",
+    "hypothesis>=6.0.0",
+    "ruff>=0.4.0",
+    "mypy>=1.10.0"
+]
+
+[tool.ruff]
+line-length = 110
+target-version = "py312"
+include = [
+    "src/hubbardflow/domain/validation.py",
+    "src/hubbardflow/domain/response_*.py",
+    "tests/unit/test_response_*.py",
+    "tests/unit/test_validation.py",
+    "tools/fdebq_*.py",
+]
+
+[tool.mypy]
+strict = true
+files = [
+    "src/hubbardflow/domain/validation.py",
+    "src/hubbardflow/domain/response_*.py",
+    "tests/unit/test_response_*.py",
+    "tests/unit/test_validation.py",
+    "tools/fdebq_*.py",
 ]
 
 [tool.setuptools]
