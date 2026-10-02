@@ -107,7 +107,13 @@ def decompose(series: ElementSeries, noise: NoiseModel) -> OddEvenDecomposition:
 
 
 def verify_order(dec: OddEvenDecomposition) -> tuple[OrderStatus, ...]:
-    """Apply R0's strict intervals separately to each consecutive drift pair."""
+    """Apply R0 while treating higher-order shifts as pre-asymptotic evidence.
+
+    A same-sign ratio below rho_1 contradicts every analytic order p >= 1.
+    Other ratios that do not uniquely identify p=1 or p=2 remain unresolved;
+    higher-order terms can shift precise finite-amplitude data away from either
+    leading-order ratio without making the response inconsistent.
+    """
     a = tuple(Fraction(str(value)) for value in dec.amplitudes_ev)
     s, nu = dec.slope_fractions, dec.noise_fractions
     result = []
@@ -130,6 +136,8 @@ def verify_order(dec: OddEvenDecomposition) -> tuple[OrderStatus, ...]:
                 else OrderStatus.VERIFIED_2
                 if contains2
                 else OrderStatus.INCONSISTENT
+                if hi < rho1
+                else OrderStatus.UNRESOLVED
             )
     return tuple(result)
 
@@ -306,6 +314,8 @@ def element_report(
     family order, then the complete amplitude tuple and polynomial degree.
     """
     dec = decompose(series, noise)
+    drifts = tuple(s1 - s0 for s0, s1 in pairwise(dec.slope_fractions))
+    ratios = tuple(_derived_finite(d1 / d0, "drift_ratios") if d0 else None for d0, d1 in pairwise(drifts))
     candidates = candidate_budgets(dec, verify_order(dec), protocol_estimator=protocol_estimator, kappa=kappa)
     families = tuple(EstimatorKind)
     admissible = [candidate for candidate in candidates if candidate.admissible]
@@ -327,8 +337,6 @@ def element_report(
         if eligible
         else None
     )
-    drifts = tuple(s1 - s0 for s0, s1 in pairwise(dec.slope_fractions))
-    ratios = tuple(_derived_finite(d1 / d0, "drift_ratios") if d0 else None for d0, d1 in pairwise(drifts))
     return ElementBudgetReport(
         (series.site_perturbed, series.mode, series.site_observed),
         dec,

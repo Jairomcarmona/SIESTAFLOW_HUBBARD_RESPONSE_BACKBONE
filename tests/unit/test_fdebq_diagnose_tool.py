@@ -159,6 +159,7 @@ def test_output_schema_scope_and_deterministic_bytes(tmp_path: Path) -> None:
     assert len(payload["series"]) == 8
     assert "timestamp" not in payload
     assert b"SCF component not assessed" in markdown_a
+    assert b"calibrated phase-2 protocol must use at least 4 amplitudes" in markdown_a
 
 
 def test_auto_estimator_uses_reported_selected_method() -> None:

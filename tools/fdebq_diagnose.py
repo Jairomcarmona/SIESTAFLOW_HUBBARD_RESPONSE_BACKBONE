@@ -298,6 +298,8 @@ def _render_markdown(payload: Mapping[str, object]) -> str:
             "",
             SCOPE,
             "",
+            "Known limitation: with 3 amplitudes, opposite-sign non-analytic and analytic terms can cancel and escape detection (synthetic coverage is about 0.84; about 0.92 with 5 amplitudes). The calibrated phase-2 protocol must use at least 4 amplitudes.",
+            "",
             f"- Element series: {len(series)}",
             f"- Reciprocity pairs reported: {len(reciprocity_items)}",
             f"- Protocol digest: `{payload['protocol_digest']}`",

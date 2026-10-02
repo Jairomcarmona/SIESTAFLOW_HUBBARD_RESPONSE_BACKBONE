@@ -158,15 +158,23 @@ def test_nonanalytic_zero_noise_order_one_and_exact_bias() -> None:
             assert BudgetReason.ORDER_NOT_VERIFIED_FOR_ESTIMATOR in value.reasons
 
 
-def test_mixed_order_and_opposite_sign_exclude_all() -> None:
-    for data in (series(b1="1", k="1"), series(b1="1", b2="-200")):
+def test_preasymptotic_mixes_are_unresolved_but_opposite_sign_is_inconsistent() -> None:
+    for data in (series(b1="1", k="1"), series(b1="1", b2="-50"), series(b1="1", b2="1000")):
         result = report(data, protocol(EstimatorKind.POLYNOMIAL_LSQ))
-        assert OrderStatus.INCONSISTENT in verify_order(result.decomposition)
-        assert result.best is None
-        assert all(
-            not value.admissible and BudgetReason.ORDER_INCONSISTENT in value.reasons
-            for value in result.candidates
-        )
+        assert verify_order(result.decomposition) == (OrderStatus.UNRESOLVED,)
+        assert result.best is not None and result.best.admissible
+        assert result.best.p_used == 1
+
+    opposite_sign = report(series(b1="1", k="-0.08"), protocol(EstimatorKind.POLYNOMIAL_LSQ))
+    assert verify_order(opposite_sign.decomposition) == (OrderStatus.INCONSISTENT,)
+    assert opposite_sign.best is None
+    assert all(
+        not value.admissible and BudgetReason.ORDER_INCONSISTENT in value.reasons
+        for value in opposite_sign.candidates
+    )
+
+    below_rho1 = report(series(b1="1", k="-2"), protocol(EstimatorKind.POLYNOMIAL_LSQ))
+    assert verify_order(below_rho1.decomposition) == (OrderStatus.INCONSISTENT,)
 
 
 def test_unresolved_drift_and_overlap_use_conservative_order() -> None:
@@ -368,6 +376,29 @@ def test_seeded_400_trial_coverage(case: str) -> None:
     assert covered / accepted >= 0.99
 
 
+def test_analytic_random_cubic_quintic_v6_coverage() -> None:
+    rng = np.random.default_rng(20261002)
+    covered = accepted = 0
+    for _ in range(400):
+        chi = float(rng.uniform(-1.5, -0.5))
+        b1 = float(rng.choice((-1, 1))) * float(rng.uniform(1.0, 8.0))
+        b2 = float(rng.choice((-1, 1))) * float(rng.uniform(0.1, 30.0))
+        data = series(chi=str(chi), b1=str(b1), b2=str(b2), width=5e-7)
+        points = tuple(
+            replace(
+                point,
+                occupation_e=point.occupation_e + float(rng.uniform(-5e-7, 5e-7)),
+            )
+            for point in data.points
+        )
+        result = report(replace(data, points=points))
+        assert result.best is not None and result.best.admissible
+        accepted += 1
+        covered += abs(result.best.estimate_e_per_ev - chi) <= result.best.total_e_per_ev
+    assert accepted == 400
+    assert covered / accepted >= 0.99
+
+
 def test_reciprocity_sorted_and_duplicate_rejection() -> None:
     base = series(width=5e-7)
     first = report(replace(base, site_perturbed="A", site_observed="B"))
@@ -425,6 +456,12 @@ def test_frozen_coo_regression() -> None:
         (-1.351575, -1.3402375, -1.3215916666666667), abs=1e-9, rel=0
     )
     assert bare.drift_ratios[0] == pytest.approx(1.645, abs=0.001)
+    bare_cross = report(frozen(0, 1, ResponseMode.BARE))
+    assert bare_cross.drift_ratios[0] == pytest.approx(1.638, abs=0.001)
+    for value in (bare, bare_cross):
+        assert verify_order(value.decomposition) == (OrderStatus.UNRESOLVED,)
+        assert value.best is not None and value.best.admissible
+        assert value.best.p_used == 1
     assert bare.decomposition.even_fit is not None
     assert bare.decomposition.even_fit[0] == pytest.approx(1.92e-5, abs=1e-8)
     cross = [report(frozen(j, i, ResponseMode.SCREENED)) for j, i in ((0, 1), (1, 0))]

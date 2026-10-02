@@ -7,7 +7,10 @@ R0 — ORDEN DEL TÉRMINO DOMINANTE (sobre la secuencia de pendientes centrales 
   - VERIFIED_2 si ρ_2 ∈ [lo, hi] y ρ_1 ∉ [lo, hi].
   - VERIFIED_1 si ρ_1 ∈ [lo, hi] y ρ_2 ∉ [lo, hi].
   - UNRESOLVED si ambas están dentro.
-  - INCONSISTENT si ninguna está dentro.
+  - INCONSISTENT solo si hi < ρ₁.
+  - UNRESOLVED en cualquier otro caso (incluye quedar entre ρ₁ y ρ₂ o por encima de ρ₂).
+    Con datos precisos, los términos de orden superior pueden desplazar la razón observada;
+    eso indica comportamiento preasintótico, no inconsistencia. Se usa p_used = 1, conservador.
 - Si hay varias ternas, el estado de la familia es el más conservador, con este orden: INCONSISTENT > UNRESOLVED > VERIFIED_1 > VERIFIED_2. Determinista y sin depender de U.
 
 ORDEN USADO Y VARIABLE DE MOMENTOS
@@ -34,6 +37,13 @@ TESTS ADICIONALES
 3. Mezcla b1·a³ + k·a|a| que dé una razón fuera de ambos ρ → INCONSISTENT y exclusión (fail-closed).
 4. Deriva por debajo del ruido → UNRESOLVED, p_used = 1, candidato elegible.
 5. Cobertura ≥ 99% en 400 ensayos con semilla para el caso no analítico con ruido, sobre los casos aceptados.
+
+LIMITACIÓN CONOCIDA
+
+Con 3 amplitudes, una mezcla de un término no analítico k·a|a| con un término analítico
+de signo opuesto puede cancelar en la razón observada y no queda cubierta por este
+diagnóstico (cobertura sintética de alrededor de 0.84; con 5 amplitudes, alrededor de
+0.92). El protocolo calibrado de fase 2 deberá usar al menos 4 amplitudes.
 
 NOTACIÓN. Escalas t_k = a_k² (eV²), k=1..K crecientes. Pendientes centrales s_k = [n(+a_k) − n(−a_k)] / (2 a_k), con radio de ruido ν_k (cota). Modelo: s_k = χ + Σ_{j≥1} b_j t_k^j. Todo estimador de la familia es E = Σ w_k s_k con Σ w_k = 1. Momentos M_j = Σ w_k t_k^j, calculados con fracciones exactas (fractions.Fraction), sin tolerancias. Sesgo de truncamiento = Σ_j b_j M_j. j0 = primer j con M_j ≠ 0 (comparación exacta). Ruido propagado: ν_E = Σ |w_k| ν_k.
 
