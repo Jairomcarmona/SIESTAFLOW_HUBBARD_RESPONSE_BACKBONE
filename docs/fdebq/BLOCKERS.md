@@ -122,3 +122,25 @@ the measured ladder values to those components or an envelope for unmeasured
 amplitudes. The author was asked to define the under-resolution output/radius
 and the exact component-splitting rule. No code, synthetic evidence, or SIESTA
 run was produced for TASK 17.
+
+## TASK 18 — Spin flip, rotations, and V3 controls (blocked)
+
+The isolated TASK 9 candidate classifier already has digest-bound
+`allow_spin_flip` and `allow_rotations` flags (both default false), and tests
+synthetic F5/F6/F7 counterexamples. TASK 18 requires end-to-end flag admission,
+candidate classes, reconstruction, and mandatory shadows. Those require
+`CoverageQualification` (TASK 10), the frozen plan (TASK 12), campaign wiring
+(TASK 13), and shadow execution (TASK 14), all blocked above. There is no
+contract here to promote `OperationClassification.accepted` from a candidate
+to a reduction decision; it explicitly is not PROVEN.
+
+TASK 18 also requires explicit egg-box quantification in the plan for
+`EXACT_IN_CONTINUUM_ONLY` rotations. The current operation model records only
+that exactness label and TASK 12's plan schema is unavailable. Finally, V2
+prospective shadows, V3 real negative controls, and V4 holdout are user-run
+validation gates; their result digests do not exist and cannot be fabricated
+for `VALIDATION_GATES.md`. CoO's approved TASK 8 evidence leaves F7
+`NOT_AVAILABLE`/`AMBIGUOUS`, and the V1 MnO permutation is not F1–F8 evidence.
+
+Existing classifier candidate tests are retained as TASK 9 coverage. No
+end-to-end acceptance or flag-enablement claim is made; flags remain off.
