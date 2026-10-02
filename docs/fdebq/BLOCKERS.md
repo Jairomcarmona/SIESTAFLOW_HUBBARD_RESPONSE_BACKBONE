@@ -32,3 +32,14 @@ one-representative golden result takes precedence.
 No TASK 10 files or reports were added. No synthetic or cross-run data were
 substituted for the missing CoO evidence. TASK 11 is independent and may
 proceed.
+
+## TASK 12 — Resolved perturbation plan
+
+TASK 12 is blocked on TASK 10. The required frozen plan embeds
+`CoverageQualification`; without the TASK 10 contract and its deterministic
+fallback behavior, the planner cannot emit the requested schema or apply §P
+without inventing a substitute coverage record. TASK 11 response reconstruction
+is complete but does not provide that qualification type.
+
+No TASK 12 implementation or plan digests were added. Revisit after the TASK 10
+data-policy and fallback questions are resolved.
