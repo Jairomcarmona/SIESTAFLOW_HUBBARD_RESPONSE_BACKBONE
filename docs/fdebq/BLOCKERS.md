@@ -54,3 +54,14 @@ unavailable.
 
 No production campaign behavior was changed. Revisit after TASK 10 and TASK 12
 are complete.
+
+## TASK 14 — Translation reduction with mandatory shadow
+
+TASK 14 is blocked on TASK 10, TASK 12 and TASK 13. Shadow qualification and
+expansion need the coverage classes, frozen per-column plans, and campaign DAG
+inputs from those tasks. Changing `symmetry_reduction.py` or
+`campaign_runner.py` before those contracts exist could alter the fixed or
+diagnostic path without a way to verify the required byte-identical behavior.
+
+No production reduction or runner changes were made. Revisit after TASK 10,
+TASK 12 and TASK 13 are resolved.
