@@ -28,7 +28,11 @@ target-version = "py312"
 include = [
     "src/hubbardflow/domain/validation.py",
     "src/hubbardflow/domain/response_*.py",
+    "src/hubbardflow/domain/subspace_inventory.py",
+    "src/hubbardflow/siesta_backend/fdf_model.py",
     "tests/unit/test_response_*.py",
+    "tests/unit/test_subspace_inventory.py",
+    "tests/unit/test_fdf_model.py",
     "tests/unit/test_validation.py",
     "tools/fdebq_*.py",
 ]
@@ -38,7 +42,11 @@ strict = true
 files = [
     "src/hubbardflow/domain/validation.py",
     "src/hubbardflow/domain/response_*.py",
+    "src/hubbardflow/domain/subspace_inventory.py",
+    "src/hubbardflow/siesta_backend/fdf_model.py",
     "tests/unit/test_response_*.py",
+    "tests/unit/test_subspace_inventory.py",
+    "tests/unit/test_fdf_model.py",
     "tests/unit/test_validation.py",
     "tools/fdebq_*.py",
 ]

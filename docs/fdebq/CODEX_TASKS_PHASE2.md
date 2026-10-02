@@ -19,6 +19,13 @@ The human only supplies the FDF, resolves `AMBIGUOUS` / `NOT_ESTABLISHED` / `REV
 Scientific logic that is **not yet validated** (spin-flip ε=−1, rotations, automatic species splitting, calibrated α,
 optional shadow) ships **implemented but disabled by flag**, never absent from the contract (§X).
 
+## Amendments after the first execution attempt (these override the text below)
+
+- **Lattice:** `LatticeParameters` is not supported (rejected, `UNSUPPORTED_SYNTAX`). The TASK 7 text was wrong; §C.3 governs.
+- **Data location:** the "CoO V6 / NiO V6 campaign outputs" are the analysis JSON files and the example reference outputs listed in TASK 8 and TASK 11; there are no per-α raw SIESTA outputs for them in the repo, and none are required.
+- **Base:** run `git fetch origin` first. `origin/codex/hubbardflow-rename` is at `b2b65ca` (merge of the phase 1 stack). Resume from `fdebq/task06-governance-documentation` (its tree equals the base plus TASK 6); the two branches `fdebq/task07-fdf-inventory-blocker` and `fdebq/task08-state-evidence-blocked` contain only blocker notes and are abandoned: create `fdebq/task07-fdf-inventory` from the TASK 6 branch.
+- **Preexisting lint/type failures** in TASK 5 files must be fixed in a first commit of the resume (`fix: ruff/mypy issues in task5 files`) because the tooling scope covers them; if a fix would change behaviour, stop and report instead.
+
 ## Working rules for every task
 
 - One task = one branch = one commit (or a few), stacked on the previous task's branch, named
@@ -71,7 +78,7 @@ Each block below can be pasted into Codex as the prompt for that task.
 **Goal.** One audited parser for the supported FDF subset and a pure canonical inventory; fail closed outside the subset.
 
 **Create** `src/hubbardflow/siesta_backend/fdf_model.py` (reuse `campaign_v2.resolve_fdf_includes`; do not duplicate it):
-- `parse_effective_fdf(path) -> FdfModel` (frozen dataclasses): lattice (`LatticeConstant`, `LatticeVectors`/`LatticeParameters`),
+- `parse_effective_fdf(path) -> FdfModel` (frozen dataclasses): lattice (`LatticeConstant` + `LatticeVectors` only; `LatticeParameters` is **rejected** with `UNSUPPORTED_SYNTAX`, as §C.3 and the existing `fdf_symmetry_adapter` do — fail closed, no conversion),
   `NumberOfAtoms`, `NumberOfSpecies`, `ChemicalSpeciesLabel` (index, Z, label), `AtomicCoordinatesFormat` (Fractional, Ang,
   Bohr, ScaledCartesian — each converted to fractional exactly, with the conversion recorded),
   `AtomicCoordinatesAndAtomicSpecies` (atom_index 0-based, species index, coordinates, optional trailing label),
@@ -113,7 +120,9 @@ digests binding it to the FDF and the output file. Missing/partial data → `REF
 
 **Create** `domain/state_evidence.py` (pure dataclasses mirroring the above, plus `spectrum_difference(a, b, flip: bool)`).
 
-**Tests.** Real archived SIESTA outputs from the repository (CoO V6, NiO V6, MnO v3r2, Cu3N, FeO diagnostic; read only) and
+**Data sources (all read only, all in the checkout; the local occupation matrices appear only in outputs that print `hubbard_term: projector occupations` / `Occupations:`):** `examples/tmo_campaigns/CoO_ref.out`, `NiO_ref.out`, `Cu3N_ref.out`, `FeO_ref.out` (with their `*_ref.fdf`), and the MnO v3r2 outputs under `campaigns/mno_afmii_strict_lr_v3r2/results/response-matrix-foreground-recovery-v4/*/siesta.out` (take the unperturbed-equivalent magnetic evidence from any run: moments are final Mulliken). The V6 reference runs `validation_observables_v6/{coo,mno}/*/siesta.out` and `FEO_SCF_DIAGNOSTIC_EXPORT_20261001/*/siesta.out` have Mulliken moments and mesh/k-mesh but **no** local occupation matrices: use them for the moment/mesh/termination parts only, and for them `occupation_spectra` is `NOT_AVAILABLE` (never fabricated). A reference without occupation spectra makes F7 `AMBIGUOUS`, which excludes reduction (safe).
+
+**Tests.** Real archived SIESTA outputs from the sources above and
 corrupted/truncated variants → `REFERENCE_NOT_ADMISSIBLE`. A test must show that FeO-type orbital differences between
 nominally equivalent sites are visible in the spectra, if the archived FeO export contains the needed data; otherwise
 record that as a documented limitation in the PR note.
@@ -193,7 +202,7 @@ reject explicitly (§E.2).
 
 **Create** `tools/v1_retrospective.py`: reproduces on archived campaigns (read only) CoO V6, NiO V6, MnO v3r2 A/B, Cu3N (X/Y/Z) the
 shadow–reconstruction consistency within FD-EBQ budgets (TASK 2) and records the α-independent discrepancy; output JSON + Markdown.
-It must reproduce the numbers of `docs/fdebq/reference/coverage_review_checks.py` for CoO and MnO.
+It must reproduce the numbers of `docs/fdebq/reference/coverage_review_checks.py` for CoO and MnO. Data: CoO `results/stage-ub-v6-observables/coo-u-b-campaigns/stageubv6-coo-a0/lr_u_analysis.v3.json`; NiO `campaigns/nio_pbe_p5_20260928/results/lr_u_analysis.v3.json`; MnO `campaigns/mno_afmii_strict_lr_v3r2/results/response-matrix-foreground-recovery-v4/response-receipt.json`; Cu3N from the archived evidence under `examples/tmo_campaigns/` and `docs/audits` (use whatever columns exist; document which are absent).
 
 **Tests.** Synthetic permutation tests (machine precision); the retrospective tool on bundled archived data; a negative test where a deliberately
 wrong permutation is detected.
