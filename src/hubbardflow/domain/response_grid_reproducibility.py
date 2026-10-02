@@ -3,15 +3,18 @@
 This contract reports observed replica spread.  It is not a probabilistic
 confidence interval, a deterministic error bound, or a guarantee of truth.
 """
+
 from __future__ import annotations
 
-from hashlib import sha256
-from dataclasses import dataclass, field
-from math import isclose, isfinite
-from pathlib import Path
 import json
 import re
-from typing import Any, Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
+from dataclasses import dataclass, field
+from hashlib import sha256
+from math import isclose, isfinite
+from pathlib import Path
+from typing import Any
+
 
 class ResponseGridCalibrationError(ValueError):
     """A response-grid repeatability calibration is incomplete or unbound."""
@@ -38,8 +41,7 @@ def response_grid_campaign_context_sha256(
         "execution_profile_sha256": execution_profile_sha256,
         "pseudopotentials": dict(sorted(pseudopotentials.items())),
         "sites": [
-            {key: site.get(key) for key in ("index", "site_id", "atom_index", "orbit_id")}
-            for site in sites
+            {key: site.get(key) for key in ("index", "site_id", "atom_index", "orbit_id")} for site in sites
         ],
         "alpha_grid_eV": alpha_grid_eV,
         "analysis_policy": dict(analysis_policy),
@@ -47,7 +49,9 @@ def response_grid_campaign_context_sha256(
         "magnetic_moment_tolerance_muB": magnetic_moment_tolerance_muB,
         "response_observable": "Hubbard projector population, BARE first-Hamiltonian / SCREENED converged",
     }
-    return sha256(json.dumps(context, sort_keys=True, separators=(",", ":"), default=str).encode()).hexdigest()
+    return sha256(
+        json.dumps(context, sort_keys=True, separators=(",", ":"), default=str).encode()
+    ).hexdigest()
 
 
 _HASH = re.compile(r"[0-9a-f]{64}\Z")
@@ -77,13 +81,19 @@ class ValidatedResponseGridCalibration:
 
     def __post_init__(self) -> None:
         if self._token is not _VALIDATION_TOKEN:
-            raise ResponseGridCalibrationError("validated calibration objects must come from the evidence validator")
+            raise ResponseGridCalibrationError(
+                "validated calibration objects must come from the evidence validator"
+            )
 
 
 def _json(path: Path) -> dict[str, Any]:
     try:
-        value = json.loads(path.read_text(encoding="utf-8"), parse_constant=lambda item: (_ for _ in ()).throw(
-            ResponseGridCalibrationError(f"non-finite JSON constant: {item}")))
+        value = json.loads(
+            path.read_text(encoding="utf-8"),
+            parse_constant=lambda item: (_ for _ in ()).throw(
+                ResponseGridCalibrationError(f"non-finite JSON constant: {item}")
+            ),
+        )
     except (OSError, UnicodeError, json.JSONDecodeError) as exc:
         raise ResponseGridCalibrationError(f"cannot read calibration JSON: {path}") from exc
     if not isinstance(value, dict):
@@ -158,7 +168,7 @@ def _execution_attempt(root: Path, cwd: Path) -> tuple[str, Path]:
     if len(matches) != 1:
         raise ResponseGridCalibrationError("node cwd must identify exactly one runner attempt directory")
     index = matches[0]
-    attempt_root = root.joinpath(*relative.parts[:index + 1]).resolve(strict=True)
+    attempt_root = root.joinpath(*relative.parts[: index + 1]).resolve(strict=True)
     try:
         cwd.resolve(strict=True).relative_to(attempt_root)
     except (OSError, ValueError) as exc:
@@ -167,7 +177,9 @@ def _execution_attempt(root: Path, cwd: Path) -> tuple[str, Path]:
 
 
 def _validate_reference_execution(
-    root: Path, reference: Mapping[str, Any], nodes: Mapping[str, Any],
+    root: Path,
+    reference: Mapping[str, Any],
+    nodes: Mapping[str, Any],
 ) -> tuple[str, str]:
     """Bind the reference DM to a validated, campaign-local SIESTA attempt."""
     if reference.get("state") != "VALIDATED":
@@ -175,17 +187,26 @@ def _validate_reference_execution(
     node_id = reference.get("node_id")
     node = nodes.get(node_id) if isinstance(node_id, str) else None
     evidence_digest = reference.get("evidence_digest")
-    if (not isinstance(node, Mapping) or node.get("state") != "VALIDATED"
-            or node.get("kind") != "siesta"
-            or node.get("evidence_digest") != evidence_digest):
-        raise ResponseGridCalibrationError("reference source is not linked to a validated SIESTA node receipt")
+    if (
+        not isinstance(node, Mapping)
+        or node.get("state") != "VALIDATED"
+        or node.get("kind") != "siesta"
+        or node.get("evidence_digest") != evidence_digest
+    ):
+        raise ResponseGridCalibrationError(
+            "reference source is not linked to a validated SIESTA node receipt"
+        )
     provenance = node.get("provenance")
     node_meta = provenance.get("node") if isinstance(provenance, Mapping) else None
     hashes = provenance.get("artifacts") if isinstance(provenance, Mapping) else None
     command, artifact_spec = node.get("command"), node.get("artifact_spec")
-    if (not isinstance(node_meta, Mapping) or node_meta.get("node_id") != node_id
-            or not isinstance(hashes, Mapping) or not isinstance(command, Mapping)
-            or not isinstance(artifact_spec, Mapping)):
+    if (
+        not isinstance(node_meta, Mapping)
+        or node_meta.get("node_id") != node_id
+        or not isinstance(hashes, Mapping)
+        or not isinstance(command, Mapping)
+        or not isinstance(artifact_spec, Mapping)
+    ):
         raise ResponseGridCalibrationError("reference node receipt lacks identity, command, spec, or hashes")
     cwd = _node_artifact_path(root, command.get("cwd"), "reference command cwd", directory=True)
     attempt_id, attempt_root = _execution_attempt(root, cwd)
@@ -201,7 +222,9 @@ def _validate_reference_execution(
         try:
             path.relative_to(attempt_root)
         except ValueError as exc:
-            raise ResponseGridCalibrationError(f"reference node {key} artifact is outside its attempt") from exc
+            raise ResponseGridCalibrationError(
+                f"reference node {key} artifact is outside its attempt"
+            ) from exc
         expected_hash = reference.get(f"{source_key}_sha256")
         declared_hash = _digest(hashes.get(key), f"reference node {key} SHA-256")
         if declared_hash != expected_hash or sha256(path.read_bytes()).hexdigest() != declared_hash:
@@ -209,20 +232,28 @@ def _validate_reference_execution(
         paths[key] = path
     source_path_fields = {"fdf": "fdf_path", "output": "out_path", "dm": "dm_path"}
     for key, field_name in source_path_fields.items():
-        declared_path = _relative_evidence(root, reference.get(field_name), reference.get(
-            "out_sha256" if key == "output" else f"{key}_sha256"
-        ), f"reference {key}")
+        declared_path = _relative_evidence(
+            root,
+            reference.get(field_name),
+            reference.get("out_sha256" if key == "output" else f"{key}_sha256"),
+            f"reference {key}",
+        )
         if declared_path != paths[key]:
-            raise ResponseGridCalibrationError(f"reference {key} path differs from node command/artifact spec")
-    if (_node_artifact_path(root, command.get("stdin_path"), "reference stdin FDF") != paths["fdf"]
-            or _node_artifact_path(root, command.get("stdout_path"), "reference stdout OUT") != paths["output"]):
+            raise ResponseGridCalibrationError(
+                f"reference {key} path differs from node command/artifact spec"
+            )
+    if (
+        _node_artifact_path(root, command.get("stdin_path"), "reference stdin FDF") != paths["fdf"]
+        or _node_artifact_path(root, command.get("stdout_path"), "reference stdout OUT") != paths["output"]
+    ):
         raise ResponseGridCalibrationError("reference command stdin/stdout do not match its artifact spec")
     reference_dm_hash = str(reference["dm_sha256"])
     return reference_dm_hash, attempt_id
 
 
 def _validate_independent_execution_identities(
-    campaigns: list[Mapping[str, Any]], *,
+    campaigns: Sequence[Mapping[str, Any]],
+    *,
     primary_campaign_id: str | None = None,
     primary_source_root: Path | None = None,
     primary_attempt_ids: set[str] | None = None,
@@ -247,13 +278,17 @@ def _validate_independent_execution_identities(
             raise ResponseGridCalibrationError("campaign execution identity lacks attempt IDs")
         root_key = str(source_root.resolve(strict=True))
         if campaign_id in seen_campaigns or root_key in seen_roots:
-            raise ResponseGridCalibrationError("independent campaigns must have distinct UUIDs and source roots")
+            raise ResponseGridCalibrationError(
+                "independent campaigns must have distinct UUIDs and source roots"
+            )
         seen_campaigns.add(campaign_id)
         seen_roots.add(root_key)
         local_attempts: set[str] = set()
         for attempt in attempts:
             if not isinstance(attempt, str) or not attempt:
-                raise ResponseGridCalibrationError("campaign execution identity contains an invalid attempt ID")
+                raise ResponseGridCalibrationError(
+                    "campaign execution identity contains an invalid attempt ID"
+                )
             if attempt in local_attempts or attempt in seen_attempts:
                 raise ResponseGridCalibrationError("independent campaign evidence reuses a runner attempt ID")
             local_attempts.add(attempt)
@@ -266,7 +301,9 @@ def _explicit_source_root(raw_path: Any) -> Path:
         raise ResponseGridCalibrationError("replica source_root must be an explicit absolute path")
     candidate = Path(raw_path)
     if not candidate.is_absolute() or ".." in candidate.parts:
-        raise ResponseGridCalibrationError("replica source_root must be absolute and contain no parent traversal")
+        raise ResponseGridCalibrationError(
+            "replica source_root must be absolute and contain no parent traversal"
+        )
     try:
         resolved = candidate.resolve(strict=True)
     except OSError as exc:
@@ -313,24 +350,37 @@ def validate_response_grid_calibration(
     lock_hash = sha256(lock_path.read_bytes()).hexdigest()
     result = _json(result_path)
     lock = _json(lock_path)
-    lock = _fields(lock, {
-        "schema", "campaign_context_sha256", "site_labels", "alpha_grid_eV",
-        "modes", "replica_count", "independence", "safety_factor",
-        "deterministic_floor_e",
-    }, "response-grid calibration lock")
+    lock = _fields(
+        lock,
+        {
+            "schema",
+            "campaign_context_sha256",
+            "site_labels",
+            "alpha_grid_eV",
+            "modes",
+            "replica_count",
+            "independence",
+            "safety_factor",
+            "deterministic_floor_e",
+        },
+        "response-grid calibration lock",
+    )
     if lock["schema"] != "siestaflow-response-grid-reproducibility-lock-v1":
         raise ResponseGridCalibrationError("response-grid calibration lock schema is invalid")
     context_hash = _digest(lock["campaign_context_sha256"], "campaign context SHA-256")
     if context_hash != expected_context_sha256:
-        raise ResponseGridCalibrationError("calibration campaign/material/functional/projector/SCF context differs")
+        raise ResponseGridCalibrationError(
+            "calibration campaign/material/functional/projector/SCF context differs"
+        )
     sites = lock["site_labels"]
     alphas = lock["alpha_grid_eV"]
     modes = lock["modes"]
     if sites != expected_sites or alphas != expected_alphas_eV or modes != ["BARE", "SCREENED"]:
         raise ResponseGridCalibrationError("calibration does not cover the exact active site/alpha/mode grid")
-    if (set(expected_site_ids) != set(expected_sites)
-            or any(not isinstance(expected_site_ids[site], str) or not expected_site_ids[site].strip()
-                   for site in expected_sites)):
+    if set(expected_site_ids) != set(expected_sites) or any(
+        not isinstance(expected_site_ids[site], str) or not expected_site_ids[site].strip()
+        for site in expected_sites
+    ):
         raise ResponseGridCalibrationError("expected site index-to-ID map is incomplete")
     replica_count = lock["replica_count"]
     if isinstance(replica_count, bool) or not isinstance(replica_count, int) or replica_count < 3:
@@ -342,7 +392,10 @@ def validate_response_grid_calibration(
     bundle_root = result_path.parent.resolve(strict=True)
     expected_result_fields = {"schema", "calibration_lock_sha256", "replica_receipts"}
     result = _fields(result, expected_result_fields, "response-grid calibration result")
-    if result["schema"] != "siestaflow-response-grid-reproducibility-result-v2" or result["calibration_lock_sha256"] != lock_hash:
+    if (
+        result["schema"] != "siestaflow-response-grid-reproducibility-result-v2"
+        or result["calibration_lock_sha256"] != lock_hash
+    ):
         raise ResponseGridCalibrationError("calibration result is not bound to this lock")
     receipts = result["replica_receipts"]
     if not isinstance(receipts, list) or len(receipts) != replica_count:
@@ -359,111 +412,192 @@ def validate_response_grid_calibration(
     quantization_by_coordinate: dict[tuple[int, float, str, int], list[float]] = {}
     expected_cells = {
         (perturbed, float(alpha), mode, observed)
-        for perturbed in expected_sites for alpha in expected_alphas_eV
-        for mode in ("BARE", "SCREENED") for observed in expected_sites
+        for perturbed in expected_sites
+        for alpha in expected_alphas_eV
+        for mode in ("BARE", "SCREENED")
+        for observed in expected_sites
     }
     for receipt_raw in receipts:
-        receipt = _fields(receipt_raw, {
-            "replica_id", "campaign_id", "reference_dm_sha256", "source_root",
-            "campaign_manifest_path", "campaign_manifest_sha256",
-            "analysis_path", "analysis_sha256", "dataset_path", "dataset_sha256",
-            "node_evidence_path", "node_evidence_sha256",
-        }, "replica receipt")
+        receipt = _fields(
+            receipt_raw,
+            {
+                "replica_id",
+                "campaign_id",
+                "reference_dm_sha256",
+                "source_root",
+                "campaign_manifest_path",
+                "campaign_manifest_sha256",
+                "analysis_path",
+                "analysis_sha256",
+                "dataset_path",
+                "dataset_sha256",
+                "node_evidence_path",
+                "node_evidence_sha256",
+            },
+            "replica receipt",
+        )
         replica_id, campaign_id = receipt["replica_id"], receipt["campaign_id"]
         if not isinstance(replica_id, str) or not replica_id or replica_id in seen_ids:
             raise ResponseGridCalibrationError("replica IDs must be non-empty and unique")
-        if (not isinstance(campaign_id, str) or not campaign_id.strip()
-                or campaign_id in seen_campaigns):
+        if not isinstance(campaign_id, str) or not campaign_id.strip() or campaign_id in seen_campaigns:
             raise ResponseGridCalibrationError("replicas must have distinct verified campaign UUIDs")
         if expected_primary_campaign_id is not None and campaign_id == expected_primary_campaign_id:
-            raise ResponseGridCalibrationError("primary campaign cannot also be counted as an independent replica")
+            raise ResponseGridCalibrationError(
+                "primary campaign cannot also be counted as an independent replica"
+            )
         dm_hash = _digest(receipt["reference_dm_sha256"], "reference DM SHA-256")
         source_root = _explicit_source_root(receipt["source_root"])
         source_root_key = str(source_root)
         if source_root_key in seen_roots:
-            raise ResponseGridCalibrationError("independent replicas must have distinct source campaign roots")
-        if expected_primary_source_root is not None and source_root == expected_primary_source_root.resolve(strict=True):
-            raise ResponseGridCalibrationError("primary campaign root cannot also be used as a replica source")
-        seen_ids.add(replica_id); seen_campaigns.add(campaign_id); seen_roots.add(source_root_key)
+            raise ResponseGridCalibrationError(
+                "independent replicas must have distinct source campaign roots"
+            )
+        if expected_primary_source_root is not None and source_root == expected_primary_source_root.resolve(
+            strict=True
+        ):
+            raise ResponseGridCalibrationError(
+                "primary campaign root cannot also be used as a replica source"
+            )
+        seen_ids.add(replica_id)
+        seen_campaigns.add(campaign_id)
+        seen_roots.add(source_root_key)
         replica_source_roots.append(source_root_key)
         manifest_path = _relative_evidence(
-            source_root, receipt["campaign_manifest_path"], receipt["campaign_manifest_sha256"],
+            source_root,
+            receipt["campaign_manifest_path"],
+            receipt["campaign_manifest_sha256"],
             "source campaign manifest",
         )
         source_campaign, source_context_hash = source_context_resolver(manifest_path)
-        if (source_campaign.get("campaign_id") != campaign_id
-                or source_context_hash != context_hash):
-            raise ResponseGridCalibrationError("source manifest/context differs from the locked response context")
+        if source_campaign.get("campaign_id") != campaign_id or source_context_hash != context_hash:
+            raise ResponseGridCalibrationError(
+                "source manifest/context differs from the locked response context"
+            )
         dataset_rel = Path(receipt["dataset_path"]) if isinstance(receipt["dataset_path"], str) else None
         if dataset_rel is None or dataset_rel.is_absolute() or ".." in dataset_rel.parts:
             raise ResponseGridCalibrationError("replica dataset path must be bundle-relative")
         dataset_path = _relative_evidence(
-            bundle_root, str(dataset_rel), receipt["dataset_sha256"], "replica dataset",
+            bundle_root,
+            str(dataset_rel),
+            receipt["dataset_sha256"],
+            "replica dataset",
         )
         analysis_path = _relative_evidence(
-            source_root, receipt["analysis_path"], receipt["analysis_sha256"], "replica analysis",
+            source_root,
+            receipt["analysis_path"],
+            receipt["analysis_sha256"],
+            "replica analysis",
         )
         analysis = _json(analysis_path)
         analysis_campaign = analysis.get("campaign")
         analysis_dataset = analysis.get("response_observation_dataset")
-        if (analysis.get("schema_version") != "siestaflow.lr_u_analysis.v3"
-                or not isinstance(analysis_campaign, Mapping)
-                or analysis_campaign.get("campaign_id") != campaign_id
-                or not isinstance(analysis_dataset, Mapping)):
+        if (
+            analysis.get("schema_version") != "siestaflow.lr_u_analysis.v3"
+            or not isinstance(analysis_campaign, Mapping)
+            or analysis_campaign.get("campaign_id") != campaign_id
+            or not isinstance(analysis_dataset, Mapping)
+        ):
             raise ResponseGridCalibrationError("source analysis is not a matching v3 campaign report")
         analysis_provenance = analysis.get("provenance")
-        if (not isinstance(analysis_provenance, Mapping)
-                or analysis_provenance.get("input_identity") != source_campaign.get("input_identity")
-                or analysis.get("alpha_grid_eV") != expected_alphas_eV):
-            raise ResponseGridCalibrationError("source analysis does not match its manifest input identity or response grid")
+        if (
+            not isinstance(analysis_provenance, Mapping)
+            or analysis_provenance.get("input_identity") != source_campaign.get("input_identity")
+            or analysis.get("alpha_grid_eV") != expected_alphas_eV
+        ):
+            raise ResponseGridCalibrationError(
+                "source analysis does not match its manifest input identity or response grid"
+            )
         dataset = _json(dataset_path)
-        dataset = _fields(dataset, {
-            "schema", "replica_id", "campaign_id", "reference_dm_sha256",
-            "campaign_context_sha256", "campaign_manifest_path", "campaign_manifest_sha256",
-            "analysis_path", "analysis_sha256",
-            "node_evidence_path", "node_evidence_sha256", "reference_dm_path",
-            "reference_node_id", "reference_evidence_digest", "reference_attempt_id",
-            "measurements",
-        }, "replica dataset")
-        if (dataset["schema"] != "siestaflow-response-grid-replica-v4"
-                or dataset["replica_id"] != replica_id or dataset["campaign_id"] != campaign_id
-                or dataset["reference_dm_sha256"] != dm_hash
-                or dataset["campaign_context_sha256"] != context_hash
-                or dataset["campaign_manifest_path"] != receipt["campaign_manifest_path"]
-                or dataset["campaign_manifest_sha256"] != receipt["campaign_manifest_sha256"]
-                or dataset["analysis_path"] != receipt["analysis_path"]
-                or dataset["analysis_sha256"] != receipt["analysis_sha256"]
-                or dataset["node_evidence_path"] != receipt["node_evidence_path"]
-                or dataset["node_evidence_sha256"] != receipt["node_evidence_sha256"]):
-            raise ResponseGridCalibrationError("replica dataset provenance differs from its receipt or target context")
-        reference_dm_path = _relative_evidence(
-            source_root, dataset["reference_dm_path"], dm_hash, "replica reference DM",
+        dataset = _fields(
+            dataset,
+            {
+                "schema",
+                "replica_id",
+                "campaign_id",
+                "reference_dm_sha256",
+                "campaign_context_sha256",
+                "campaign_manifest_path",
+                "campaign_manifest_sha256",
+                "analysis_path",
+                "analysis_sha256",
+                "node_evidence_path",
+                "node_evidence_sha256",
+                "reference_dm_path",
+                "reference_node_id",
+                "reference_evidence_digest",
+                "reference_attempt_id",
+                "measurements",
+            },
+            "replica dataset",
+        )
+        if (
+            dataset["schema"] != "siestaflow-response-grid-replica-v4"
+            or dataset["replica_id"] != replica_id
+            or dataset["campaign_id"] != campaign_id
+            or dataset["reference_dm_sha256"] != dm_hash
+            or dataset["campaign_context_sha256"] != context_hash
+            or dataset["campaign_manifest_path"] != receipt["campaign_manifest_path"]
+            or dataset["campaign_manifest_sha256"] != receipt["campaign_manifest_sha256"]
+            or dataset["analysis_path"] != receipt["analysis_path"]
+            or dataset["analysis_sha256"] != receipt["analysis_sha256"]
+            or dataset["node_evidence_path"] != receipt["node_evidence_path"]
+            or dataset["node_evidence_sha256"] != receipt["node_evidence_sha256"]
+        ):
+            raise ResponseGridCalibrationError(
+                "replica dataset provenance differs from its receipt or target context"
+            )
+        _relative_evidence(
+            source_root,
+            dataset["reference_dm_path"],
+            dm_hash,
+            "replica reference DM",
         )
         source_reference = analysis_dataset.get("reference_source")
-        if (not isinstance(source_reference, Mapping)
-                or source_reference.get("dm_sha256") != dm_hash
-                or source_reference.get("dm_path") != dataset["reference_dm_path"]):
-            raise ResponseGridCalibrationError("analysis reference DM identity does not match the replica receipt")
+        if (
+            not isinstance(source_reference, Mapping)
+            or source_reference.get("dm_sha256") != dm_hash
+            or source_reference.get("dm_path") != dataset["reference_dm_path"]
+        ):
+            raise ResponseGridCalibrationError(
+                "analysis reference DM identity does not match the replica receipt"
+            )
         node_evidence_path = _relative_evidence(
-            source_root, dataset["node_evidence_path"], dataset["node_evidence_sha256"], "node-evidence receipt",
+            source_root,
+            dataset["node_evidence_path"],
+            dataset["node_evidence_sha256"],
+            "node-evidence receipt",
         )
         node_evidence = _json(node_evidence_path)
         nodes = node_evidence.get("nodes")
         identity = node_evidence.get("identity")
-        if (not isinstance(nodes, dict) or not isinstance(identity, dict)
-                or not isinstance(identity.get("campaign_id"), str) or not identity["campaign_id"].strip()
-                or not isinstance(identity.get("input_identity"), str) or not identity["input_identity"].strip()):
-            raise ResponseGridCalibrationError("node-evidence receipt lacks its campaign identity or node map")
-        if (identity.get("campaign_id") != campaign_id
-                or identity.get("input_identity") != source_campaign.get("input_identity")):
-            raise ResponseGridCalibrationError("node-evidence identity differs from the source manifest/analysis")
+        if (
+            not isinstance(nodes, dict)
+            or not isinstance(identity, dict)
+            or not isinstance(identity.get("campaign_id"), str)
+            or not identity["campaign_id"].strip()
+            or not isinstance(identity.get("input_identity"), str)
+            or not identity["input_identity"].strip()
+        ):
+            raise ResponseGridCalibrationError(
+                "node-evidence receipt lacks its campaign identity or node map"
+            )
+        if identity.get("campaign_id") != campaign_id or identity.get(
+            "input_identity"
+        ) != source_campaign.get("input_identity"):
+            raise ResponseGridCalibrationError(
+                "node-evidence identity differs from the source manifest/analysis"
+            )
         reference_dm_hash, reference_attempt_id = _validate_reference_execution(
-            source_root, source_reference, nodes,
+            source_root,
+            source_reference,
+            nodes,
         )
-        if (reference_dm_hash != dm_hash
-                or dataset.get("reference_node_id") != source_reference.get("node_id")
-                or dataset.get("reference_evidence_digest") != source_reference.get("evidence_digest")
-                or dataset.get("reference_attempt_id") != reference_attempt_id):
+        if (
+            reference_dm_hash != dm_hash
+            or dataset.get("reference_node_id") != source_reference.get("node_id")
+            or dataset.get("reference_evidence_digest") != source_reference.get("evidence_digest")
+            or dataset.get("reference_attempt_id") != reference_attempt_id
+        ):
             raise ResponseGridCalibrationError("reference execution identity differs from the dataset")
         if reference_attempt_id in seen_attempt_ids:
             raise ResponseGridCalibrationError("replicas must have distinct validated execution attempts")
@@ -483,7 +617,9 @@ def validate_response_grid_calibration(
                 row_alpha = _number(analysis_row["alpha_eV"], "analysis alpha")
                 row_site_id = analysis_row["perturbed_site_id"]
             except (KeyError, TypeError, ValueError) as exc:
-                raise ResponseGridCalibrationError("source analysis response coordinate is malformed") from exc
+                raise ResponseGridCalibrationError(
+                    "source analysis response coordinate is malformed"
+                ) from exc
             observed_rows = analysis_row.get("observed_sites")
             if not isinstance(observed_rows, list):
                 raise ResponseGridCalibrationError("source analysis observed-site rows are malformed")
@@ -498,48 +634,81 @@ def validate_response_grid_calibration(
                 except (KeyError, TypeError, ValueError) as exc:
                     raise ResponseGridCalibrationError("source analysis measurement is incomplete") from exc
                 if not all(isinstance(value, Mapping) for value in (row_values, row_widths, row_sources)):
-                    raise ResponseGridCalibrationError("source analysis measurement has invalid values or sources")
+                    raise ResponseGridCalibrationError(
+                        "source analysis measurement has invalid values or sources"
+                    )
                 for mode in ("BARE", "SCREENED"):
                     mode_key = mode.lower()
                     source = row_sources.get(mode_key)
                     if not isinstance(source, Mapping) or source.get("state") != "VALIDATED":
-                        raise ResponseGridCalibrationError("source analysis contains an unvalidated response source")
+                        raise ResponseGridCalibrationError(
+                            "source analysis contains an unvalidated response source"
+                        )
                     coordinate = (row_perturbed, row_alpha, mode, row_observed)
                     if coordinate in analysis_cells:
-                        raise ResponseGridCalibrationError("source analysis contains duplicate response coordinates")
+                        raise ResponseGridCalibrationError(
+                            "source analysis contains duplicate response coordinates"
+                        )
                     if row_site_id != expected_site_ids.get(row_perturbed):
-                        raise ResponseGridCalibrationError("source analysis perturbed site differs from its manifest")
+                        raise ResponseGridCalibrationError(
+                            "source analysis perturbed site differs from its manifest"
+                        )
                     analysis_cells[coordinate] = (
                         _number(row_values.get(mode_key), "analysis occupation"),
                         _number(row_widths.get(mode_key), "analysis occupation half-width"),
                         source,
                     )
         if set(analysis_cells) != expected_cells:
-            raise ResponseGridCalibrationError("source analysis does not cover the exact locked response grid")
+            raise ResponseGridCalibrationError(
+                "source analysis does not cover the exact locked response grid"
+            )
         measurements = dataset["measurements"]
         if not isinstance(measurements, list) or len(measurements) != len(expected_cells):
-            raise ResponseGridCalibrationError("each replica must contain every response-grid coordinate exactly once")
+            raise ResponseGridCalibrationError(
+                "each replica must contain every response-grid coordinate exactly once"
+            )
         seen_cells: set[tuple[int, float, str, int]] = set()
         response_nodes: dict[tuple[int, float, str], str] = {}
         response_attempts: dict[tuple[int, float, str], str] = {}
         for raw in measurements:
-            cell = _fields(raw, {
-                "perturbed_site", "alpha_eV", "mode", "observed_site", "occupation_e",
-                "perturbed_site_id", "observed_atom_index", "occupation_half_width_e",
-                "node_id", "evidence_digest", "attempt_id", "fdf_path", "fdf_sha256", "out_path", "out_sha256",
-                "dm_path", "dm_sha256",
-            }, "replica measurement")
+            cell = _fields(
+                raw,
+                {
+                    "perturbed_site",
+                    "alpha_eV",
+                    "mode",
+                    "observed_site",
+                    "occupation_e",
+                    "perturbed_site_id",
+                    "observed_atom_index",
+                    "occupation_half_width_e",
+                    "node_id",
+                    "evidence_digest",
+                    "attempt_id",
+                    "fdf_path",
+                    "fdf_sha256",
+                    "out_path",
+                    "out_sha256",
+                    "dm_path",
+                    "dm_sha256",
+                },
+                "replica measurement",
+            )
             if any(
                 isinstance(cell[name], bool) or not isinstance(cell[name], int)
                 for name in ("perturbed_site", "observed_site")
             ):
                 raise ResponseGridCalibrationError("replica site coordinates must be integer indices")
             coordinate = (
-                cell["perturbed_site"], _number(cell["alpha_eV"], "alpha_eV"),
-                cell["mode"], cell["observed_site"],
+                cell["perturbed_site"],
+                _number(cell["alpha_eV"], "alpha_eV"),
+                cell["mode"],
+                cell["observed_site"],
             )
             if coordinate not in expected_cells or coordinate in seen_cells or coordinate[2] not in _MODES:
-                raise ResponseGridCalibrationError("replica measurement has an unexpected or duplicate coordinate")
+                raise ResponseGridCalibrationError(
+                    "replica measurement has an unexpected or duplicate coordinate"
+                )
             value = _number(cell["occupation_e"], "occupation_e")
             print_half_width = _number(cell["occupation_half_width_e"], "occupation_half_width_e")
             if print_half_width < 0.0:
@@ -550,61 +719,91 @@ def validate_response_grid_calibration(
                 raise ResponseGridCalibrationError("measurement site ID does not match the campaign site map")
             observed_site = coordinate[3]
             expected_atom = expected_atom_indices.get(observed_site)
-            if (isinstance(cell["observed_atom_index"], bool)
-                    or not isinstance(cell["observed_atom_index"], int)
-                    or cell["observed_atom_index"] != expected_atom):
-                raise ResponseGridCalibrationError("measurement atom index does not match the campaign site map")
+            if (
+                isinstance(cell["observed_atom_index"], bool)
+                or not isinstance(cell["observed_atom_index"], int)
+                or cell["observed_atom_index"] != expected_atom
+            ):
+                raise ResponseGridCalibrationError(
+                    "measurement atom index does not match the campaign site map"
+                )
             node_id = cell["node_id"]
             if not isinstance(node_id, str) or not node_id or node_id not in nodes:
-                raise ResponseGridCalibrationError("measurement node_id is absent from the pinned node-evidence receipt")
+                raise ResponseGridCalibrationError(
+                    "measurement node_id is absent from the pinned node-evidence receipt"
+                )
             response_key = (perturbed_site, coordinate[1], coordinate[2])
             previous_node_id = response_nodes.setdefault(response_key, node_id)
             if previous_node_id != node_id:
-                raise ResponseGridCalibrationError("one response coordinate is bound to multiple execution nodes")
+                raise ResponseGridCalibrationError(
+                    "one response coordinate is bound to multiple execution nodes"
+                )
             node_record = nodes[node_id]
             if not isinstance(node_record, dict):
                 raise ResponseGridCalibrationError("node-evidence entry is malformed")
             evidence_digest = _digest(cell["evidence_digest"], "node evidence digest")
-            if (node_record.get("state") != "VALIDATED"
-                    or node_record.get("evidence_digest") != evidence_digest
-                    or node_record.get("kind") != "siesta"):
-                raise ResponseGridCalibrationError("measurement does not match a validated SIESTA node receipt")
+            if (
+                node_record.get("state") != "VALIDATED"
+                or node_record.get("evidence_digest") != evidence_digest
+                or node_record.get("kind") != "siesta"
+            ):
+                raise ResponseGridCalibrationError(
+                    "measurement does not match a validated SIESTA node receipt"
+                )
             provenance = node_record.get("provenance")
             node_metadata = provenance.get("node") if isinstance(provenance, Mapping) else None
-            if (not isinstance(node_metadata, Mapping)
-                    or node_metadata.get("node_id") != node_id):
+            if not isinstance(node_metadata, Mapping) or node_metadata.get("node_id") != node_id:
                 raise ResponseGridCalibrationError(
                     "node-evidence provenance.node.node_id does not match its node-map key"
                 )
             perturbation = node_metadata.get("perturbation")
             if not isinstance(perturbation, Mapping):
                 raise ResponseGridCalibrationError("validated node receipt lacks its perturbation coordinate")
-            if (isinstance(perturbation.get("site_index"), bool)
-                    or not isinstance(perturbation.get("site_index"), int)
-                    or perturbation.get("site_index") != perturbed_site
-                    or perturbation.get("site_id") != expected_site_id
-                    or perturbation.get("mode") != coordinate[2]
-                    or not isclose(_number(perturbation.get("alpha_ev"), "node perturbation alpha"),
-                                   coordinate[1], rel_tol=0.0, abs_tol=1e-14)):
-                raise ResponseGridCalibrationError("node receipt perturbation does not match the measurement coordinate")
+            if (
+                isinstance(perturbation.get("site_index"), bool)
+                or not isinstance(perturbation.get("site_index"), int)
+                or perturbation.get("site_index") != perturbed_site
+                or perturbation.get("site_id") != expected_site_id
+                or perturbation.get("mode") != coordinate[2]
+                or not isclose(
+                    _number(perturbation.get("alpha_ev"), "node perturbation alpha"),
+                    coordinate[1],
+                    rel_tol=0.0,
+                    abs_tol=1e-14,
+                )
+            ):
+                raise ResponseGridCalibrationError(
+                    "node receipt perturbation does not match the measurement coordinate"
+                )
 
             command = node_record.get("command")
             artifact_spec = node_record.get("artifact_spec")
             artifact_hashes = provenance.get("artifacts") if isinstance(provenance, Mapping) else None
-            if (not isinstance(command, Mapping) or not isinstance(artifact_spec, Mapping)
-                    or not isinstance(artifact_hashes, Mapping)):
-                raise ResponseGridCalibrationError("node receipt lacks command, artifact specification, or hashes")
+            if (
+                not isinstance(command, Mapping)
+                or not isinstance(artifact_spec, Mapping)
+                or not isinstance(artifact_hashes, Mapping)
+            ):
+                raise ResponseGridCalibrationError(
+                    "node receipt lacks command, artifact specification, or hashes"
+                )
             cwd = _node_artifact_path(source_root, command.get("cwd"), "node command cwd", directory=True)
             attempt_id, attempt_root = _execution_attempt(source_root, cwd)
             if cell.get("attempt_id") != attempt_id:
-                raise ResponseGridCalibrationError("measurement attempt ID differs from its node command receipt")
+                raise ResponseGridCalibrationError(
+                    "measurement attempt ID differs from its node command receipt"
+                )
             response_attempt_key = (perturbed_site, coordinate[1], coordinate[2])
             previous_attempt_id = response_attempts.get(response_attempt_key)
             if previous_attempt_id is not None and previous_attempt_id != attempt_id:
-                raise ResponseGridCalibrationError("one response coordinate is bound to multiple execution attempts")
+                raise ResponseGridCalibrationError(
+                    "one response coordinate is bound to multiple execution attempts"
+                )
             if previous_attempt_id is None:
                 if attempt_id in seen_attempt_ids:
-                    raise ResponseGridCalibrationError("independent response nodes reuse a validated execution attempt")
+                    raise ResponseGridCalibrationError(
+                        "independent response nodes reuse a validated execution attempt"
+                    )
                 response_attempts[response_attempt_key] = attempt_id
                 campaign_attempts.add(attempt_id)
                 seen_attempt_ids.add(attempt_id)
@@ -621,19 +820,33 @@ def validate_response_grid_calibration(
                     spec_paths[key].relative_to(attempt_root)
                 except ValueError as exc:
                     raise ResponseGridCalibrationError(f"node {key} artifact is outside its attempt") from exc
-            fdf_path = _relative_evidence(source_root, cell["fdf_path"], cell["fdf_sha256"], "measurement FDF")
-            out_path = _relative_evidence(source_root, cell["out_path"], cell["out_sha256"], "measurement OUT")
-            declared_dm_path = _relative_evidence(source_root, cell["dm_path"], cell["dm_sha256"], "measurement DM")
+            fdf_path = _relative_evidence(
+                source_root, cell["fdf_path"], cell["fdf_sha256"], "measurement FDF"
+            )
+            out_path = _relative_evidence(
+                source_root, cell["out_path"], cell["out_sha256"], "measurement OUT"
+            )
+            declared_dm_path = _relative_evidence(
+                source_root, cell["dm_path"], cell["dm_sha256"], "measurement DM"
+            )
             command_fdf = _node_artifact_path(source_root, command.get("stdin_path"), "node stdin FDF")
             command_out = _node_artifact_path(source_root, command.get("stdout_path"), "node stdout OUT")
-            if (fdf_path != command_fdf or fdf_path != spec_paths["fdf"]
-                    or out_path != command_out or out_path != spec_paths["output"]
-                    or declared_dm_path != spec_paths["dm"]):
-                raise ResponseGridCalibrationError("dataset FDF/OUT paths differ from the pinned node receipt")
+            if (
+                fdf_path != command_fdf
+                or fdf_path != spec_paths["fdf"]
+                or out_path != command_out
+                or out_path != spec_paths["output"]
+                or declared_dm_path != spec_paths["dm"]
+            ):
+                raise ResponseGridCalibrationError(
+                    "dataset FDF/OUT paths differ from the pinned node receipt"
+                )
             for artifact_name, path in (("fdf", fdf_path), ("output", out_path), ("dm", spec_paths["dm"])):
                 declared_hash = _digest(artifact_hashes.get(artifact_name), f"node {artifact_name} SHA-256")
                 if sha256(path.read_bytes()).hexdigest() != declared_hash:
-                    raise ResponseGridCalibrationError(f"node {artifact_name} bytes do not match node-evidence hash")
+                    raise ResponseGridCalibrationError(
+                        f"node {artifact_name} bytes do not match node-evidence hash"
+                    )
                 if artifact_name == "fdf" and declared_hash != cell["fdf_sha256"]:
                     raise ResponseGridCalibrationError("measurement FDF hash differs from node-evidence hash")
                 if artifact_name == "output" and declared_hash != cell["out_sha256"]:
@@ -642,29 +855,36 @@ def validate_response_grid_calibration(
                     raise ResponseGridCalibrationError("measurement DM hash differs from node-evidence hash")
             try:
                 parsed_value, parsed_half_width = response_cell_extractor(
-                    fdf_path, out_path, mode=coordinate[2], site_id=expected_site_id,
-                    alpha_ev=coordinate[1], atom_index=expected_atom,
+                    fdf_path,
+                    out_path,
+                    mode=coordinate[2],
+                    site_id=expected_site_id,
+                    alpha_ev=coordinate[1],
+                    atom_index=expected_atom,
                 )
             except (ValueError, KeyError, IndexError, OSError) as exc:
                 raise ResponseGridCalibrationError(
                     f"cannot semantically re-extract measurement from its output: {coordinate}: {exc}"
                 ) from exc
-            if (not isclose(value, parsed_value, rel_tol=0.0, abs_tol=1e-12)
-                    or not isclose(print_half_width, parsed_half_width, rel_tol=0.0, abs_tol=1e-12)):
+            if not isclose(value, parsed_value, rel_tol=0.0, abs_tol=1e-12) or not isclose(
+                print_half_width, parsed_half_width, rel_tol=0.0, abs_tol=1e-12
+            ):
                 raise ResponseGridCalibrationError(
                     f"replica occupation or quantization disagrees with parser output at {coordinate}"
                 )
             report_value, report_width, report_source = analysis_cells[coordinate]
-            if (not isclose(value, report_value, rel_tol=0.0, abs_tol=1e-12)
-                    or not isclose(print_half_width, report_width, rel_tol=0.0, abs_tol=1e-12)
-                    or report_source.get("node_id") != node_id
-                    or report_source.get("evidence_digest") != evidence_digest
-                    or report_source.get("fdf_path") != cell["fdf_path"]
-                    or report_source.get("fdf_sha256") != cell["fdf_sha256"]
-                    or report_source.get("out_path") != cell["out_path"]
-                    or report_source.get("out_sha256") != cell["out_sha256"]
-                    or report_source.get("dm_path") != cell["dm_path"]
-                    or report_source.get("dm_sha256") != cell["dm_sha256"]):
+            if (
+                not isclose(value, report_value, rel_tol=0.0, abs_tol=1e-12)
+                or not isclose(print_half_width, report_width, rel_tol=0.0, abs_tol=1e-12)
+                or report_source.get("node_id") != node_id
+                or report_source.get("evidence_digest") != evidence_digest
+                or report_source.get("fdf_path") != cell["fdf_path"]
+                or report_source.get("fdf_sha256") != cell["fdf_sha256"]
+                or report_source.get("out_path") != cell["out_path"]
+                or report_source.get("out_sha256") != cell["out_sha256"]
+                or report_source.get("dm_path") != cell["dm_path"]
+                or report_source.get("dm_sha256") != cell["dm_sha256"]
+            ):
                 raise ResponseGridCalibrationError(
                     f"replica dataset differs from its hash-bound source analysis at {coordinate}"
                 )
@@ -673,11 +893,13 @@ def validate_response_grid_calibration(
             quantization_by_coordinate.setdefault(coordinate, []).append(print_half_width)
         if seen_cells != expected_cells:
             raise ResponseGridCalibrationError("replica omits one or more response-grid coordinates")
-        execution_identity_records.append({
-            "campaign_id": campaign_id,
-            "source_root": source_root,
-            "attempt_ids": campaign_attempts,
-        })
+        execution_identity_records.append(
+            {
+                "campaign_id": campaign_id,
+                "source_root": source_root,
+                "attempt_ids": campaign_attempts,
+            }
+        )
     if set(samples) != expected_cells or any(len(values) != replica_count for values in samples.values()):
         raise ResponseGridCalibrationError("response-grid replica coverage is incomplete")
     _validate_independent_execution_identities(
@@ -691,9 +913,9 @@ def validate_response_grid_calibration(
         result_sha256=sha256(result_path.read_bytes()).hexdigest(),
         replica_count=replica_count,
         replica_campaign_ids=tuple(sorted(seen_campaigns)),
-        reference_dm_sha256s=tuple(sorted(
-            _digest(item["reference_dm_sha256"], "reference DM SHA-256") for item in receipts
-        )),
+        reference_dm_sha256s=tuple(
+            sorted(_digest(item["reference_dm_sha256"], "reference DM SHA-256") for item in receipts)
+        ),
         replica_source_roots=tuple(sorted(replica_source_roots)),
         reference_execution_attempt_ids=tuple(sorted(reference_attempt_ids)),
         execution_attempt_ids=tuple(sorted(all_attempt_ids)),
