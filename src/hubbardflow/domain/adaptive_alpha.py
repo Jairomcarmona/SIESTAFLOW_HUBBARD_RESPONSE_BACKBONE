@@ -3,14 +3,25 @@
 This module deliberately separates *planning seven points* from deciding which
 window may be used in the final response matrix.  It never changes an FDF,
 submits a task, or widens a rejected window.
+
+Deprecated legacy wrapper: FD-EBQ review §M.1 identifies this module and its
+AdaptiveAlphaPolicy as legacy. It remains available for compatibility; this
+notice does not change its behavior.
 """
 from __future__ import annotations
 
+import warnings
 from dataclasses import dataclass
 from math import isfinite
 from typing import Any, Sequence
 
 from .alpha_selection import AlphaSelectionPolicy, select_common_alpha_window
+
+warnings.warn(
+    "hubbardflow.domain.adaptive_alpha is deprecated; see FD-EBQ review §M.1",
+    DeprecationWarning,
+    stacklevel=2,
+)
 
 
 class AlphaPlanError(ValueError):

@@ -4,14 +4,25 @@ This module analyses measurements already obtained by a campaign.  It does not
 create FDF files, submit work, or choose an electronic state.  The caller must
 provide occupations and magnetic moments selected by a versioned backend
 policy.
+
+Deprecated legacy mechanism: FD-EBQ review §M.1 identifies this threshold-based
+alpha selector for deprecation. It remains available for compatibility; this
+notice does not change its behavior.
 """
 
 from __future__ import annotations
 
+import warnings
 from dataclasses import asdict, dataclass
 from typing import Any, Mapping, Sequence
 
 import numpy as np
+
+warnings.warn(
+    "hubbardflow.domain.alpha_selection is deprecated; see FD-EBQ review §M.1",
+    DeprecationWarning,
+    stacklevel=2,
+)
 
 
 @dataclass(frozen=True)
