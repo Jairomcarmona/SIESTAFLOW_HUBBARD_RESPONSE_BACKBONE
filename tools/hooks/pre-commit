@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Blocks any commit while the frozen V6 evidence differs from its manifest / tag.
+# Install once per clone:  git config core.hooksPath tools/hooks
+root=$(git rev-parse --show-toplevel) || exit 1
+cd "$root" || exit 1
+bash tools/check_v6_integrity.sh || { echo "pre-commit: V6 integrity gate failed; commit blocked."; exit 1; }
