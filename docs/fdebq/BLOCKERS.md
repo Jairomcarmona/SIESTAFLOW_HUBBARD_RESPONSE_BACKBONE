@@ -1,37 +1,44 @@
 # FD-EBQ phase 2 blockers
 
-## TASK 10 — Coverage qualification and diagnostic mode
+## TASK 10 — Coverage qualification and diagnostic mode (RESUELTO)
 
-TASK 10 is not implemented. The requested CoO golden diagnostic cannot be
-produced from an admissible reference state using the data-source rules in the
-author's amendments:
+The specification blockers are RESUELTO by author amendments D1/D2 in
+`9a60d78` (`docs/fdebq/AMENDMENTS_2.md`). The implementation provides a pure
+`CoverageQualification`, a single-output reference-admission adapter, diagnostic
+JSON/Markdown reports, and deterministic golden contracts in `task10_reports/`.
+The implementation commit is recorded by the orchestrator in PHASE2_SUMMARY.md.
 
-- `examples/tmo_campaigns/CoO_ref.out` contains local occupation matrices but
-  does not print final per-atom Mulliken moments, so F5/reference admissibility
-  is incomplete.
-- CoO V6 outputs contain moments, mesh and termination, but no local occupation
-  matrices. TASK 8 explicitly requires `occupation_spectra = NOT_AVAILABLE`;
-  F7 is therefore `AMBIGUOUS` and cannot support reduction.
-- Combining moments from the V6 output with spectra from the example output
-  would join distinct outputs without a specified evidence-binding rule. No
-  data were combined or inferred.
+CoO/NiO/FeO examples and the available frozen V6 outputs produce
+`REFERENCE_NOT_ADMISSIBLE -> ALL_SUBSPACES` with `EVIDENCE_INCOMPLETE`.
+Missing data are never merged from separate outputs. D2 always reports
+`would_reduce_to`; an orbit of two members remains explicit with `NO_SAVING`
+because representative plus mandatory shadow costs two runs. Singletons remain
+explicit. Diagnostic candidates are `CANDIDATE_PENDING_SHADOW`, never `PROVEN`.
 
-Consequently the specified CoO `2 -> 1` diagnostic would claim a candidate
-equivalence that the available, author-approved evidence cannot establish.
-TASK 10's required golden report and `ALL_SUBSPACES` fallback cannot both be
-met for CoO until the reference-data policy or expected golden result is
-amended.
+Two archived-data limitations remain explicit rather than blocking the module:
 
-The fallback text also says to expand a “small system” when its minimum orbit
-is `|S|`, while the golden tests request a one-representative candidate for
-CoO where the whole correlated set has two sites. It is unclear whether the
-diagnostic should report the candidate count while selecting `ALL_SUBSPACES`
-because the mandatory shadow removes the run-count savings, or whether the
-one-representative golden result takes precedence.
+- **Cu3N:** the named output echoes `DFTU.PotentialShift true`, a Cu1 record
+  with U=1.7600 eV and J=0.1000 eV, and `DM.UseSaveDM true`; the supplied
+  `Cu3N_ref.fdf` contains none of these records. Its input SHA256 is
+  `bdac24b25c230ca8852c2619165490a4e215c5da5cc8e7623034959d00a8c8f8`; output
+  SHA256 is `aa6c0b98135c3a3ebd086db7dab2d4d59da0b208947d7d67aaf1262b9755a628`.
+  The non-polarized declaration is verified, but the output is perturbed and
+  inconsistent with the input. D1 therefore excludes it; the source FDF also
+  has no correlated inventory. The requested archived positive translation
+  golden cannot be established. A non-polarized synthetic translation toy and
+  a complete zero-shift synthetic backend pair cover the positive rule.
+- **MnO:** `response-matrix-foreground-recovery-v4/00_REFERENCE` is an
+  unperturbed, input-bound, admissible output with 32 moments and 16 local
+  spectra. Its archived inputs omit explicit `PAO.Basis` and the directory lacks
+  the label-specific pseudopotentials needed by TASK 7's semantic identity
+  contract. Thus coverage remains `ALL_SUBSPACES` with
+  `SPECIES_IDENTITY_NOT_ESTABLISHED`. The 16->2 / 16->1 candidate cases are
+  covered by the TASK 9 geometry/state toy with flags off / spin flip on.
 
-No TASK 10 files or reports were added. No synthetic or cross-run data were
-substituted for the missing CoO evidence. TASK 11 is independent and may
-proceed.
+These are **decisión del implementador (conservadora)** under the general
+principle of AMENDMENTS_2.md. Archived inputs/outputs and TASK 7–9 behavior are
+unchanged. Full diagnostic reports are delivered in
+`C:\Users\Jairo\work\fdebq_pr_notes\r2-task10-reports`.
 
 ## TASK 12 — Resolved perturbation plan
 

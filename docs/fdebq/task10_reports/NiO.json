@@ -1,0 +1,25 @@
+{
+  "diagnostic_only": true,
+  "input_file_sha256": "470a5aeea6999ee8cd81c414d6a79ea877878d1e6c1299a1a861967f8e40af01",
+  "inventory": [],
+  "output_sha256": "4843d1c22fbbd6a19048b1cda038fb42fd10b2988f712b1f1396f41ec4106a91",
+  "reasons": [
+    "EVIDENCE_INCOMPLETE",
+    "INVENTORY_NOT_ESTABLISHED",
+    "REFERENCE_NOT_ADMISSIBLE",
+    "SPECIES_IDENTITY_NOT_ESTABLISHED"
+  ],
+  "reference_admission": {
+    "echoed_input_sha256": "5e17c844c358c9aa98d2fcc70f13033a32ab794e1066174233b44903ff11c8ae",
+    "input_file_sha256": "470a5aeea6999ee8cd81c414d6a79ea877878d1e6c1299a1a861967f8e40af01",
+    "input_output_consistent": false,
+    "nonpolarized_verified": false,
+    "parent_dm_sha256": null,
+    "perturbation_detected": false,
+    "status": "REFERENCE_NOT_ADMISSIBLE"
+  },
+  "reference_status": "REFERENCE_NOT_ADMISSIBLE",
+  "schema": "hubbardflow.coverage_diagnostic.v1",
+  "strategy": "ALL_SUBSPACES",
+  "would_reduce_to": 0
+}
