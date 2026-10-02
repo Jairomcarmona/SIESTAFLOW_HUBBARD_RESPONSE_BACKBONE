@@ -60,7 +60,7 @@ TASK 10 code, archived evidence and frozen V6 artifacts are unchanged.
 ## TASK 13 — campaign_v2 integration (RESUELTO: inventory/lock; ABIERTA: runtime pilot reuse)
 
 Inventory/lock integration resolved on `fdebq/r2-task13-campaign-v2`;
-implementation commit: **hash pendiente**. TASK 13 remains partial while the
+implementation commit: **b66e370**. TASK 13 remains partial while the
 runtime pilot-reuse connection below is ABIERTA.
 Campaign initialization uses the TASK 7 inventory to fill optional sites and
 reject explicit atom/species mismatches. DISABLED, DIAGNOSTIC (default), and
