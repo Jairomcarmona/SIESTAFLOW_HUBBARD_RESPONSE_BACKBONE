@@ -65,3 +65,23 @@ diagnostic path without a way to verify the required byte-identical behavior.
 
 No production reduction or runner changes were made. Revisit after TASK 10,
 TASK 12 and TASK 13 are resolved.
+
+## TASK 15 — Automatic species splitting admission
+
+The opt-in backend materializer is implemented, but end-to-end campaign
+admission remains unavailable. It returns `STAGED_PENDING_GENERATED_IDENTITY`
+until the caller verifies SIESTA-generated alias `.ion` files; copied reference
+files alone are not proof. TASK 13's campaign configuration gate is blocked,
+so `lr-config.auto_split_species` is not wired to production.
+
+The available CoO/NiO/MnO shared-label examples lack explicit `PAO.Basis`
+blocks and fail the required identity preflight; archived production FDFs are
+already split. No source file in the checkout supports the requested positive
+real-FDF materialization test with the required explicit basis and reference
+identity. Tests use synthetic FDFs for the positive preservation case and real
+archives only for fail-closed read-only checks. No SIESTA-generated aliases
+were invented or run.
+
+The helper remains disabled by default and cannot mark a campaign ready. Revisit
+the campaign gate after TASK 13 and when generated alias identity evidence is
+available.
