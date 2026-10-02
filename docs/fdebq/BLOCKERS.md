@@ -105,3 +105,20 @@ also unavailable because TASK 12/13 are blocked; that dependency alone would
 permit documenting a wiring blocker, but does not resolve the core scientific
 ambiguities. The author was asked to define the row aggregation and remainder
 rule, or explicitly limit calibrated mode to diagnostics without READY.
+
+## TASK 17 — SCF tolerance ladder (blocked)
+
+The ladder contraction test allows the case where both successive differences
+are at print resolution (§E.2 and §J/S4 of the FD-EBQ review), but the
+specification does not define `rho_hat` or the SCF `ESTIMATE` for that case,
+including `eta1 = eta2 = 0` or differences unresolved within their print
+radii. The expression `theta * eta1 / (1 - rho_hat)` is not identifiable
+there; choosing zero, `rho_max`, or another radius would invent a scientific
+rule.
+
+The review also calls for splitting absolute and relative components by small
+and large amplitudes (§E.2–E.3), but does not specify the transformation from
+the measured ladder values to those components or an envelope for unmeasured
+amplitudes. The author was asked to define the under-resolution output/radius
+and the exact component-splitting rule. No code, synthetic evidence, or SIESTA
+run was produced for TASK 17.
