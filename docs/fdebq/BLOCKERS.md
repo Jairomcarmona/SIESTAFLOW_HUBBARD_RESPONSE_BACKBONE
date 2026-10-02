@@ -85,3 +85,23 @@ were invented or run.
 The helper remains disabled by default and cannot mark a campaign ready. Revisit
 the campaign gate after TASK 13 and when generated alias identity evidence is
 available.
+
+## TASK 16 — Calibrated amplitudes and deterministic rounds (blocked)
+
+TASK 16 cannot be implemented without two scientific decisions:
+
+- §J S7 selects a best estimator per `(J, mode, I)`, while the required
+  `ColumnPlan` holds one estimator for `(J, mode)`. The specification does not
+  define how row-wise error budgets are aggregated to choose a single column
+  estimator or how that same aggregation drives the round machine.
+- §I.7 accepts by first-order `u_influence` plus an unspecified `O(β²)` term.
+  TASK 16 asks for acceptance against user-supplied `tau_U`, but gives no
+  remainder bound or rule relating the existing enlarged-matrix-box method in
+  §I.8 to this gate. Choosing either would invent scientific policy.
+
+The TASK 16 implementation agent stopped before writing code. No estimator,
+amplitude, or acceptance decisions were made. The planner/campaign wiring is
+also unavailable because TASK 12/13 are blocked; that dependency alone would
+permit documenting a wiring blocker, but does not resolve the core scientific
+ambiguities. The author was asked to define the row aggregation and remainder
+rule, or explicitly limit calibrated mode to diagnostics without READY.
