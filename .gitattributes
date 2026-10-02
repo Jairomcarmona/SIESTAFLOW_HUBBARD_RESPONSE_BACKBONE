@@ -18,3 +18,5 @@ schemas/response_tokens.v1.schema.json -text
 tests/unit/test_feo_band_postprocessor.py -text
 src/hubbardflow/execution/u_certification_node.py -text
 docs/history/SCIENTIFIC_BASELINE_V6.sha256 -text
+tools/check_v6_integrity.sh text eol=lf
+tools/hooks/pre-commit text eol=lf
