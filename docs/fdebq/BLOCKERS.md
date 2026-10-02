@@ -268,7 +268,7 @@ existing fail-closed admission. No SIESTA campaigns were started.
 
 ## TASK 19 — Product CLI and execution admission
 
-**RESUELTO: product CLI core; commit pending**, branch
+**RESUELTO: product CLI core; commit `74ea767`**, branch
 `fdebq/r2-task19-product-cli`. AMENDMENTS_2 D8 is implemented:
 `hubbardflow plan`, `run system.fdf` and `submit system.fdf --partition ...`
 exist and reach the available contract boundary. Planning delegates to TASK
