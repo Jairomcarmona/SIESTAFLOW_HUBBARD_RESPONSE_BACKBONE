@@ -102,7 +102,7 @@ AGENTS.md rule 8 applies; the test and historical data were not changed.
 
 ## TASK 14 — Translation reduction with mandatory shadow
 
-**RESUELTO: software shadow loop; commit pendiente del orquestador**, branch
+**RESUELTO: software shadow loop; commit 5038065**, branch
 `fdebq/r2-task14-shadow`. The runner consumes the frozen TASK 12/13 plan only
 for `TRANSLATION_SHADOWED`. TASK 2's declared estimator and additive print
 BOUND determine each comparison `|direct-reconstructed| <= B_dir+B_rep`.
