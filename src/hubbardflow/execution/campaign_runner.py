@@ -38,6 +38,7 @@ from hubbardflow.execution.campaign_v2 import (
     validate_psml, validate_reference_fdf, verify_campaign_inventory,
 )
 from hubbardflow.execution.campaign_plan import campaign_inventory
+from hubbardflow.execution.campaign_shadow import CampaignShadow
 from hubbardflow.execution.dag_contract import NodeState
 from hubbardflow.execution.execution_profile import ExecutionProfile
 from hubbardflow.execution.response_grid_context import response_grid_source_campaign_context
@@ -384,8 +385,6 @@ class CampaignRunner:
         inventory = campaign_inventory(fdf_path, tuple(sorted({Path(p).parent for p in self.config["pseudopotentials"].values()}, key=str)))
         self.config = validate_lr_config(self.config, fdf_species, projector_sites, self.atom_count, inventory=inventory)
         self.perturbation_plan = self.campaign["_perturbation_plan"]
-        if self.perturbation_plan is not None and self.perturbation_plan.reconstruction_maps:
-            raise CampaignV2Error("TRANSLATION_SHADOWED requires TASK 14 shadow execution before production")
         if functional != self.campaign["functional"] or self.config["functional"] != functional:
             raise CampaignV2Error("campaign functional differs from effective reference FDF/config")
         if self.config["xc_profile"] != self.campaign["_xc_profile"]:
@@ -396,6 +395,16 @@ class CampaignRunner:
             (self.root / self.campaign["contract_file"]).read_text(encoding="utf-8")
         )
         self.sites = self.campaign["sites"]
+        self.shadow = None
+        if self.config["coverage"] == "TRANSLATION_SHADOWED":
+            if self.perturbation_plan is None:
+                raise CampaignV2Error("TRANSLATION_SHADOWED requires a frozen perturbation plan")
+            by_label = {s["site_id"]: s for s in self.sites}
+            self.sites = [
+                {**by_label[subspace.species_label], "index": i}
+                for i, subspace in enumerate(self.perturbation_plan.inventory.subspaces)
+            ]
+            self.shadow = CampaignShadow(self.perturbation_plan, self.control, self.campaign["input_identity"])
         self.alpha_grid = [float(value) for value in self.campaign["alpha_grid_ev"]]
         if any(abs(value - float(f"{value:+.4f}")) > 1.0e-12 for value in self.alpha_grid):
             raise CampaignV2Error(
@@ -408,6 +417,8 @@ class CampaignRunner:
         self.adaptive_policy_digest: str | None = None
         self.adaptive_state: dict[str, Any] | None = None
         if self.adaptive_policy is not None:
+            if self.shadow is not None:
+                raise CampaignV2Error("NOT_ESTABLISHED: translation shadows with legacy adaptive rounds")
             self.adaptive_policy_digest = _digest(self.adaptive_policy.to_mapping())
             self.adaptive_state = self._load_or_initialize_adaptive_state()
             self._build_adaptive_graph()
@@ -423,6 +434,8 @@ class CampaignRunner:
             self.dag, self.specs = _build_dag(self.sites, self.alpha_grid)
             self.executor = GenericDagExecutor(self.dag, self.checkpoint_path)
             self.checkpoint_identity = None
+            if self.shadow is not None:
+                self.shadow.install(self)
         self.records_path = self.control / "node-evidence.json"
         self.records = self._load_records()
         self.reference_fdf = fdf_path
@@ -586,6 +599,12 @@ class CampaignRunner:
         return records if isinstance(records, dict) else {}
 
     def _identity(self) -> dict[str, str]:
+        if getattr(self, "shadow", None) is not None:
+            return {
+                "campaign_id": self.campaign["campaign_id"],
+                "input_identity": self.campaign["input_identity"],
+                "perturbation_plan_digest": self.shadow.plan.digest,
+            }
         if self.adaptive_policy_digest is not None:
             return {
                 "campaign_id": self.campaign["campaign_id"],
@@ -1659,6 +1678,7 @@ class CampaignRunner:
 
     def _verified_observations(
         self, *, alpha_grid: list[float] | None = None, scf_level_id: str = "base",
+        site_indices: tuple[int, ...] | None = None,
     ) -> tuple[
         list[ResponseObservation], dict[float, str] | None, dict[str, Any],
         dict[tuple[int, float, str], list[float]], list[float] | None,
@@ -1715,6 +1735,8 @@ class CampaignRunner:
             branch_differences: list[float] = []
             magnetic_per_site: dict[str, Any] = {}
             for site_index, site in enumerate(self.sites):
+                if site_indices is not None and site_index not in site_indices:
+                    continue
                 try:
                     bare_node, bare_record = indexed[(site_index, alpha, "BARE")]
                     screened_node, screened_record = indexed[(site_index, alpha, "SCREENED")]
@@ -1976,15 +1998,18 @@ class CampaignRunner:
             active_window = None
         magnetic: dict[str, Any] = {}
         try:
-            observations, states, magnetic, trace_half_widths_electron, reference_trace_half_widths_electron = self._verified_observations(
-                alpha_grid=alpha_grid, scf_level_id=level_id,
-            )
-            verified_dataset = self._response_observation_dataset(
-                observations, scf_level_id=level_id,
-                trace_half_widths_electron=trace_half_widths_electron,
-                reference_trace_half_widths_electron=reference_trace_half_widths_electron,
-                occupation_source="siesta_occupations_total",
-            )
+            if getattr(self, "shadow", None) is not None:
+                observations, states, magnetic, trace_half_widths_electron, reference_trace_half_widths_electron, verified_dataset = self.shadow.analysis_data(self)
+            else:
+                observations, states, magnetic, trace_half_widths_electron, reference_trace_half_widths_electron = self._verified_observations(
+                    alpha_grid=alpha_grid, scf_level_id=level_id,
+                )
+                verified_dataset = self._response_observation_dataset(
+                    observations, scf_level_id=level_id,
+                    trace_half_widths_electron=trace_half_widths_electron,
+                    reference_trace_half_widths_electron=reference_trace_half_widths_electron,
+                    occupation_source="siesta_occupations_total",
+                )
             execution_identity = (
                 self._analysis_execution_identity(
                     verified_dataset, scf_level_id=level_id, alpha_grid=alpha_grid,
@@ -2066,6 +2091,8 @@ class CampaignRunner:
                 raise ExecutionContractError("campaign already has DAG receipts; use resume")
         if mode == "resume":
             self._revalidate_reuse()
+            if getattr(self, "shadow", None) is not None:
+                self.shadow.replay_barrier(self)
         while True:
             ready = self.executor.runnable()
             if not ready:
@@ -2090,6 +2117,8 @@ class CampaignRunner:
             if node.kind in {LRNodeKind.REFERENCE, LRNodeKind.PERTURBATION}:
                 receipt = self._execute_siesta(node, heartbeat)
             elif node.kind is LRNodeKind.ALPHA_GATE:
+                if getattr(self, "shadow", None) is not None and not self.shadow.prepare(self):
+                    continue
                 receipt = self._execute_gate(node)
             elif node.kind is LRNodeKind.MATRIX_ANALYSIS:
                 receipt = self._execute_analysis(node)
@@ -2098,6 +2127,8 @@ class CampaignRunner:
             completed = sorted(self._checkpoint())
             heartbeat.update(active_node=None, current_node_state=receipt.state.value, completed_nodes=completed)
             if receipt.state is not NodeState.VALIDATED:
+                if getattr(self, "shadow", None) is not None and self.shadow.failed_shadow(self, node):
+                    continue
                 heartbeat.finish("FAILED", failed_node=node.node_id, failure_state=receipt.state.value)
                 return 1
 

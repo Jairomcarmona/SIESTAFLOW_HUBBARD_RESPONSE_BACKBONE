@@ -5,6 +5,10 @@ path, chemical symbol, or cluster setting.  It converts a *verified* symmetry
 certificate into a finite-difference run plan and keeps reduction provisional
 until direct shadow responses pass declared tolerances.
 
+The tolerance-based certificate API below is retained for legacy callers only.
+New TRANSLATION_SHADOWED campaigns use response_shadow and TASK 2 print budgets;
+none of these legacy tolerance literals enters their coverage qualification.
+
 This is deliberately stricter than merely grouping atoms by geometry: a
 certificate must already bind geometry, magnetic evidence and local Hubbard
 definitions.  By default only identity-rotation operations (translations in

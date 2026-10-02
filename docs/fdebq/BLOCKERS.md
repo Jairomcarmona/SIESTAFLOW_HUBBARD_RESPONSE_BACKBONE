@@ -88,8 +88,9 @@ never evidence. Fixed legacy execution remains available with that conservative
 qualification. This is **decisión del implementador (conservadora)** under
 AMENDMENTS_2.md.
 
-TASK 14 supplies shadow execution and expansion. Until then the runner rejects
-plans that contain omitted columns; no reduction is silently executed.
+TASK 14 now supplies the shadow barrier and explicit expansion. The runtime
+expands pending classes while the complete FDRC I.5 state gate remains absent;
+its implementation status and conservative limitation are recorded below.
 `auto_split_species` remains false by default and an opt-in fails closed with
 STAGED_PENDING_GENERATED_IDENTITY pending TASK 15 admission. Existing adaptive
 execution retains its legacy controller; the frozen static plan records the
@@ -101,14 +102,34 @@ AGENTS.md rule 8 applies; the test and historical data were not changed.
 
 ## TASK 14 — Translation reduction with mandatory shadow
 
-TASK 14 is blocked on TASK 10, TASK 12 and TASK 13. Shadow qualification and
-expansion need the coverage classes, frozen per-column plans, and campaign DAG
-inputs from those tasks. Changing `symmetry_reduction.py` or
-`campaign_runner.py` before those contracts exist could alter the fixed or
-diagnostic path without a way to verify the required byte-identical behavior.
+**RESUELTO: software shadow loop; commit pendiente del orquestador**, branch
+`fdebq/r2-task14-shadow`. The runner consumes the frozen TASK 12/13 plan only
+for `TRANSLATION_SHADOWED`. TASK 2's declared estimator and additive print
+BOUND determine each comparison `|direct-reconstructed| <= B_dir+B_rep`.
+Shadows inherit the representative ColumnPlan. Rejected classes expand every
+member; valid receipts survive, invalid runs retain their failure evidence and
+receive an explicit fallback retry. TASK 11 reconstructs full raw chi0/chi;
+direct shadow observations and reconstruction maps remain in the report.
+Resume verifies frozen plan identity, revalidates runs and replays the barrier.
+DISABLED/DIAGNOSTIC continue through their original all-column path. The legacy
+tolerance API remains isolated for compatibility and does not qualify this path.
 
-No production reduction or runner changes were made. Revisit after TASK 10,
-TASK 12 and TASK 13 are resolved.
+**ABIERTA / NOT_ESTABLISHED: complete production state gate.** The existing
+runtime verifies SCF and magnetic moment continuity, but lacks the occupation
+spectra/occupied-subspace, gap/Fermi and smoothness gates required by FDRC I.5.
+Therefore no production class may become PROVEN: even a passing print shadow
+expands explicitly, with its comparisons retained and
+`SCIENTIFIC_STATE_NOT_ESTABLISHED` recorded. No production flag bypasses this
+gate. Synthetic tests inject a complete known state oracle and exercise both
+PROVEN reconstruction and REJECTED_EXPANDED behavior. This is **decisión del
+implementador (conservadora)** under AMENDMENTS_2's general principle, expressly
+confirmed by the orchestrator. Missing parent-DM identity, precision or magnetic
+continuity also expands; legacy adaptive rounds remain NOT_ESTABLISHED for this
+route. TASK 13 operational pilot reuse remains ABIERTA / NOT_ESTABLISHED.
+
+The certification module and downstream rank/condition/direct-inversion gates
+remain intact. TASK 14 introduces no MatrixBox, SCF ESTIMATE, calibrated READY
+claim, numerical threshold, SIESTA campaign or real-data validation claim.
 
 ## TASK 15 — Automatic species splitting admission
 

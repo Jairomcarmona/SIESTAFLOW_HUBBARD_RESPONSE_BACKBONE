@@ -273,6 +273,21 @@ class OddEvenDecomposition(_Record):
 
 
 @dataclass(frozen=True)
+class PrintedResponseBudget(_Record):
+    """Resolved estimator value and additive print BOUND, with no SCF claim."""
+
+    estimate_e_per_ev: float
+    print_bound_e_per_ev: float
+    kind: BoundKind
+
+    def __post_init__(self) -> None:
+        super().__post_init__()
+        require_nonnegative_finite(self.print_bound_e_per_ev, "print_bound_e_per_ev")
+        if self.kind is not BoundKind.BOUND:
+            raise ResponseBudgetError("printed response uncertainty must be a BOUND")
+
+
+@dataclass(frozen=True)
 class CandidateBudget(_Record):
     """Print BOUND plus conditional truncation ESTIMATE; never a certification."""
 
