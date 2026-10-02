@@ -27,6 +27,8 @@ line-length = 110
 target-version = "py312"
 include = [
     "src/hubbardflow/domain/validation.py",
+    "src/hubbardflow/domain/fdebq_*.py",
+    "tests/unit/test_fdebq_*.py",
     "src/hubbardflow/domain/response_*.py",
     "src/hubbardflow/domain/subspace_inventory.py",
     "src/hubbardflow/domain/state_evidence.py",
@@ -67,6 +69,8 @@ include = [
 strict = true
 files = [
     "src/hubbardflow/domain/validation.py",
+    "src/hubbardflow/domain/fdebq_*.py",
+    "tests/unit/test_fdebq_*.py",
     "src/hubbardflow/domain/response_*.py",
     "src/hubbardflow/domain/subspace_inventory.py",
     "src/hubbardflow/domain/state_evidence.py",

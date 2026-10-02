@@ -151,25 +151,57 @@ The helper remains disabled by default and cannot mark a campaign ready. Revisit
 the campaign gate after TASK 13 and when generated alias identity evidence is
 available.
 
-## TASK 16 — Calibrated amplitudes and deterministic rounds (blocked)
+## TASK 16 — Calibrated amplitudes and deterministic rounds
 
-TASK 16 cannot be implemented without two scientific decisions:
+**RESUELTO: D3/D4 software core; commit pending orchestrator integration**, on
+`fdebq/r2-task16-calibrated-rounds`. `MatrixBox` already accepts one independent
+`Interval` per element; the certification module is unchanged. The versioned
+protocol records the common representable lattice, seeds of at least four
+amplitudes, maximum rounds, TASK2 falsification multiplier, explicit user
+`tau_u_ev`, SCF level and optional T0–T4 result digest (explicit null when absent).
+Each column selects a TASK2 candidate admissible in every row by minimizing the
+maximum full additive absolute budget. Ties use maximum amplitude, fixed family
+order, full amplitude tuple, then polynomial degree. Diagnostic row choices
+cannot populate production matrices. The emitted ColumnPlan uses the common
+functional for every row and mandatory shadows inherit the representative plan.
 
-- §J S7 selects a best estimator per `(J, mode, I)`, while the required
-  `ColumnPlan` holds one estimator for `(J, mode)`. The specification does not
-  define how row-wise error budgets are aggregated to choose a single column
-  estimator or how that same aggregation drives the round machine.
-- §I.7 accepts by first-order `u_influence` plus an unspecified `O(β²)` term.
-  TASK 16 asks for acceptance against user-supplied `tau_U`, but gives no
-  remainder bound or rule relating the existing enlarged-matrix-box method in
-  §I.8 to this gate. Choosing either would invent scientific policy.
+Round barriers precede analysis. Failed amplitudes exclude that scale and every
+larger scale. When the matrix is resolved, the next column is ranked by the
+maximum over K of its first-order influence contribution, separately for BARE
+and SCREENED; ties use site and mode order. The next unused permitted lattice
+level is requested in ascending lattice order. Missing common candidates are
+unresolved; without an estimated full matrix their influence cannot be computed,
+so sorted unresolved-column order is the **decisión del implementador
+(conservadora)**. The round count is derived from the cumulative completed seed
+plus one new column-level per subsequent round, rather than success counters.
+Exhausted lattice gives NOT_ESTABLISHED; exhausted protocol rounds gives REVIEW.
 
-The TASK 16 implementation agent stopped before writing code. No estimator,
-amplitude, or acceptance decisions were made. The planner/campaign wiring is
-also unavailable because TASK 12/13 are blocked; that dependency alone would
-permit documenting a wiring blocker, but does not resolve the core scientific
-ambiguities. The author was asked to define the row aggregation and remainder
-rule, or explicitly limit calibrated mode to diagnostics without READY.
+D4 acceptance requires both strict spectral beta gates and exact existing U
+interval evaluation on the full elementwise print+truncation+SCF box, with each
+U diagonal half width at most the declared tau. The artifact label is exactly
+"calificación condicional al modelo de error". Missing/under-resolved SCF,
+incomplete scientific state or absent T0–T4 digest caps REVIEW. Reciprocal-budget
+falsification also caps REVIEW, retaining raw selected matrix entries.
+Synthetic known-state/SCF models exercise QUALIFIED with an explicitly synthetic
+validation digest; no archived or prospective SIESTA validation is claimed.
+
+**ABIERTA / NOT_ESTABLISHED: production evidence producer and dynamic wiring.**
+The runtime lacks the complete I.5 state gate (occupation spectra/subspaces,
+gap/Fermi, smoothness); TASK17 must supply the SCF model/envelope and user-run
+T0–T4 evidence. CALIBRATED/CALIBRATED_GRID config admission validates the explicit
+protocol, then fails with SCIENTIFIC_STATE_NOT_ESTABLISHED before the legacy
+U-stability controller. Pure planner callers can inject a resolved qualification
+and protocol, which are frozen into the plan digest, but the executable plan
+remains REVIEW pending production validation. No production flag promotes READY.
+This boundary is the **decisión del implementador (conservadora)**, confirmed by
+the orchestrator. The fixed/explicit production paths and frozen V6 remain intact.
+
+TASK17 candidate providers must distinguish SCF ESTIMATE from print BOUND and
+must not extrapolate an uncovered envelope: missing candidate estimates in a
+partially populated SCF record are inadmissible. TASK2 currently verifies order
+and tail using print-only decompositions; the TASK17 integration must retain
+REVIEW unless its complete SCF-aware model is established. No hidden numerical
+threshold, pseudoinverse, regularization or SIESTA campaign was introduced.
 
 ## TASK 17 — SCF tolerance ladder (blocked)
 

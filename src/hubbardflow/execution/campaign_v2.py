@@ -242,11 +242,23 @@ def validate_lr_config(payload: Mapping[str, Any], fdf_species: Mapping[str, int
         raise CampaignV2Error("lr-config sites must enumerate every DFTU.Proj site exactly once")
     try:
         coverage = CampaignCoverage(payload.get("coverage", "DIAGNOSTIC"))
-        alpha_strategy = AlphaStrategy(payload.get("alpha_strategy", "FIXED_PROTOCOL_GRID"))
+        raw_alpha_strategy = payload.get("alpha_strategy", "FIXED_PROTOCOL_GRID")
+        alpha_strategy = AlphaStrategy("CALIBRATED_GRID" if raw_alpha_strategy == "CALIBRATED" else raw_alpha_strategy)
     except (ValueError, TypeError) as exc:
         raise CampaignV2Error("unsupported coverage or alpha_strategy") from exc
     if alpha_strategy is AlphaStrategy.CALIBRATED_GRID:
-        raise CampaignV2Error("CALIBRATION_NOT_ENABLED: TASK 16 is required")
+        from ..domain.fdebq_models import CalibrationProtocol
+        raw_calibration = payload.get("calibration_protocol")
+        if not isinstance(raw_calibration, Mapping):
+            raise CampaignV2Error("CALIBRATED requires an explicit calibration_protocol with tau_u_ev")
+        try:
+            CalibrationProtocol.from_mapping(raw_calibration)
+        except ValueError as exc:
+            raise CampaignV2Error(f"invalid calibration_protocol: {exc}") from exc
+        raise CampaignV2Error(
+            "NOT_ESTABLISHED: SCIENTIFIC_STATE_NOT_ESTABLISHED; CALIBRATED production requires "
+            "the complete I.5 state gate, TASK17 SCF ESTIMATE and recorded T0–T4 validation"
+        )
     planning_files = {}
     for field in ("planning_reference_output", "planning_reference_dm"):
         source = payload.get(field)

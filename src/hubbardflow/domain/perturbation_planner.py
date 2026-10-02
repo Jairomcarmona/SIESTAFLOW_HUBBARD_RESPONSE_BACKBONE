@@ -15,6 +15,9 @@ from .coverage_models import (
     CoverageStatus,
     CoverageStrategy,
 )
+from .fdebq_models import CalibrationProtocol, RoundStatus
+from .fdebq_models import CalibrationQualification as RoundQualification
+from .fdebq_rounds import production_column_plan
 from .perturbation_plan import (
     SCHEMA,
     AlphaStrategy,
@@ -45,6 +48,8 @@ def resolve_perturbation_plan(
     backend_identity: str,
     tau_u_ev: float | None,
     explicit_sites: tuple[str, ...] | None = None,
+    calibration_protocol: CalibrationProtocol | None = None,
+    calibration_qualification: RoundQualification | None = None,
 ) -> ResolvedPerturbationPlan:
     """Freeze evidence; explicit targets bypass reduction, never reference admission.
 
@@ -63,6 +68,8 @@ def resolve_perturbation_plan(
             backend_identity=backend_identity,
             tau_u_ev=tau_u_ev,
             explicit_sites=explicit_sites,
+            calibration_protocol=calibration_protocol,
+            calibration_qualification=calibration_qualification,
         )
     except (ValueError, KeyError, TypeError, AttributeError) as exc:
         raise PerturbationPlanError(f"cannot resolve perturbation plan: {exc}") from exc
@@ -79,6 +86,8 @@ def _resolve(
     backend_identity: str,
     tau_u_ev: float | None,
     explicit_sites: tuple[str, ...] | None,
+    calibration_protocol: CalibrationProtocol | None,
+    calibration_qualification: RoundQualification | None,
 ) -> ResolvedPerturbationPlan:
     inventory = freeze_inventory(inventory)
     if not isinstance(alpha_strategy, AlphaStrategy):
@@ -156,8 +165,38 @@ def _resolve(
     calibration = []
     runs: list[RunSpec] = []
     maps = []
-    if alpha_strategy is AlphaStrategy.CALIBRATED_GRID:
-        reasons.add(PlanReason.CALIBRATION_NOT_ENABLED)
+    calibrated = alpha_strategy is AlphaStrategy.CALIBRATED_GRID
+    established_calibration = False
+    if calibrated and calibration_protocol is not None and calibration_qualification is not None:
+        if calibration_qualification.protocol_sha256 != calibration_protocol.digest:
+            raise PerturbationPlanError("calibration evidence disagrees with the declared protocol")
+        if tau_u_ev != calibration_protocol.tau_u_ev:
+            raise PerturbationPlanError("tau_u_ev must equal the explicit calibration protocol requirement")
+        if calibration_qualification.status in (RoundStatus.QUALIFIED, RoundStatus.REVIEW):
+            selected = tuple(
+                production_column_plan(c, calibration_protocol) for c in calibration_qualification.columns
+            )
+            if all(c is not None for c in selected) and {
+                (c.site_id, c.mode) for c in selected if c is not None
+            } == {(s, mode) for s in sites for mode in (c.mode for c in response_protocol.columns)}:
+                response_protocol = replace(
+                    response_protocol,
+                    columns=tuple(c for c in selected if c is not None),
+                    protocol_version=calibration_protocol.version,
+                )
+                established_calibration = True
+                reasons.add(PlanReason.CALIBRATION_REVIEW)
+                # TASK17's recorded T0–T4 qualification is not yet available.
+                if status is PlanStatus.READY:
+                    status = PlanStatus.REVIEW
+    elif calibration_protocol is not None or calibration_qualification is not None:
+        raise PerturbationPlanError("calibration protocol and qualification require CALIBRATED_GRID together")
+    if calibrated and not established_calibration:
+        reasons.add(
+            PlanReason.CALIBRATION_NOT_ENABLED
+            if calibration_protocol is None
+            else PlanReason.CALIBRATION_NOT_ESTABLISHED
+        )
         status = PlanStatus.NOT_ESTABLISHED
         computed = ()
         # The seed remains provenance only; no calibrated run is executable.
@@ -185,7 +224,14 @@ def _resolve(
                         ColumnCalibration(
                             alpha_strategy,
                             column,
-                            CalibrationQualification(CalibrationStatus.NOT_ASSESSED, ()),
+                            CalibrationQualification(
+                                CalibrationStatus.REVIEW if calibrated else CalibrationStatus.NOT_ASSESSED,
+                                (calibration_qualification.evidence_sha256,)
+                                if calibrated and calibration_qualification is not None
+                                else (),
+                                calibration_qualification if calibrated else None,
+                                calibration_protocol if calibrated else None,
+                            ),
                         )
                     )
                     runs.extend(RunSpec(site, mode, a) for v in column.amplitudes_ev for a in (-v, v))

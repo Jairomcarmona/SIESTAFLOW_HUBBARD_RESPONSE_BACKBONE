@@ -14,6 +14,8 @@ from hashlib import sha256
 from typing import cast
 
 from .coverage_models import CoverageQualification, CoverageReferenceEvidence, CoverageStatus
+from .fdebq_models import CalibrationProtocol
+from .fdebq_models import CalibrationQualification as RoundQualification
 from .perturbation_plan_evidence import (
     PerturbationPlanError,
     freeze_inventory,
@@ -46,6 +48,8 @@ class PlanReason(str, Enum):
     SHADOW_PENDING = "SHADOW_PENDING"
     FEATURES_NOT_ENABLED = "FEATURES_NOT_ENABLED"
     DISABLED_OR_FIXED = "DISABLED_OR_FIXED"
+    CALIBRATION_NOT_ESTABLISHED = "CALIBRATION_NOT_ESTABLISHED"
+    CALIBRATION_REVIEW = "CALIBRATION_REVIEW"
 
 
 class AlphaStrategy(str, Enum):
@@ -56,6 +60,8 @@ class AlphaStrategy(str, Enum):
 
 class CalibrationStatus(str, Enum):
     NOT_ASSESSED = "NOT_ASSESSED"
+    QUALIFIED = "QUALIFIED"
+    REVIEW = "REVIEW"
 
 
 @dataclass(frozen=True)
@@ -64,6 +70,8 @@ class CalibrationQualification:
 
     status: CalibrationStatus
     evidence_sha256: tuple[str, ...]
+    round_qualification: RoundQualification | None = None
+    round_protocol: CalibrationProtocol | None = None
 
     def __post_init__(self) -> None:
         if not isinstance(self.status, CalibrationStatus):
@@ -71,14 +79,33 @@ class CalibrationQualification:
         for digest in self.evidence_sha256:
             require_sha256(digest, "calibration evidence")
         object.__setattr__(self, "evidence_sha256", tuple(sorted(set(self.evidence_sha256))))
+        if (self.round_qualification is None) != (self.round_protocol is None):
+            raise PerturbationPlanError("calibrated evidence and protocol must be supplied together")
+        if (
+            self.round_qualification is not None
+            and self.round_protocol is not None
+            and self.round_qualification.protocol_sha256 != self.round_protocol.digest
+        ):
+            raise PerturbationPlanError("calibrated qualification protocol digest disagrees")
 
     def to_mapping(self) -> dict[str, object]:
-        return asdict(self)
+        result: dict[str, object] = {"status": self.status.value, "evidence_sha256": self.evidence_sha256}
+        if self.round_qualification is not None and self.round_protocol is not None:
+            result["round_qualification"] = self.round_qualification.to_mapping()
+            result["round_protocol"] = self.round_protocol.to_mapping()
+        return result
 
     @classmethod
     def from_mapping(cls, row: Mapping[str, object]) -> CalibrationQualification:
         return cls(
-            CalibrationStatus(cast(str, row["status"])), tuple(cast(Sequence[str], row["evidence_sha256"]))
+            CalibrationStatus(cast(str, row["status"])),
+            tuple(cast(Sequence[str], row["evidence_sha256"])),
+            RoundQualification.from_mapping(cast(Mapping[str, object], row["round_qualification"]))
+            if "round_qualification" in row
+            else None,
+            CalibrationProtocol.from_mapping(cast(Mapping[str, object], row["round_protocol"]))
+            if "round_protocol" in row
+            else None,
         )
 
 
@@ -279,9 +306,9 @@ class ResolvedPerturbationPlan:
         if len(runs) != len(set(runs)) or set(runs) != expected_runs:
             raise PerturbationPlanError("run specs must match every resolved column amplitude exactly")
         maps = {r.omitted_site_id: r for r in self.reconstruction_maps}
-        disabled_calibration = (
-            self.status is PlanStatus.NOT_ESTABLISHED
-            and PlanReason.CALIBRATION_NOT_ENABLED in self.reason_codes
+        disabled_calibration = self.status is PlanStatus.NOT_ESTABLISHED and bool(
+            {PlanReason.CALIBRATION_NOT_ENABLED, PlanReason.CALIBRATION_NOT_ESTABLISHED}
+            & set(self.reason_codes)
         )
         omitted = set() if disabled_calibration else set(sites) - set(self.computed_columns)
         if disabled_calibration and (self.computed_columns or self.run_specs or self.calibration):
