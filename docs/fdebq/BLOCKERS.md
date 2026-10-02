@@ -42,7 +42,7 @@ unchanged. Full diagnostic reports are delivered in
 
 ## TASK 12 — Resolved perturbation plan (RESUELTO)
 
-Resolved on `fdebq/r2-task12-plan`; implementation commit: **PENDING_ORCHESTRATOR_COMMIT**.
+Resolved on `fdebq/r2-task12-plan`; implementation commit: **6f970bb**.
 The pure planner embeds the complete TASK 10 qualification, projector inventory,
 single-output reference/parent-DM identities, declared bands, resolved estimators
 and their weights. Canonical JSON freezes deterministic experiments and omitted
