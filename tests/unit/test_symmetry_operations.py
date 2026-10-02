@@ -395,6 +395,23 @@ def test_nondiagonal_supercell_rows_define_reciprocal_generators_as_inverse_colu
     assert _condition(result, "F4") is ConditionStatus.DIFFERENT
 
 
+def test_nonorthogonal_fractional_rotation_uses_inverse_transpose_on_kpoints() -> None:
+    model, inventory, state = _ring((0.0,))
+    model = replace(
+        model,
+        lattice_vectors_angstrom=((1.0, 1.0, 0), (0, 1.0, 0), (0, 0, 1.0)),
+    )
+    rotation = ((1, 1, 0), (-1, -1, 1), (1, 0, 0))
+    op = Operation(rotation, (0, 0, 0), 1, (0,), (0,), model)
+    policy = replace(coverage_policy_v1(), allow_rotations=True)
+    assert _condition(classify(op, inventory, state, policy), "F1") is ConditionStatus.EQUAL
+    # The operation is a nonorthogonal integer representation of a cubic
+    # rotation. A one-axis-only mesh must fail F4 under reciprocal R^{-T}.
+    state = replace(state, k_mesh=((2, 0, 0, 0), (0, 1, 0, 0), (0, 0, 1, 0)))
+    result = classify(op, inventory, state, replace(coverage_policy_v1(), allow_rotations=True))
+    assert _condition(result, "F4") is ConditionStatus.DIFFERENT
+
+
 def test_rotations_require_method_two_invariant_effective_kmesh_and_explicit_flag() -> None:
     model, inventory, state = _ring((0.8,) * 4)
     reflection = ((-1, 0, 0), (0, 1, 0), (0, 0, 1))
