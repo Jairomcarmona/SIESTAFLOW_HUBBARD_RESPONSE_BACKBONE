@@ -144,3 +144,14 @@ for `VALIDATION_GATES.md`. CoO's approved TASK 8 evidence leaves F7
 
 Existing classifier candidate tests are retained as TASK 9 coverage. No
 end-to-end acceptance or flag-enablement claim is made; flags remain off.
+
+## TASK 19 — Product CLI and final report (blocked)
+
+`hubbardflow plan` requires the inventory, reference evidence, coverage
+qualification, and frozen `ResolvedPerturbationPlan`; TASK 10 and TASK 12 are
+blocked. `run` and `submit` additionally require campaign plan consumption,
+mandatory-shadow execution, and the existing full downstream chain; TASK 13
+and TASK 14 are blocked. Adding CLI commands without these contracts would
+create a second, incomplete production path and could not satisfy the READY
+gate, provenance, resume, or V6 golden requirements. No product commands were
+added. Revisit after the upstream contracts and validations are resolved.
