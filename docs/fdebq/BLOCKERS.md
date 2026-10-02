@@ -43,3 +43,14 @@ is complete but does not provide that qualification type.
 
 No TASK 12 implementation or plan digests were added. Revisit after the TASK 10
 data-policy and fallback questions are resolved.
+
+## TASK 13 — campaign_v2 integration
+
+TASK 13 is blocked on TASK 12. Optional-site validation and resume-time plan
+invalidation require a resolved inventory/coverage plan digest; implementing
+the campaign path without the frozen plan would create an unverified second
+source of campaign targets. The diagnostic fallback from TASK 10 is also
+unavailable.
+
+No production campaign behavior was changed. Revisit after TASK 10 and TASK 12
+are complete.
