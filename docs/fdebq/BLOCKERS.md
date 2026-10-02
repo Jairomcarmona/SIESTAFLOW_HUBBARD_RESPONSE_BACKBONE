@@ -203,22 +203,43 @@ and tail using print-only decompositions; the TASK17 integration must retain
 REVIEW unless its complete SCF-aware model is established. No hidden numerical
 threshold, pseudoinverse, regularization or SIESTA campaign was introduced.
 
-## TASK 17 — SCF tolerance ladder (blocked)
+## TASK 17 — SCF tolerance ladder (D5 blockers RESUELTOS)
 
-The ladder contraction test allows the case where both successive differences
-are at print resolution (§E.2 and §J/S4 of the FD-EBQ review), but the
-specification does not define `rho_hat` or the SCF `ESTIMATE` for that case,
-including `eta1 = eta2 = 0` or differences unresolved within their print
-radii. The expression `theta * eta1 / (1 - rho_hat)` is not identifiable
-there; choosing zero, `rho_max`, or another radius would invent a scientific
-rule.
+Branch: `fdebq/r2-task17-scf-ladder`. Commit: PENDING_ORCHESTRATOR_COMMIT.
+The author resolves the two scientific gaps in `AMENDMENTS_2.md` D5. The
+implementation uses the exact eta plus/minus print intervals and contraction
+formula. Under-resolution, including two zero differences, uses the declared
+rho_max and caps REVIEW. Failed contraction yields
+NOISE_FLOOR_NOT_ESTABLISHED and REVIEW. Theta, rho_max and every SCF tolerance
+are explicit versioned/digest-bound protocol values, with no production profile.
 
-The review also calls for splitting absolute and relative components by small
-and large amplitudes (§E.2–E.3), but does not specify the transformation from
-the measured ladder values to those components or an envelope for unmeasured
-amplitudes. The author was asked to define the under-resolution output/radius
-and the exact component-splitting rule. No code, synthetic evidence, or SIESTA
-run was produced for TASK 17.
+Two endpoints supply the explicit absolute/relative envelope; no extrapolation
+is allowed. The maximum endpoint rho scales both components: **decisión del
+implementador (conservadora)**. Uncovered order/tail evidence is also rejected
+conservatively. TASK2's API and phase-one models are unchanged; the adapter
+feeds their R0/R1/R2 and neighbour gates the complete print+SCF intervals, then
+separates the pure print BOUND from the SCF ESTIMATE. TASK16 consumes one
+measured envelope per observed row and can qualify complete synthetic models;
+missing state or T0–T4 still limits REVIEW. TASK14 accepts a documented explicit
+SCF component and expands on incomplete/under-resolved supplied SCF evidence.
+
+Tools prepare same-parent DM.Tolerance inputs, without invoking SIESTA, and
+check user-produced T0–T4 metrics against a preregistered validation protocol.
+Source FDFs are independently bound to their exact DFTU label, unique atom,
+signed alpha and explicit BARE/SCREENED input contract before any file is
+materialized. Mismatched or incomplete metadata returns NOT_ESTABLISHED.
+Independent verification corrections make SCF_UNDER_RESOLVED return REVIEW
+even when D4 fails and further amplitudes exist or the lattice is exhausted.
+The runbook documents exact schemas, commands, high-precision reference,
+holdout and digest requirements. Synthetic tests include 400 noisy known-truth
+responses per absolute, relative and mixed regime; they are not prospective
+SIESTA validation. T4 remains explicitly optional per the scientific review.
+
+**ABIERTA / NOT_ESTABLISHED: production state and prospective T0–T4 evidence.**
+The runtime I.5 state-evidence producer remains unavailable and is outside this
+task. No real result file/hash is manufactured; CALIBRATED admission and the
+existing planner REVIEW cap remain intact. Pure model qualification does not
+claim production READY. Frozen V6 and direct-inversion certification are intact.
 
 ## TASK 18 — Spin flip, rotations, and V3 controls (blocked)
 

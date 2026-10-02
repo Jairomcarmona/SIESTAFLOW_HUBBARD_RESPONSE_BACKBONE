@@ -11,6 +11,7 @@ from typing import Self
 
 from .response_budget_models import BoundKind, CandidateBudget, ElementSeries, ResponseBudgetError, _Record
 from .response_protocol import EstimatorSpec
+from .scf_ladder_models import ScfEnvelope
 from .symmetry_reduction import ResponseMode
 from .validation import (
     require_fdf_representable_ev,
@@ -64,6 +65,9 @@ class RoundReason(str, Enum):
     REQUIREMENT_NOT_MET = "REQUIREMENT_NOT_MET"
     BUDGET_FALSIFIED = "BUDGET_FALSIFIED"
     VALIDATION_NOT_ESTABLISHED = "VALIDATION_NOT_ESTABLISHED"
+    SCF_UNDER_RESOLVED = "SCF_UNDER_RESOLVED"
+    NOISE_FLOOR_NOT_ESTABLISHED = "NOISE_FLOOR_NOT_ESTABLISHED"
+    SCF_ENVELOPE_NOT_COVERED = "SCF_ENVELOPE_NOT_COVERED"
 
 
 @dataclass(frozen=True)
@@ -152,6 +156,7 @@ class ColumnEvidence(_RoundRecord):
     failed_amplitudes_ev: tuple[float, ...]
     scf_estimates: tuple[ScfCandidateEstimate, ...]
     state_gate_established: bool
+    scf_envelopes: tuple[ScfEnvelope, ...] = ()
 
     def __post_init__(self) -> None:
         super().__post_init__()
@@ -173,6 +178,18 @@ class ColumnEvidence(_RoundRecord):
             e.site_observed not in {s.site_observed for s in self.series} for e in self.scf_estimates
         ):
             raise FdebqRoundsError("SCF estimates require distinct known row/estimator keys")
+        if self.scf_envelopes:
+            if self.scf_estimates:
+                raise FdebqRoundsError("supply measured SCF envelopes or injected estimates, never both")
+            if {e.site_observed for e in self.scf_envelopes} != {s.site_observed for s in self.series} or (
+                len(self.scf_envelopes) != len(self.series)
+            ):
+                raise FdebqRoundsError("SCF envelopes must cover every distinct observed row")
+            if any(e.site_perturbed != self.site_id or e.mode is not self.mode for e in self.scf_envelopes):
+                raise FdebqRoundsError("SCF envelope key disagrees with column")
+            object.__setattr__(
+                self, "scf_envelopes", tuple(sorted(self.scf_envelopes, key=lambda e: e.site_observed))
+            )
         object.__setattr__(self, "series", tuple(sorted(self.series, key=lambda s: s.site_observed)))
         object.__setattr__(self, "failed_amplitudes_ev", tuple(sorted(set(self.failed_amplitudes_ev))))
         object.__setattr__(

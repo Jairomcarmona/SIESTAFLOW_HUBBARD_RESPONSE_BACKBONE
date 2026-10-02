@@ -22,6 +22,7 @@ from .response_reconstruction import (
     ScalarPermutation,
     reconstruct_matrix,
 )
+from .scf_ladder_models import ScfResponseEstimate, ScfStatus
 from .symmetry_operation_models import IDENTITY
 from .symmetry_reduction import ResponseMode
 from .validation import ValidationError, require_finite, require_nonnegative_finite
@@ -37,6 +38,7 @@ class ShadowReason(str, Enum):
     SCIENTIFIC_STATE_NOT_ESTABLISHED = "SCIENTIFIC_STATE_NOT_ESTABLISHED"
     INCOMPLETE_RESPONSE_EVIDENCE = "INCOMPLETE_RESPONSE_EVIDENCE"
     PREVIOUSLY_REJECTED_CLASS = "PREVIOUSLY_REJECTED_CLASS"
+    SCF_ESTIMATE_NOT_ESTABLISHED = "SCF_ESTIMATE_NOT_ESTABLISHED"
 
 
 @dataclass(frozen=True)
@@ -47,6 +49,8 @@ class ShadowComparison(_Record):
     reconstructed_e_per_ev: float
     direct_bound_e_per_ev: float
     representative_bound_e_per_ev: float
+    direct_scf_estimate_e_per_ev: float | None = None
+    representative_scf_estimate_e_per_ev: float | None = None
 
     def __post_init__(self) -> None:
         super().__post_init__()
@@ -55,13 +59,26 @@ class ShadowComparison(_Record):
             require_nonnegative_finite(self.representative_bound_e_per_ev, "representative_bound_e_per_ev")
             require_finite(self.direct_bound_e_per_ev + self.representative_bound_e_per_ev, "summed bounds")
             require_finite(self.direct_e_per_ev - self.reconstructed_e_per_ev, "shadow residual")
+            for value in (self.direct_scf_estimate_e_per_ev, self.representative_scf_estimate_e_per_ev):
+                if value is not None:
+                    require_nonnegative_finite(value, "SCF estimate")
+            require_finite(
+                self.direct_bound_e_per_ev
+                + self.representative_bound_e_per_ev
+                + (self.direct_scf_estimate_e_per_ev or 0)
+                + (self.representative_scf_estimate_e_per_ev or 0),
+                "total shadow budget",
+            )
         except ValidationError as exc:
             raise ResponseShadowError(str(exc)) from exc
 
     @property
     def passed(self) -> bool:
         return abs(self.direct_e_per_ev - self.reconstructed_e_per_ev) <= (
-            self.direct_bound_e_per_ev + self.representative_bound_e_per_ev
+            self.direct_bound_e_per_ev
+            + self.representative_bound_e_per_ev
+            + (self.direct_scf_estimate_e_per_ev or 0)
+            + (self.representative_scf_estimate_e_per_ev or 0)
         )
 
 
@@ -137,6 +154,7 @@ def qualify_shadows(
     series: Sequence[ElementSeries],
     *,
     scientific_state_valid: bool,
+    scf_estimates: Sequence[ScfResponseEstimate] = (),
 ) -> tuple[ShadowOutcome, ...]:
     """Check all (I, mode) with the same declared estimator and permuted radius.
 
@@ -148,6 +166,11 @@ def qualify_shadows(
     sites = tuple(s.site_id for s in plan.inventory.subspaces)
     columns = {(c.site_id, c.mode): c for c in plan.response_protocol.columns}
     budgets = dict(response_budgets(plan, series))
+    scf = {(e.site_perturbed, e.mode, e.site_observed): e for e in scf_estimates}
+    if len(scf) != len(scf_estimates) or not scf.keys() <= budgets.keys():
+        raise ResponseShadowError("SCF estimates must identify distinct available response elements")
+    if any(e.estimator != columns[(e.site_perturbed, e.mode)].estimator for e in scf_estimates):
+        raise ResponseShadowError("SCF estimates must use the declared ColumnPlan estimator")
     outcomes = []
     for group in plan.coverage.classes:
         if not group.reduced:
@@ -170,11 +193,18 @@ def qualify_shadows(
         op_id = dict(group.ops_rep_to_member)[group.shadow]
         permutation = plan.coverage.operations[op_id].operation.correlated_permutation
         comparisons = []
+        scf_complete = True
         for source, target in enumerate(permutation):
             for mode in ResponseMode:
                 direct = budgets.get((group.shadow, mode, sites[target]))
                 rep_budget = budgets.get((group.representative, mode, sites[source]))
                 if direct is not None and rep_budget is not None:
+                    direct_scf = scf.get((group.shadow, mode, sites[target]))
+                    rep_scf = scf.get((group.representative, mode, sites[source]))
+                    if scf_estimates and any(
+                        e is None or e.status is not ScfStatus.ESTABLISHED for e in (direct_scf, rep_scf)
+                    ):
+                        scf_complete = False
                     comparisons.append(
                         ShadowComparison(
                             sites[target],
@@ -183,6 +213,8 @@ def qualify_shadows(
                             rep_budget.estimate_e_per_ev,
                             direct.print_bound_e_per_ev,
                             rep_budget.print_bound_e_per_ev,
+                            None if direct_scf is None else direct_scf.radius_e_per_ev,
+                            None if rep_scf is None else rep_scf.radius_e_per_ev,
                         )
                     )
         reason = (
@@ -190,6 +222,8 @@ def qualify_shadows(
             if len(comparisons) != len(sites) * len(ResponseMode)
             else ShadowReason.SCIENTIFIC_STATE_NOT_ESTABLISHED
             if not scientific_state_valid
+            else ShadowReason.SCF_ESTIMATE_NOT_ESTABLISHED
+            if not scf_complete
             else ShadowReason.OUTSIDE_PRINT_BOUNDS
             if not all(c.passed for c in comparisons)
             else ShadowReason.WITHIN_PRINT_BOUNDS

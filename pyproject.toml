@@ -26,6 +26,9 @@ test = [
 line-length = 110
 target-version = "py312"
 include = [
+    "src/hubbardflow/siesta_backend/scf_ladder_inputs.py",
+    "src/hubbardflow/domain/scf_*.py",
+    "tests/unit/test_scf_*.py",
     "src/hubbardflow/domain/validation.py",
     "src/hubbardflow/domain/fdebq_*.py",
     "tests/unit/test_fdebq_*.py",
@@ -68,6 +71,9 @@ include = [
 [tool.mypy]
 strict = true
 files = [
+    "src/hubbardflow/siesta_backend/scf_ladder_inputs.py",
+    "src/hubbardflow/domain/scf_*.py",
+    "tests/unit/test_scf_*.py",
     "src/hubbardflow/domain/validation.py",
     "src/hubbardflow/domain/fdebq_*.py",
     "tests/unit/test_fdebq_*.py",

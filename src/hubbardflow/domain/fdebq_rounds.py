@@ -32,6 +32,8 @@ from .fdebq_models import (
 from .response_budget_models import BoundKind, NoiseModel
 from .response_error_budget import element_report
 from .response_protocol import ColumnPlan, EstimatorKind, EstimatorSpec
+from .scf_budget_adapter import scf_element_report
+from .scf_ladder_models import ScfLadderError, ScfStatus
 from .symmetry_reduction import ResponseMode
 
 
@@ -74,21 +76,36 @@ def _select_column(evidence: ColumnEvidence, protocol: CalibrationProtocol) -> C
     if len(usable) < 4:
         return empty
     reports = []
+    scf_estimates = list(evidence.scf_estimates)
+    envelopes = {e.site_observed: e for e in evidence.scf_envelopes}
     for series in evidence.series:
         filtered = replace(series, points=tuple(p for p in series.points if abs(p.alpha_ev) in usable))
-        reports.append(
-            element_report(
-                filtered, NoiseModel(0.0, 0.0, BoundKind.BOUND), protocol_estimator=None, kappa=protocol.kappa
+        if envelopes:
+            try:
+                adapted = scf_element_report(
+                    filtered, envelopes[series.site_observed], protocol_estimator=None, kappa=protocol.kappa
+                )
+            except ScfLadderError as exc:
+                if "SCF_ENVELOPE_NOT_COVERED" in str(exc) or "NOISE_FLOOR_NOT_ESTABLISHED" in str(exc):
+                    return empty
+                raise
+            reports.append(adapted.report)
+            scf_estimates.extend(adapted.estimates)
+        else:
+            reports.append(
+                element_report(
+                    filtered,
+                    NoiseModel(0.0, 0.0, BoundKind.BOUND),
+                    protocol_estimator=None,
+                    kappa=protocol.kappa,
+                )
             )
-        )
-    scf = {(e.site_observed, e.estimator): e for e in evidence.scf_estimates}
+    scf = {(e.site_observed, e.estimator): e for e in scf_estimates}
     candidates: dict[EstimatorSpec, list[SelectedElement]] = {}
     for row, report in zip(evidence.series, reports, strict=True):
         for candidate in report.candidates:
             estimate = scf.get((row.site_observed, candidate.estimator))
-            if candidate.admissible and (
-                not evidence.scf_estimates or (estimate is not None and estimate.admissible)
-            ):
+            if candidate.admissible and (not scf_estimates or (estimate is not None and estimate.admissible)):
                 candidates.setdefault(candidate.estimator, []).append(
                     SelectedElement(
                         row.site_observed,
@@ -242,12 +259,30 @@ def _decide_round(
     selections = tuple(select_column(c, protocol) for c in ordered)
     unresolved = [c for c, s in zip(ordered, selections, strict=True) if s.estimator is None]
     reasons = [RoundReason.NO_COMMON_ESTIMATOR] if unresolved else []
+    for c in ordered:
+        for envelope in c.scf_envelopes:
+            if envelope.status is ScfStatus.SCF_UNDER_RESOLVED:
+                reasons.append(RoundReason.SCF_UNDER_RESOLVED)
+            elif envelope.status is ScfStatus.NOISE_FLOOR_NOT_ESTABLISHED:
+                reasons.append(RoundReason.NOISE_FLOOR_NOT_ESTABLISHED)
+            observed = tuple(p.alpha_ev for p in c.series[0].points if p.alpha_ev > 0)
+            if not envelope.covers(observed):
+                reasons.append(RoundReason.SCF_ENVELOPE_NOT_COVERED)
     if protocol.t0_t4_result_sha256 is None:
         reasons.append(RoundReason.VALIDATION_NOT_ESTABLISHED)
     if any(not c.state_gate_established for c in ordered):
         reasons.append(RoundReason.SCIENTIFIC_STATE_NOT_ESTABLISHED)
     if any(not e.scf_qualified for s in selections for e in s.elements):
         reasons.append(RoundReason.SCF_ESTIMATE_MISSING)
+    if any(
+        reason in reasons
+        for reason in (
+            RoundReason.SCF_UNDER_RESOLVED,
+            RoundReason.NOISE_FLOOR_NOT_ESTABLISHED,
+            RoundReason.SCF_ENVELOPE_NOT_COVERED,
+        )
+    ):
+        return decision(RoundStatus.REVIEW, reasons)
     scores: dict[tuple[str, ResponseMode], float] = {}
     if not unresolved:
         centers = {m: [[0.0 for _ in sites] for _ in sites] for m in ResponseMode}
