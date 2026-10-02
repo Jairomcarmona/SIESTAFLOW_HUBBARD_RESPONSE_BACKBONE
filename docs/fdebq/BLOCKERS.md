@@ -40,16 +40,22 @@ principle of AMENDMENTS_2.md. Archived inputs/outputs and TASK 7–9 behavior ar
 unchanged. Full diagnostic reports are delivered in
 `C:\Users\Jairo\work\fdebq_pr_notes\r2-task10-reports`.
 
-## TASK 12 — Resolved perturbation plan
+## TASK 12 — Resolved perturbation plan (RESUELTO)
 
-TASK 12 is blocked on TASK 10. The required frozen plan embeds
-`CoverageQualification`; without the TASK 10 contract and its deterministic
-fallback behavior, the planner cannot emit the requested schema or apply §P
-without inventing a substitute coverage record. TASK 11 response reconstruction
-is complete but does not provide that qualification type.
+Resolved on `fdebq/r2-task12-plan`; implementation commit: **PENDING_ORCHESTRATOR_COMMIT**.
+The pure planner embeds the complete TASK 10 qualification, projector inventory,
+single-output reference/parent-DM identities, declared bands, resolved estimators
+and their weights. Canonical JSON freezes deterministic experiments and omitted
+column maps. Explicit fixed targets bypass reduction and reproduce the existing
+campaign's site/mode/alpha experiment identities for CoO, NiO, MnO v3r2 and Cu3N.
 
-No TASK 12 implementation or plan digests were added. Revisit after the TASK 10
-data-policy and fallback questions are resolved.
+Candidate translations retain compulsory shadows and state REVIEW until proven;
+missing inventory/reference/parent-DM evidence lowers the plan to NOT_ESTABLISHED
+while declared fixed experiments remain inspectable. CALIBRATED_GRID emits
+CALIBRATION_NOT_ENABLED with no executable runs. Spin flip/rotations expand to
+explicit columns at this task boundary. These are **decisión del implementador
+(conservadora)** under AMENDMENTS_2.md. The fixed production path, certification,
+TASK 10 code, archived evidence and frozen V6 artifacts are unchanged.
 
 ## TASK 13 — campaign_v2 integration
 
