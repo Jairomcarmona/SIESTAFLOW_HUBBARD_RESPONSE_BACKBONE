@@ -243,8 +243,7 @@ claim production READY. Frozen V6 and direct-inversion certification are intact.
 
 ## TASK 18 — Spin flip, rotations, and V3 controls
 
-**RESUELTO: implementation gaps under AMENDMENTS_2 D7. Commit pending
-orchestrator integration on `fdebq/r2-task18-spin-rotations`.**
+**RESUELTO: implementation gaps under AMENDMENTS_2 D7. Commit `81b5f85` on `fdebq/r2-task18-spin-rotations`.**
 
 Both flags now traverse config normalization, CoveragePolicy, diagnostic
 coverage, the frozen plan/digest and campaign locks. They default false;
