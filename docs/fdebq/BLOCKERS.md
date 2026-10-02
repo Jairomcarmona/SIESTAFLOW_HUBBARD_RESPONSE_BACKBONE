@@ -57,16 +57,47 @@ explicit columns at this task boundary. These are **decisión del implementador
 (conservadora)** under AMENDMENTS_2.md. The fixed production path, certification,
 TASK 10 code, archived evidence and frozen V6 artifacts are unchanged.
 
-## TASK 13 — campaign_v2 integration
+## TASK 13 — campaign_v2 integration (RESUELTO: inventory/lock; ABIERTA: runtime pilot reuse)
 
-TASK 13 is blocked on TASK 12. Optional-site validation and resume-time plan
-invalidation require a resolved inventory/coverage plan digest; implementing
-the campaign path without the frozen plan would create an unverified second
-source of campaign targets. The diagnostic fallback from TASK 10 is also
-unavailable.
+Inventory/lock integration resolved on `fdebq/r2-task13-campaign-v2`;
+implementation commit: **hash pendiente**. TASK 13 remains partial while the
+runtime pilot-reuse connection below is ABIERTA.
+Campaign initialization uses the TASK 7 inventory to fill optional sites and
+reject explicit atom/species mismatches. DISABLED, DIAGNOSTIC (default), and
+TRANSLATION_SHADOWED are recorded alongside a frozen TASK 12 plan and
+`campaign.lock`. The diagnostic lock retains the complete candidate qualification
+while its executable plan includes every column. Resume rechecks FDF, reference,
+parent-DM, species/static bytes, backend declarations, bands, policy, targets and
+grid. All executable manifest fields must match normalized frozen lr-config,
+including adaptive policy/flags, magnetic tolerance, observables, material and
+scientific profile. Canonical input pointers and backend-contract campaign UUID
+are also checked; a missing field fails closed. Golden initialization for CoO, NiO, MnO v3r2 and Cu3N preserves the legacy
+fixed experiment identities and estimator selector.
 
-No production campaign behavior was changed. Revisit after TASK 10 and TASK 12
-are complete.
+Pilot reuse has a complete versioned identity and a deterministic execution
+selector bound to unchanged output and validation-receipt bytes. The selector
+is intentionally not consumed by init/runner: the existing campaign contract
+has no declared pilot source or producer of the required complete reuse receipt.
+That runtime connection is **ABIERTA** and pilot provenance remains
+**NOT_ESTABLISHED**, with **no reuse**. A filename or legacy response-ID match
+cannot supply the missing evidence. The API also binds
+reference-node, observable, semantic species and MPI layout as required by the
+FD-EBQ review §I.9. Missing reference output remains explicitly incomplete;
+the empty-output digest is an absence marker with REFERENCE_NOT_ADMISSIBLE,
+never evidence. Fixed legacy execution remains available with that conservative
+qualification. This is **decisión del implementador (conservadora)** under
+AMENDMENTS_2.md.
+
+TASK 14 supplies shadow execution and expansion. Until then the runner rejects
+plans that contain omitted columns; no reduction is silently executed.
+`auto_split_species` remains false by default and an opt-in fails closed with
+STAGED_PENDING_GENERATED_IDENTITY pending TASK 15 admission. Existing adaptive
+execution retains its legacy controller; the frozen static plan records the
+declared seed and adaptive policy, without claiming calibrated qualification.
+
+The expanded historical CLI regression still reports the existing missing
+`campaigns/nio_afmii_pbe_restart_v3_20260927/inputs/reference_pbe.fdf` fixture.
+AGENTS.md rule 8 applies; the test and historical data were not changed.
 
 ## TASK 14 — Translation reduction with mandatory shadow
 

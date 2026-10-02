@@ -37,6 +37,7 @@ from hubbardflow.execution.campaign_v2 import (
     CampaignV2Error, load_campaign_v2, sha256_file, validate_lr_config,
     validate_psml, validate_reference_fdf, verify_campaign_inventory,
 )
+from hubbardflow.execution.campaign_plan import campaign_inventory
 from hubbardflow.execution.dag_contract import NodeState
 from hubbardflow.execution.execution_profile import ExecutionProfile
 from hubbardflow.execution.response_grid_context import response_grid_source_campaign_context
@@ -380,7 +381,11 @@ class CampaignRunner:
         if atoms_match is None:
             raise CampaignV2Error("reference FDF lacks NumberOfAtoms")
         self.atom_count = int(atoms_match.group(1))
-        self.config = validate_lr_config(self.config, fdf_species, projector_sites, self.atom_count)
+        inventory = campaign_inventory(fdf_path, tuple(sorted({Path(p).parent for p in self.config["pseudopotentials"].values()}, key=str)))
+        self.config = validate_lr_config(self.config, fdf_species, projector_sites, self.atom_count, inventory=inventory)
+        self.perturbation_plan = self.campaign["_perturbation_plan"]
+        if self.perturbation_plan is not None and self.perturbation_plan.reconstruction_maps:
+            raise CampaignV2Error("TRANSLATION_SHADOWED requires TASK 14 shadow execution before production")
         if functional != self.campaign["functional"] or self.config["functional"] != functional:
             raise CampaignV2Error("campaign functional differs from effective reference FDF/config")
         if self.config["xc_profile"] != self.campaign["_xc_profile"]:
