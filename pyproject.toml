@@ -26,6 +26,10 @@ test = [
 line-length = 110
 target-version = "py312"
 include = [
+    "src/hubbardflow/product_cli.py",
+    "src/hubbardflow/execution/product_*.py",
+    "src/hubbardflow/reporting/product_report.py",
+    "tests/unit/test_product_*.py",
     "src/hubbardflow/siesta_backend/scf_ladder_inputs.py",
     "src/hubbardflow/domain/scf_*.py",
     "tests/unit/test_scf_*.py",
@@ -74,6 +78,10 @@ include = [
 [tool.mypy]
 strict = true
 files = [
+    "src/hubbardflow/product_cli.py",
+    "src/hubbardflow/execution/product_*.py",
+    "src/hubbardflow/reporting/product_report.py",
+    "tests/unit/test_product_*.py",
     "src/hubbardflow/siesta_backend/scf_ladder_inputs.py",
     "src/hubbardflow/domain/scf_*.py",
     "tests/unit/test_scf_*.py",

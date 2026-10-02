@@ -266,13 +266,41 @@ shadow does not establish real validation or grant PROVEN for these features.
 The product defaults stay off, shadows mandatory; CALIBRATED keeps TASK16/17's
 existing fail-closed admission. No SIESTA campaigns were started.
 
-## TASK 19 — Product CLI and final report (blocked)
+## TASK 19 — Product CLI and execution admission
 
-`hubbardflow plan` requires the inventory, reference evidence, coverage
-qualification, and frozen `ResolvedPerturbationPlan`; TASK 10 and TASK 12 are
-blocked. `run` and `submit` additionally require campaign plan consumption,
-mandatory-shadow execution, and the existing full downstream chain; TASK 13
-and TASK 14 are blocked. Adding CLI commands without these contracts would
-create a second, incomplete production path and could not satisfy the READY
-gate, provenance, resume, or V6 golden requirements. No product commands were
-added. Revisit after the upstream contracts and validations are resolved.
+**RESUELTO: product CLI core; commit pending**, branch
+`fdebq/r2-task19-product-cli`. AMENDMENTS_2 D8 is implemented:
+`hubbardflow plan`, `run system.fdf` and `submit system.fdf --partition ...`
+exist and reach the available contract boundary. Planning delegates to TASK
+7–13, writes the actual frozen TASK 12 plan when inputs permit, preserves its
+exact domain state, and records a separate immutable campaign identity/lock.
+Without a declared LR config it writes an inventory/optional reference-coverage
+diagnostic with `NOT_ESTABLISHED / LR_CONFIG_REQUIRED`; no protocol is invented.
+Run/submit consume and verify the frozen serialization, identities and current
+inputs before writing admission receipts. A user override reason and explicit
+SLURM partition/account enter those receipts. Legacy campaign commands retain
+their existing runner. USER_GUIDE.md documents commands, schemas, states,
+flags, provenance, invalidation and reports.
+Product destinations reject every frozen manifest path, all AGENTS V6
+directories, `FINAL_SIESTA_VALIDATION_REPORT_V6.md`, and
+`production_benchmarks_v6.zip*` roots/descendants. Canonical sidecars cannot
+collide with a manifest file; unavailable or malformed manifests fail closed.
+
+**ABIERTA / NOT_ESTABLISHED: upstream production dependencies.** The complete
+I.5 runtime producer (occupation spectra/subspace, gap/Fermi, smoothness) is
+absent; TASK 13 has no operational pilot source/complete reuse receipt;
+CALIBRATED lacks admitted runtime evidence and recorded T0–T4 validation;
+TASK 15 requires generated alias species identity. Product execution therefore
+stops before materialization/DAG/local-MPI/SLURM launch with explicit reasons,
+even for a static READY plan or a recorded non-READY override. No override
+manufactures scientific evidence. This boundary is **decisión del implementador
+(conservadora)** under AMENDMENTS_2 D8/general principle.
+
+Reports expose inventory, F1–F8 evidence and mandatory shadows, candidate and
+execution coverage, per-(column, mode) alpha/estimator/SCF protocol and all plan
+digests. χ0/χ, matrix gates, U, budgets and downstream qualification remain
+NOT_ASSESSED while blocked; no certificate is claimed. Synthetic 2/4-site and
+archived fixed-grid tests verify plan equivalence, frozen-plan consumption,
+identity invalidation and simulator prohibition. Full fake-SIESTA execution
+and kill/restart are deferred with the unavailable production chain. No
+SIESTA campaigns were started.
