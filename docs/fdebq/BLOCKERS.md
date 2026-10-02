@@ -1,0 +1,34 @@
+# FD-EBQ phase 2 blockers
+
+## TASK 10 — Coverage qualification and diagnostic mode
+
+TASK 10 is not implemented. The requested CoO golden diagnostic cannot be
+produced from an admissible reference state using the data-source rules in the
+author's amendments:
+
+- `examples/tmo_campaigns/CoO_ref.out` contains local occupation matrices but
+  does not print final per-atom Mulliken moments, so F5/reference admissibility
+  is incomplete.
+- CoO V6 outputs contain moments, mesh and termination, but no local occupation
+  matrices. TASK 8 explicitly requires `occupation_spectra = NOT_AVAILABLE`;
+  F7 is therefore `AMBIGUOUS` and cannot support reduction.
+- Combining moments from the V6 output with spectra from the example output
+  would join distinct outputs without a specified evidence-binding rule. No
+  data were combined or inferred.
+
+Consequently the specified CoO `2 -> 1` diagnostic would claim a candidate
+equivalence that the available, author-approved evidence cannot establish.
+TASK 10's required golden report and `ALL_SUBSPACES` fallback cannot both be
+met for CoO until the reference-data policy or expected golden result is
+amended.
+
+The fallback text also says to expand a “small system” when its minimum orbit
+is `|S|`, while the golden tests request a one-representative candidate for
+CoO where the whole correlated set has two sites. It is unclear whether the
+diagnostic should report the candidate count while selecting `ALL_SUBSPACES`
+because the mandatory shadow removes the run-count savings, or whether the
+one-representative golden result takes precedence.
+
+No TASK 10 files or reports were added. No synthetic or cross-run data were
+substituted for the missing CoO evidence. TASK 11 is independent and may
+proceed.
