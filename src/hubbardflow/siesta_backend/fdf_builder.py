@@ -52,7 +52,7 @@ class FdfBuilder:
     def construct_dftu_proj_block(
         self,
         projections: List[Dict],
-        alpha: float = 0.0,
+        alpha: float,
         *,
         execution_mode: str,
         target_species: Optional[str] = None,
@@ -69,6 +69,13 @@ class FdfBuilder:
             raise ValueError("generic FDF float serializer is DEVELOPMENT-only; production requires ValidatedURelease-bound materialization")
         if not projections:
             raise ValueError("at least one DFTU projector must be specified")
+        required_fields = {"species", "n", "l", "rc", "omega"}
+        for index, projection in enumerate(projections):
+            if not isinstance(projection, dict) or required_fields - set(projection):
+                missing = sorted(required_fields - set(projection)) if isinstance(projection, dict) else sorted(required_fields)
+                raise ValueError(f"projection {index} must explicitly declare {', '.join(missing)}")
+            if not isinstance(projection["species"], str) or not projection["species"].strip():
+                raise ValueError(f"projection {index} species must be a non-empty label")
         if isinstance(alpha, bool) or not isinstance(alpha, (int, float)) or not float("-inf") < float(alpha) < float("inf"):
             raise ValueError("alpha must be a finite number")
 
@@ -81,7 +88,7 @@ class FdfBuilder:
 
         if alpha != 0.0 and target_species is not None:
             target_count = sum(
-                item.get("species", "Mn") == target_species for item in projections
+                item["species"] == target_species for item in projections
             )
             if target_count != 1:
                 raise ValueError(
@@ -92,7 +99,7 @@ class FdfBuilder:
         species_map = {}
         nonzero_shifts = 0
         for proj_dict in projections:
-            sp = proj_dict.get("species", "Mn")
+            sp = proj_dict["species"]
             if sp not in species_map:
                 species_map[sp] = []
 
@@ -109,12 +116,12 @@ class FdfBuilder:
             if float(u_val) != 0.0:
                 nonzero_shifts += 1
             proj = DftuProjector(
-                n=proj_dict.get("n", 3),
-                l=proj_dict.get("l", 2),
+                n=proj_dict["n"],
+                l=proj_dict["l"],
                 U=u_val,  # LINEAR RESPONSE CONTRACT
                 J=0.0,    # LINEAR RESPONSE CONTRACT
-                rc=proj_dict.get("rc", 3.0),
-                omega=proj_dict.get("omega", 0.05),
+                rc=proj_dict["rc"],
+                omega=proj_dict["omega"],
                 lambda_factor=proj_dict.get("lambda_factor", None)
             )
             species_map[sp].append(proj)
@@ -154,11 +161,11 @@ class FdfBuilder:
         alpha: float,
         run_name: Optional[str] = None,
         response_mode: str = "SCREENED",
-        species: str = "Mn",
-        n: int = 3,
-        l: int = 2,
-        rc: float = 3.0,
-        omega: float = 0.05,
+        species: Optional[str] = None,
+        n: Optional[int] = None,
+        l: Optional[int] = None,
+        rc: Optional[float] = None,
+        omega: Optional[float] = None,
         lambda_factor: Optional[float] = None,
         projections: Optional[List[Dict]] = None,
         *,
@@ -176,6 +183,8 @@ class FdfBuilder:
             content = self.replace_or_append_fdf_key(content, "SystemLabel", run_name)
 
         if projections is None:
+            if species is None or n is None or l is None or rc is None or omega is None:
+                raise ValueError("materialization without explicit projections requires species, n, l, rc and omega")
             projections = [
                 {
                     "species": species,
@@ -187,14 +196,14 @@ class FdfBuilder:
                 }
             ]
 
-        # When every caller-supplied projector carries its own alpha/U, those
-        # values define the perturbed site; the ``species`` default ("Mn")
-        # must not become a target that matches none of them.  The single
-        # non-zero shift is still enforced by construct_dftu_proj_block.
+        # When each projector carries its own alpha/U, those values define the
+        # perturbed site; otherwise an explicit species target is required.
         explicit_shifts = all("alpha" in item or "U" in item for item in projections)
+        if not explicit_shifts and not species:
+            raise ValueError("a global alpha requires an explicit target species")
         proj_block_str = self.construct_dftu_proj_block(
             projections, alpha, execution_mode=execution_mode,
-            target_species=None if explicit_shifts else species
+            target_species=None if explicit_shifts else species,
         )
 
         # Remove pre-existing DFTU.proj block if present (both LDAU and DFTU)
@@ -230,11 +239,11 @@ class FdfBuilder:
         alpha: float,
         run_name: Optional[str] = None,
         response_mode: str = "SCREENED",
-        species: str = "Mn",
-        n: int = 3,
-        l: int = 2,
-        rc: float = 3.0,
-        omega: float = 0.05,
+        species: Optional[str] = None,
+        n: Optional[int] = None,
+        l: Optional[int] = None,
+        rc: Optional[float] = None,
+        omega: Optional[float] = None,
         lambda_factor: Optional[float] = None,
         projections: Optional[List[Dict]] = None,
         *,
@@ -487,8 +496,8 @@ class FdfBuilder:
 
 def materialize_split_species_fdf(
     content: str,
-    target_species: str = "Mn",
-    new_prefix: str = "MnLR",
+    target_species: str,
+    new_prefix: str,
 ) -> tuple[str, list[str]]:
     """
     Splits all atoms of `target_species` in FDF content into distinct species aliases:
@@ -556,7 +565,7 @@ def materialize_split_species_fdf(
     new_species_labels = [f"{new_prefix}{i}" for i in range(N)]
 
     # 3. Build new species table
-    # Indices 1..N: MnLR0..MnLR(N-1)
+    # Indices 1..N: one explicitly named alias per target atom.
     # Index N+1..: other species
     new_spec_lines = ["%block ChemicalSpeciesLabel"]
     for i, label in enumerate(new_species_labels, start=1):

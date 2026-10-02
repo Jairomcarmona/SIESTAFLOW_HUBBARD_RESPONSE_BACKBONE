@@ -31,9 +31,12 @@ def test_fdf_builder_safe_materialization(dummy_base_fdf, tmp_path):
         run_name="safe_run",
         response_mode="SCREENED",
         species="Fe",
+        n=3,
+        l=2,
         rc=4.2,
         omega=0.07,
-        lambda_factor=1.1
+        lambda_factor=1.1,
+        execution_mode="DEVELOPMENT",
     )
     
     # Assert Booleans are correctly written (by value override)

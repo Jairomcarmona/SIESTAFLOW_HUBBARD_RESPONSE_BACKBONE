@@ -39,6 +39,8 @@ from hubbardflow.execution.campaign_v2 import (
 )
 from hubbardflow.execution.dag_contract import NodeState
 from hubbardflow.execution.execution_profile import ExecutionProfile
+from hubbardflow.execution.response_grid_context import response_grid_source_campaign_context
+from hubbardflow.siesta_backend.response_grid_semantics import extract_siesta_response_cell
 from hubbardflow.execution.generic_executor import (
     ExecutionContractError, GenericDagExecutor, NodeReceipt, dag_digest,
 )
@@ -381,6 +383,8 @@ class CampaignRunner:
         self.config = validate_lr_config(self.config, fdf_species, projector_sites, self.atom_count)
         if functional != self.campaign["functional"] or self.config["functional"] != functional:
             raise CampaignV2Error("campaign functional differs from effective reference FDF/config")
+        if self.config["xc_profile"] != self.campaign["_xc_profile"]:
+            raise CampaignV2Error("campaign scientific profile differs from the validated LR config profile")
         for label, source in self.config["pseudopotentials"].items():
             validate_psml(Path(source), label, fdf_species[label], functional)
         self.contract = LinearResponseBareCampaignContract.from_json(
@@ -1418,6 +1422,7 @@ class CampaignRunner:
             "campaign": {
                 "campaign_id": self.campaign["campaign_id"], "name": self.campaign.get("name"),
                 "material": self.campaign.get("material"), "functional": self.campaign["functional"],
+                "xc_profile": self.campaign["_xc_profile"],
                 "sites": self.sites, "observables": self.campaign.get("observables", []),
                 "fixed_grid": True, "automatic_alpha_refinement": False,
             },
@@ -1623,6 +1628,8 @@ class CampaignRunner:
                 expected_site_ids={int(site["index"]): str(site["site_id"]) for site in self.sites},
                 expected_atom_indices={int(site["index"]): int(site["atom_index"]) for site in self.sites},
                 expected_alphas_eV=self.alpha_grid,
+                source_context_resolver=response_grid_source_campaign_context,
+                response_cell_extractor=extract_siesta_response_cell,
                 expected_primary_campaign_id=str(self.campaign["campaign_id"]),
                 expected_primary_source_root=self.root.resolve(strict=True),
             )
@@ -1987,6 +1994,7 @@ class CampaignRunner:
                     "reference_dm_sha256": verified_dataset["reference_source"]["dm_sha256"],
                     **execution_identity,
                     "material": self.campaign.get("material"), "functional": self.campaign["functional"],
+                    "xc_profile": self.campaign["_xc_profile"],
                     "sites": self.sites, "observables": self.campaign.get("observables", []),
                     "fixed_grid": not adaptive, "automatic_alpha_refinement": adaptive,
                 },

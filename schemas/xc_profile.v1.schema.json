@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "xc_profile.v1.schema.json",
+  "title": "HubbardFlow XC scientific profile identity",
+  "description": "XC identity and qualification status. Recognition is not scientific validation.",
+  "type": "object",
+  "required": ["profile_id", "version", "xc_functional", "qualification_status", "qualification_basis"],
+  "properties": {
+    "profile_id": {"type": "string", "minLength": 1},
+    "version": {"const": 1},
+    "xc_functional": {"enum": ["PBE", "PBEsol", "RPBE", "LDA_CA", "LDA_PZ", "SCAN"]},
+    "qualification_status": {"enum": ["V6_VALIDATED", "DECLARED_UNVALIDATED"]},
+    "qualification_basis": {"type": ["string", "null"]}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"qualification_status": {"const": "V6_VALIDATED"}}, "required": ["qualification_status"]},
+      "then": {
+        "properties": {
+          "profile_id": {"const": "hubbardflow.v6.pbe-reference"},
+          "version": {"const": 1},
+          "xc_functional": {"const": "PBE"},
+          "qualification_basis": {"const": "scientific-v6-final"}
+        }
+      }
+    },
+    {
+      "if": {"properties": {"qualification_status": {"const": "DECLARED_UNVALIDATED"}}, "required": ["qualification_status"]},
+      "then": {"properties": {"qualification_basis": {"type": "null"}}}
+    }
+  ],
+  "additionalProperties": false
+}

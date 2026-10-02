@@ -11,11 +11,7 @@ from math import isclose, isfinite
 from pathlib import Path
 import json
 import re
-from typing import Any, Mapping
-
-from hubbardflow.siesta_backend.occupation_precision import read_printed_occupation_precision
-from hubbardflow.siesta_backend.siesta542_bare_profile import Siesta542PotentialShiftHamiltonianProfile
-from hubbardflow.siesta_backend.siesta542_screened_selection import select_converged_screened_event
+from typing import Any, Callable, Mapping
 
 class ResponseGridCalibrationError(ValueError):
     """A response-grid repeatability calibration is incomplete or unbound."""
@@ -52,90 +48,6 @@ def response_grid_campaign_context_sha256(
         "response_observable": "Hubbard projector population, BARE first-Hamiltonian / SCREENED converged",
     }
     return sha256(json.dumps(context, sort_keys=True, separators=(",", ":"), default=str).encode()).hexdigest()
-
-
-def response_grid_source_campaign_context(
-    manifest_path: Path,
-) -> tuple[dict[str, Any], str]:
-    """Reconstruct a source campaign's response context from its pinned inputs."""
-    # Imports are local to avoid a domain/execution import cycle at module load.
-    from hubbardflow.domain.adaptive_alpha_control import AdaptiveAlphaPolicy
-    from hubbardflow.domain.lr_analysis_v2 import LRAnalysisPolicy
-    from hubbardflow.execution.campaign_v2 import (
-        load_campaign_v2, sha256_file, verify_campaign_inventory,
-    )
-
-    campaign = load_campaign_v2(manifest_path)
-    verify_campaign_inventory(campaign)
-    root = Path(str(campaign["_campaign_root"])).resolve(strict=True)
-    config_relative = Path(str(campaign["lr_config_file"]))
-    if config_relative.is_absolute() or ".." in config_relative.parts:
-        raise ResponseGridCalibrationError("source LR config path is not campaign-relative")
-    config_path = (root / config_relative).resolve(strict=True)
-    try:
-        config_path.relative_to(root)
-    except ValueError as exc:
-        raise ResponseGridCalibrationError("source LR config escapes campaign root") from exc
-    try:
-        config = json.loads(config_path.read_text(encoding="utf-8"))
-    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
-        raise ResponseGridCalibrationError("source LR config is unreadable") from exc
-    if not isinstance(config, Mapping):
-        raise ResponseGridCalibrationError("source LR config must be an object")
-    pseudopotentials = config.get("pseudopotentials")
-    if not isinstance(pseudopotentials, Mapping) or not pseudopotentials:
-        raise ResponseGridCalibrationError("source LR config lacks pseudopotential paths")
-    pseudo_hashes: dict[str, str] = {}
-    for label, raw in sorted(pseudopotentials.items()):
-        if not isinstance(raw, str):
-            raise ResponseGridCalibrationError(f"source pseudopotential path for {label} is invalid")
-        pseudo = Path(raw)
-        if not pseudo.is_absolute():
-            pseudo = root / pseudo
-        pseudo = pseudo.resolve(strict=True)
-        if not pseudo.is_file():
-            raise ResponseGridCalibrationError(f"source pseudopotential for {label} is not a file")
-        pseudo_hashes[str(label)] = sha256_file(pseudo)
-    analysis_raw = config.get("analysis_policy", {})
-    if not isinstance(analysis_raw, Mapping):
-        raise ResponseGridCalibrationError("source analysis_policy must be an object")
-    try:
-        analysis_context = LRAnalysisPolicy(**analysis_raw).response_context()
-    except (TypeError, ValueError) as exc:
-        raise ResponseGridCalibrationError(f"source analysis policy is invalid: {exc}") from exc
-    adaptive_raw = config.get("adaptive_alpha_policy")
-    if adaptive_raw is None:
-        adaptive_context = None
-    else:
-        try:
-            adaptive_context = AdaptiveAlphaPolicy.from_mapping(adaptive_raw).to_mapping()
-        except (TypeError, ValueError) as exc:
-            raise ResponseGridCalibrationError(f"source adaptive alpha policy is invalid: {exc}") from exc
-    reference_fdf_rel = Path(str(campaign["reference_fdf"]))
-    profile_rel = Path(str(campaign["execution_profile_file"]))
-    if (reference_fdf_rel.is_absolute() or profile_rel.is_absolute()
-            or ".." in reference_fdf_rel.parts or ".." in profile_rel.parts):
-        raise ResponseGridCalibrationError("source FDF/profile path is not campaign-relative")
-    reference_fdf = (root / reference_fdf_rel).resolve(strict=True)
-    profile = (root / profile_rel).resolve(strict=True)
-    for path in (reference_fdf, profile):
-        try:
-            path.relative_to(root)
-        except ValueError as exc:
-            raise ResponseGridCalibrationError("source FDF/profile path escapes campaign root") from exc
-    context_hash = response_grid_campaign_context_sha256(
-        material=campaign.get("material"),
-        functional=str(campaign["functional"]),
-        reference_fdf_sha256=sha256_file(reference_fdf),
-        execution_profile_sha256=sha256_file(profile),
-        pseudopotentials=pseudo_hashes,
-        sites=campaign["sites"],
-        alpha_grid_eV=[float(value) for value in campaign["alpha_grid_ev"]],
-        analysis_policy=analysis_context,
-        adaptive_alpha_policy=adaptive_context,
-        magnetic_moment_tolerance_muB=campaign.get("magnetic_moment_tolerance_muB"),
-    )
-    return campaign, context_hash
 
 
 _HASH = re.compile(r"[0-9a-f]{64}\Z")
@@ -364,45 +276,6 @@ def _explicit_source_root(raw_path: Any) -> Path:
     return resolved
 
 
-def _verify_projector_shift(fdf_text: str, site_id: str, alpha_ev: float) -> None:
-    lines = fdf_text.splitlines()
-    starts = [i for i, line in enumerate(lines) if re.match(r"^\s*%block\s+DFTU\.Proj\s*$", line, re.I)]
-    if len(starts) != 1:
-        raise ResponseGridCalibrationError("node FDF must contain exactly one DFTU.Proj block")
-    start = starts[0]
-    ends = [i for i in range(start + 1, len(lines))
-            if re.match(r"^\s*%endblock\s+DFTU\.Proj\s*$", lines[i], re.I)]
-    if len(ends) != 1:
-        raise ResponseGridCalibrationError("node FDF has an incomplete or ambiguous DFTU.Proj block")
-    body = lines[start + 1:ends[0]]
-    if not body or len(body) % 4:
-        raise ResponseGridCalibrationError("node FDF DFTU.Proj records are not complete four-line site records")
-    matched = 0
-    for offset in range(0, len(body), 4):
-        header, shell, shift_line, radial = body[offset:offset + 4]
-        header_fields, shell_fields = header.split(), shell.split()
-        shift_fields, radial_fields = shift_line.split(), radial.split()
-        if len(header_fields) != 2 or len(shell_fields) != 2 or len(shift_fields) != 2 or len(radial_fields) < 2:
-            raise ResponseGridCalibrationError("node FDF contains an unsupported DFTU.Proj site record")
-        try:
-            alpha = float(shift_fields[0])
-            other_shift = float(shift_fields[1])
-            int(header_fields[1]); int(shell_fields[0]); int(shell_fields[1])
-            float(radial_fields[0]); float(radial_fields[1])
-        except ValueError as exc:
-            raise ResponseGridCalibrationError("node FDF contains a nonnumeric DFTU.Proj record") from exc
-        if header_fields[0] == site_id:
-            matched += 1
-            if not isclose(alpha, alpha_ev, rel_tol=0.0, abs_tol=5.1e-5):
-                raise ResponseGridCalibrationError("FDF projector shift does not match the node alpha")
-        elif not isclose(alpha, 0.0, rel_tol=0.0, abs_tol=1e-12):
-            raise ResponseGridCalibrationError("FDF applies a nonzero shift to an unexpected site")
-        if not isclose(other_shift, 0.0, rel_tol=0.0, abs_tol=1e-12):
-            raise ResponseGridCalibrationError("FDF applies an unexpected second-channel projector shift")
-    if matched != 1:
-        raise ResponseGridCalibrationError("node FDF does not identify exactly one perturbed site")
-
-
 def validate_response_grid_calibration(
     root: Path,
     lock_path: Path,
@@ -413,6 +286,8 @@ def validate_response_grid_calibration(
     expected_site_ids: Mapping[int, str],
     expected_atom_indices: Mapping[int, int],
     expected_alphas_eV: list[float],
+    source_context_resolver: Callable[[Path], tuple[dict[str, Any], str]],
+    response_cell_extractor: Callable[..., tuple[float, float]],
     expected_primary_campaign_id: str | None = None,
     expected_primary_source_root: Path | None = None,
 ) -> ValidatedResponseGridCalibration:
@@ -515,7 +390,7 @@ def validate_response_grid_calibration(
             source_root, receipt["campaign_manifest_path"], receipt["campaign_manifest_sha256"],
             "source campaign manifest",
         )
-        source_campaign, source_context_hash = response_grid_source_campaign_context(manifest_path)
+        source_campaign, source_context_hash = source_context_resolver(manifest_path)
         if (source_campaign.get("campaign_id") != campaign_id
                 or source_context_hash != context_hash):
             raise ResponseGridCalibrationError("source manifest/context differs from the locked response context")
@@ -765,22 +640,17 @@ def validate_response_grid_calibration(
                     raise ResponseGridCalibrationError("measurement OUT hash differs from node-evidence hash")
                 if artifact_name == "dm" and declared_hash != cell["dm_sha256"]:
                     raise ResponseGridCalibrationError("measurement DM hash differs from node-evidence hash")
-            fdf_text = fdf_path.read_text(encoding="utf-8", errors="replace")
-            _verify_projector_shift(fdf_text, expected_site_id, coordinate[1])
-            output_text = out_path.read_text(encoding="utf-8", errors="replace")
             try:
-                event = (
-                    Siesta542PotentialShiftHamiltonianProfile().select_response(output_text).response_event
-                    if coordinate[2] == "BARE"
-                    else select_converged_screened_event(output_text)
+                parsed_value, parsed_half_width = response_cell_extractor(
+                    fdf_path, out_path, mode=coordinate[2], site_id=expected_site_id,
+                    alpha_ev=coordinate[1], atom_index=expected_atom,
                 )
-                parsed = read_printed_occupation_precision(output_text, event)[expected_atom]
-            except (ValueError, KeyError, IndexError) as exc:
+            except (ValueError, KeyError, IndexError, OSError) as exc:
                 raise ResponseGridCalibrationError(
                     f"cannot semantically re-extract measurement from its output: {coordinate}: {exc}"
                 ) from exc
-            if (not isclose(value, parsed.total, rel_tol=0.0, abs_tol=1e-12)
-                    or not isclose(print_half_width, parsed.half_width, rel_tol=0.0, abs_tol=1e-12)):
+            if (not isclose(value, parsed_value, rel_tol=0.0, abs_tol=1e-12)
+                    or not isclose(print_half_width, parsed_half_width, rel_tol=0.0, abs_tol=1e-12)):
                 raise ResponseGridCalibrationError(
                     f"replica occupation or quantization disagrees with parser output at {coordinate}"
                 )

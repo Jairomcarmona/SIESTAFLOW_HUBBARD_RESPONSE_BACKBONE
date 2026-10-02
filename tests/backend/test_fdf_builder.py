@@ -36,6 +36,12 @@ def test_fdf_builder_screened_mode(tmp_path):
         target_fdf_path=str(target_file),
         alpha=-0.10,
         run_name="MnO_SCR_m0p10",
+        species="Mn",
+        n=3,
+        l=2,
+        rc=3.0,
+        omega=0.05,
+        execution_mode="DEVELOPMENT",
     )
 
     assert "SystemLabel MnO_SCR_m0p10" in content

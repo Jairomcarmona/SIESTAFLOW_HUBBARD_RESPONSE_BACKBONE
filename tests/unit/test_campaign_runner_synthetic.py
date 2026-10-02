@@ -1,4 +1,5 @@
 from hubbardflow.domain.matrix_lr import ResponseObservation
+from hubbardflow.domain.scientific_profile import V6_PBE_REFERENCE_PROFILE
 from hubbardflow.execution.campaign_runner import CampaignRunner, _build_dag, _build_verified_dataset
 from hubbardflow.execution.lr_dag import LRNodeKind
 from hubbardflow.domain.symmetry_reduction import ResponseMode
@@ -28,7 +29,10 @@ def test_fixed_grid_dag_is_explicit_and_alpha_diagnostic_does_not_veto_analysis(
     # A failed linear-window diagnosis is not a dependency veto: the fixed
     # grid always reaches matrix analysis, which decides what can be reported.
     runner = object.__new__(CampaignRunner)
-    runner.campaign = {"campaign_id": "synthetic", "name": "fixed-grid", "material": "fixture", "input_identity": "a" * 64}
+    runner.campaign = {
+        "campaign_id": "synthetic", "name": "fixed-grid", "material": "fixture",
+        "input_identity": "a" * 64, "_xc_profile": V6_PBE_REFERENCE_PROFILE.to_mapping(),
+    }
     runner.sites = sites
     runner.alpha_grid = alphas
     runner.config = {"analysis_policy": {"estimator": "auto"}}

@@ -55,7 +55,9 @@ def test_explicit_projection_shifts_do_not_inherit_default_mn_target():
     alpha, so every non-Mn campaign raised ``found 0``.
     """
     base = "SystemLabel nio\nNumberOfAtoms 4\nSpin polarized\n"
-    text = FdfBuilder().modify_fdf_content(base, alpha=0.01, projections=_nio_projections(0.01))
+    text = FdfBuilder().modify_fdf_content(
+        base, alpha=0.01, projections=_nio_projections(0.01), execution_mode="DEVELOPMENT",
+    )
     block = text.split("%block DFTU.proj", 1)[1].split("%endblock DFTU.proj", 1)[0]
     shifted = [line for line in block.splitlines() if line.strip().startswith("0.0100")]
     assert len(shifted) == 1
@@ -66,11 +68,16 @@ def test_explicit_projection_shifts_still_require_a_single_perturbed_site():
     projections = _nio_projections(0.01)
     projections[1]["alpha"] = 0.01
     with pytest.raises(ValueError, match="exactly one projector"):
-        FdfBuilder().modify_fdf_content("SystemLabel nio\n", alpha=0.01, projections=projections)
+        FdfBuilder().modify_fdf_content(
+            "SystemLabel nio\n", alpha=0.01, projections=projections, execution_mode="DEVELOPMENT",
+        )
 
 
 def test_implicit_projection_still_uses_the_declared_species_target():
-    text = FdfBuilder().modify_fdf_content("SystemLabel feo\n", alpha=0.02, species="Fe")
+    text = FdfBuilder().modify_fdf_content(
+        "SystemLabel feo\n", alpha=0.02, species="Fe", n=3, l=2, rc=3.0, omega=0.05,
+        execution_mode="DEVELOPMENT",
+    )
     block = text.split("%block DFTU.proj", 1)[1]
     assert block.split()[0:2] == ["Fe", "1"] and "0.0200" in block
 

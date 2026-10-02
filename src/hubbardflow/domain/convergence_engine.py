@@ -14,7 +14,7 @@ Design principles:
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, asdict
 from typing import Optional, Sequence, Any
 import hashlib
 import json
@@ -26,6 +26,7 @@ from .matrix_lr import (
     ResponseObservation,
     analyze_matrix_response_campaign,
 )
+from .scientific_profile import XcScientificProfile
 
 
 # ─────────────────────────────────────────────
@@ -49,20 +50,25 @@ class LRScientificConfiguration:
     mesh_cutoff_ry: float                   # e.g. 150.0, 200.0
     kgrid: tuple[int, int, int]             # e.g. (1, 1, 1)
     supercell: tuple[int, int, int]         # e.g. (2, 1, 1)
-    projector_n: int = 3
-    projector_l: int = 2
-    projector_rc_bohr: float = 3.0          # SIESTA Method-2 unit: Bohr
-    projector_omega_bohr: float = 0.05      # SIESTA Method-2 unit: Bohr
-    projector_units: str = "Bohr"
-    pao_energy_shift_ry: float = 0.02       # Ry
-    pao_split_norm: float = 0.15
-    pao_basis_type: str = "split"
-    alpha_grid: list[float] = field(default_factory=lambda: [-0.02, -0.01, 0.00, 0.01, 0.02])
-    spin_configuration: str = "polarized"
-    response_fit_method: str = "linear"
-    response_polynomial_degree: int = 3
-    response_minimum_residual_dof: int = 1
-    response_alpha_window_ev: Optional[float] = None
+    xc_profile: XcScientificProfile
+    projector_n: int
+    projector_l: int
+    projector_rc_bohr: float                # SIESTA Method-2 unit: Bohr
+    projector_omega_bohr: float             # SIESTA Method-2 unit: Bohr
+    projector_units: str
+    pao_energy_shift_ry: float              # Ry
+    pao_split_norm: float
+    pao_basis_type: str
+    alpha_grid: list[float]
+    spin_configuration: str
+    response_fit_method: str
+    response_polynomial_degree: int
+    response_minimum_residual_dof: int
+    response_alpha_window_ev: Optional[float]
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.xc_profile, XcScientificProfile):
+            raise TypeError("xc_profile must be an explicit XcScientificProfile")
 
     @property
     def projector_rc(self) -> float:
@@ -90,6 +96,7 @@ class LRScientificConfiguration:
             "mesh_cutoff_ry": float(self.mesh_cutoff_ry),
             "kgrid": list(self.kgrid),
             "supercell": list(self.supercell),
+            "xc_profile": self.xc_profile.to_mapping(),
             "projector_n": self.projector_n,
             "projector_l": self.projector_l,
             "projector_rc_bohr": float(self.projector_rc_bohr),
@@ -122,6 +129,7 @@ class LRScientificConfiguration:
             "mesh_cutoff_ry": float(self.mesh_cutoff_ry),
             "kgrid": list(self.kgrid),
             "supercell": list(self.supercell),
+            "xc_profile": self.xc_profile.to_mapping(),
             "projector_n": self.projector_n,
             "projector_l": self.projector_l,
             "projector_rc_bohr": float(self.projector_rc_bohr),
@@ -255,6 +263,9 @@ def generate_single_dimension_scan(
     configs = []
     for val in param_values:
         d = asdict(base_config)
+        # dataclasses.asdict recursively expands the immutable profile; retain
+        # the typed value required by LRScientificConfiguration.
+        d["xc_profile"] = base_config.xc_profile
         d[param_name] = val
         configs.append(LRScientificConfiguration(**d))
 

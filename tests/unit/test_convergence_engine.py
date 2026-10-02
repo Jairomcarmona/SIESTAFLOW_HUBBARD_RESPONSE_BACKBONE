@@ -26,6 +26,7 @@ from hubbardflow.domain.convergence_engine import (
     build_convergence_result_from_observations,
 )
 from hubbardflow.domain.matrix_lr import ResponseObservation
+from hubbardflow.domain.scientific_profile import V6_PBE_REFERENCE_PROFILE
 
 
 # ─────────────────────────────────────────────
@@ -44,10 +45,21 @@ def base_config_2site():
         mesh_cutoff_ry=150.0,
         kgrid=(1, 1, 1),
         supercell=(2, 1, 1),
+        xc_profile=V6_PBE_REFERENCE_PROFILE,
+        projector_n=3,
+        projector_l=2,
         projector_rc_bohr=3.0,
         projector_omega_bohr=0.05,
+        projector_units="Bohr",
+        pao_energy_shift_ry=0.02,
+        pao_split_norm=0.15,
+        pao_basis_type="split",
         alpha_grid=[-0.02, -0.01, 0.00, 0.01, 0.02],
         spin_configuration="polarized",
+        response_fit_method="linear",
+        response_polynomial_degree=3,
+        response_minimum_residual_dof=1,
+        response_alpha_window_ev=None,
     )
 
 
@@ -76,10 +88,21 @@ def test_physical_identity_hash_excludes_alpha_grid(base_config_2site):
         mesh_cutoff_ry=150.0,
         kgrid=(1, 1, 1),
         supercell=(2, 1, 1),
+        xc_profile=V6_PBE_REFERENCE_PROFILE,
+        projector_n=3,
+        projector_l=2,
         projector_rc_bohr=3.0,
         projector_omega_bohr=0.05,
+        projector_units="Bohr",
+        pao_energy_shift_ry=0.02,
+        pao_split_norm=0.15,
+        pao_basis_type="split",
         alpha_grid=[-0.01, 0.00, 0.01],  # different alpha grid
         spin_configuration="polarized",
+        response_fit_method="linear",
+        response_polynomial_degree=3,
+        response_minimum_residual_dof=1,
+        response_alpha_window_ev=None,
     )
 
     assert cfg1.physical_identity_hash() == cfg2.physical_identity_hash()
@@ -230,10 +253,21 @@ def test_arbitrary_n_compatibility_3site():
         mesh_cutoff_ry=150.0,
         kgrid=(1, 1, 1),
         supercell=(1, 1, 1),
+        xc_profile=V6_PBE_REFERENCE_PROFILE,
+        projector_n=3,
+        projector_l=2,
         projector_rc_bohr=3.0,
         projector_omega_bohr=0.05,
+        projector_units="Bohr",
+        pao_energy_shift_ry=0.02,
+        pao_split_norm=0.15,
+        pao_basis_type="split",
         alpha_grid=[-0.02, -0.01, 0.00, 0.01, 0.02],
         spin_configuration="polarized",
+        response_fit_method="linear",
+        response_polynomial_degree=3,
+        response_minimum_residual_dof=1,
+        response_alpha_window_ev=None,
     )
 
     assert cfg_3site.n_sites() == 3

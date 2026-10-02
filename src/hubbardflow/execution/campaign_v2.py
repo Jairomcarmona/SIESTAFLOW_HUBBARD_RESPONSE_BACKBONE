@@ -11,6 +11,10 @@ from pathlib import Path, PurePosixPath
 from typing import Any, Mapping
 
 from ..domain.adaptive_alpha_control import AdaptiveAlphaControlError, AdaptiveAlphaPolicy
+from ..domain.scientific_profile import (
+    ScientificProfileError, profile_from_explicit_functional, require_lr_qualified,
+    resolve_scientific_profile, validate_xc_text,
+)
 from .execution_profile import ExecutionProfile, ProfileValidationError
 
 
@@ -96,43 +100,27 @@ def _single_fdf_value(text: str, name: str) -> str | None:
     return values[0] if values else None
 
 
-_FUNCTIONAL_MARKERS: dict[str, tuple[str, tuple[tuple[str, ...], ...]]] = {
-    "PBE": ("gga", (("pbe",), ("perdew", "burke", "ernzerhof"))),
-    "PBEsol": ("gga", (("pbesol",), ("perdew", "burke", "ernzerhof", "solids"))),
-    "RPBE": ("gga", (("rpbe",),)),
-    "LDA_CA": ("lda", (("ca",), ("ceperley", "alder"))),
-    "LDA_PZ": ("lda", (("pz",), ("perdew", "zunger"))),
-    "SCAN": ("mgga", (("scan",),)),
-}
-
-
 def _functional_key(value: Any) -> str:
-    if not isinstance(value, str) or not value.strip():
-        raise CampaignV2Error("functional must be declared explicitly")
-    normalized = re.sub(r"[^a-z0-9]", "", value.casefold())
-    aliases = {
-        "pbe": "PBE", "gga-pbe": "PBE", "pbesol": "PBEsol", "rpbe": "RPBE",
-        "lda-ca": "LDA_CA", "ca-lda": "LDA_CA", "lda-pz": "LDA_PZ", "pz-lda": "LDA_PZ",
-        "scan": "SCAN",
-    }
-    for alias, canonical in aliases.items():
-        if re.sub(r"[^a-z0-9]", "", alias.casefold()) == normalized:
-            return canonical
-    raise CampaignV2Error(
-        "unsupported declared functional; currently supported families are PBE, PBEsol, RPBE, LDA_CA, LDA_PZ, and SCAN"
-    )
+    try:
+        return profile_from_explicit_functional(value).xc_functional
+    except ScientificProfileError as exc:
+        raise CampaignV2Error(str(exc)) from exc
 
 
 def _check_functional_text(text: str, functional: str, source: str) -> None:
-    family, markers = _FUNCTIONAL_MARKERS[functional]
-    folded = text.casefold()
-    if family not in folded or not any(all(marker.casefold() in folded for marker in group) for group in markers):
-        raise CampaignV2Error(f"{source} is inconsistent with declared functional {functional}")
+    try:
+        validate_xc_text(text, functional, source)
+    except ScientificProfileError as exc:
+        raise CampaignV2Error(str(exc)) from exc
 
 
 def validate_reference_fdf(text: str, declared_functional: str) -> tuple[str, dict[str, int], list[str]]:
     """Require explicit declared XC, complete species mapping, and method-2 projectors."""
     functional = _functional_key(declared_functional)
+    try:
+        require_lr_qualified(profile_from_explicit_functional(functional))
+    except ScientificProfileError as exc:
+        raise CampaignV2Error(str(exc)) from exc
     fdf_xc = f"{_single_fdf_value(text, 'XC.functional') or ''} {_single_fdf_value(text, 'XC.authors') or ''}"
     _check_functional_text(fdf_xc, functional, "reference FDF")
     atoms = _single_fdf_value(text, "NumberOfAtoms")
@@ -332,8 +320,15 @@ def validate_lr_config(payload: Mapping[str, Any], fdf_species: Mapping[str, int
         or not math.isfinite(float(magnetic_tolerance)) or float(magnetic_tolerance) <= 0
     ):
         raise CampaignV2Error("magnetic_moment_tolerance_muB must be finite and positive when supplied")
+    try:
+        xc_profile = require_lr_qualified(resolve_scientific_profile(
+            payload.get("functional"), payload.get("xc_profile"),
+        ))
+    except ScientificProfileError as exc:
+        raise CampaignV2Error(str(exc)) from exc
     return {
-        "functional": _functional_key(payload.get("functional")),
+        "functional": xc_profile.xc_functional,
+        "xc_profile": xc_profile.to_mapping(),
         "sites": normalized_sites,
         "alpha_grid_ev": sorted(values),
         "pseudopotentials": {str(key): str(Path(value).resolve()) for key, value in pseudopotentials.items()},
@@ -412,8 +407,14 @@ def load_campaign_v2(path: str | Path) -> dict[str, Any]:
             raise CampaignV2Error("adaptive policy requires automatic_alpha_refinement=true")
     elif payload.get("automatic_alpha_refinement") is True:
         raise CampaignV2Error("automatic_alpha_refinement requires an explicit versioned adaptive_alpha_policy")
-    if payload.get("functional") not in _FUNCTIONAL_MARKERS:
-        raise CampaignV2Error("campaign declares an unsupported functional")
+    try:
+        xc_profile = require_lr_qualified(resolve_scientific_profile(
+            payload.get("functional"), payload.get("xc_profile"),
+        ))
+    except ScientificProfileError as exc:
+        raise CampaignV2Error(str(exc)) from exc
+    if payload.get("functional") != xc_profile.xc_functional:
+        raise CampaignV2Error("campaign functional must use its canonical declared family name")
     input_files = payload.get("input_files")
     if not isinstance(input_files, list) or not input_files:
         raise CampaignV2Error("campaign v2 requires an input_files identity inventory")
@@ -443,7 +444,8 @@ def load_campaign_v2(path: str | Path) -> dict[str, Any]:
         raise CampaignV2Error("campaign input identity does not match its declared inventory")
     return {
         **payload, "_manifest_path": str(candidate), "_campaign_root": str(candidate.parent.resolve()),
-        "_profile": profile, "_adaptive_alpha_policy": adaptive_policy,
+        "_profile": profile, "_xc_profile": xc_profile.to_mapping(),
+        "_adaptive_alpha_policy": adaptive_policy,
     }
 
 

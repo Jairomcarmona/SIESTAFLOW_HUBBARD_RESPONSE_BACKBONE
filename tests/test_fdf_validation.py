@@ -53,7 +53,10 @@ def test_kgrid_generation():
 def test_fdf_builder_integration():
     fdf = "MD.TypeOfRun CG\nMD.NumCGsteps 50\n"
     builder = FdfBuilder()
-    mod = builder.modify_fdf_content(fdf, alpha=0.1)
+    mod = builder.modify_fdf_content(
+        fdf, alpha=0.1, species="fixture", n=3, l=2, rc=3.0, omega=0.05,
+        execution_mode="DEVELOPMENT",
+    )
     # Check that validator logic applies (builder should call validator)
     assert "MD.NumCGsteps       0" in mod
     assert "MD.TypeOfRun" not in mod

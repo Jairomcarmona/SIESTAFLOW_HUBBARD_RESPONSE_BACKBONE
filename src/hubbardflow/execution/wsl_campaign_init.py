@@ -171,6 +171,7 @@ def initialize_campaign(
 
         config_payload.update({
             "functional": functional,
+            "xc_profile": normalized["xc_profile"],
             "pseudopotentials": normalized_pseudopotentials,
             "static_artifacts": static_node_paths,
             "compatibility_registry": str(registry_target),
@@ -219,6 +220,7 @@ def initialize_campaign(
             **config_payload,
             "schema": CONFIG_SCHEMA,
             "functional": functional,
+            "xc_profile": normalized["xc_profile"],
             "sites": normalized["sites"],
             "alpha_grid_ev": alpha_grid,
             "pseudopotentials": normalized_pseudopotentials,
@@ -254,6 +256,7 @@ def initialize_campaign(
             "name": name,
             "material": normalized["material"],
             "functional": functional,
+            "xc_profile": normalized["xc_profile"],
             "reference_fdf": "reference.fdf",
             "contract_file": "backend_contract.json",
             "lr_config_file": "lr_config.json",

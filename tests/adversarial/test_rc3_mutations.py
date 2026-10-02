@@ -7,7 +7,10 @@ from hubbardflow.siesta_backend.fdf_builder import FdfBuilder
 def test_mutation_serializer_swaps_u_rc():
     builder = FdfBuilder("SystemName test")
     with patch("hubbardflow.siesta_backend.fdf_builder.FdfBuilder.construct_dftu_proj_block", return_value="%block DFTU.proj\\n  Mn 1\\n  3 2\\n  0.05 0.00\\n  3.00 0.05\\n%endblock DFTU.proj"):
-        block = builder.construct_dftu_proj_block([{"target_subspace_id": "Mn", "n": 3, "l": 2, "rc": 3.0}], alpha=0.05)
+        block = builder.construct_dftu_proj_block(
+            [{"species": "Mn", "target_subspace_id": "Mn", "n": 3, "l": 2, "rc": 3.0, "omega": 0.05}],
+            alpha=0.05, execution_mode="DEVELOPMENT",
+        )
         with pytest.raises(AssertionError):
             assert "0.0500  0.0000" in block
 
@@ -17,7 +20,10 @@ def test_mutation_boolean_override_disabled():
     content = "DFTU.PotentialShift false"
     with patch("hubbardflow.siesta_backend.fdf_builder.FdfBuilder.replace_or_append_fdf_key") as mock_replace:
         mock_replace.return_value = content # disables override
-        new_content = builder.modify_fdf_content(content, alpha=0.1)
+        new_content = builder.modify_fdf_content(
+            content, alpha=0.1, species="fixture", n=3, l=2, rc=3.0, omega=0.05,
+            execution_mode="DEVELOPMENT",
+        )
         with pytest.raises(AssertionError):
             assert "DFTU.PotentialShift true" in new_content # The mutation causes the core state not to update
 
