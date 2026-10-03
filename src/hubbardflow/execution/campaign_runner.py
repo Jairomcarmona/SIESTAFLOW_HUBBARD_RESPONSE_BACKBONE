@@ -398,7 +398,7 @@ class CampaignRunner:
         # validated and use the allocation adapter below.
         lock_root = Path(self.profile.wsl.workspace_root) if self.profile.wsl else self.root
         self.resource_lock_path = lock_root / ".siestaflow" / "single-siesta.lock"
-        os.environ.update(self.profile.runtime.environment)
+        self.environment = {**os.environ, **self.profile.runtime.environment}
 
         self.config = json.loads((self.root / self.campaign["lr_config_file"]).read_text(encoding="utf-8"))
         fdf_path = self.root / self.campaign["reference_fdf"]
@@ -532,10 +532,10 @@ class CampaignRunner:
     def _slurm_hosts(self) -> tuple[str, ...]:
         """Resolve hosts in the already granted allocation; never submit jobs."""
         from hubbardflow.execution.slurm_environment import SlurmEnvironment
-        slurm = SlurmEnvironment.from_environ(os.environ)
+        slurm = SlurmEnvironment.from_environ(self.environment)
         completed = subprocess_run(
             ["scontrol", "show", "hostnames", slurm.nodelist],
-            check=False, capture_output=True, text=True, shell=False,
+            check=False, capture_output=True, text=True, shell=False, env=self.environment,
         )
         if completed.returncode != 0:
             raise CampaignV2Error("cannot resolve hosts in the granted Slurm allocation")
@@ -962,10 +962,10 @@ class CampaignRunner:
         factory = CapturingFactory()
         if self.profile.target == "slurm":
             adapter = SlurmAllocationExecutor(
-                self.profile, self.hosts, factory, self.admitted.validator, environment=os.environ,
+                self.profile, self.hosts, factory, self.admitted.validator, environment=self.environment,
             )
         else:
-            adapter = LocalSubprocessExecutor(factory, self.admitted.validator)
+            adapter = LocalSubprocessExecutor(factory, self.admitted.validator, env=self.environment)
         if fcntl is None:
             raise ExecutionContractError("SIESTA resource locking requires Linux/WSL fcntl")
         self.resource_lock_path.parent.mkdir(parents=True, exist_ok=True)

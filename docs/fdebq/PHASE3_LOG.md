@@ -152,3 +152,27 @@ The Part A fixture files and detached campaign remain unmodified during Phase
 - Conservative decision: each xfail is tied to a concrete absent path found in
   the baseline traceback; collection errors are ignored by exact test-file
   path because their imports fail before pytest can collect individual tests.
+- Full acceptance after commit `f52d7c2`: Windows `pytest tests` passed with
+  1,350 passed, 25 skipped, 20 xfailed in 286.97 seconds; WSL passed with
+  1,355 passed, 20 skipped, 20 xfailed in 609.21 seconds. The WSL replay ran;
+  Windows correctly skipped the POSIX-only replay. Ruff check and format checks
+  also passed. Remote CI had not run yet at this point.
+
+## 3.3 Explicit profile environment
+
+- Premise recheck: `campaign_runner.py` mutated `os.environ` before creating
+  the executor; `LocalSubprocessExecutor` omitted `env=`, `_slurm_hosts` read
+  process-global environment and its `scontrol` call omitted `env=`; Slurm
+  validation took `os.environ`. Every tracked profile uses `{}` for
+  `runtime.environment`, apart from an example with `<site-defined>` tokens.
+- The source-wide environment scan found `campaign_runner.py` as the only
+  execution-time environment reader beyond the unused `verify_locked_software`
+  PYTHONPATH guard. That validator has no call sites in `src/` or `tests/`, so
+  it does not depend on the runner mutation. Premise holds.
+- Changes: compute `CampaignRunner.environment` as the parent environment
+  overlaid with profile values; pass it to `scontrol`, Slurm validation, and
+  both executor variants. `LocalSubprocessExecutor` accepts an optional `env`
+  and passes it to `subprocess.run`; omitting it preserves inherited behavior.
+  `SlurmAllocationExecutor` passes its validated mapping to the delegated local
+  executor. The new test confirms the profile value reaches a child process and
+  mocked `scontrol` while `os.environ` remains unchanged.
