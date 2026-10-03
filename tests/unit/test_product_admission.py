@@ -8,7 +8,7 @@ from typing import Any, cast
 import pytest
 
 from hubbardflow.domain.perturbation_plan import AlphaStrategy, PlanStatus
-from hubbardflow.domain.subspace_inventory import InventoryStatus
+from hubbardflow.domain.subspace_inventory import InventoryReason, InventoryStatus
 from hubbardflow.execution.product_admission import (
     ExecutionAdmissionReason,
     ExecutionAdmissionStatus,
@@ -62,6 +62,72 @@ def test_explicit_direct_fixed_grid_does_not_require_i5_or_pilot_reuse() -> None
     assert admission.scientific_state_requirement is ExecutionRequirementStatus.NOT_REQUIRED
     assert admission.pilot_reuse_requirement is ExecutionRequirementStatus.NOT_REQUIRED
     assert admission.reference_reason_handling is ExecutionRequirementStatus.COVERAGE_DIAGNOSTIC_ONLY
+
+
+@pytest.mark.parametrize(
+    ("reason_codes", "expected_status", "expected_reason"),
+    [
+        pytest.param(
+            (InventoryReason.SPECIES_IDENTITY_NOT_ESTABLISHED,),
+            ExecutionAdmissionStatus.ADMISSIBLE_LEGACY_EQUIVALENT,
+            None,
+            id="species-identity-only",
+        ),
+        pytest.param(
+            (
+                InventoryReason.SPECIES_IDENTITY_NOT_ESTABLISHED,
+                InventoryReason.DFTU_LABEL_NO_ATOM,
+            ),
+            ExecutionAdmissionStatus.BLOCKED,
+            ExecutionAdmissionReason.INVENTORY_NOT_READY,
+            id="species-identity-and-label-no-atom",
+        ),
+        pytest.param(
+            (InventoryReason.DFTU_LABEL_NO_ATOM,),
+            ExecutionAdmissionStatus.BLOCKED,
+            ExecutionAdmissionReason.INVENTORY_NOT_READY,
+            id="label-no-atom-only",
+        ),
+        pytest.param(
+            (),
+            ExecutionAdmissionStatus.BLOCKED,
+            ExecutionAdmissionReason.INVENTORY_NOT_READY,
+            id="no-reason-codes",
+        ),
+    ],
+)
+def test_species_identity_only_inventory_allows_explicit_direct_plans(
+    reason_codes: tuple[InventoryReason, ...],
+    expected_status: ExecutionAdmissionStatus,
+    expected_reason: ExecutionAdmissionReason | None,
+) -> None:
+    snapshot, config = _valid_case()
+    inventory = SimpleNamespace(
+        **{
+            **snapshot.inventory.__dict__,
+            "status": InventoryStatus.SUBSPACE_MAPPING_NOT_ESTABLISHED,
+            "reason_codes": reason_codes,
+        }
+    )
+    plan = SimpleNamespace(**{**cast(Any, snapshot.planning).plan.__dict__, "inventory": inventory})
+    snapshot = cast(
+        ProductSnapshot,
+        SimpleNamespace(
+            **{
+                **snapshot.__dict__,
+                "planning": SimpleNamespace(plan=plan),
+                "inventory": inventory,
+            }
+        ),
+    )
+
+    admission = execution_admission(snapshot, config)
+
+    assert admission.status is expected_status
+    if expected_reason is None:
+        assert admission.reasons == ()
+    else:
+        assert admission.reasons == (expected_reason,)
 
 
 @pytest.mark.parametrize(
