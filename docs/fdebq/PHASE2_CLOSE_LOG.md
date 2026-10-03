@@ -58,6 +58,12 @@ Base: `84b8eb6` (`origin/fdebq/r2-task15-species-split`). Branch: `fdebq/r3-task
 | 20.6/P5 | TRUE | `rg -n 'setattr\(product_paths, "WORKSPACE"' tests/unit/test_product_paths.py` found four callers at lines 64, 78, 90, 99; the `test_missing_manifest_fails_closed` test is among them. |
 | 20.7/P1 | TRUE | `rg`/`Get-Content` showed `cli.py` attaches `add_product_options` to every `run`. Venv Python probe made a schema-valid v2 manifest, mocked `run_campaign_worker`, ran `cli.main(["run", manifest, "--output-dir", ignored])`; output was `exit: 17` and one worker call with mode `run`. |
 
+## 20.7 checks
+
+- Implemented rejection before legacy dispatch: a non-`.fdf` `run` with any of the ten product options exits 2 and names every supplied option. The new parametrized test covers each option individually; focused result: `10 passed`.
+- `cli.py` is outside `pyproject.toml`'s Ruff/mypy file lists. Before/after diagnostics: Ruff `2 → 2` (both pre-existing I001 import-order reports at lines 17 and 173); strict mypy `7 → 7` (pre-existing diagnostics at lines 157, 180, 183, 186, 204, 207, 208). No diagnostic is on the changed lines. No whole-file formatting or cleanup was done.
+- Configured checks plus new test: Ruff passed; format check reported `88 files already formatted`; configured strict mypy reported `Success: no issues found in 87 source files`. The new test's strict mypy check requires `MYPYPATH=src` so it resolves the checkout rather than the installed package.
+
 ## 20.1 checks and pre-existing-file static comparison
 
 - Focused tests: venv `pytest.exe tests/unit/test_campaign_runner_legacy_resume.py tests/unit/test_campaign_runner_synthetic.py tests/unit/test_campaign_runner_execution_identity.py tests/unit/test_campaign_plan.py -q` → `30 passed`.

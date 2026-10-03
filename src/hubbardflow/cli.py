@@ -272,6 +272,24 @@ def main(argv: list[str] | None = None) -> int:
 
     args = parser.parse_args(argv)
     try:
+        if args.command == "run" and Path(args.campaign).suffix.casefold() != ".fdf":
+            product_options = (
+                ("--lr-config", args.lr_config),
+                ("--reference-output", args.reference_output),
+                ("--reference-dm", args.reference_dm),
+                ("--coverage", args.coverage),
+                ("--alpha-strategy", args.alpha_strategy),
+                ("--identity-dir", args.identity_dir),
+                ("--allow-spin-flip", args.allow_spin_flip),
+                ("--allow-rotations", args.allow_rotations),
+                ("--output-dir", args.output_dir),
+                ("--override-plan-state", args.override_plan_state),
+            )
+            supplied_options = [name for name, value in product_options if value is not None]
+            if supplied_options:
+                raise ValueError(
+                    "product options require an FDF target: " + ", ".join(supplied_options)
+                )
         if args.command == "audit-fdf":
             audit_fdf(args)
         elif args.command == "init":
