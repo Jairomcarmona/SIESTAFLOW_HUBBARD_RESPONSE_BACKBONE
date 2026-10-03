@@ -198,3 +198,35 @@ The Part A fixture files and detached campaign remain unmodified during Phase
 - Added a test that records initial evidence, invokes the real shadow barrier
   to expand/install a replacement graph, then saves and reloads through the
   store and confirms the new checkpoint manager is used.
+- Post-commit `dd394b1` full suites passed: Windows 1,352 passed, 25 skipped,
+  20 xfailed in 292.85 seconds; WSL 1,357 passed, 20 skipped, 20 xfailed in
+  619.24 seconds. The 36 runner/replay tests, 101 product/science/architecture
+  tests, Ruff, format, strict store-module mypy, configured mypy (91 files),
+  and V6 passed as well.
+
+## 3.5 Observation assembly
+
+- Moved occupation extraction, projector fingerprints, reference selection,
+  receipt-bound observation assembly and dataset construction out of
+  `CampaignRunner` into `ObservationAssembler` and `campaign_files`. The runner
+  retains compatibility delegators and aliases; its new read-only inventory
+  properties provide current input hashes and precision policy to the
+  assembler. `CampaignShadow` now calls the assembler with the live DAG,
+  specs, records and checkpoint on each barrier, without `runner._` access.
+- Added unit coverage for the extracted file helpers and a real assembler test
+  that expands a shadow DAG, then parses hash-bound FDF/output/DM artifacts for
+  every expanded site. Existing parser-based Cu1 and occupation-precision
+  regressions also exercise the compatibility delegators.
+- The POSIX NIO P5 replay initially exposed that its campaign profile embedded
+  the active test interpreter path. The replay now pins `/usr/bin/python3` in
+  its local-Wsl fixture and updates only the corresponding normalized file
+  manifest entry; the analyzed result remains equal to the Part A fixture.
+- `campaign_runner.py` decreased from 2,207 lines / 47 methods at `dd394b1` to
+  1,892 lines / 49 methods. The two extra methods are the read-only properties;
+  moved instance methods remain as compatibility delegators.
+- Full acceptance: Windows 1,355 passed, 25 skipped, 20 xfailed and 4 subtests
+  in 296.84 seconds; WSL 1,360 passed, 20 skipped, 20 xfailed and 4 subtests
+  in 604.12 seconds. The POSIX replay passed in WSL. Ruff, format, configured
+  strict mypy (91 source files), strict mypy on the three extracted/test files,
+  architecture (8 tests), focused observation/shadow/parser tests (39 passed,
+  1 xfailed), and V6 integrity passed.

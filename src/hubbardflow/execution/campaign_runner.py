@@ -39,9 +39,18 @@ from hubbardflow.execution.campaign_v2 import (
 )
 from hubbardflow.execution.campaign_plan import campaign_inventory
 from hubbardflow.execution.campaign_shadow import CampaignShadow
+from hubbardflow.execution.campaign_files import (
+    build_verified_dataset as _build_verified_dataset,
+    campaign_relative_path as _campaign_relative_path,
+    dataset_half_width as _dataset_half_width,
+    dataset_half_widths as _dataset_half_widths,
+    source_record as _source_record,
+    verify_record_artifacts as _verify_record_artifacts,
+)
 from hubbardflow.execution.campaign_store import CampaignStore, atomic_json as _atomic_json
 from hubbardflow.execution.dag_contract import NodeState
 from hubbardflow.execution.execution_profile import ExecutionProfile
+from hubbardflow.execution.observation_assembly import ObservationAssembler
 from hubbardflow.execution.response_grid_context import response_grid_source_campaign_context
 from hubbardflow.siesta_backend.response_grid_semantics import extract_siesta_response_cell
 from hubbardflow.execution.generic_executor import (
@@ -139,155 +148,6 @@ def _build_dag(sites: list[dict[str, Any]], alpha_grid: list[float]) -> tuple[LR
     return LRDag((reference, *responses, alpha_gate, analysis), False, False), specs
 
 
-def _campaign_relative_path(root: Path, value: str | Path | None) -> str | None:
-    if not value:
-        return None
-    path = Path(value)
-    try:
-        return path.resolve().relative_to(root.resolve()).as_posix()
-    except (OSError, ValueError):
-        return str(value)
-
-
-def _build_verified_dataset(
-    observations: list[ResponseObservation],
-    sites: list[dict[str, Any]],
-    *,
-    reference_source: Mapping[str, Any],
-    response_sources: Mapping[tuple[int, float], Mapping[str, Mapping[str, Any]]],
-    trace_half_widths_electron: Mapping[tuple[int, float, str], list[float]] | None = None,
-    reference_trace_half_widths_electron: list[float] | None = None,
-    occupation_source: str = "matrix_trace_total",
-) -> dict[str, Any]:
-    """Persist the verified occupations and the exact run evidence they came from."""
-    site_index_map = [
-        {
-            "index": index,
-            "site_id": str(site["site_id"]),
-            "atom_index": site.get("atom_index"),
-            "orbit_id": site.get("orbit_id"),
-        }
-        for index, site in enumerate(sites)
-    ]
-    by_index = {item["index"]: item for item in site_index_map}
-    rows: list[dict[str, Any]] = []
-    seen: set[tuple[int, float]] = set()
-    for observation in observations:
-        key = (int(observation.perturbation_site), float(observation.alpha))
-        if key in seen:
-            raise ValueError(f"duplicate verified observation for site={key[0]}, alpha={key[1]}")
-        seen.add(key)
-        expected_indices = list(range(len(sites)))
-        if key[0] not in by_index or list(observation.site_labels) != expected_indices:
-            raise ValueError("verified observations do not match the campaign site index map")
-        if any(
-            len(values) != len(sites)
-            for values in (
-                observation.occupations_ref,
-                observation.occupations_bare,
-                observation.occupations_screened,
-            )
-        ):
-            raise ValueError("verified occupation vectors do not match the campaign site index map")
-        sources = response_sources.get(key, {})
-        bare_source = sources.get("bare")
-        screened_source = sources.get("screened")
-        if not isinstance(bare_source, Mapping) or not isinstance(screened_source, Mapping):
-            raise ValueError(f"verified response sources are incomplete for site={key[0]}, alpha={key[1]}")
-        observed_sites = []
-        for offset, site_index in enumerate(observation.site_labels):
-            site_index = int(site_index)
-            if site_index not in by_index:
-                raise ValueError(f"verified observation contains unknown site index {site_index}")
-            observed_sites.append({
-                "observed_site_index": site_index,
-                "observed_site_id": by_index[site_index]["site_id"],
-                "occupations_electron": {
-                    "reference": float(observation.occupations_ref[offset]),
-                    "bare": float(observation.occupations_bare[offset]),
-                    "screened": float(observation.occupations_screened[offset]),
-                },
-                ("occupation_half_widths_electron" if occupation_source == "siesta_occupations_total"
-                 else "matrix_trace_half_widths_electron"): {
-                    "reference": None if reference_trace_half_widths_electron is None else float(reference_trace_half_widths_electron[offset]),
-                    "bare": _dataset_half_width(trace_half_widths_electron, key, "bare", offset),
-                    "screened": _dataset_half_width(trace_half_widths_electron, key, "screened", offset),
-                },
-            })
-        rows.append({
-            "perturbed_site_index": key[0],
-            "perturbed_site_id": by_index[key[0]]["site_id"],
-            "alpha_eV": key[1],
-            "observed_sites": observed_sites,
-            "sources": {"bare": dict(bare_source), "screened": dict(screened_source)},
-        })
-    rows.sort(key=lambda item: (item["perturbed_site_index"], item["alpha_eV"]))
-    return {
-        "schema_version": (
-            "siestaflow.lr_u_verified_dataset.v2"
-            if occupation_source == "siesta_occupations_total"
-            else "siestaflow.lr_u_verified_dataset.v1"
-        ),
-        "occupation_source": occupation_source,
-        "status": "AVAILABLE",
-        "units": {"alpha": "eV", "occupations": "electron"},
-        "site_index_map": site_index_map,
-        "matrix_index_to_site_id": {str(item["index"]): item["site_id"] for item in site_index_map},
-        "site_id_to_matrix_index": {item["site_id"]: item["index"] for item in site_index_map},
-        "reference_source": dict(reference_source),
-        "rows": rows,
-    }
-
-
-def _dataset_half_widths(
-    trace_half_widths_electron: Mapping[tuple[int, float, str], list[float]] | None,
-    key: tuple[int, float],
-    mode: str,
-) -> list[float] | None:
-    if trace_half_widths_electron is None:
-        return None
-    values = trace_half_widths_electron.get((int(key[0]), float(key[1]), mode))
-    return None if values is None else [float(value) for value in values]
-
-
-def _dataset_half_width(
-    trace_half_widths_electron: Mapping[tuple[int, float, str], list[float]] | None,
-    key: tuple[int, float],
-    mode: str,
-    offset: int,
-) -> float | None:
-    values = _dataset_half_widths(trace_half_widths_electron, key, mode)
-    return None if values is None else values[offset]
-
-
-def _source_record(
-    root: Path,
-    node_id: str,
-    record: Mapping[str, Any],
-    receipt: NodeReceipt,
-    *,
-    mode: str,
-) -> dict[str, Any]:
-    command = record.get("command") or {}
-    provenance = record.get("provenance") or {}
-    artifact_hashes = provenance.get("artifacts") or {}
-    artifact_spec = record.get("artifact_spec") or {}
-    cwd = Path(str(command.get("cwd", "")))
-    dm_name = artifact_spec.get("dm")
-    return {
-        "node_id": node_id,
-        "mode": mode,
-        "state": receipt.state.value,
-        "fdf_path": _campaign_relative_path(root, command.get("stdin_path")),
-        "out_path": _campaign_relative_path(root, command.get("stdout_path")),
-        "dm_path": _campaign_relative_path(root, cwd / str(dm_name)) if dm_name else None,
-        "fdf_sha256": artifact_hashes.get("fdf"),
-        "out_sha256": artifact_hashes.get("output"),
-        "dm_sha256": artifact_hashes.get("dm"),
-        "evidence_digest": receipt.evidence_digest,
-    }
-
-
 class _Heartbeat:
     def __init__(self, path: Path, *, campaign_id: str):
         self.path = path
@@ -364,6 +224,16 @@ class _AttemptingFactory:
 
 
 class CampaignRunner:
+    @property
+    def input_sha256_by_path(self) -> Mapping[str, str]:
+        """Read-only inventory hashes consumed by observation assembly."""
+        return self._input_sha256_by_path
+
+    @property
+    def minimum_occupation_decimal_places(self) -> int | None:
+        """Current output precision requirement for occupation extraction."""
+        return self._minimum_occupation_decimal_places
+
     def __init__(self, manifest_path: str | Path):
         self.campaign = load_campaign_v2(manifest_path)
         verify_campaign_inventory(self.campaign)
@@ -460,6 +330,7 @@ class CampaignRunner:
                 self.shadow.install(self)
         self.records_path = self.control / "node-evidence.json"
         self.store = CampaignStore(self.records_path, lambda: self.executor.checkpoint)
+        self.observations = ObservationAssembler()
         self.records = self._load_records()
         self.reference_fdf = fdf_path
         self.reference_dm_name = self.config["reference_dm_name"]
@@ -1453,87 +1324,28 @@ class CampaignRunner:
     def _event_occupations(
         self, output_content: str, event: HubbardPopulationEvent, sites: list[dict[str, Any]],
     ) -> list[float]:
-        printed = read_printed_occupation_precision(
-            output_content, event, minimum_decimal_places=self._minimum_occupation_decimal_places,
+        return self.observations.event_occupations(
+            output_content, event, sites,
+            minimum_decimal_places=self._minimum_occupation_decimal_places,
         )
-        expected = [int(site["atom_index"]) for site in sites]
-        if len(printed) != len(event.atoms) or any(index not in printed for index in expected):
-            raise ValueError("selected Hubbard event lacks one or more declared correlated atom indices")
-        return [float(printed[index].total) for index in expected]
 
     def _event_trace_half_widths(
         self, output_content: str, event: HubbardPopulationEvent, sites: list[dict[str, Any]],
     ) -> list[float] | None:
-        """Read deterministic half-widths from the selected Occupations tokens."""
-        try:
-            precision = read_printed_occupation_precision(
-                output_content, event, minimum_decimal_places=self._minimum_occupation_decimal_places,
-            )
-        except (ValueError, KeyError, IndexError):
-            return None
-        expected = [int(site["atom_index"]) for site in sites]
-        if any(index not in precision for index in expected):
-            return None
-        return [float(precision[index].half_width) for index in expected]
+        return self.observations.event_trace_half_widths(
+            output_content, event, sites,
+            minimum_decimal_places=self._minimum_occupation_decimal_places,
+        )
 
     @staticmethod
     def _verify_record_artifacts(record: Mapping[str, Any], node_id: str) -> dict[str, str]:
-        """Bind extraction to bytes rechecked after the output-validator receipt."""
-        command = record.get("command")
-        spec = record.get("artifact_spec")
-        provenance = record.get("provenance")
-        if not isinstance(command, Mapping) or not isinstance(spec, Mapping) or not isinstance(provenance, Mapping):
-            raise ValueError(f"{node_id} has no complete validator provenance record")
-        declared = provenance.get("artifacts")
-        if not isinstance(declared, Mapping):
-            raise ValueError(f"{node_id} validator provenance has no artifact hashes")
-        cwd = Path(str(command.get("cwd", "")))
-        paths = {
-            "fdf": Path(str(command.get("stdin_path", ""))),
-            "output": Path(str(command.get("stdout_path", ""))),
-            "dm": cwd / str(spec.get("dm", "")),
-        }
-        actual: dict[str, str] = {}
-        for label, path in paths.items():
-            if not path.is_file():
-                raise ValueError(f"{node_id} validated {label} artifact is missing")
-            digest = sha256_file(path)
-            if declared.get(label) != digest:
-                raise ValueError(f"{node_id} {label} changed after output validation")
-            actual[label] = digest
-        parent_dm_name = spec.get("reference_dm")
-        semantic = provenance.get("semantic", {})
-        if parent_dm_name:
-            parent_dm = cwd / str(parent_dm_name)
-            if not parent_dm.is_file():
-                raise ValueError(f"{node_id} reference DM copy is missing")
-            parent_digest = sha256_file(parent_dm)
-            if not isinstance(semantic, Mapping) or semantic.get("reference_dm_sha256") != parent_digest:
-                raise ValueError(f"{node_id} reference DM changed after output validation")
-            actual["parent_dm"] = parent_digest
-        return actual
+        return _verify_record_artifacts(record, node_id)
 
     def _projector_fingerprint(self, site_id: str, fdf_text: str) -> str:
-        import re
-        match = re.search(
-            r"^\s*%block\s+DFTU\.Proj\s*$([\s\S]*?)^\s*%endblock(?:\s+DFTU\.Proj)?\s*$",
-            fdf_text, re.IGNORECASE | re.MULTILINE,
+        return self.observations.projector_fingerprint(
+            site_id, fdf_text, root=self.root, config=self.config,
+            input_sha256_by_path=self._input_sha256_by_path,
         )
-        if match is None:
-            raise ValueError("reference FDF lost its DFTU.Proj block after validation")
-        rows = [line.split("#", 1)[0].strip() for line in match.group(1).splitlines() if line.split("#", 1)[0].strip()]
-        for offset in range(0, len(rows), 4):
-            if rows[offset].split()[0] == site_id:
-                potential = self.config["pseudopotentials"].get(site_id)
-                if not potential:
-                    raise ValueError(f"no PSML is declared for correlated site {site_id}")
-                relative_path = _campaign_relative_path(self.root, potential)
-                digest = self._input_sha256_by_path.get(str(relative_path))
-                if digest is None:
-                    raise ValueError(f"PSML for correlated site {site_id} is absent from the verified input inventory")
-                return sha256(("\n".join(rows[offset:offset + 4]) + "\0" + digest).encode()).hexdigest()
-        raise ValueError(f"correlated site {site_id} has no DFTU.Proj record")
-
     def _analysis_input_provenance(self) -> dict[str, Any]:
         """Expose the campaign's declared inputs and runtime identity in the report."""
         def input_record(path: str | Path) -> dict[str, Any]:
@@ -1642,13 +1454,7 @@ class CampaignRunner:
             }
 
     def _reference_node(self, scf_level_id: str = "base") -> LRDagNode:
-        matches = [
-            node for node in self.dag.nodes
-            if node.kind is LRNodeKind.REFERENCE and (node.scf_level_id or "base") == scf_level_id
-        ]
-        if len(matches) != 1:
-            raise ValueError(f"expected one shared reference node for SCF level {scf_level_id!r}")
-        return matches[0]
+        return self.observations.reference_node(self.dag, scf_level_id)
 
     def _verified_observations(
         self, *, alpha_grid: list[float] | None = None, scf_level_id: str = "base",
@@ -1657,121 +1463,23 @@ class CampaignRunner:
         list[ResponseObservation], dict[float, str] | None, dict[str, Any],
         dict[tuple[int, float, str], list[float]], list[float] | None,
     ]:
-        receipts, records = self._checkpoint(), self.records
-        reference_node = self._reference_node(scf_level_id) if self.adaptive_policy is not None else next(
-            node for node in self.dag.nodes if node.kind is LRNodeKind.REFERENCE
+        return self.observations.verified_observations(
+            root=self.root,
+            campaign=self.campaign,
+            config=self.config,
+            sites=self.sites,
+            dag=self.dag,
+            specs=self.specs,
+            records=self.records,
+            checkpoint=self.checkpoint(),
+            admitted=self.admitted,
+            input_sha256_by_path=self._input_sha256_by_path,
+            minimum_decimal_places=self._minimum_occupation_decimal_places,
+            adaptive=self.adaptive_policy is not None,
+            alpha_grid=list(alpha_grid if alpha_grid is not None else self.alpha_grid),
+            scf_level_id=scf_level_id,
+            site_indices=site_indices,
         )
-        reference_id = reference_node.node_id
-        selected_grid = list(alpha_grid if alpha_grid is not None else self.alpha_grid)
-        reference = records.get(reference_id, {})
-        if receipts.get(reference_id) is None or receipts[reference_id].state is not NodeState.VALIDATED:
-            raise ValueError("validated reference receipt is missing")
-        command = reference.get("command", {})
-        reference_output = Path(command.get("stdout_path", ""))
-        reference_fdf = Path(command.get("stdin_path", ""))
-        if not reference_output.is_file() or not reference_fdf.is_file():
-            raise ValueError("validated reference FDF/output artifacts are missing")
-        reference_hashes = self._verify_record_artifacts(reference, reference_id)
-        output_text = reference_output.read_text(encoding="utf-8", errors="replace")
-        fdf_text = reference_fdf.read_text(encoding="utf-8", errors="replace")
-        reference_event = select_converged_screened_event(output_text)
-        reference_occ = self._event_occupations(output_text, reference_event, self.sites)
-        reference_trace_half_widths = self._event_trace_half_widths(output_text, reference_event, self.sites)
-        reference_moments, magnetic_parser = reference_moments_from_fdf_and_output(fdf_text, output_text)
-
-        indexed: dict[tuple[int, float, str], tuple[LRDagNode, dict[str, Any]]] = {}
-        nodes_by_id = {node.node_id: node for node in self.dag.nodes}
-        for node_id, spec in self.specs.items():
-            node = nodes_by_id[node_id]
-            if (node.scf_level_id or "base") != scf_level_id:
-                continue
-            if not any(abs(float(spec.alpha_ev) - alpha) <= 1e-14 for alpha in selected_grid):
-                continue
-            receipt = receipts.get(node_id)
-            record = records.get(node_id)
-            if receipt is None or receipt.state is not NodeState.VALIDATED or not isinstance(record, dict):
-                raise ValueError(f"validated receipt/evidence missing for {node_id}")
-            if record.get("evidence_digest") != receipt.evidence_digest:
-                raise ValueError(f"receipt/evidence digest mismatch for {node_id}")
-            indexed[(spec.site_index, float(spec.alpha_ev), spec.mode.value)] = (node, record)
-
-        observations: list[ResponseObservation] = []
-        trace_half_widths_electron: dict[tuple[int, float, str], list[float]] = {}
-        tolerance = self.campaign.get("magnetic_moment_tolerance_muB")
-        alpha_state: dict[float, str] | None = {} if tolerance is not None else None
-        magnetic_rows: dict[str, Any] = {"reference_parser": magnetic_parser, "reference_moments_muB": reference_moments.tolist(), "by_alpha": {}}
-        reference_dm_hash = reference_hashes["dm"]
-        projector_fingerprints = {
-            site_index: self._projector_fingerprint(site["site_id"], fdf_text)
-            for site_index, site in enumerate(self.sites)
-        }
-        for alpha in selected_grid:
-            branch_differences: list[float] = []
-            magnetic_per_site: dict[str, Any] = {}
-            for site_index, site in enumerate(self.sites):
-                if site_indices is not None and site_index not in site_indices:
-                    continue
-                try:
-                    bare_node, bare_record = indexed[(site_index, alpha, "BARE")]
-                    screened_node, screened_record = indexed[(site_index, alpha, "SCREENED")]
-                except KeyError as exc:
-                    raise ValueError(f"incomplete mode/site/alpha pair for site {site['site_id']} at alpha={alpha}") from exc
-                bare_output = Path(bare_record["command"]["stdout_path"])
-                screened_output = Path(screened_record["command"]["stdout_path"])
-                bare_hashes = self._verify_record_artifacts(bare_record, bare_node.node_id)
-                screened_hashes = self._verify_record_artifacts(screened_record, screened_node.node_id)
-                for node_id, record in ((bare_node.node_id, bare_record), (screened_node.node_id, screened_record)):
-                    if record.get("reference_dm_sha256") != reference_dm_hash:
-                        raise ValueError(f"{node_id} parent DM does not match the validated reference DM")
-                bare_text = bare_output.read_text(encoding="utf-8", errors="replace")
-                bare_event = self.admitted.factory.bare_profile.select_response(bare_text).response_event
-                screened_text = screened_output.read_text(encoding="utf-8", errors="replace")
-                screened_event = select_converged_screened_event(screened_text)
-                bare_occ = self._event_occupations(bare_text, bare_event, self.sites)
-                screened_occ = self._event_occupations(screened_text, screened_event, self.sites)
-                bare_half_widths = self._event_trace_half_widths(bare_text, bare_event, self.sites)
-                screened_half_widths = self._event_trace_half_widths(screened_text, screened_event, self.sites)
-                if bare_half_widths is not None:
-                    trace_half_widths_electron[(site_index, float(alpha), "bare")] = bare_half_widths
-                if screened_half_widths is not None:
-                    trace_half_widths_electron[(site_index, float(alpha), "screened")] = screened_half_widths
-                screened_fdf = Path(screened_record["command"]["stdin_path"])
-                moments, screened_magnetic_parser = reference_moments_from_fdf_and_output(
-                    screened_fdf.read_text(encoding="utf-8", errors="replace"), screened_text,
-                )
-                difference = float(abs(moments - reference_moments).max())
-                branch_differences.append(difference)
-                magnetic_per_site[str(site["site_id"])] = {
-                    "moments_muB": moments.tolist(), "max_abs_difference_from_reference_muB": difference,
-                    "parser": screened_magnetic_parser,
-                }
-                observations.append(ResponseObservation(
-                    perturbation_site=site_index,
-                    alpha=float(alpha),
-                    site_labels=list(range(len(self.sites))),
-                    occupations_ref=reference_occ,
-                    occupations_bare=bare_occ,
-                    occupations_screened=screened_occ,
-                    parent_dm_sha256=reference_dm_hash,
-                    projector_fingerprints=projector_fingerprints,
-                    bare_fdf_sha256=bare_hashes["fdf"],
-                    bare_out_sha256=bare_hashes["output"],
-                    screened_fdf_sha256=screened_hashes["fdf"],
-                    screened_out_sha256=screened_hashes["output"],
-                ))
-            max_difference = max(branch_differences, default=float("inf"))
-            state_label = None
-            if tolerance is not None:
-                state_label = "reference_branch" if max_difference <= float(tolerance) else f"changed_branch_at_alpha_{alpha}"
-                assert alpha_state is not None
-                alpha_state[alpha] = state_label
-            magnetic_rows["by_alpha"][str(alpha)] = {
-                "state_label": state_label, "continuity_known": tolerance is not None,
-                "tolerance_muB": tolerance,
-                "max_abs_difference_from_reference_muB": max_difference,
-                "per_perturbed_site": magnetic_per_site,
-            }
-        return observations, alpha_state, magnetic_rows, trace_half_widths_electron, reference_trace_half_widths
 
     def _response_observation_dataset(
         self, observations: list[ResponseObservation], *, scf_level_id: str = "base",
@@ -1779,42 +1487,19 @@ class CampaignRunner:
         reference_trace_half_widths_electron: list[float] | None = None,
         occupation_source: str = "matrix_trace_total",
     ) -> dict[str, Any]:
-        receipts = self._checkpoint()
-        reference_node = self._reference_node(scf_level_id) if self.adaptive_policy is not None else next(
-            node for node in self.dag.nodes if node.kind is LRNodeKind.REFERENCE
-        )
-        reference_id = reference_node.node_id
-        reference_receipt = receipts.get(reference_id)
-        reference_record = self.records.get(reference_id)
-        if reference_receipt is None or not isinstance(reference_record, Mapping):
-            raise ValueError("validated reference evidence is unavailable for the report dataset")
-        reference_source = _source_record(
-            self.root, reference_id, reference_record, reference_receipt, mode="REFERENCE_SCREENED",
-        )
-        sources_by_perturbation: dict[tuple[int, float], dict[str, Mapping[str, Any]]] = {}
-        for node_id, spec in self.specs.items():
-            node = next(node for node in self.dag.nodes if node.node_id == node_id)
-            if (node.scf_level_id or "base") != scf_level_id:
-                continue
-            if not any(abs(float(spec.alpha_ev) - float(item.alpha)) <= 1e-14 for item in observations):
-                continue
-            receipt = receipts.get(node_id)
-            record = self.records.get(node_id)
-            if receipt is None or not isinstance(record, Mapping):
-                raise ValueError(f"validated source evidence is unavailable for {node_id}")
-            key = (int(spec.site_index), float(spec.alpha_ev))
-            sources_by_perturbation.setdefault(key, {})[spec.mode.value.casefold()] = _source_record(
-                self.root, node_id, record, receipt, mode=spec.mode.value,
-            )
-        return _build_verified_dataset(
-            observations, self.sites,
-            reference_source=reference_source,
-            response_sources=sources_by_perturbation,
+        return self.observations.response_observation_dataset(
+            root=self.root,
+            sites=self.sites,
+            dag=self.dag,
+            specs=self.specs,
+            records=self.records,
+            checkpoint=self.checkpoint(),
+            observations=observations,
+            scf_level_id=scf_level_id,
             trace_half_widths_electron=trace_half_widths_electron,
             reference_trace_half_widths_electron=reference_trace_half_widths_electron,
             occupation_source=occupation_source,
         )
-
     def _analysis_execution_identity(
         self, dataset: Mapping[str, Any], *, scf_level_id: str, alpha_grid: list[float],
     ) -> dict[str, Any]:

@@ -97,7 +97,7 @@ def test_nio_p5_runner_replay_matches_part_a_and_resumes(
                 "evidence": "VALIDATED_RUNTIME",
                 "wsl": {
                     "distribution": "Ubuntu",
-                    "python_executable": sys.executable,
+                    "python_executable": "/usr/bin/python3",
                     "workspace_root": str(tmp_path),
                 },
                 "allocation": {

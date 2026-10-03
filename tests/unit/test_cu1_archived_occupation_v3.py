@@ -16,6 +16,7 @@ from hubbardflow.execution.campaign_runner import (
     CampaignRunner,
     _build_verified_dataset,
 )
+from hubbardflow.execution.observation_assembly import ObservationAssembler
 from hubbardflow.siesta_backend.siesta542_bare_profile import (
     Siesta542PotentialShiftHamiltonianProfile,
 )
@@ -90,6 +91,7 @@ def test_archived_cu1_occupations_v3_builds_verified_dataset_without_authorizing
     sites = [{"site_id": "Cu1", "atom_index": 1, "orbit_id": "Cu1"}]
     runner = object.__new__(CampaignRunner)
     runner._minimum_occupation_decimal_places = None
+    runner.observations = ObservationAssembler()
     reference_occupations = runner._event_occupations(
         reference_text, reference_event, sites,
     )

@@ -9,8 +9,10 @@ from __future__ import annotations
 import json
 from dataclasses import replace
 from fractions import Fraction
+from hashlib import sha256
 from pathlib import Path
-from typing import Any
+from types import SimpleNamespace
+from typing import Any, cast
 
 import numpy as np
 import pytest
@@ -46,6 +48,8 @@ from hubbardflow.execution.generic_executor import (
     dag_digest,
 )
 from hubbardflow.execution.lr_dag import LRDagNode
+from hubbardflow.execution.observation_assembly import ObservationAssembler
+from hubbardflow.siesta_backend.siesta542_bare_profile import Siesta542PotentialShiftHamiltonianProfile
 from tests.unit.test_coverage import DIGEST, _toy
 
 
@@ -118,6 +122,9 @@ def _runner(
     runner.results = root / "results"
     runner.checkpoint_path = runner.control / "dag-checkpoint.json"
     runner.records_path = runner.control / "node-evidence.json"
+    runner._input_sha256_by_path = {}
+    runner._minimum_occupation_decimal_places = None
+    runner.observations = ObservationAssembler()
     runner.campaign = {
         "campaign_id": "synthetic",
         "input_identity": DIGEST,
@@ -131,6 +138,10 @@ def _runner(
     ]
     runner.alpha_grid = [-0.02, -0.01, 0.01, 0.02]
     runner.config = {"analysis_policy": {"estimator": "linear"}}
+    runner.admitted = cast(
+        Any,
+        SimpleNamespace(factory=SimpleNamespace(bare_profile=Siesta542PotentialShiftHamiltonianProfile())),
+    )
     runner.analysis_policy = LRAnalysisPolicy(estimator="linear")
     runner.adaptive_policy = None
     runner.adaptive_state = None
@@ -174,7 +185,7 @@ def _runner(
             for k, s in runner.specs.items()
             if k in receipts and receipts[k].state is NodeState.VALIDATED
         }
-        requested = set(kwargs.get("site_indices", computed))
+        requested = set(kwargs.get("site_indices") or computed)
         assert requested <= computed
         observations, widths = _observations(plan, requested, fail=fail)
         return (
@@ -200,8 +211,8 @@ def _runner(
         }
 
     monkeypatch.setattr(runner, "_execute_siesta", siesta)
-    monkeypatch.setattr(runner, "_verified_observations", verified)
-    monkeypatch.setattr(runner, "_response_observation_dataset", dataset)
+    monkeypatch.setattr(runner.observations, "verified_observations", verified)
+    monkeypatch.setattr(runner.observations, "response_observation_dataset", dataset)
     monkeypatch.setattr(runner, "_analysis_input_provenance", dict)
     monkeypatch.setattr(runner, "_revalidate_reuse", lambda: None)
     if runner.shadow is not None and complete_synthetic_state:
@@ -285,6 +296,159 @@ def test_store_uses_post_expansion_checkpoint_and_round_trips_records(
     records = reloaded.load_records(runner._identity())
     assert records[node.node_id]["kind"] == "post-expansion-store-test"
     assert reloaded.checkpoint()[node.node_id] == receipt
+
+
+def test_real_observation_assembler_reads_nodes_added_by_shadow_expansion(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    runner, _, _ = _runner(tmp_path, monkeypatch, _plan(), fail=True)
+    assert runner.shadow is not None
+    for node in runner.dag.nodes:
+        if node.perturbation is not None:
+            runner._record_receipt(node, NodeReceipt(node.node_id, NodeState.VALIDATED, DIGEST))
+
+    # This real barrier rejects the synthetic shadow and installs the expanded graph.
+    assert runner.shadow.prepare(runner) is False
+    expanded_ids = {node.node_id for node in runner.dag.nodes if node.perturbation is not None}
+    assert len(expanded_ids) == len(runner.sites) * len(runner.alpha_grid) * 2
+
+    # Replace the shadow-test oracle with the production assembler after graph replacement.
+    runner.observations = ObservationAssembler()
+    runner.admitted = cast(
+        Any,
+        SimpleNamespace(factory=SimpleNamespace(bare_profile=Siesta542PotentialShiftHamiltonianProfile())),
+    )
+    pseudo_dir = tmp_path / "pseudos"
+    pseudo_dir.mkdir()
+    pseudo_hashes: dict[str, str] = {}
+    pseudo_paths: dict[str, str] = {}
+    for site in runner.sites:
+        pseudo = pseudo_dir / f"{site['site_id']}.psml"
+        pseudo.write_text("verified synthetic PSML placeholder\n", encoding="utf-8")
+        pseudo_paths[site["site_id"]] = str(pseudo)
+        pseudo_hashes[pseudo.relative_to(tmp_path).as_posix()] = sha256(pseudo.read_bytes()).hexdigest()
+    runner.config = {"pseudopotentials": pseudo_paths}
+    runner._input_sha256_by_path = pseudo_hashes
+
+    projection_rows: list[str] = []
+    for site in runner.sites:
+        projection_rows.extend((f"{site['site_id']} 1", "1 0", "0.0 0.0", "2.0 0.2"))
+    fdf_text = (
+        f"NumberOfAtoms {len(runner.sites)}\nSpin non-polarized\n"
+        "%block DFTU.Proj\n" + "\n".join(projection_rows) + "\n%endblock DFTU.Proj\n"
+    )
+
+    def population_event(occupation: float) -> str:
+        rows = ["hubbard_term: recalculating local occupations 1"]
+        for atom_index in range(1, len(runner.sites) + 1):
+            rows.extend(
+                (
+                    f"hubbard_term: atom, species: {atom_index} 1",
+                    f"1 1 {occupation:.6f}",
+                    f"Occupations: {occupation:.6f} {occupation:.6f}",
+                )
+            )
+        rows.append("recalculating Hamiltonian")
+        return "\n".join(rows)
+
+    reference_output = (
+        "\n".join(
+            (
+                "redata: Spin configuration = none",
+                "redata: Number of spin components = 1",
+                "redata: Time-Reversal Symmetry = T",
+                "SCF Convergence by density criterion",
+                "Using DM_out to compute the final energy and forces",
+                population_event(0.500000),
+                "Job completed",
+                "siesta: normal completion",
+            )
+        )
+        + "\n"
+    )
+    dm_hash = sha256(b"reference density matrix\n").hexdigest()
+
+    def register(node: LRDagNode) -> NodeReceipt:
+        node_dir = tmp_path / "assembled" / sha256(node.node_id.encode()).hexdigest()[:16]
+        node_dir.mkdir(parents=True)
+        fdf_path = node_dir / "input.fdf"
+        out_path = node_dir / "siesta.out"
+        dm_path = node_dir / "run.DM"
+        fdf_path.write_text(fdf_text, encoding="utf-8")
+        if node.perturbation is None:
+            out_path.write_text(reference_output, encoding="utf-8")
+            dm_path.write_bytes(b"reference density matrix\n")
+            artifact_spec = {"dm": "run.DM"}
+            semantic: dict[str, Any] = {}
+        else:
+            spec = node.perturbation
+            if spec.mode is ResponseMode.BARE:
+                output = (
+                    "\n".join(
+                        (
+                            "redata: SCF mix quantity = Hamiltonian",
+                            population_event(0.500000),
+                            "stepf: Fermi-Dirac step function",
+                            population_event(0.490000),
+                            "scf: 1",
+                            "siesta: normal completion",
+                        )
+                    )
+                    + "\n"
+                )
+            else:
+                output = (
+                    "\n".join(
+                        (
+                            "redata: Spin configuration = none",
+                            "redata: Number of spin components = 1",
+                            "redata: Time-Reversal Symmetry = T",
+                            "SCF Convergence by density criterion",
+                            "Using DM_out to compute the final energy and forces",
+                            population_event(0.490000),
+                            "Job completed",
+                            "siesta: normal completion",
+                        )
+                    )
+                    + "\n"
+                )
+            out_path.write_text(output, encoding="utf-8")
+            dm_path.write_bytes(f"{node.node_id}\n".encode())
+            parent_path = node_dir / "reference.DM"
+            parent_path.write_bytes(b"reference density matrix\n")
+            artifact_spec = {"dm": "run.DM", "reference_dm": "reference.DM"}
+            semantic = {"reference_dm_sha256": dm_hash}
+
+        digest = sha256(node.node_id.encode()).hexdigest()
+        artifacts = {
+            "fdf": sha256(fdf_path.read_bytes()).hexdigest(),
+            "output": sha256(out_path.read_bytes()).hexdigest(),
+            "dm": sha256(dm_path.read_bytes()).hexdigest(),
+        }
+        runner.records[node.node_id] = {
+            "evidence_digest": digest,
+            "artifact_spec": artifact_spec,
+            "command": {
+                "cwd": str(node_dir),
+                "stdin_path": str(fdf_path),
+                "stdout_path": str(out_path),
+            },
+            "provenance": {"artifacts": artifacts, "semantic": semantic},
+            "reference_dm_sha256": dm_hash if node.perturbation is not None else None,
+        }
+        return NodeReceipt(node.node_id, NodeState.VALIDATED, digest)
+
+    receipts = {
+        node.node_id: register(node)
+        for node in runner.dag.nodes
+        if node.node_id == "reference" or node.node_id in expanded_ids
+    }
+    runner.executor.checkpoint.save(receipts)
+
+    observations, _, _, _, _ = runner.shadow._data(runner)
+    assert {observation.perturbation_site for observation in observations} == set(range(len(runner.sites)))
+    assert len(observations) == len(runner.sites) * len(runner.alpha_grid)
 
 
 def test_production_without_complete_orbital_gap_and_smoothness_gate_expands(
