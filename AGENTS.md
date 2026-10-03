@@ -60,6 +60,7 @@ Layering (respect it strictly):
 10. `tests/unit/test_import_architecture.py` must pass; its allowlists may only shrink.
 11. Never import a private name (leading underscore) from another module, never call a
     private method of another class; existing cases are allowlisted for Phase 3.
+12. `tests/known_failures.txt` may only shrink.
 
 ## 3. Code style
 

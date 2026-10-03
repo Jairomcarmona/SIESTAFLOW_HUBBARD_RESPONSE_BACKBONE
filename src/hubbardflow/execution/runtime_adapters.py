@@ -68,8 +68,15 @@ def _failed_receipt(node: LRDagNode, completed: CompletedProcess[str]) -> NodeRe
 class LocalSubprocessExecutor:
     """Run one materialized node locally using argv execution, never a shell."""
 
-    def __init__(self, factory: CommandFactory, validator: OutputValidator):
+    def __init__(
+        self,
+        factory: CommandFactory,
+        validator: OutputValidator,
+        *,
+        env: Mapping[str, str] | None = None,
+    ):
         self.factory, self.validator = factory, validator
+        self.env = env
 
     def execute(self, node: LRDagNode) -> NodeReceipt:
         command = self.factory.command_for(node)
@@ -83,7 +90,7 @@ class LocalSubprocessExecutor:
                 stdout=stdout_handle if stdout_handle else None,
                 stderr=stderr_handle if stderr_handle else None,
                 capture_output=stdout_handle is None and stderr_handle is None,
-                text=True, shell=False, check=False,
+                text=True, shell=False, check=False, env=self.env,
             )
         except OSError as exc:
             completed = CompletedProcess(command.argv, 127, "", str(exc))
@@ -122,7 +129,7 @@ class SlurmAllocationExecutor:
         slurm = SlurmEnvironment.from_environ(actual_environment)
         slurm.validate_profile(profile, hosts)
         self.profile, self.slurm, self.hosts = profile, slurm, tuple(hosts)
-        self._delegate = LocalSubprocessExecutor(factory, validator)
+        self._delegate = LocalSubprocessExecutor(factory, validator, env=actual_environment)
 
     def execute(self, node: LRDagNode) -> NodeReceipt:
         return self._delegate.execute(node)

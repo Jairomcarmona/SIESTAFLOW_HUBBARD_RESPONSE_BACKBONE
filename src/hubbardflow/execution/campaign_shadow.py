@@ -128,7 +128,7 @@ class CampaignShadow:
             (),
             ShadowReason.INCOMPLETE_RESPONSE_EVIDENCE,
         )
-        failed = runner._checkpoint()[node.node_id]
+        failed = runner.checkpoint()[node.node_id]
         self.failed_runs.append(
             {
                 "node_id": node.node_id,
@@ -136,10 +136,10 @@ class CampaignShadow:
                 "record": runner.records[node.node_id],
             }
         )
-        receipts = {k: v for k, v in runner._checkpoint().items() if k != node.node_id}
+        receipts = {k: v for k, v in runner.checkpoint().items() if k != node.node_id}
         runner.executor.checkpoint.save(receipts)
         runner.records.pop(node.node_id, None)
-        runner._save_records()
+        runner.save_records()
         return self._expand(runner, (outcome,))
 
     def _data(
@@ -152,10 +152,23 @@ class CampaignShadow:
         list[float] | None,
     ]:
         computed = set(self.plan.computed_columns) | set(self.expanded)
-        return runner._verified_observations(
+        return runner.observations.verified_observations(
+            root=runner.root,
+            campaign=runner.campaign,
+            config=runner.config,
+            sites=runner.sites,
+            dag=runner.dag,
+            specs=runner.specs,
+            records=runner.records,
+            checkpoint=runner.checkpoint(),
+            admitted=runner.admitted,
+            input_sha256_by_path=runner.input_sha256_by_path,
+            minimum_decimal_places=runner.minimum_occupation_decimal_places,
+            adaptive=runner.adaptive_policy is not None,
+            alpha_grid=list(runner.alpha_grid),
             site_indices=tuple(
                 i for i, s in enumerate(self.plan.inventory.subspaces) if s.site_id in computed
-            )
+            ),
         )
 
     def _outcomes(
@@ -215,10 +228,10 @@ class CampaignShadow:
     def replay_barrier(self, runner: CampaignRunner) -> None:
         """Resume grants no shadow status from JSON; recompute derived evidence."""
         derived = {"alpha-diagnostic-gate", "matrix-analysis"}
-        runner.executor.checkpoint.save({k: v for k, v in runner._checkpoint().items() if k not in derived})
+        runner.executor.checkpoint.save({k: v for k, v in runner.checkpoint().items() if k not in derived})
         for key in derived:
             runner.records.pop(key, None)
-        runner._save_records()
+        runner.save_records()
 
     def analysis_data(
         self, runner: CampaignRunner
@@ -237,8 +250,14 @@ class CampaignShadow:
             raise ExecutionContractError(
                 "shadow evidence changed; explicit expansion must finish before analysis"
             )
-        dataset = runner._response_observation_dataset(
-            observations,
+        dataset = runner.observations.response_observation_dataset(
+            root=runner.root,
+            sites=runner.sites,
+            dag=runner.dag,
+            specs=runner.specs,
+            records=runner.records,
+            checkpoint=runner.checkpoint(),
+            observations=observations,
             trace_half_widths_electron=widths,
             reference_trace_half_widths_electron=reference_widths,
             occupation_source="siesta_occupations_total",

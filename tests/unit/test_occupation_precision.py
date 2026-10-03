@@ -6,6 +6,7 @@ from hubbardflow.siesta_backend.occupation_precision import (
     read_printed_occupation_precision,
 )
 from hubbardflow.execution.campaign_runner import CampaignRunner
+from hubbardflow.execution.observation_assembly import ObservationAssembler
 
 
 def _matrix_event(diagonal_token="0.10000", *, down_spin=True):
@@ -50,6 +51,7 @@ def test_campaign_observable_uses_occupations_total_not_matrix_trace():
     measured = read_printed_occupation_precision(output, event)[1]
     runner = object.__new__(CampaignRunner)
     runner._minimum_occupation_decimal_places = None
+    runner.observations = ObservationAssembler()
     selected = runner._event_occupations(output, event, [{"atom_index": 1}])
     assert selected == [1.000020]
     assert selected[0] != event.atoms[0].trace_total

@@ -1,0 +1,31 @@
+# Baseline-only items. Missing-file paths are checked before xfail is applied;
+# when a referenced file exists, the test runs normally and can expose changes.
+# Syntax: xfail | exact pytest node id | reason
+xfail | tests/test_cli_and_manifest.py::test_cli_audit_fdf_reports_repository_nio_pbe_spin_and_dftu | missing file: campaigns/nio_afmii_pbe_restart_v3_20260927/inputs/reference_pbe.fdf
+xfail | tests/unit/test_cu1_archived_occupation_v3.py::test_archived_cu1_occupations_v3_builds_verified_dataset_without_authorizing_u | missing file: docs/evidence/siesta542_openmpi_slurm_full_campaign_20260920_run2_wheel/artifact-manifest.json
+xfail | tests/unit/test_cu3n_symmetry_shadow_package.py::test_fdf_mutation_changes_only_the_declared_target_shift | missing file: CU3N_PBE_LRU_SC222_RC3p0_V1/runs/10_X_BARE_MINUS/siesta.fdf
+xfail | tests/unit/test_cu_one_atom_noise_calibrated_campaign.py::test_static_campaign_is_admitted_without_a_calibration_result | missing file: LOCKS.sha256
+xfail | tests/unit/test_cu_one_atom_noise_calibrated_campaign.py::test_lock_and_plan_strictly_separate_calibration_from_response_mesh | missing file: campaigns/cu_one_atom_noise_calibrated_lr_v1/locks/calibration-methodology-lock.json
+xfail | tests/unit/test_cu_one_atom_noise_calibrated_campaign.py::test_fdf_hash_and_recorded_native_six_decimal_format_evidence_are_locked | missing file: campaigns/cu_one_atom_noise_calibrated_lr_v1/locks/response-methodology-lock.json
+xfail | tests/unit/test_fdf_symmetry_adapter.py::test_real_campaign_fdf_parses_but_never_uses_initial_spin_as_evidence[NiO] | missing file: NIO_PBE_LRU_SC222_V1/runs/00_REFERENCE/siesta.fdf
+xfail | tests/unit/test_fdf_symmetry_adapter.py::test_real_campaign_fdf_parses_but_never_uses_initial_spin_as_evidence[MnO] | missing file: MNO_PBE_LRU_SC222_VALIDATION_V1_1/runs/00_REFERENCE/siesta.fdf
+xfail | tests/unit/test_fdf_symmetry_adapter.py::test_real_campaign_fdf_parses_but_never_uses_initial_spin_as_evidence[FeO] | missing file: FEO_PBE_LRU_SC222_VALIDATION_V1/runs/00_REFERENCE/siesta.fdf
+xfail | tests/unit/test_fdf_symmetry_adapter.py::test_real_campaign_fdf_parses_but_never_uses_initial_spin_as_evidence[Cu3N] | missing file: CU3N_PBE_LRU_SC222_RC3p0_V1/runs/00_REFERENCE/siesta.fdf
+xfail | tests/unit/test_fdf_symmetry_adapter.py::test_evidence_must_bind_hash_and_cover_every_atom | missing file: CU3N_PBE_LRU_SC222_RC3p0_V1/runs/00_REFERENCE/siesta.fdf
+xfail | tests/unit/test_fdf_symmetry_adapter.py::test_missing_magnetic_evidence_materializes_explicit_site_neutral_plan | missing file: NIO_PBE_LRU_SC222_V1/runs/00_REFERENCE/siesta.fdf
+xfail | tests/unit/test_hubbard_parameter_semantics.py::test_scalar_charge_result_cannot_feed_dudarev_input | missing file: src/siestaflow_hubbard
+xfail | tests/unit/test_hubbard_parameter_semantics.py::test_physical_fdf_replaces_the_saved_u_entry_with_explicit_ueff | missing file: src/siestaflow_hubbard
+xfail | tests/unit/test_mno_foreground_preflight.py::test_mno_preflight_reuses_canonical_foreground_slurm_contract | missing file: src/siestaflow_hubbard
+xfail | tests/unit/test_mno_independent_audit_regressions.py::test_screened_reanalysis_rejects_an_unconverged_trace | missing file: src/siestaflow_hubbard
+xfail | tests/unit/test_mno_independent_audit_regressions.py::test_screened_reanalysis_rejects_an_explicit_nonconvergence | missing file: src/siestaflow_hubbard
+xfail | tests/unit/test_mno_independent_audit_regressions.py::test_screened_reanalysis_rejects_a_population_block_after_completion | missing file: src/siestaflow_hubbard
+xfail | tests/unit/test_mno_independent_audit_regressions.py::test_screened_reanalysis_keeps_archived_converged_values | missing file: src/siestaflow_hubbard
+xfail | tests/unit/test_mno_independent_audit_regressions.py::test_quantized_analysis_declares_scalar_charge_and_keeps_estimate | missing file: src/siestaflow_hubbard
+
+# Collection imports depend on the same absent historical source trees/data.
+# Syntax: collect_ignore | test file | reason
+collect_ignore | adversarial/test_method2_reference.py | missing package: src/siestaflow_hubbard
+collect_ignore | adversarial/test_phase4_alpha0_control.py | missing package: src/siestaflow_hubbard
+collect_ignore | test_nio_polynomial_analysis.py | missing file: campaigns/nio_afmii_four_atom_lru_v2_20260926/scripts/analyze_nio_lru_v3.py
+collect_ignore | test_nio_shared_lru_regression.py | missing package: lru_core
+collect_ignore | unit/test_stage_ub_baseline_summary.py | missing package: siestaflow_hubbard

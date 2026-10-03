@@ -6,6 +6,7 @@ import numpy as np
 import pytest
 
 from hubbardflow.domain.matrix_lr import fit_polynomial_response
+from hubbardflow.domain.response_budget_moments import estimator_moments
 from hubbardflow.domain.response_protocol import (
     EstimatorKind,
     EstimatorSpec,
@@ -95,6 +96,36 @@ def test_polynomial_weights_match_existing_fit() -> None:
         weighted_slope = float(weight @ occupations)
         fitted_slope = fit_polynomial_response(alpha.tolist(), occupations.tolist(), degree=3).slope
         assert weighted_slope == pytest.approx(fitted_slope, abs=1e-12)
+
+
+@pytest.mark.parametrize(
+    ("kind", "degree", "amplitudes"),
+    [
+        (EstimatorKind.CENTRAL, None, (0.02,)),
+        (EstimatorKind.RICHARDSON_2, None, (0.02, 0.04)),
+        (EstimatorKind.LINEAR_LSQ, None, (0.02, 0.04, 0.06)),
+        (EstimatorKind.POLYNOMIAL_LSQ, 2, (0.02, 0.04)),
+        (EstimatorKind.POLYNOMIAL_LSQ, 3, (0.02, 0.04, 0.06)),
+    ],
+)
+def test_weights_match_exact_estimator_moments_and_are_antisymmetric(
+    kind: EstimatorKind, degree: int | None, amplitudes: tuple[float, ...]
+) -> None:
+    estimator = EstimatorSpec(kind, degree, amplitudes)
+    moments = estimator_moments(estimator)
+    expected = tuple(
+        sorted(
+            (
+                sign * float(amplitude),
+                float((slope_weight if sign > 0 else -slope_weight) / (2 * amplitude)),
+            )
+            for amplitude, slope_weight in zip(moments.amplitudes_ev, moments.weights, strict=True)
+            for sign in (-1, 1)
+        )
+    )
+    assert estimator.weights() == expected
+    by_alpha = dict(estimator.weights())
+    assert all(by_alpha[-alpha] == -by_alpha[alpha] for alpha in amplitudes)
 
 
 def test_requires_both_modes_and_estimator_sufficient_grid() -> None:

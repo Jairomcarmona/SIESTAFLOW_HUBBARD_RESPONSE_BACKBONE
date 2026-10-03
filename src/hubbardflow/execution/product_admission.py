@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import cast
 
-from hubbardflow.domain.subspace_inventory import InventoryStatus
+from hubbardflow.domain.subspace_inventory import InventoryReason, InventoryStatus
 from hubbardflow.execution.product_models import ProductSnapshot
 
 
@@ -67,7 +67,15 @@ def execution_admission(
     plan = None if snapshot.planning is None else snapshot.planning.plan
     if plan is None or frozen_lr_config is None:
         reasons.add(ExecutionAdmissionReason.FROZEN_PLAN_MISSING)
-    if snapshot.inventory.status is not InventoryStatus.OK or not snapshot.inventory.subspaces:
+    # Species semantic identity is evidence for symmetry equivalence (F2) only.
+    # A plan that perturbs every column directly needs the static label/atom
+    # mapping, exactly as legacy init (``inventory_sites``) does.
+    identity_only = snapshot.inventory.status is InventoryStatus.SUBSPACE_MAPPING_NOT_ESTABLISHED and set(
+        getattr(snapshot.inventory, "reason_codes", ()) or ()
+    ) == {InventoryReason.SPECIES_IDENTITY_NOT_ESTABLISHED}
+    if (
+        snapshot.inventory.status is not InventoryStatus.OK and not identity_only
+    ) or not snapshot.inventory.subspaces:
         reasons.add(ExecutionAdmissionReason.INVENTORY_NOT_READY)
     if snapshot.split_staging is not None:
         reasons.add(ExecutionAdmissionReason.SPLIT_STAGING_PENDING)

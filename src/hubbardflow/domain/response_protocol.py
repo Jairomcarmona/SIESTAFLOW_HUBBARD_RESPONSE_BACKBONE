@@ -12,9 +12,8 @@ import json
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from enum import Enum
+from fractions import Fraction
 from numbers import Real
-
-import numpy as np
 
 from hubbardflow.domain.symmetry_reduction import ResponseMode
 from hubbardflow.domain.validation import (
@@ -74,43 +73,66 @@ def _amplitudes(values: object, label: str) -> tuple[float, ...]:
 def _estimator_weights(
     kind: EstimatorKind, degree: int | None, amplitudes: tuple[float, ...]
 ) -> tuple[tuple[float, float], ...]:
-    """Build the linear functional in occupation space for a declared estimator."""
+    """Build machine-independent slope functionals from decimal amplitudes.
+
+    Symmetric least-squares slopes depend only on the exact odd polynomial
+    block in ``t = a²``. Rational arithmetic keeps frozen plans independent of
+    the host LAPACK implementation.
+    """
+    exact_amplitudes = tuple(Fraction(str(amplitude)) for amplitude in amplitudes)
+    if any(amplitude <= 0 for amplitude in exact_amplitudes):
+        raise ResponseProtocolError("estimator amplitudes must be positive")
+    if len(set(exact_amplitudes)) != len(exact_amplitudes):
+        raise ResponseProtocolError("estimator amplitudes must be distinct")
     signed_alpha = tuple(sorted(alpha for amplitude in amplitudes for alpha in (-amplitude, amplitude)))
+    slope_weights: tuple[Fraction, ...]
     if kind is EstimatorKind.CENTRAL:
-        amplitude = amplitudes[0]
-        return ((-amplitude, -0.5 / amplitude), (amplitude, 0.5 / amplitude))
+        amplitude = exact_amplitudes[0]
+        weight = Fraction(1, 2) / amplitude
+        return ((-float(amplitude), -float(weight)), (float(amplitude), float(weight)))
 
     if kind is EstimatorKind.RICHARDSON_2:
-        inner, outer = amplitudes
-        denominator = outer**2 - inner**2
-        inner_factor = outer**2 / denominator
-        outer_factor = -(inner**2) / denominator
-        weight_by_alpha = {
-            -inner: -inner_factor / (2.0 * inner),
-            inner: inner_factor / (2.0 * inner),
-            -outer: -outer_factor / (2.0 * outer),
-            outer: outer_factor / (2.0 * outer),
-        }
-        return tuple((alpha, weight_by_alpha[alpha]) for alpha in signed_alpha)
+        inner, outer = exact_amplitudes
+        t_inner, t_outer = inner**2, outer**2
+        denominator = t_outer - t_inner
+        slope_weights = (t_outer / denominator, -t_inner / denominator)
+        return tuple(
+            (float(alpha), float((slope_weight if alpha > 0 else -slope_weight) / (2 * amplitude)))
+            for alpha in signed_alpha
+            for amplitude, slope_weight in zip(exact_amplitudes, slope_weights, strict=True)
+            if abs(alpha) == float(amplitude)
+        )
 
     fit_degree = 1 if kind is EstimatorKind.LINEAR_LSQ else degree
     if fit_degree is None:
         raise ResponseProtocolError("POLYNOMIAL_LSQ requires polynomial_degree")
-    alpha_array = np.asarray(signed_alpha, dtype=float)
-    alpha_scale = float(np.max(np.abs(alpha_array)))
-    scaled_alpha = alpha_array / alpha_scale
-    design = np.column_stack(tuple(scaled_alpha**power for power in range(fit_degree + 1)))
-    # Solving against the identity gives the same least-squares coefficient
-    # operator as fit_polynomial_response, including its scaled design matrix.
-    coefficient_operator, _, rank, _ = np.linalg.lstsq(
-        design,
-        np.eye(len(signed_alpha)),
-        rcond=None,
-    )
-    if int(rank) != fit_degree + 1:
+    t = tuple(amplitude**2 for amplitude in exact_amplitudes)
+    if fit_degree in (1, 2):
+        denominator = sum(t, Fraction())
+        slope_weights = tuple(value / denominator for value in t)
+    elif fit_degree == 3:
+        s1, s2, s3 = (sum((value**power for value in t), Fraction()) for power in (1, 2, 3))
+        determinant = s1 * s3 - s2**2
+        if determinant == 0:
+            raise ResponseProtocolError("degree-3 estimator design is rank deficient")
+        slope_weights = tuple(value * (s3 - s2 * value) / determinant for value in t)
+    else:
         raise ResponseProtocolError(f"degree-{fit_degree} estimator design is rank deficient")
-    weights = coefficient_operator[1] / alpha_scale
-    return tuple((alpha, float(weight)) for alpha, weight in zip(signed_alpha, weights, strict=True))
+    weight_by_amplitude = dict(zip(exact_amplitudes, slope_weights, strict=True))
+    return tuple(
+        (
+            float(alpha),
+            float(
+                (
+                    weight_by_amplitude[Fraction(str(abs(alpha)))]
+                    if alpha > 0
+                    else -weight_by_amplitude[Fraction(str(abs(alpha)))]
+                )
+                / (2 * Fraction(str(abs(alpha))))
+            ),
+        )
+        for alpha in signed_alpha
+    )
 
 
 @dataclass(frozen=True)
