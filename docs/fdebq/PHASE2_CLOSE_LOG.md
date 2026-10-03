@@ -251,3 +251,217 @@ Punctuation-sensitive legacy paths recorded for Phase 3: `fdf_builder.py` uses l
 literally; `reference_magnetic_evidence._is_explicitly_nonpolarized` matches literal `Spin
 non-polarized`; and `campaign_v2.validate_reference_fdf`/`fdf_validator.py` use their current
 legacy regex spellings. These validators remain untouched by 20.2.
+
+### 20.3 premise checks (before implementation)
+
+| Premise | Result | Command and evidence |
+|---|---|---|
+| 20.3/P1 | TRUE | `rg -n -i -C 3 'DM\.Tolerance ladder|same inputs|E\.2|factor|parent.*reference|reference.*level' docs/fdebq/CODEX_TASKS_PHASE2.md docs/fdebq/HUBBARDFLOW_FDRC_INDEPENDENT_REVIEW.md` → TASK 17 calls for “DM.Tolerance ladder, same inputs”; review §E.2 calls for DM and H tolerances tightened together and a same-level parent reference. |
+| 20.3/P2 | TRUE | `Get-Content tools/fdebq_scf_ladder_campaign.py | Select-Object -Skip 90 -First 60` → materializer removes only `DM.Tolerance` and appends that spelling. |
+| 20.3/P3 | TRUE | Official SIESTA 5.4 manual, `https://docs.siesta-project.org/projects/siesta/en/5.4/reference/siesta.html`, §Convergence criteria lines 3288–3313: newer `SCF.DM.*` flags have precedence; `DM.Tolerance` is the default for `SCF.DM.Tolerance`. |
+| 20.3/P4 | TRUE | `$files = rg --no-ignore --files -g '*.fdf' -g '!**/.git/**' -g '!**/.venv/**' -g '!**/venv/**' -g '!**/__pycache__/**'; ... [PowerShell regex count for each file]` → `FILES=197 SCF.DM.Tolerance=66 DM.Tolerance=12 SCF.H.Tolerance=66`. |
+| 20.3/P5 | TRUE | `Get-Content tools/fdebq_scf_ladder_campaign.py | Select-Object -Skip 80 -First 48` → requires identical SHA256 across all parent DMs with error `all ladder runs must preserve the same parent DM identity`. |
+| 20.3/P6 | TRUE | `rg -n -C 3 'MaxSCFIterations' src/hubbardflow/siesta_backend/siesta542_bare_profile.py` → profile declares `"MaxSCFIterations": "1"`. |
+| 20.3/P7 | TRUE | `Select-String -Path campaigns/mno_afmii_strict_lr_v3r2/results/calibration-replicas-admissible-foreground-v3/recovery-01/reference/siesta.out -Pattern 'redata: Require DM convergence|redata: DM tolerance for SCF|redata: Require H convergence|redata: Hamiltonian tolerance for SCF' | Select-Object -First 4` → echoes both criteria as `T`, DM `0.000010`, H `0.000100 eV`, each to six decimal places. |
+| 20.3/P8 | TRUE | `rg -n -C 4 'def bind_ladder_input|alpha.*zero|alpha_ev.*0|alpha_ev == 0' src/hubbardflow/siesta_backend/scf_ladder_inputs.py` → `bind_ladder_input` raises `zero perturbations are not SCF ladder inputs` for `alpha_ev == 0`. |
+| 20.3/P9 | TRUE | Official SIESTA documentation lookup: `https://docs.siesta-project.org/projects/siesta/en/latest/tutorials/applications/optical-properties/` says the DM is copied, not linked, because the calculation overwrites the DM file; the 5.4 reference also states DM output is overwritten at every SCF step. |
+
+The nine 20.3 premises are TRUE. Independent pre-implementation review completed with `RISK_COVERED`.
+The draft was then stopped on the existing-test/specification conflict documented below.
+
+### 20.3 draft stopped: conflict with existing tests
+
+Pre-implementation auditor verdict: `RISK_COVERED`. Conditions: v2 requires explicit DM/H
+values >=1e-6 and exact multiples of 1e-6; preserve D5 mathematics and the named
+`synthetic-v1` algebraic tests without enabling v1 evidence/materialization; bind each level to
+its distinct reference-output DM at preparation time; check exact six-decimal echoes;
+require positive existing convergence evidence for references; do not require convergence
+from perturbed BARE runs; preserve BARE `MaxSCFIterations 1`.
+
+The draft changes only 20.3's permitted models/backend/two tools/runbook and a new test file.
+It is **not committed or integrated**. No existing test was edited. The code draft is saved in
+`git stash` as `draft blocked task 20.3`, outside the working tree. The stop is a test/specification conflict, not an uncovered scientific
+risk; the auditor's verdict remains `RISK_COVERED`.
+
+Command:
+`.venv/Scripts/python.exe -m pytest tests/unit/test_scf_ladder_v2.py tests/unit/test_scf_ladder.py tests/unit/test_scf_ladder_inputs.py tests/unit/test_scf_validation.py -q`
+
+Literal short summary:
+```text
+FAILED tests/unit/test_scf_validation.py::test_materialized_ladder_changes_only_tolerance_and_preserves_parent
+FAILED tests/unit/test_scf_validation.py::test_materializer_rejects_missing_parent_assets_and_unsafe_restart
+2 failed, 54 passed, 2 warnings in 7.90s
+```
+
+The first test calls `build_ladder_runs(..., policy(), ...)` where `policy()` is
+`synthetic-v1`, has a tightest DM tolerance `1e-7`, lacks every H tolerance and supplies the
+same parent for all levels. It expects materialization to succeed. The draft correctly rejects
+it with `NOT_ESTABLISHED: SCF_LADDER_PROTOCOL_V1`, because 20.3 and the auditor explicitly
+prohibit v1 production materialization and require distinct level parents and representable
+DM/H tolerances. No scope authorization names this existing test for editing.
+
+The second test uses the same v1 protocol and an incomplete FDF containing
+`File.DM.Init parent.DM`. It expects the `File.DM.Init` error first. The new v1 rejection
+occurs first: expected regex `File.DM.Init`; actual message
+`NOT_ESTABLISHED: SCF_LADDER_PROTOCOL_V1`. This test also is not authorized for editing.
+The orchestration must resolve both existing-test expectations before committing 20.3.
+
+Other draft checks, recorded without treating the item as accepted:
+- Earlier focused command excluding `test_scf_validation.py`: `52 passed, 2 warnings in 6.81s`.
+- `.venv/Scripts/python.exe -m pytest tests/unit/test_lr_analysis_v2.py tests/unit/test_matrix_lr.py tests/unit/test_quantized_response.py tests/unit/test_u_certification.py -q`: `70 passed, 2 warnings in 1.19s`.
+- Ruff on the six touched/new Python files: `All checks passed!`.
+- Ruff format check on those six files: `6 files already formatted`.
+- Strict mypy on those six files: `Success: no issues found in 6 source files`.
+- `bash tools/check_v6_integrity.sh`: `V6 GATE OK`.
+
+Decisiones del implementador (conservadoras) in the uncommitted draft: retain absent criterion
+families as explicit null evidence instead of inferring SIESTA defaults; refuse v1 evidence or
+materialization while preserving `synthetic-v1` algebraic calculations; capture parent bytes
+once before copying; preserve the existing SCREENED output failure/convergence check and
+require positive existing convergence evidence for each reference. D5 numerical formulas
+are unchanged.
+
+### 20.4 premise checks (after R2, before implementation)
+
+| Premise | Result | Command and evidence |
+|---|---|---|
+| 20.4/P1 | TRUE | `rg -n -C 2 'def relabel_ion_bytes|def canonical_ion_bytes|<basis_specs>|# Label' src/hubbardflow/siesta_backend/semantic_ion_identity.py` → both helpers exist, normalize only the basis header label and scalar before `# Label`, preserve line structure, and reject unknown layouts. |
+| 20.4/P2 | TRUE | `python probe using pathlib bytes/splitlines on FEO_SCF_DIAGNOSTIC_EXPORT_20261001/feo_lru_fullU_PopTol1e-5_MixerWeight0.05/FeLR0.ion and FeLR1.ion` → both files have 8119 lines; raw diff is exactly `[5, 79]`, showing only the basis-header label and `# Label` value. Frozen V6 files were read only. |
+| 20.4/P3 | TRUE | `rg -n -C 2 'raw SHA256 equality|raw_sha256.*!=' src/hubbardflow/siesta_backend/split_generated_identity.py` → current code adds `ION_BYTES_DIFFER` when raw hashes differ and returns `SPECIES_IDENTITY_NOT_ESTABLISHED`; the real pair's raw bytes differ. |
+| 20.4/P4 | TRUE | `rg -n -C 1 '# Symbol|pseudopotential_header|FeLR[01]' .../FeLR0.ion .../FeLR1.ion` and the P2 byte diff → `# Symbol` is `Fe` in both; pseudopotential header is `Fe pb nrl pcec` in both; neither line differs. |
+
+R2 explicitly authorizes renaming/editing only `tests/unit/test_split_generated_identity.py::test_real_archive_label_only_difference_is_never_a_positive` to `test_real_archive_label_only_difference_matches`, expecting `MATCH` for the frozen real FeLR0/FeLR1 pair. A current read-only probe reports `canonical_ion_bytes(FeLR0, "FeLR0") == canonical_ion_bytes(FeLR1, "FeLR1")` as `True`. No implementation has started for 20.4.
+
+### 20.4 stopped before implementation: existing fixture contradicts canonical identity
+
+All 20.4 premises were verified TRUE by the orchestrator. R2 authorizes only editing/renaming
+`tests/unit/test_split_generated_identity.py::test_real_archive_label_only_difference_is_never_a_positive`
+to `test_real_archive_label_only_difference_matches`, expecting MATCH for the real FeLR0/FeLR1 pair.
+It does not authorize changes to `_run()` or `test_exact_receipt_roundtrip_and_cli`.
+No 20.4 source or test edits were made, and there is no 20.4 implementation commit.
+The stop is an existing-test/specification conflict, not a scientific `RISK_UNCOVERED` verdict.
+
+Evidence command: a temporary-directory Python probe imports
+`tests.unit.test_split_generated_identity._run`, writes its existing synthetic fixture, calls
+`verify_generated_split_identity(root, 'Mn', ['MnLR0', 'MnLR1'])`, and independently calls
+`canonical_ion_bytes` with each requested label. Literal output:
+
+```text
+EXISTING_TEST_VERDICT=EXACT_ION_BYTES_MATCH
+ORIGINAL_CANONICAL_LENGTH=163
+MnLR0: canonical rejected: ion must have exactly one matching basis_specs species header
+MnLR1: canonical rejected: ion must have exactly one matching basis_specs species header
+```
+
+`rg -n 'def test_|_run\(|raw_sha256|EXACT_ION' tests/unit/test_split_generated_identity.py`
+shows `_run()` at line 23 writes the internal Mn bytes under each alias filename. The positive
+`test_exact_receipt_roundtrip_and_cli` at line 31 requires MATCH and CLI exit 0 for that fixture,
+whose alias content has the wrong label for `canonical_ion_bytes(alias, alias_label)`.
+
+Current-gate command:
+`.venv/Scripts/python.exe -m pytest tests/unit/test_split_generated_identity.py::test_exact_receipt_roundtrip_and_cli -q`
+returned `1 passed, 2 warnings in 0.77s`. Implementing the stipulated MATCH iff canonical equality
+rule would make this existing positive gate fail, since both alias canonicalizations reject.
+Allowing raw equality as a shortcut would violate 20.4's stated necessary conditions.
+The fixture cannot be changed under R2's narrow authorization. Implementation stops pending an
+explicit resolution of this additional existing-test expectation; no shortcut was introduced.
+
+### 20.5 premise checks (after R3, before implementation)
+
+| Premise | Result | Command and evidence |
+|---|---|---|
+| 20.5/P1 | TRUE | `rg -n -C 3 'def exactness_class|EXACT_TRANSLATION' src/hubbardflow/domain/symmetry_operation_models.py` → current property returns `EXACT_TRANSLATION` whenever `rotation_int == IDENTITY`, without checking epsilon, atom mapping, or mesh. |
+| 20.5/P2 | TRUE | `rg -n -C 3 'F8|exactness_class|EXACT_TRANSLATION|translations' src/hubbardflow/domain/symmetry_operations.py src/hubbardflow/domain/coverage.py` → F8 ambiguity is ignored for identity-rotation candidates and F8 does not gate translation candidacy. |
+| 20.5/P3 | TRUE | `rg -n -C 2 'EXACT_IN_CONTINUUM_ONLY|commensurate|continuum' docs/fdebq/HUBBARDFLOW_PERTURBATION_PLANNING_REVIEW.md` → review D.3 marks noncommensurate translations `EXACT_IN_CONTINUUM_ONLY`, requiring a shadow and validation before enabling. |
+| 20.5/P4 | TRUE | `rg -n -C 3 'positions|Fraction\(str|tau_neq|Fractional|LatticeConstant|AtomicCoordinatesFormat|InitMesh' src/hubbardflow/domain/symmetry_operations.py src/hubbardflow/siesta_backend/fdf_model.py` → candidates use floating `coordinates_fractional % 1`; F8 uses `Fraction(str(float))`; atom matching uses the declared geometry band; parser normalizes coordinates/lattice units but retains only numeric values in the current model. |
+| 20.5/P5 | TRUE | `rg -n -C 3 'matching\[0\]' src/hubbardflow/domain/coverage.py` → member operation is selected as `matching[0]`. |
+| 20.5/P6 | TRUE | `python probe using tests.unit.test_coverage._toy(4, nonpolarized=True), qualify_coverage, and spin-flip false/true policies` → both reports contain 32 epsilon=-1 rows and F7 `AMBIGUOUS`; current code creates the channel-relabel operation instead of marking epsilon=-1 `NOT_APPLICABLE`. |
+| 20.5/P7 | TRUE | `rg -n -C 4 'spglib|importlib' src/hubbardflow/domain/symmetry_operations.py pyproject.toml` plus `python -c find_spec('spglib')` → candidate search dynamically imports optional spglib; pyproject has no declaration; this environment reports `spglib_importable=False`. |
+| 20.5/P8 | TRUE | `rg -n -C 3 'coverage_qualification|"coverage": "DISABLED"|NiO' src/hubbardflow/execution/campaign_plan.py tests/unit/test_campaign_plan.py` and read-only in-memory `resolve_campaign_planning` on `benchmarks/lr_u/stage_u_b/materials/NiO/reference.fdf` with `coverage=DISABLED` → qualification is embedded; the current NiO result has 16 operations and a plan digest. |
+
+R3(a) explicitly authorizes updating only `tests/unit/test_symmetry_operations.py::test_f8_records_incommensurate_translation_without_excluding_candidate`: t=1/4 with mesh (3,3,3) remains a candidate and becomes `EXACT_IN_CONTINUUM_ONLY`. R3(b) retires spglib from planning; rotation candidates missed on non-orthogonal cells are a known conservative Phase 3 savings limitation, not an uncovered risk. Translation candidates must be checked by a dedicated test; if one is lost, stop before implementation. Independent scientific audit is now required before code because 20.5 is `[science]`.
+
+### 20.5 independent scientific audit and stop under R3(b)
+
+Auditor verdict: `RISK_UNCOVERED`; no code or tests were changed for 20.5. The read-only counterexample uses `tests.unit.test_symmetry_operations._ring((0.8,)*4)`, moves alternating fractional x coordinates by `0.75*tau_neq`, constructs the valid candidate operation (IDENTITY, t=(0.25,0,0), eps=+1, permutation=(1,2,3,0)), and forces the internal path without spglib by patching `importlib.import_module` to raise ImportError.
+
+Observed output:
+
+```text
+F1 AMBIGUOUS 0.0007500000000000284
+internal identity translations: t=0 (identity permutation), t=0.5 (permutation 2,3,0,1)
+missing candidate: t=0.25 (permutation 1,2,3,0)
+```
+
+The declared `tau_neq=0.001` admits this near-symmetry as an `AMBIGUOUS` candidate; the current anchor enumeration proposes t=0.25075, whose residual on other atoms reaches 0.0015, and discards the needed t=0.25 mapping. The audit also simulated a spglib result supplying t=0.25 and observed that it adds the missing candidate; this was a controlled simulation, not a claim that spglib was installed or run. R3 explicitly requires stopping if a translation candidate is lost, so no implementation/test attempt is authorized until translation search can retain it.
+
+R3(b) resolves the separate rotation omission: omitted rotations on non-orthogonal lattices are a conservative lost-savings limitation because rotations are off by default and cannot reduce production without V2 validation. This is not `RISK_UNCOVERED`; record it as a known Phase 3 limitation. The translation counterexample is the active uncovered risk.
+
+Exact audit probe and output are recorded in the auditor report for `/root/audit_20_5_r3`; the critical executed logic was the candidate_operations call with the optional import patched to ImportError, then an inventory check of its identity/epsilon operations. No baseline file or campaign was modified.
+
+### Exact 20.5 read-only probe commands
+
+P6 command:
+`powershell
+@'
+from dataclasses import replace
+from tests.unit.test_coverage import _toy, USER
+from hubbardflow.domain.coverage import qualify_coverage
+from hubbardflow.domain.symmetry_operation_models import coverage_policy_v1
+for enabled in (False, True):
+    inv, ref, model = _toy(4, nonpolarized=True)
+    q = qualify_coverage(inv, ref, model, replace(coverage_policy_v1(), allow_spin_flip=enabled), USER)
+    rows = [(r.operation.eps, [(c.condition,c.status.value) for c in r.conditions if c.condition=='F7']) for r in q.operations if r.operation.eps == -1]
+    print('allow_spin_flip=',enabled,'eps_minus_rows=',len(rows),'F7=',rows[:2])
+'@ | .venv/Scripts/python.exe -
+`
+Output: allow_spin_flip=False and True each produced 32 epsilon=-1 rows with F7 AMBIGUOUS.
+
+P8 command:
+`powershell
+@'
+import tempfile
+from pathlib import Path
+from tests.unit.test_campaign_plan import inputs, normalized
+from hubbardflow.execution.campaign_plan import resolve_campaign_planning
+source=Path.cwd()/'benchmarks/lr_u/stage_u_b/materials/NiO/reference.fdf'
+with tempfile.TemporaryDirectory() as tmp:
+    fdf, raw, _=inputs(Path(tmp), source.read_text(encoding='utf-8'))
+    raw['coverage']='DISABLED'
+    result=resolve_campaign_planning(fdf,normalized(fdf,raw))
+    print(raw['coverage'],len(result.diagnostic_coverage.operations),result.plan.digest)
+'@ | .venv/Scripts/python.exe -
+`
+Output: DISABLED 16 47f5bbb9dde9803fed4d1a5601d3cebd1926990f2ebf3ef3d851bcf7e1925136.
+
+### 20.8 — dependency stop before premise checks or implementation
+
+20.8 requires the SCF ladder v2 protocol from 20.3 and validates calibration against coverage/planner evidence from 20.5. 20.3 is blocked by two existing tests that demand v1 production materialization; 20.5 is stopped under R3 because a within-band translation candidate is lost. Therefore 20.8 is not independent and no 20.8 code, tests, or premise checks were started. Resume after the two upstream blockers are resolved.
+
+
+### 20.9 — comprobación R4 sobre NiO P5 (detenida por diferencia)
+
+La única cadena archivada compatible especificada por R4 existe en `/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/`. Los hashes del campaign.v2.json, reference.fdf, lr_config.json y node-evidence.json son, respectivamente, `0917d0ca393f167aaff02f5730d0a6a549ea35cbc17ddbe818cb662b3d073b4f`, `b4fb34e642d862be6949a5b2033a60c5b9fcae56119879583bb3eaf237620ee7`, `619895c0908c5c557a476151a9e06a63483254b7e0b814af084784ac07fd7cd6`, y `0e8d0b0bb781437b59942f8bae33204401bb116b32d40a4762aa33a2c174e1be`. Los hashes de FDF materializados constan en los 24 nodos de node-evidence.
+
+Comando de inicialización en directorio temporal, con coverage=DISABLED y usando la FDF, lr-config y ejecución de la cadena archivada:
+`wsl.exe -d Ubuntu -- bash -lc 'PYTHONPATH=/mnt/c/Users/Jairo/work/hubbardflow/src /home/jmc/.local/state/siestaflow/hubbard-response-env/bin/python - << "PY" ... initialize_campaign(...) ... PY'`
+
+Salida observada: 2 sitios actuales (`NiLR0`, `NiLR1`, átomos 1 y 2), 24 run specs y coverage `DISABLED`. Las tuplas de átomo, modo y alpha coinciden con las 24 entradas archivadas, pero falla la igualdad estricta solicitada para `(site, atom, mode, alpha)`: el plan actual emplea `NiLR0@0:3:2` y `NiLR1@1:3:2`; el manifiesto y node-evidence usan `NiLR0` y `NiLR1`. Por instrucción R4, 20.9 se detiene sin cambios para forzar equivalencia. Al no coincidir el conjunto, no se intentó fabricar una comparación de hashes materializados actuales. CoO, MnO y Cu3N: `NOT_COVERED`, según R4. No se modificaron fixtures ni datos archivados.
+
+
+## Rerun under author resolutions R1–R4 — final current branch check
+
+The order resumed as requested: 20.2, 20.3, 20.4, 20.5, 20.8, 20.9, 20.11, 20.10. 20.2 completed in commit `f629220`. 20.3, 20.4, 20.5 and 20.9 reached their item-specific blockers recorded above; 20.8, 20.11 and 20.10 depend on stopped items. No source/test changes or item commits were made for those stopped items. R2 and R3 test-edit exceptions were not exercised because the separate 20.4 fixture conflict and the R3 translation-loss stop remain unresolved.
+
+Full-suite command on current branch:
+`.venv/Scripts/pytest.exe tests -q -rfE --continue-on-collection-errors` with `PYTHONPATH` set to this checkout's `src`.
+
+Result: `21 failed, 1288 passed, 24 skipped, 2 warnings, 5 errors, 4 subtests passed in 276.22s`. The five collection errors and 20 original failure IDs are exactly the `BASELINE_FAILURES` listed in §0.2. One additional failure is new relative to that baseline:
+
+- `tests/unit/test_scf_validation.py::test_materializer_rejects_missing_parent_assets_and_unsafe_restart` — expected an error matching `File.DM.Init`, received `NOT_ESTABLISHED: source FDF ladder identity cannot be bound: required FDF directive LatticeConstant is missing`.
+
+Thus the suite is not baseline-clean; no item implementation was attempted to mask or repair this failure. TASK 21 focused command `.venv/Scripts/pytest.exe tests/unit/test_product_cli.py tests/unit/test_product_paths.py tests/unit/test_product_paths_portable.py tests/unit/test_product_admission.py tests/unit/test_product_execution.py -q` → `85 passed, 2 warnings in 133.11s`.
+
+Final gates on this result: 70 scientific regression tests → `70 passed, 2 warnings`; `ruff check .` → `All checks passed!`; `ruff format --check .` → `90 files already formatted` (cache write warnings only; exit 0); `MYPYPATH=src mypy --strict` → `Success: no issues found in 90 source files`; `bash tools/check_v6_integrity.sh` → `V6 GATE OK`.
+
+R4 archived materialized-input hash comparison was not reached: the required exact run-spec tuple comparison already differs in `site` (`NiLR0@0:3:2`/`NiLR1@1:3:2` current versus `NiLR0`/`NiLR1` archived). Per author instruction, stop without attempting a correction. CoO, MnO and Cu3N are `NOT_COVERED` for this revised 20.9 check.

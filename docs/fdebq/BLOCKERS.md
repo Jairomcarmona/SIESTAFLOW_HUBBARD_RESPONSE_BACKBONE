@@ -323,17 +323,17 @@ SIESTA campaigns were started.
 
 **Bloqueo inicial resuelto por R1 (`AMENDMENTS_2.md`, commit `e4d9029`).** El autor aclaró que “is read” significa reconocida antes del rechazo. 20.2 se reabre bajo la prueba positiva unmanaged `Long_Output` registrada en `PHASE2_CLOSE_LOG.md`; el auditor científico emitió `RISK_COVERED` sujeto a las condiciones de orden de duplicados, contenido de bloques y censo FDF allí anotadas. La auditoría inicial y su evidencia se conservan como historial, no como bloqueo vigente.
 
-## Phase 2 close — RISK_UNCOVERED en 20.4
+## Phase 2 close — 20.4 existing fixture conflict
 
-La regla nueva de 20.4 exige `MATCH` cuando los bytes canónicos coinciden y la diferencia cruda se limita a los campos de etiqueta. Eso invierte directamente la expectativa del test existente `tests/unit/test_split_generated_identity.py::test_real_archive_label_only_difference_is_never_a_positive`. El ítem solo autoriza añadir tests; §0.1.5 prohíbe editar este test existente porque 20.4 no lo nombra. No hay implementación que cumpla a la vez la regla de veredicto y las dos expectativas. Se requiere corregir explícitamente el alcance de edición de tests o la aceptación antes de implementar 20.4.
+R2 now explicitly authorizes editing the named real-archive test to expect MATCH. A separate existing test, `tests/unit/test_split_generated_identity.py::test_exact_receipt_roundtrip_and_cli`, still requires MATCH for raw-identical synthetic Mn bytes stored under incompatible MnLR0/MnLR1 labels. Canonicalization rejects both because each file's species header does not match its alias label. The raw equality shortcut would violate 20.4's canonical-equality requirement; R2 did not authorize changing this second fixture/test. 20.4 remains stopped before implementation.
 
 ## Phase 2 close — RISK_UNCOVERED en 20.5
 
-La auditoría científica detuvo 20.5. La nueva aceptación de exactitud discreta contradice `tests/unit/test_symmetry_operations.py::test_f8_records_incommensurate_translation_without_excluding_candidate`, que exige `EXACT_TRANSLATION` para t=1/4 y `InitMesh=(3,3,3)`; el ítem no autoriza editar el test existente. Además, una rotación válida para la celda `((1,0,0),(1,1,0),(0,0,1))` queda fuera de la enumeración interna actual. Una simulación de la API de spglib elevó candidatos 8→10, pero spglib real no está instalado y no se afirma que la haya encontrado. La equivalencia entre rutas no está probada. Se requiere resolver el conflicto de test/aceptación y verificar el alcance de búsqueda antes de implementar. No se modificó código de 20.5.
+R3(a) resolves the specific existing F8-test conflict and authorizes its named test edit. R3(b) resolves the rotation enumeration issue as a known Phase 3 limitation. The active stop is the independent translation-loss counterexample: without spglib, the internal candidate search drops a valid t=0.25 translation within the declared geometry tolerance. Details and the auditor's exact evidence are in `PHASE2_CLOSE_LOG.md`. No 20.5 implementation was made.
 
-## Phase 2 close — RISK_UNCOVERED en 20.9
+## Phase 2 close — 20.9 detenido por diferencia de NiO P5
 
-La auditoría científica determinó que usar los FDF de `examples/tmo_campaigns` como golden de las entradas modernas CoO/NiO mezcla campañas físicamente distintas: cambian celda, cantidad/etiqueta de sitios, grid y método de proyectores; la inicialización PBE actual rechaza las plantillas antiguas. Para Cu3N, el archivo de materialización disponible corresponde al antiguo modelo de 4 átomos/Cu1 frente al modelo actual de 32 átomos/24 sitios. En MnO, solo hay FDF materializados de los representantes A/B aunque la entrada de referencia declara 16 sitios. No se generaron ni emparejaron hashes incompatibles y se eliminó el prototipo de generador/prueba. Se necesita una cadena archivada compatible, designada por el autor, o una aclaración explícita que limite la comparación. 20.9 queda detenido como `RISK_UNCOVERED`.
+R4 designó `campaigns/nio_pbe_p5_20260928/` como la única cadena archivada compatible. La inicialización actual con coverage=DISABLED reproduce 24 run specs, los mismos átomos, modos y alphas de manifiesto/node-evidence, pero no reproduce el conjunto exacto `(site, atom, mode, alpha)`: los sitios actuales son `NiLR0@0:3:2` y `NiLR1@1:3:2`, frente a `NiLR0` y `NiLR1` archivados. La comparación se detiene según R4; no se cambió código ni se generaron entradas para corregir la diferencia. CoO, MnO y Cu3N quedan `NOT_COVERED` en el log.
 
 
 ## Phase 2 close — 20.11 dependency
@@ -343,3 +343,49 @@ La auditoría científica determinó que usar los FDF de `examples/tmo_campaigns
 ## Phase 2 close — 20.10 dependency
 
 20.10 no se implementó: su aceptación requiere retirar el import opcional de `spglib` como parte de 20.5. Como 20.5 está detenido, no se movió el resolver de includes ni se fijó una allowlist de arquitectura dependiente de ese cambio.
+
+## 20.3 — existing-test/specification conflict (uncommitted draft)
+
+Auditor verdict remains `RISK_COVERED`; this is not an uncovered scientific risk.
+Command `.venv/Scripts/python.exe -m pytest tests/unit/test_scf_ladder_v2.py tests/unit/test_scf_ladder.py tests/unit/test_scf_ladder_inputs.py tests/unit/test_scf_validation.py -q`
+returned `2 failed, 54 passed, 2 warnings in 7.90s`.
+
+- `tests/unit/test_scf_validation.py::test_materialized_ladder_changes_only_tolerance_and_preserves_parent`
+  requires successful v1 materialization with a shared parent, no H tolerance and `1e-7` DM
+  tolerance; 20.3 requires rejection of v1 production materialization, explicit representable
+  DM/H tolerances and three distinct level parents.
+- `tests/unit/test_scf_validation.py::test_materializer_rejects_missing_parent_assets_and_unsafe_restart`
+  expects `File.DM.Init` before the v1 protocol rejection. Actual error is
+  `NOT_ESTABLISHED: SCF_LADDER_PROTOCOL_V1`.
+
+Neither existing test is authorized for editing by 20.3. No test was edited, no commit was
+made, and implementation stopped. The code draft is saved in `git stash` as `draft blocked task 20.3`; it is not part of the working tree.
+See PHASE2_CLOSE_LOG.md for literal failure IDs and gate outputs.
+
+## 20.4 — additional existing-test/specification conflict before implementation
+
+R2 names only the real-archive test for editing. The different existing test
+`tests/unit/test_split_generated_identity.py::test_exact_receipt_roundtrip_and_cli` calls `_run()`,
+which writes Mn bytes under both MnLR0/MnLR1 filenames, and requires a positive receipt and CLI
+exit 0. Independent canonicalization with either alias label fails with
+`ion must have exactly one matching basis_specs species header`; the current raw-byte verifier
+returns `EXACT_ION_BYTES_MATCH`. The current selected test passes (`1 passed, 2 warnings in 0.77s`).
+
+20.4 requires MATCH iff canonical(original,label_o)==canonical(alias,label_a), plus a confined
+raw line diff. Raw equality cannot bypass that necessary canonical comparison. Editing this
+other fixture/test is not authorized by R2. The item stopped before source/test edits or any
+implementation commit. This records an existing-gate/specification conflict, not a scientific
+`RISK_UNCOVERED` verdict. Exact commands/output are in PHASE2_CLOSE_LOG.md.
+
+## Phase 2 close — R3(b) limitación de Fase 3 y bloqueo activo de 20.5
+
+La limitación conocida es la enumeración de rotaciones independiente de spglib para redes no ortogonales. El bloqueo activo sigue siendo la pérdida de la traslación t=0.25 documentada arriba; no se implementó 20.5.
+
+## 20.8 dependency blocker
+
+20.8 depends on SCF ladder v2 (20.3) and the planner/coverage update (20.5), both currently stopped. No code, tests, or premise probes were started for 20.8; resume after the upstream blockers are resolved.
+
+
+## Current full-suite delta after R1–R4
+
+The required full suite was rerun with `--continue-on-collection-errors`. It reproduced all five baseline collection errors and all 20 baseline failed IDs, plus the new failure `tests/unit/test_scf_validation.py::test_materializer_rejects_missing_parent_assets_and_unsafe_restart` (expected `File.DM.Init`, received a missing `LatticeConstant` identity-binding error). This is recorded in `PHASE2_CLOSE_LOG.md`; do not treat the branch as fully green.
