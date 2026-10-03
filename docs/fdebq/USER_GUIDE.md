@@ -109,7 +109,10 @@ alpha strategies remain available; `CALIBRATED_GRID` reports
 `CALIBRATION_PROTOCOL_REQUIRED` when no explicit protocol exists, or
 `CALIBRATED_VALIDATION_NOT_ESTABLISHED` while I.5, SCF ESTIMATE and recorded
 T0–T4 validation are unavailable. `auto_split_species` defaults to false;
-opt-in reports `STAGED_PENDING_GENERATED_IDENTITY` until TASK 15 admission.
+opt-in stages shared labels with `STAGED_PENDING_GENERATED_IDENTITY` and binds
+the staging manifest to the frozen product identity. Generated `.ion` verification
+uses exact raw SHA256 equality; its receipt cannot unlock production on its own.
+See [SPECIES_SPLIT_RUNBOOK.md](SPECIES_SPLIT_RUNBOOK.md) for the user-run procedure.
 An unadmitted shared DFTU label reports `SHARED_LABEL_NEEDS_SPLIT`.
 
 This report is planning/admission evidence. With execution blocked, χ0/χ,

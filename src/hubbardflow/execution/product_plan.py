@@ -11,6 +11,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import asdict, dataclass, replace
 from hashlib import sha256
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from typing import cast
 
 from hubbardflow.domain.coverage import UserCoveragePolicy, qualify_coverage
@@ -23,6 +24,7 @@ from hubbardflow.execution.campaign_plan import (
     planning_config_digest,
     resolve_campaign_planning,
 )
+from hubbardflow.execution.campaign_split import stage_campaign_split, verify_campaign_split_staging
 from hubbardflow.execution.campaign_v2 import resolve_fdf_includes, validate_lr_config, validate_reference_fdf
 from hubbardflow.execution.product_models import (
     LOCK_SCHEMA,
@@ -134,6 +136,12 @@ def resolve_product_snapshot(request: ProductRequest) -> ProductSnapshot:
     fdf = Path(request.fdf)
     model = parse_effective_fdf(fdf)
     raw = _config(request)
+    split_staging = None
+    if raw is not None and raw.get("auto_split_species") is True:
+        with TemporaryDirectory(prefix="hubbardflow-product-split-") as temporary:
+            split_staging = stage_campaign_split(
+                fdf, raw, Path(temporary), identity_dirs=tuple(Path(d) for d in request.identity_dirs)
+            )
     dirs = {Path(d) for d in request.identity_dirs}
     if raw is not None:
         dirs.update(Path(p).parent for p in cast(Mapping[str, str], raw.get("pseudopotentials", {})).values())
@@ -220,6 +228,7 @@ def resolve_product_snapshot(request: ProductRequest) -> ProductSnapshot:
         () if reason is None else (reason,),
         detail,
         diagnostic_coverage,
+        split_staging,
     )
 
 
@@ -267,6 +276,16 @@ def freeze_product_snapshot(root: Path, snapshot: ProductSnapshot) -> None:
             raise ProductError("frozen product plan invalidated: inputs, policy or provenance changed")
         return
     root.mkdir(parents=True, exist_ok=True)
+    if snapshot.split_staging is not None:
+        request = ProductRequest.from_mapping(json_object(snapshot.request_json))
+        staging = stage_campaign_split(
+            Path(request.fdf),
+            _config(request) or {},
+            root,
+            identity_dirs=tuple(Path(d) for d in request.identity_dirs),
+        )
+        if staging != snapshot.split_staging:
+            raise ProductError("split input identity changed before freezing")
     for name, row in values.items():
         with (root / name).open("x", encoding="utf-8", newline="\n") as stream:
             stream.write(canonical(row) + "\n")
@@ -297,6 +316,8 @@ def load_product_snapshot(root: Path) -> ProductSnapshot:
         _protect_source_files(root, request)
         if resolve_product_snapshot(request).to_mapping() != snapshot.to_mapping():
             raise ProductError("frozen product plan invalidated: inputs, parent DM, bands or policy changed")
+        if snapshot.split_staging is not None:
+            verify_campaign_split_staging(root, snapshot.split_staging)
         return snapshot
     except (OSError, ValueError, KeyError, TypeError) as exc:
         raise ProductError(f"cannot consume frozen product plan: {exc}") from exc

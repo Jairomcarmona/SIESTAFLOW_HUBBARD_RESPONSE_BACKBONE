@@ -11,7 +11,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import Enum
 from hashlib import sha256
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 from hubbardflow.domain.coverage_models import CoverageQualification
 from hubbardflow.domain.perturbation_plan import PlanStatus
@@ -23,6 +23,9 @@ from hubbardflow.domain.perturbation_plan_evidence import (
 from hubbardflow.domain.subspace_inventory import CorrelatedSubspaceInventory
 from hubbardflow.domain.validation import require_sha256
 from hubbardflow.execution.campaign_plan import CampaignPlanning
+
+if TYPE_CHECKING:
+    from hubbardflow.execution.campaign_split import CampaignSplitStaging
 
 SCHEMA = "hubbardflow.product_plan.v1"
 LOCK_SCHEMA = "hubbardflow.product_campaign_lock.v1"
@@ -81,8 +84,17 @@ class ProductSnapshot:
     reasons: tuple[ProductReason, ...]
     detail: str
     diagnostic_coverage: CoverageQualification | None
+    split_staging: CampaignSplitStaging | None = None
 
     def __post_init__(self) -> None:
+        if self.split_staging is not None:
+            from hubbardflow.execution.campaign_split import CampaignSplitStaging
+
+            object.__setattr__(
+                self, "split_staging", CampaignSplitStaging.from_mapping(self.split_staging.to_mapping())
+            )
+            if self.planning is not None or self.status is not PlanStatus.NOT_ESTABLISHED:
+                raise ProductError("staged aliases cannot supply an executable plan")
         object.__setattr__(self, "request_json", canonical(json_object(self.request_json)))
         object.__setattr__(self, "inventory", freeze_inventory(self.inventory))
         if self.planning is not None:
@@ -110,7 +122,7 @@ class ProductSnapshot:
             raise ProductError("product snapshot disagrees with the resolved plan")
 
     def to_mapping(self) -> dict[str, object]:
-        return {
+        result: dict[str, object] = {
             "schema": SCHEMA,
             "request": json_object(self.request_json),
             "inventory": inventory_mapping(self.inventory),
@@ -125,9 +137,14 @@ class ProductSnapshot:
             else self.diagnostic_coverage.to_mapping(),
             "downstream_status": DownstreamStatus.NOT_ASSESSED.value,
         }
+        if self.split_staging is not None:
+            result["split_staging"] = self.split_staging.to_mapping()
+        return result
 
     @classmethod
     def from_mapping(cls, row: Mapping[str, object]) -> ProductSnapshot:
+        from hubbardflow.execution.campaign_split import CampaignSplitStaging
+
         if row.get("schema") != SCHEMA or row.get("downstream_status") != DownstreamStatus.NOT_ASSESSED.value:
             raise ProductError("unsupported product plan schema or downstream state")
         raw = row["planning"]
@@ -143,6 +160,9 @@ class ProductSnapshot:
             None
             if row["diagnostic_coverage"] is None
             else CoverageQualification.from_mapping(cast(Mapping[str, object], row["diagnostic_coverage"])),
+            None
+            if "split_staging" not in row
+            else CampaignSplitStaging.from_mapping(cast(Mapping[str, object], row["split_staging"])),
         )
 
     @property

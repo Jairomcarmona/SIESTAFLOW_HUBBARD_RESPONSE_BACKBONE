@@ -133,23 +133,31 @@ claim, numerical threshold, SIESTA campaign or real-data validation claim.
 
 ## TASK 15 — Automatic species splitting admission
 
-The opt-in backend materializer is implemented, but end-to-end campaign
-admission remains unavailable. It returns `STAGED_PENDING_GENERATED_IDENTITY`
-until the caller verifies SIESTA-generated alias `.ion` files; copied reference
-files alone are not proof. TASK 13's campaign configuration gate is blocked,
-so `lr-config.auto_split_species` is not wired to production.
+**RESUELTO: D6 software staging/admission; commit pendiente**, on
+`fdebq/r2-task15-species-split` based on TASK19. `lr-config.auto_split_species`
+is now wired to campaign initialization and product planning, default false.
+Explicit true stages shared DFTU labels with full basis/projector/PP input
+preservation and per-atom `DM.InitSpin`; it records
+`STAGED_PENDING_GENERATED_IDENTITY`. The staging manifest binds the versioned
+flag and all staged input hashes. Product plans freeze that evidence in their
+campaign identity and check staged bytes on resume. No executable campaign
+manifest or READY plan is created for this pending path; override remains
+NOT_ESTABLISHED.
 
-The available CoO/NiO/MnO shared-label examples lack explicit `PAO.Basis`
-blocks and fail the required identity preflight; archived production FDFs are
-already split. No source file in the checkout supports the requested positive
-real-FDF materialization test with the required explicit basis and reference
-identity. Tests use synthetic FDFs for the positive preservation case and real
-archives only for fail-closed read-only checks. No SIESTA-generated aliases
-were invented or run.
+`tools/hubbardflow_verify_split_identity.py` emits a typed, versioned JSON
+receipt for actual user-generated ions. Its positive verdict requires exact
+raw SHA256 equality, failing closed on missing, duplicates and mismatches.
+Label-normalized hashes are diagnostic only. The synthetic positive plus
+read-only real archive negatives satisfy D6; a positive real FDF is no longer
+a software prerequisite. See `SPECIES_SPLIT_RUNBOOK.md` for the exact command,
+removal of copied ions from the user's separate run directory, and provenance.
 
-The helper remains disabled by default and cannot mark a campaign ready. Revisit
-the campaign gate after TASK 13 and when generated alias identity evidence is
-available.
+**ABIERTO: validación real / admisión de ejecución.** No SIESTA generation was
+performed or invented. Copied reference ions and canonical label equality
+cannot demonstrate actual generated exact identity; ordinary renamed ion
+bytes fail the raw comparison even if the canonical diagnostics agree. A
+generated receipt cannot bypass the absent full I.5 state producer or other
+TASK19 production boundaries. There is no receipt-to-production override.
 
 ## TASK 16 — Calibrated amplitudes and deterministic rounds
 

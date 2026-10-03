@@ -211,7 +211,10 @@ def validate_lr_config(payload: Mapping[str, Any], fdf_species: Mapping[str, int
     if type(auto_split) is not bool:
         raise CampaignV2Error("auto_split_species must be a boolean")
     if auto_split:
-        raise CampaignV2Error("STAGED_PENDING_GENERATED_IDENTITY: auto_split_species requires TASK 15 admission")
+        raise CampaignV2Error(
+            "STAGED_PENDING_GENERATED_IDENTITY: auto_split_species permits staging only; "
+            "verify actual SIESTA-generated .ion bytes before requesting production admission"
+        )
     sites = payload.get("sites")
     if inventory is not None:
         try:

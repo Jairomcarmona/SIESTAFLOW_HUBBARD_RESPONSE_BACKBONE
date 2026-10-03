@@ -159,6 +159,16 @@ def verify_semantic_split_identities(
             SemanticSplitCode.SPECIES_IDENTITY_NOT_ESTABLISHED, "reference PP, basis and .ion are required"
         )
     model = parse_effective_fdf(materialized_fdf_path)
+    if (
+        not labels
+        or len(set(labels)) != len(labels)
+        or source_label in labels
+        or any(record.label == source_label for record in model.dftu_records)
+    ):
+        raise SemanticSpeciesSplitError(
+            SemanticSplitCode.SPECIES_IDENTITY_NOT_ESTABLISHED,
+            "alias labels must be unique and the original DFTU projector must not remain orphaned",
+        )
     identities = species_identity(model, search_dirs)
     if _basis_options(model) != _basis_options(source):
         raise SemanticSpeciesSplitError(

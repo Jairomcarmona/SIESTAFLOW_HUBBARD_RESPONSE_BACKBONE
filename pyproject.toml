@@ -26,6 +26,11 @@ test = [
 line-length = 110
 target-version = "py312"
 include = [
+    "src/hubbardflow/execution/campaign_split.py",
+    "src/hubbardflow/siesta_backend/split_generated_identity.py",
+    "tools/hubbardflow_verify_split_identity.py",
+    "tests/unit/test_campaign_split.py",
+    "tests/unit/test_split_generated_identity.py",
     "src/hubbardflow/product_cli.py",
     "src/hubbardflow/execution/product_*.py",
     "src/hubbardflow/reporting/product_report.py",
@@ -78,6 +83,11 @@ include = [
 [tool.mypy]
 strict = true
 files = [
+    "src/hubbardflow/execution/campaign_split.py",
+    "src/hubbardflow/siesta_backend/split_generated_identity.py",
+    "tools/hubbardflow_verify_split_identity.py",
+    "tests/unit/test_campaign_split.py",
+    "tests/unit/test_split_generated_identity.py",
     "src/hubbardflow/product_cli.py",
     "src/hubbardflow/execution/product_*.py",
     "src/hubbardflow/reporting/product_report.py",

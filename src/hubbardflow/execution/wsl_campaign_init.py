@@ -133,6 +133,27 @@ def initialize_campaign(
                 raise CampaignV2Error(f"static_artifacts destination collides with pseudopotential {relative}")
             static_sources[relative] = _source_file(source, config_base, f"static_artifacts.{destination}")
 
+        # D6 admits opt-in staging only. This manifest cannot be loaded by the
+        # production campaign runner and carries no executable plan or DAG.
+        from .campaign_split import stage_campaign_split
+        from hubbardflow.siesta_backend.semantic_split_models import SemanticSpeciesSplitError
+        pending_config = {
+            **raw_config,
+            "pseudopotentials": {key.split(".", 1)[1]: str(source) for key, source in declared_sources.items()},
+            "static_artifacts": {key: str(source) for key, source in static_sources.items()},
+        }
+        try:
+            staged = stage_campaign_split(input_fdf, pending_config, root)
+        except SemanticSpeciesSplitError as exc:
+            raise CampaignV2Error(str(exc)) from exc
+        if staged is not None:
+            return {
+                "status": staged.status.value,
+                "staging_manifest_path": str(root / "species_split/species_split_staging.json"),
+                "staging_digest": staged.digest,
+                "auto_split_species": True,
+            }
+
         # Copy the source inventory into Linux ext4; the response factory then
         # stages only the referenced assets into each node's private directory.
         reference_path = root / "reference.fdf"
