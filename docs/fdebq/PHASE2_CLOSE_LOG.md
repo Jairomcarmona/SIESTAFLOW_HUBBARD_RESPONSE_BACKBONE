@@ -179,3 +179,75 @@ Pre-change static baseline for pre-existing `src/hubbardflow/cli.py` (outside py
 - The five collection errors are exactly the five IDs recorded in `BASELINE_FAILURES`. The 20 failing test IDs are also exactly the same 20 IDs recorded there. No new failing test or collection error; there are 36 more passing tests than the corrected baseline.
 - The five collection errors: adversarial `test_method2_reference.py` and `test_phase4_alpha0_control.py` (`siestaflow_hubbard` absent); `test_nio_polynomial_analysis.py` (historical analyzer missing); `test_nio_shared_lru_regression.py` (`lru_core` absent); and `test_stage_ub_baseline_summary.py` (`siestaflow_hubbard` absent).
 - All 20 failure IDs are enumerated in the corrected §0.2 `BASELINE_FAILURES` list above; the current pytest short summary reproduced that exact list.
+
+## Reopened phase-close work — author resolutions R1–R4
+
+The author resolutions were committed first as `e4d9029`. The existing `BASELINE_FAILURES` from
+the corrected `84b8eb6` run remains the comparison set; every complete run below uses
+`pytest tests -q -rfE --continue-on-collection-errors`.
+
+### 20.2 premise checks after R1
+
+| Premise | Result | Command and evidence |
+|---|---|---|
+| 20.2/P1 | TRUE | Official SIESTA 5.4 reference lookup (`web.search_query` for the FDF label rule, then `web.open` on `https://docs.siesta-project.org/projects/siesta/en/5.4/reference/siesta.html`): labels are case insensitive and `-`, `_`, `.` are ignored. This agrees with R1's recognized-then-reject meaning. |
+| 20.2/P2 | TRUE | `rg -n -C 2 '_directives|re.escape\(key\)' src/hubbardflow/siesta_backend/fdf_model.py` → `_directives` builds `re.escape(key)` with `re.IGNORECASE`; punctuation remains literal. |
+| 20.2/P3 | TRUE | `rg -n -C 2 'active_name|casefold\(\)|re.fullmatch' src/hubbardflow/siesta_backend/fdf_model.py` → block labels are indexed with `casefold()` and name-specific lookups use escaped literal names. |
+| 20.2/P4 | TRUE | `Get-Content src/hubbardflow/siesta_backend/coverage_reference.py -TotalCount 65` → literal regexes for `DFTU.PotentialShift` and `%block DFTU.proj`, only `re.IGNORECASE`. |
+| 20.2/P5 | TRUE | Temporary valid fixture from `tests/unit/test_fdf_model.py::_fdf()` plus each of `Spin_Orbit T`, `spin.orbit true`, `Non-Collinear-Spin T` printed `spin_orbit=False, noncollinear=False` with current `parse_effective_fdf`. |
+
+20.2 FDF census before implementation: `Path.rglob('*.fdf')`, excluding `.git`, Python virtual environments, and `__pycache__`, found `197`; current `parse_effective_fdf` accepted `130`, rejected `67` (first failures were legacy `DFTU.Proj record shape is unsupported`). Directive census command counted `SCF.DM.Tolerance=66`, `DM.Tolerance=12`, `SCF.H.Tolerance=66` across the same FDF files.
+
+Managed labels recorded from `fdf_builder.py`, `fdf_model.py`, `coverage_reference.py`,
+`scf_ladder_inputs.py`, the SIESTA profile, `symmetry_materializer.py`, `fdf_validator.py`, and
+spin/DFTU readers (comparison preserves each spelling, case insensitive):
+
+- Directives: `AtomicCoordinatesFormat`, `DFTU.FirstIteration`, `DFTU.Method`,
+  `DFTU.PotentialShift`, `DFTU.ProjectorGenerationMethod`, `DM.Tolerance`, `DM.UseSaveDM`,
+  `File.DM.Init`, `LatticeConstant`, `LatticeParameters`, `MaxSCFIterations`, `MeshCutoff`,
+  `MD.NumCGsteps`, `MD.TypeOfRun`, `NonCollinearSpin`, `NumberOfAtoms`, `NumberOfSpecies`,
+  `PAO.BasisSize`, `PAO.BasisType`, `SCF.Mix`, `SCF.Mixer.Method`, `SCF.Mixer.Weight`,
+  `SCF.Mixer.History`, `SCF.MustConverge`, `SCF.DM.Converge`, `SCF.H.Converge`,
+  `SCF.DM.Tolerance`, `SCF.H.Tolerance`, `Spin`, `SpinOrbit`, `SpinPolarized`, `SystemLabel`,
+  `kgrid_cutoff`.
+- Blocks: `AtomicCoordinatesAndAtomicSpecies`, `ChemicalSpeciesLabel`, `DFTU.proj`, `LDAU.proj`,
+  `DM.InitSpin`, `LatticeParameters`, `LatticeVectors`, `PAO.Basis`,
+  `kgrid_Monkhorst_Pack`.
+- `LongOutput` is not managed: `rg -n 'LongOutput|Long_Output|Long\\.Output|Long-Output' src/hubbardflow tools -g '*.py'` returned no matches. The pre-change generic `_one('Long_Output true', 'LongOutput')` probe returned `None`; the positive punctuation-recognition test uses this unmanaged label and asserts the value is read.
+
+Independent `auditor_cientifico` pre-implementation verdict: `RISK_COVERED` under R1. The audit
+requires duplicate canonical labels to fail before managed-spelling rejection, never normalize
+inside block payloads as directives, preserve exact echo-FDF comparison in
+`coverage_reference._canonical`, and stop if any of the 130 pre-accepted FDFs becomes rejected.
+
+20.2 implementation and gates: `fdf_labels.py` supplies canonical FDF identity and the recorded
+managed set; `fdf_model.py` canonicalizes directive/block lookup, reports managed spelling
+violations as `NONCANONICAL_MANAGED_LABEL`, and rejects canonical duplicates before spelling
+validation. `coverage_reference._canonical` remains unchanged. The positive read case is unmanaged
+`Long_Output`/`LongOutput`. Read-only baseline/current comparison command loaded
+`8e99fe6:src/hubbardflow/siesta_backend/fdf_model.py` via `git show` and parsed the same 197 FDFs:
+`PRE_ACCEPTED=130 POST_ACCEPTED=130 NEWLY_REJECTED=[] NEWLY_ACCEPTED=[]`. All 40 FDFs accepted by
+`validate_reference_fdf(..., "PBE")` still parse.
+
+- Focused tests: `.venv/Scripts/python.exe -m pytest tests/unit/test_fdf_labels.py tests/unit/test_fdf_model.py tests/unit/test_scf_ladder_inputs.py tests/unit/test_coverage_features.py tests/unit/test_coverage.py -q` → `107 passed, 2 warnings`.
+- 70 scientific regressions → `70 passed, 2 warnings`.
+- Configured static gates → Ruff `All checks passed`; format `90 files already formatted`; mypy `Success: no issues found in 90 source files`. Explicit new-file/test static gates also passed (Ruff clean, 5 formatted, mypy 2 files clean).
+- V6: `bash tools/check_v6_integrity.sh` → `V6 GATE OK`.
+
+Additional 20.2 validation evidence: official 5.4 docs give the FDF equivalence example
+`LatticeConstant` / `lattice_constant`; on the current strict parser,
+`_one('Long_Output true', 'LongOutput')` returned `None`. Pre-change
+`rg -n 'LongOutput|Long_Output|Long\.Output|Long-Output' src/hubbardflow tools -g '*.py'`
+returned no matches. The `Long_Output`/`LongOutput` pair is therefore the positive unmanaged-label
+read case; it does not add a HubbardFlow scientific field.
+
+P3 nuance checked against the official SIESTA 5.4 convergence reference, lines 3286–3313: newer
+`SCF.DM.Tolerance` has precedence over the older DM-prefixed option, while the legacy
+`DM.Tolerance` supplies its actual default. This reading matches the premise quote.
+
+Punctuation-sensitive legacy paths recorded for Phase 3: `fdf_builder.py` uses literal regexes for
+`DFTU.proj`, `LDAU.proj`, `ChemicalSpeciesLabel`, `AtomicCoordinatesAndAtomicSpecies`, and
+`DM.InitSpin`; `coverage_reference._perturbed` matches `DFTU.PotentialShift` and `DFTU.proj`
+literally; `reference_magnetic_evidence._is_explicitly_nonpolarized` matches literal `Spin
+non-polarized`; and `campaign_v2.validate_reference_fdf`/`fdf_validator.py` use their current
+legacy regex spellings. These validators remain untouched by 20.2.

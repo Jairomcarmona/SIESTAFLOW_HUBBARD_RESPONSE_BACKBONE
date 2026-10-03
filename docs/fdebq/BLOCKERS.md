@@ -321,7 +321,7 @@ SIESTA campaigns were started.
 
 ## Phase 2 close — RISK_UNCOVERED en 20.2
 
-La auditoría científica detuvo 20.2 antes de implementar. La especificación §20.2.3 declara administradas las etiquetas que HubbardFlow escribe o lee; `fdf_builder.py` escribe `ChemicalSpeciesLabel` y `fdf_model.py` la lee. Por tanto, `Chemical_Species_Label` debe rechazarse como `NONCANONICAL_MANAGED_LABEL`, mientras §20.2 Acceptance también exige que se lea. No está definido si “is read” significa reconocerla antes del rechazo o aceptar el bloque. Resolverlo por código escogería qué FDF participa en el inventario y la campaña científica. Se requiere aclaración del autor y, si se espera aceptarla, una regla de etiquetas administradas corregida. No se implementó 20.2.
+**Bloqueo inicial resuelto por R1 (`AMENDMENTS_2.md`, commit `e4d9029`).** El autor aclaró que “is read” significa reconocida antes del rechazo. 20.2 se reabre bajo la prueba positiva unmanaged `Long_Output` registrada en `PHASE2_CLOSE_LOG.md`; el auditor científico emitió `RISK_COVERED` sujeto a las condiciones de orden de duplicados, contenido de bloques y censo FDF allí anotadas. La auditoría inicial y su evidencia se conservan como historial, no como bloqueo vigente.
 
 ## Phase 2 close — RISK_UNCOVERED en 20.4
 

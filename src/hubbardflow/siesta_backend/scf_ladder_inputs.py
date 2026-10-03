@@ -93,9 +93,11 @@ def bind_ladder_input(source: Path, site_id: str, mode: ResponseMode, alpha_ev: 
         if alpha_ev == 0:
             raise ScfLadderError("zero perturbations are not SCF ladder inputs")
         effective, _ = resolve_fdf_includes(source)
+        # Validate the whole input first: canonical duplicates take precedence
+        # over spelling aliases or individual prohibited directives.
+        model = parse_effective_fdf(source)
         if _one(effective, "File.DM.Init") is not None:
             raise ScfLadderError("File.DM.Init is prohibited; supply DM.UseSaveDM true")
-        model = parse_effective_fdf(source)
         if model.dftu_method != 2 or model.dftu_potential_shift is not True:
             raise ScfLadderError("input must explicitly establish method-2 DFTU.PotentialShift")
         target = [r for r in model.dftu_records if r.label == site_id]

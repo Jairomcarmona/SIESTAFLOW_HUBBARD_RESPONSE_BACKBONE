@@ -14,7 +14,8 @@ from pathlib import Path
 
 from hubbardflow.domain.coverage_models import CoverageReferenceEvidence
 from hubbardflow.domain.state_evidence import CorrelatedSubspaceLike, EvidenceStatus, OccupationSpectraStatus
-from hubbardflow.siesta_backend.fdf_model import parse_effective_fdf
+from hubbardflow.siesta_backend.fdf_labels import canonical_fdf_label
+from hubbardflow.siesta_backend.fdf_model import _blocks, _one, parse_effective_fdf
 from hubbardflow.siesta_backend.reference_magnetic_evidence import (
     ReferenceMagneticEvidenceError,
     _is_explicitly_nonpolarized,
@@ -39,18 +40,13 @@ def _echo(text: str) -> str | None:
 
 
 def _perturbed(text: str) -> bool:
-    if not re.search(
-        r"^\s*DFTU\.PotentialShift\s+(?:true|t|yes)\s*(?:#.*)?$", text, re.IGNORECASE | re.MULTILINE
-    ):
+    potential = _one(text, "DFTU.PotentialShift")
+    if potential is None or potential.casefold() not in {"true", "t", "yes"}:
         return False
-    block = re.search(r"%block\s+DFTU\.proj\s*\n(.*?)%endblock", text, re.IGNORECASE | re.DOTALL)
-    if block is None:
+    rows = _blocks(text).get(canonical_fdf_label("DFTU.proj"))
+    if rows is None:
         return True
-    lines = [
-        line.partition("#")[0].strip()
-        for line in block.group(1).splitlines()
-        if line.partition("#")[0].strip()
-    ]
+    lines = list(rows)
     records = 0
     for index, line in enumerate(lines):
         if re.fullmatch(r"\S*[A-Za-z]\S*\s+\d+", line):

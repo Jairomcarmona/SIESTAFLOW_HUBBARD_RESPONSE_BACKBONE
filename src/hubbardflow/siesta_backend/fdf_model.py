@@ -15,6 +15,7 @@ from enum import Enum
 from pathlib import Path
 
 from hubbardflow.execution.campaign_v2 import CampaignV2Error, resolve_fdf_includes
+from hubbardflow.siesta_backend.fdf_labels import MANAGED_FDF_LABELS, canonical_fdf_label
 
 _BOHR_TO_ANGSTROM = 0.529177210903
 
@@ -23,6 +24,7 @@ class FdfErrorCode(str, Enum):
     """Stable outcomes for syntax and evidence that the parser cannot accept."""
 
     UNSUPPORTED_SYNTAX = "UNSUPPORTED_SYNTAX"
+    NONCANONICAL_MANAGED_LABEL = "NONCANONICAL_MANAGED_LABEL"
     AMBIGUOUS_DFTU_LABEL = "AMBIGUOUS_DFTU_LABEL"
     DFTU_LABEL_MULTIPLE_ATOMS = "DFTU_LABEL_MULTIPLE_ATOMS"
     DFTU_LABEL_NO_ATOM = "DFTU_LABEL_NO_ATOM"
@@ -145,8 +147,62 @@ def _clean(line: str) -> tuple[str, str | None]:
 
 
 def _directives(text: str, key: str) -> list[str]:
-    pattern = re.compile(rf"^\s*{re.escape(key)}\s+([^#]+?)\s*$", re.IGNORECASE)
-    return [match.group(1).strip() for line in text.splitlines() if (match := pattern.match(line))]
+    return [
+        value
+        for label, value in _directive_rows(text)
+        if canonical_fdf_label(label) == canonical_fdf_label(key)
+    ]
+
+
+def _directive_rows(text: str) -> list[tuple[str, str]]:
+    """Read only top-level labels; block payload is scientific data, not directives."""
+    rows: list[tuple[str, str]] = []
+    active = False
+    for raw in text.splitlines():
+        line, _ = _clean(raw)
+        if re.match(r"%block\s", line, re.IGNORECASE):
+            active = True
+        elif re.match(r"%endblock(?:\s|$)", line, re.IGNORECASE):
+            active = False
+        elif not active and line and not line.startswith("%"):
+            fields = line.split(maxsplit=1)
+            rows.append((fields[0], fields[1] if len(fields) > 1 else ""))
+    return rows
+
+
+def _validate_labels(text: str) -> None:
+    """Reject ambiguous canonical identities before checking writer spellings.
+
+    A spelling alias is recognized, but must not reach punctuation-sensitive
+    writers. Separate whole-input passes make duplicate precedence independent
+    of declaration order.
+    """
+    directives = _directive_rows(text)
+    block_names: list[str] = []
+    end_names: list[str] = []
+    for raw in text.splitlines():
+        line, _ = _clean(raw)
+        start = re.fullmatch(r"%block\s+(\S+)", line, re.IGNORECASE)
+        end = re.fullmatch(r"%endblock\s+(\S+)", line, re.IGNORECASE)
+        if start:
+            block_names.append(start.group(1))
+        elif end:
+            end_names.append(end.group(1))
+    for kind, labels in (("directive", [label for label, _ in directives]), ("block", block_names)):
+        seen: set[str] = set()
+        for label in labels:
+            key = canonical_fdf_label(label)
+            if key in seen:
+                raise FdfModelError(FdfErrorCode.UNSUPPORTED_SYNTAX, f"duplicate FDF {kind} {key}")
+            seen.add(key)
+    managed = {canonical_fdf_label(label): label for label in MANAGED_FDF_LABELS}
+    for label in sorted([label for label, _ in directives] + block_names + end_names):
+        expected = managed.get(canonical_fdf_label(label))
+        if expected is not None and label.casefold() != expected.casefold():
+            raise FdfModelError(
+                FdfErrorCode.NONCANONICAL_MANAGED_LABEL,
+                f"noncanonical managed FDF label {label!r}; use {expected}",
+            )
 
 
 def _one(text: str, key: str, *, required: bool = False) -> str | None:
@@ -169,7 +225,7 @@ def _blocks(text: str) -> dict[str, tuple[str, ...]]:
         if start:
             if active_name is not None:
                 raise FdfModelError(FdfErrorCode.UNSUPPORTED_SYNTAX, "nested FDF blocks are unsupported")
-            active_name = start.group(1).casefold()
+            active_name = canonical_fdf_label(start.group(1))
             if active_name in result:
                 raise FdfModelError(FdfErrorCode.UNSUPPORTED_SYNTAX, f"duplicate FDF block {active_name}")
             active_lines = []
@@ -177,7 +233,7 @@ def _blocks(text: str) -> dict[str, tuple[str, ...]]:
         if end:
             if active_name is None:
                 raise FdfModelError(FdfErrorCode.UNSUPPORTED_SYNTAX, "FDF block end without a block start")
-            if end.group(1) is not None and end.group(1).casefold() != active_name:
+            if end.group(1) is not None and canonical_fdf_label(end.group(1)) != active_name:
                 raise FdfModelError(
                     FdfErrorCode.UNSUPPORTED_SYNTAX, f"mismatched end of FDF block {active_name}"
                 )
@@ -196,10 +252,16 @@ def _block_rows_with_comments(text: str, name: str) -> tuple[tuple[str, str | No
     rows: list[tuple[str, str | None]] = []
     for raw in text.splitlines():
         body, comment = _clean(raw)
-        if re.fullmatch(rf"%block\s+{re.escape(name)}\s*", body, re.IGNORECASE):
+        start = re.fullmatch(r"%block\s+(\S+)", body, re.IGNORECASE)
+        end = re.fullmatch(r"%endblock(?:\s+(\S+))?", body, re.IGNORECASE)
+        if start and canonical_fdf_label(start.group(1)) == canonical_fdf_label(name):
             active = True
             continue
-        if active and re.fullmatch(rf"%endblock(?:\s+{re.escape(name)})?\s*", body, re.IGNORECASE):
+        if (
+            active
+            and end
+            and (end.group(1) is None or canonical_fdf_label(end.group(1)) == canonical_fdf_label(name))
+        ):
             return tuple(rows)
         if active and body:
             rows.append((body, comment))
@@ -293,15 +355,14 @@ def parse_effective_fdf(path: str | Path) -> FdfModel:
         raise FdfModelError(
             FdfErrorCode.UNSUPPORTED_SYNTAX, f"could not resolve effective FDF: {exc}"
         ) from exc
-    if _directives(effective, "LatticeParameters") or re.search(
-        r"^\s*%block\s+LatticeParameters\b", effective, re.IGNORECASE | re.MULTILINE
-    ):
+    _validate_labels(effective)
+    if _directives(effective, "LatticeParameters"):
         raise FdfModelError(
             FdfErrorCode.UNSUPPORTED_SYNTAX,
             "LatticeParameters is unsupported; use LatticeConstant and LatticeVectors",
         )
     blocks = _blocks(effective)
-    if "latticeparameters" in blocks:
+    if canonical_fdf_label("LatticeParameters") in blocks:
         raise FdfModelError(
             FdfErrorCode.UNSUPPORTED_SYNTAX,
             "LatticeParameters is unsupported; use LatticeConstant and LatticeVectors",
@@ -325,7 +386,7 @@ def parse_effective_fdf(path: str | Path) -> FdfModel:
         )
     if lattice_constant <= 0:
         raise FdfModelError(FdfErrorCode.UNSUPPORTED_SYNTAX, "LatticeConstant must be positive")
-    lattice_rows = _float_rows(blocks.get("latticevectors", ()), 3, "LatticeVectors")
+    lattice_rows = _float_rows(blocks.get(canonical_fdf_label("LatticeVectors"), ()), 3, "LatticeVectors")
     if len(lattice_rows) != 3:
         raise FdfModelError(FdfErrorCode.UNSUPPORTED_SYNTAX, "LatticeVectors must contain exactly three rows")
     lattice = tuple(
@@ -346,7 +407,7 @@ def parse_effective_fdf(path: str | Path) -> FdfModel:
     species: list[SpeciesLabel] = []
     seen_species_indices: set[int] = set()
     seen_labels: set[str] = set()
-    for row in blocks.get("chemicalspecieslabel", ()):
+    for row in blocks.get(canonical_fdf_label("ChemicalSpeciesLabel"), ()):
         fields = row.split()
         if len(fields) != 3:
             raise FdfModelError(
@@ -424,7 +485,7 @@ def parse_effective_fdf(path: str | Path) -> FdfModel:
         raise FdfModelError(
             FdfErrorCode.UNSUPPORTED_SYNTAX, "coordinate row count differs from NumberOfAtoms"
         )
-    dftu_rows = blocks.get("dftu.proj", ())
+    dftu_rows = blocks.get(canonical_fdf_label("DFTU.proj"), ())
     if len(dftu_rows) % 4:
         raise FdfModelError(
             FdfErrorCode.UNSUPPORTED_SYNTAX, "DFTU.Proj must contain complete four-line records"
@@ -530,11 +591,13 @@ def parse_effective_fdf(path: str | Path) -> FdfModel:
     }
     block_hashes = tuple(
         sorted(
-            (name, _sha256_text("\n".join(rows))) for name, rows in blocks.items() if name in relevant_names
+            (name, _sha256_text("\n".join(blocks[canonical_fdf_label(name)])))
+            for name in relevant_names
+            if canonical_fdf_label(name) in blocks
         )
     )
     basis_rows: list[tuple[str, tuple[str, ...]]] = []
-    basis_lines = blocks.get("pao.basis", ())
+    basis_lines = blocks.get(canonical_fdf_label("PAO.Basis"), ())
     species_labels = {entry.label for entry in species}
     current_label: str | None = None
     current_basis: list[str] = []
@@ -571,9 +634,9 @@ def parse_effective_fdf(path: str | Path) -> FdfModel:
         spin_polarized=spin_polarized,
         noncollinear=noncollinear,
         spin_orbit=spin_orbit,
-        dm_init_spin=blocks.get("dm.initspin", ()),
+        dm_init_spin=blocks.get(canonical_fdf_label("DM.InitSpin"), ()),
         mesh_cutoff=_one(effective, "MeshCutoff"),
-        kgrid_block=blocks.get("kgrid_monkhorst_pack", ()),
+        kgrid_block=blocks.get(canonical_fdf_label("kgrid_Monkhorst_Pack"), ()),
         kgrid_cutoff=_one(effective, "kgrid_cutoff"),
         pao_basis_blocks=tuple(sorted(basis_rows)),
         pao_basis_size=_one(effective, "PAO.BasisSize"),
