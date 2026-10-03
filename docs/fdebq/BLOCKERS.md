@@ -333,3 +333,7 @@ La auditoría científica detuvo 20.5. La nueva aceptación de exactitud discret
 
 La auditoría científica determinó que usar los FDF de `examples/tmo_campaigns` como golden de las entradas modernas CoO/NiO mezcla campañas físicamente distintas: cambian celda, cantidad/etiqueta de sitios, grid y método de proyectores; la inicialización PBE actual rechaza las plantillas antiguas. Para Cu3N, el archivo de materialización disponible corresponde al antiguo modelo de 4 átomos/Cu1 frente al modelo actual de 32 átomos/24 sitios. En MnO, solo hay FDF materializados de los representantes A/B aunque la entrada de referencia declara 16 sitios. No se generaron ni emparejaron hashes incompatibles y se eliminó el prototipo de generador/prueba. Se necesita una cadena archivada compatible, designada por el autor, o una aclaración explícita que limite la comparación. 20.9 queda detenido como `RISK_UNCOVERED`.
 
+
+## Phase 2 close — 20.11 dependency
+
+20.11 no se implementó: su golden exige un plan `TRANSLATION_SHADOWED` y `campaign-planner-v2`, cambio que depende de 20.5. 20.5 está detenido por `RISK_UNCOVERED`; por eso no se fijó un digest ni se cambió la versión.
