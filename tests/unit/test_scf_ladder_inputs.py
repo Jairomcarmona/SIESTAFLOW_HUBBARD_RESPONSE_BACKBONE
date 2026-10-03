@@ -49,6 +49,13 @@ toy 1
 """
 
 
+def test_noncanonical_file_dm_init_is_rejected_before_fdf_parsing(tmp_path: Path) -> None:
+    source = tmp_path / "unsafe.fdf"
+    source.write_text("file_dm_init parent.DM\n", encoding="utf-8")
+    with pytest.raises(ScfLadderError, match="File.DM.Init"):
+        bind_ladder_input(source, "toy", ResponseMode.SCREENED, 0.01)
+
+
 def test_binding_checks_exact_label_alpha_and_screened_bare_modes(tmp_path: Path) -> None:
     source = tmp_path / "input.fdf"
     source.write_text(source_text(0.01), encoding="utf-8")

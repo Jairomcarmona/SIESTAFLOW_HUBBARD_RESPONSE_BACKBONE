@@ -465,3 +465,35 @@ Thus the suite is not baseline-clean; no item implementation was attempted to ma
 Final gates on this result: 70 scientific regression tests → `70 passed, 2 warnings`; `ruff check .` → `All checks passed!`; `ruff format --check .` → `90 files already formatted` (cache write warnings only; exit 0); `MYPYPATH=src mypy --strict` → `Success: no issues found in 90 source files`; `bash tools/check_v6_integrity.sh` → `V6 GATE OK`.
 
 R4 archived materialized-input hash comparison was not reached: the required exact run-spec tuple comparison already differs in `site` (`NiLR0@0:3:2`/`NiLR1@1:3:2` current versus `NiLR0`/`NiLR1` archived). Per author instruction, stop without attempting a correction. CoO, MnO and Cu3N are `NOT_COVERED` for this revised 20.9 check.
+
+
+### R6 / 20.2 corrective regression premise checks (before code)
+
+| Premise | Result | Command and evidence |
+|---|---|---|
+| R6/P1 | TRUE | `Get-Content src/hubbardflow/siesta_backend/scf_ladder_inputs.py` and `rg -n -C 5 'resolve_fdf_includes|parse_effective_fdf|File.DM.Init|_one\(effective' ...` → `resolve_fdf_includes(source)` is followed by `parse_effective_fdf(source)` and only then `_one(effective, "File.DM.Init")`. |
+| R6/P2 | TRUE | Venv Python called `canonical_fdf_label` on `File.DM.Init`, `file_dm_init`, and `FILE-DM-INIT` → all three produce `filedminit`. |
+| R6/P3 | TRUE | `Get-Content src/hubbardflow/siesta_backend/fdf_labels.py` and `rg -n 'def resolve_fdf_includes|effective, _ = resolve_fdf_includes' src/hubbardflow/execution/campaign_v2.py src/hubbardflow/siesta_backend/scf_ladder_inputs.py` → canonical label helper exists and `bind_ladder_input` receives effective include-resolved text. |
+| R6/P4 | TRUE | `.venv/Scripts/pytest.exe tests/unit/test_scf_validation.py::test_materializer_rejects_missing_parent_assets_and_unsafe_restart -q` → currently fails as R6 claims: expected `File.DM.Init`, actual `NOT_ESTABLISHED: source FDF ladder identity cannot be bound: required FDF directive LatticeConstant is missing`. |
+| R6/P5 | TRUE | `Get-Content src/hubbardflow/siesta_backend/fdf_model.py` lines 144–170 → `_clean` strips text after `#`; `_directive_rows` selects first top-level token. R6 explicitly requires checking the first token on each effective line after comments are removed. |
+
+Independent scientific audit is requested before implementation because this is a correction to the `[science]` item 20.2. No source or test has been changed yet.
+
+
+R6 pre-implementation auditor: `RISK_COVERED`. The auditor confirmed that the check belongs after include expansion and before parsing, uses `#` comment semantics, ignores blank lines, and keeps `DM.UseSaveDM` and parent identity checks intact. No math, tolerance, estimator, or scientific selection behavior changes. Auditor also verified canonical spellings `File.DM.Init`, `file_dm_init`, and `FILE-DM-INIT` all map to `filedminit`, while the commented spelling has no directive token.
+
+
+### R6 implementation and gates
+
+Changed `bind_ladder_input` to inspect every include-resolved effective FDF line immediately after `resolve_fdf_includes`: remove `#` comments, take the first token, canonicalize it, and reject `filedminit` before `parse_effective_fdf`. Removed the old post-parse `_one` check. Added `test_noncanonical_file_dm_init_is_rejected_before_fdf_parsing` using `file_dm_init parent.DM`. The original `test_materializer_rejects_missing_parent_assets_and_unsafe_restart` was not edited.
+
+- Focused: `.venv/Scripts/pytest.exe tests/unit/test_scf_ladder_inputs.py tests/unit/test_scf_validation.py::test_materializer_rejects_missing_parent_assets_and_unsafe_restart -q` → `17 passed, 2 warnings`.
+- Full required suite: `.venv/Scripts/pytest.exe tests -q -rfE --continue-on-collection-errors` with current checkout `src` on `PYTHONPATH` → `20 failed, 1290 passed, 24 skipped, 2 warnings, 5 errors, 4 subtests passed in 216.00s`. The five collection errors and all 20 failing test IDs exactly match `BASELINE_FAILURES`; the additional SCF validation failure recorded above is gone. Exact IDs remain the §0.2 list.
+- Scientific regressions: 70 passed, 2 warnings.
+- Ruff: `All checks passed!`.
+- Format: `90 files already formatted`.
+- Configured strict mypy: `Success: no issues found in 90 source files`.
+- New test strict mypy: `Success: no issues found in 1 source file`.
+- V6: `V6 GATE OK`.
+
+No pre-existing test assertion was edited. No FDF parser behavior outside the early safety guard changed.

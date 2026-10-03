@@ -18,6 +18,7 @@ from hubbardflow.domain.scf_ladder_models import ScfLadderError
 from hubbardflow.domain.symmetry_reduction import ResponseMode
 from hubbardflow.domain.validation import require_fdf_representable_ev, require_int, require_sha256
 from hubbardflow.execution.campaign_v2 import resolve_fdf_includes
+from hubbardflow.siesta_backend.fdf_labels import canonical_fdf_label
 
 from .fdf_model import _one, parse_effective_fdf
 from .siesta542_bare_profile import Siesta542PotentialShiftHamiltonianProfile
@@ -93,11 +94,12 @@ def bind_ladder_input(source: Path, site_id: str, mode: ResponseMode, alpha_ev: 
         if alpha_ev == 0:
             raise ScfLadderError("zero perturbations are not SCF ladder inputs")
         effective, _ = resolve_fdf_includes(source)
-        # Validate the whole input first: canonical duplicates take precedence
-        # over spelling aliases or individual prohibited directives.
+        for raw_line in effective.splitlines():
+            directive = raw_line.partition("#")[0].split(maxsplit=1)
+            if directive and canonical_fdf_label(directive[0]) == "filedminit":
+                raise ScfLadderError("File.DM.Init is prohibited; supply DM.UseSaveDM true")
+        # Validate the whole input after rejecting the unsafe restart route.
         model = parse_effective_fdf(source)
-        if _one(effective, "File.DM.Init") is not None:
-            raise ScfLadderError("File.DM.Init is prohibited; supply DM.UseSaveDM true")
         if model.dftu_method != 2 or model.dftu_potential_shift is not True:
             raise ScfLadderError("input must explicitly establish method-2 DFTU.PotentialShift")
         target = [r for r in model.dftu_records if r.label == site_id]

@@ -389,3 +389,8 @@ La limitación conocida es la enumeración de rotaciones independiente de spglib
 ## Current full-suite delta after R1–R4
 
 The required full suite was rerun with `--continue-on-collection-errors`. It reproduced all five baseline collection errors and all 20 baseline failed IDs, plus the new failure `tests/unit/test_scf_validation.py::test_materializer_rejects_missing_parent_assets_and_unsafe_restart` (expected `File.DM.Init`, received a missing `LatticeConstant` identity-binding error). This is recorded in `PHASE2_CLOSE_LOG.md`; do not treat the branch as fully green.
+
+
+## R6 resolved the temporary full-suite delta
+
+The extra failure in `tests/unit/test_scf_validation.py::test_materializer_rejects_missing_parent_assets_and_unsafe_restart` was corrected in R6 by moving the canonical `File.DM.Init` guard ahead of FDF parsing. The existing test now passes unchanged, and the full suite again matches `BASELINE_FAILURES` exactly. See the R6 gate record in `PHASE2_CLOSE_LOG.md`.
