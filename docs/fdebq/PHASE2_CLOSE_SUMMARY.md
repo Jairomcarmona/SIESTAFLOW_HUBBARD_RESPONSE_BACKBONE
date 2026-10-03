@@ -1,31 +1,30 @@
 # Phase 2 close summary
 
-Branch: `fdebq/r3-task20-fixes`
-Base: `84b8eb6` (`origin/fdebq/r2-task15-species-split`)
+Branch: `fdebq/r3-task20-fixes` (from `84b8eb6`). No PR or SIESTA campaign was run. The full-suite command was `pytest tests -q -rfE --continue-on-collection-errors`; final failures match `BASELINE_FAILURES` exactly.
 
-| Item | Status | Auditor / verification | Tests added or edited | Commit |
+| Item | Commit / status | Premises and auditor | Tests and authorized test edits | Conservative decision |
 |---|---|---|---|---|
-| 20.1 | Complete | Focused 30 passed; 70 scientific regressions; static gates; V6 passed | Added campaign runner resume tests | Earlier commit on branch |
-| 20.2 | Complete after R1 | Auditor `RISK_COVERED`; focused 107 passed, 70 regressions; static gates; V6 passed; label census recorded | Positive read uses unmanaged `Long_Output`; no existing tests edited | `f629220` |
-| 20.3 | Stopped | Auditor `RISK_COVERED`; focused gate had two existing-test/spec conflicts | No tests edited; draft code remains in stash | None |
-| 20.4 | Stopped | R2 authorizes named real-archive test, but a second synthetic test expects raw-identical invalid aliases to MATCH, contrary to canonical identity | No tests edited | None |
-| 20.5 | Stopped | Auditor `RISK_UNCOVERED`: a valid in-band translation candidate is lost by internal enumeration | R3(a) named test edit not attempted; no tests edited | None |
-| 20.6 | Complete | Focused 74 passed; POSIX subset 13 passed; V6 and static gates passed | Updated named `test_every_manifest_path_is_rejected_read_only` under the task exception | Earlier commit on branch |
-| 20.7 | Complete | Focused 10 passed; static gates and V6 passed | Added product-option rejection coverage | Earlier commit on branch |
-| 20.8 | Dependency stopped | Depends on blocked 20.3 and 20.5 | None | None |
-| 20.9 | Stopped by R4 | NiO P5 initialization yields 24 rows, but exact `(site, atom, mode, alpha)` differs; CoO/MnO/Cu3N `NOT_COVERED` | No fixtures generated | None |
-| 20.11 | Dependency stopped | Requires the 20.5 `campaign-planner-v2` plan | None | None |
-| 20.10 | Dependency stopped | Requires 20.5 spglib removal; architecture test not run | None | None |
-| TASK 21 | Product-focused gates pass; full suite has one new failure | Product suite 85 passed; 70 regressions passed; Ruff, format, mypy strict and V6 passed | Existing product test suite | Earlier commit on branch |
+| 20.1 | `6163c4e` | P1–P4 TRUE; auditor not required | 30 focused tests; legacy resume tests added | Preserve legacy resume validation while binding inventory. |
+| 20.2 | `f629220` | P1–P5 TRUE; `RISK_COVERED` after R1 | 107 focused; no existing test edits | Reject recognized noncanonical managed labels; positive read case is unmanaged `Long_Output`. |
+| R6 / 20.2 correction | `b37246e` | R6/P1–P5 TRUE; `RISK_COVERED` | Unsafe restart test unchanged; added `file_dm_init` rejection | Check `File.DM.Init` immediately after include resolution, before parsing. |
+| 20.3 | `8278d9d` | P1–P9 TRUE; `RISK_COVERED` | Focused SCF-ladder tests; R5 changed only v1 materialization expectation in the explicitly authorized test | Require ladder protocol v2 and verify safety before protocol rejection. |
+| 20.4 | `5ca79ba` | P1–P4 TRUE; audit confirmed the R5 fixture edit | Positive Mn aliases rebuilt with `relabel_ion_bytes`; added wrong-header `MISMATCH`; R2 real FeLR0/FeLR1 assertion updated | Compare canonical label-normalized ion bytes; do not accept raw-hash equality alone. |
+| 20.5 | `b6a85d1` | P1–P8 TRUE; R9 re-audit `RISK_COVERED` | Rational-ring tests include all k/4 and k/8; R5 changed only the authorized F8 exactness assertion | Exact reductions require rational mapping and mesh commensurability. Lost near-symmetry triggers and non-orthogonal rotations remain Phase 3 savings limitations before TASK 22. |
+| 20.6 | `b9388f6` | P1–P5 TRUE; auditor not required | 74 focused plus 13 POSIX tests; updated only the named read-only manifest-path test | Fail closed on protected destinations across platforms. |
+| 20.7 | `c4b0cb6` | P1 TRUE; auditor not required | 10 focused CLI tests added; no test edits | Reject product-only options on legacy `run` targets. |
+| 20.8 | **Stopped; no implementation commit** (`50751cf` records risk) | Premises TRUE; independent auditor `RISK_UNCOVERED` | No implementation tests committed | Supplied SCF estimates can bypass envelope-based order/tail/truncation budgeting and falsely qualify; stop pending a scientific correction. |
+| 20.9 | `dba0788` | P1 TRUE; R10 archive comparison exact | Added NiO P5 archived golden generator, fixture and current-code test; no existing test edits | Compare in manifest namespace. NiO P5 matches 24 identities and 25 FDF hashes; CoO, MnO and Cu3N are `NOT_COVERED`. |
+| 20.11 | **Skipped; `PREMISE_FALSE`** (recorded in `374d257`) | R10 leaves one compatible 20.9 archive chain, not the four DISABLED 20.9 plans required by this item's golden | No code/tests changed | Do not invent three historical digests from TASK 13/TASK 21 evidence. |
+| 20.10 | `6627e10` | P1–P5 TRUE; 20.5 prerequisite met | 86 focused tests; new AST architecture test; no existing test edits | Move include resolution to the backend and retain the campaign exception wrapper. Architecture allowlist has 44 explicit `# phase 3` entries and rejects new/stale violations. |
+| TASK 21 | `8e287bb` | P1–P8 TRUE; auditor not required | TASK 21 gate: 85 passed; full suite below | Enable only fixed explicit, unreduced legacy-equivalent execution. Real numerical CoO equivalence remains a user SIESTA check; no SIESTA was run. |
 
-## Premises false and uncovered risks
+## Final gates
 
-No false premise was recorded in the resumed items. 20.5 has an uncovered scientific risk: internal translation enumeration loses the valid t=0.25 candidate described in the execution log. Rotation enumeration without spglib on non-orthogonal lattices is a known conservative Phase 3 savings limitation per R3(b), not an uncovered risk. NiO P5 20.9 stopped on an exact site-ID mismatch under R4. 20.4 and 20.3 are existing-test/specification conflicts; they are not scientific audit verdicts.
+- 70 scientific regressions: `70 passed`.
+- Ruff: `All checks passed!`; format: `91 files already formatted`; strict mypy: `Success: no issues found in 91 source files`.
+- New architecture suite and relevant focused tests: `86 passed`.
+- TASK 21 CLI/path/admission/execution gates: `85 passed`.
+- V6 integrity: `V6 GATE OK`.
+- Pre-existing `campaign_v2.py` static debt stayed unchanged: Ruff `2 → 2` on untouched lines; strict mypy `0 → 0`.
 
-## Final test failures compared with BASELINE_FAILURES
-
-The full command was `pytest tests -q -rfE --continue-on-collection-errors` with this checkout's `src` on `PYTHONPATH`. It reported 21 failed, 1288 passed, 24 skipped, 5 collection errors and 4 subtests passed. All five collection errors and all 20 baseline failed test IDs are unchanged. One new failure is present:
-
-- `tests/unit/test_scf_validation.py::test_materializer_rejects_missing_parent_assets_and_unsafe_restart` — expected `File.DM.Init`, received `NOT_ESTABLISHED: source FDF ladder identity cannot be bound: required FDF directive LatticeConstant is missing`.
-
-Therefore the final failure set is not a subset of `BASELINE_FAILURES`. The full exact baseline failure and collection-error lists remain in `PHASE2_CLOSE_LOG.md` §0.2.
+Final full suite: `20 failed, 1345 passed, 24 skipped, 2 warnings, 5 collection errors, 4 subtests passed in 304.40s`. All 20 failed test IDs and all five collection errors equal the complete §0.2 `BASELINE_FAILURES` lists; there are no new failures. The exact IDs are recorded in `PHASE2_CLOSE_LOG.md` under §0.2.
