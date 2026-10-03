@@ -21,8 +21,8 @@ from hubbardflow.domain.response_budget_models import _Record
 from hubbardflow.domain.scf_ladder_models import ScfLadderError, ScfLevel, ScfReason, ScfStatus
 from hubbardflow.domain.symmetry_reduction import ResponseMode
 from hubbardflow.domain.validation import require_fdf_representable_ev, require_int, require_sha256
-from hubbardflow.execution.campaign_v2 import resolve_fdf_includes
 
+from .fdf_includes import resolve_fdf_includes
 from .fdf_labels import canonical_fdf_label
 from .fdf_model import _directive_rows, _one, parse_effective_fdf
 from .reference_state_evidence import build_reference_state_evidence

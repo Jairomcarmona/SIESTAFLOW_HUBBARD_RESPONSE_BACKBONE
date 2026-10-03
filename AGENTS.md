@@ -57,6 +57,9 @@ Layering (respect it strictly):
    `docs/architecture/SCIENTIFIC_DECOUPLING_VERIFICATION.md`). Report them; don't touch them.
 9. Never change existing behaviour of the FIXED_PROTOCOL_GRID path (V6
    reproduction) unless a task explicitly says so.
+10. `tests/unit/test_import_architecture.py` must pass; its allowlists may only shrink.
+11. Never import a private name (leading underscore) from another module, never call a
+    private method of another class; existing cases are allowlisted for Phase 3.
 
 ## 3. Code style
 

@@ -49,34 +49,14 @@ def _safe_relative(value: Any, label: str) -> str:
 
 
 def resolve_fdf_includes(source: Path) -> tuple[str, list[Path]]:
-    """Inline nested FDF includes at their original location, rejecting cycles."""
-    included: list[Path] = []
-    stack: list[Path] = []
-    include_re = re.compile(r"^\s*(?:%include|#include)\s+[\"']?([^\"'\s]+)", re.IGNORECASE)
+    """Preserve the public campaign exception contract for include expansion."""
+    from ..siesta_backend.fdf_includes import FdfIncludeError
+    from ..siesta_backend.fdf_includes import resolve_fdf_includes as resolve
 
-    def expand(path: Path) -> str:
-        resolved = path.resolve(strict=True)
-        if resolved in stack:
-            raise CampaignV2Error(f"FDF include cycle detected at {resolved}")
-        if not resolved.is_file():
-            raise CampaignV2Error(f"FDF include is not a file: {resolved}")
-        stack.append(resolved)
-        output: list[str] = []
-        for line in resolved.read_text(encoding="utf-8").splitlines():
-            match = include_re.match(line)
-            if match:
-                child = (resolved.parent / match.group(1)).resolve(strict=True)
-                included.append(child)
-                output.append(expand(child))
-            else:
-                output.append(line)
-        stack.pop()
-        return "\n".join(output) + "\n"
-
-    text = expand(source)
-    if re.search(r"^\s*(?:%include|#include)\b", text, re.IGNORECASE | re.MULTILINE):
-        raise CampaignV2Error("unsupported or unresolved FDF include directive")
-    return text, list(dict.fromkeys(included))
+    try:
+        return resolve(source)
+    except FdfIncludeError as exc:
+        raise CampaignV2Error(str(exc)) from exc
 
 
 def _fdf_block(text: str, name: str) -> list[str]:

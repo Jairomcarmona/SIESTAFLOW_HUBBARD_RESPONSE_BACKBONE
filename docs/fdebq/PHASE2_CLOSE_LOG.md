@@ -774,3 +774,15 @@ R10 supersedes 20.9's four-archive equivalence comparison with one compatible ar
 | 20.10 prerequisite | TRUE | `rg -n 'spglib|planner_version="campaign-planner-v2"' src/hubbardflow` → no spglib reference under `src/hubbardflow`; planner is already v2 in `execution/campaign_plan.py` from committed 20.5. |
 
 No 20.10 code or tests were changed before these checks. No existing test assertion edit is planned. The 20.11 premise check immediately above is `PREMISE_FALSE`: under R10 only the NiO P5 plan/evidence golden exists, while CoO, MnO and Cu3N are `NOT_COVERED`; do not fabricate the four requested 20.9 plan digests. 20.11 is skipped as a whole; 20.10 is independent and may proceed.
+
+### 20.10 implementation and orchestrator gates
+
+Moved the include expansion algorithm unchanged into `siesta_backend/fdf_includes.py`; new `FdfIncludeError` represents resolver errors, while missing-file/decoding/filesystem exceptions retain their original classes. `campaign_v2.resolve_fdf_includes` remains a thin `CampaignV2Error` wrapper. `fdf_model` and `scf_ladder_inputs` now use the backend resolver. The new AST architecture test includes function imports and excludes `TYPE_CHECKING`, enforces layer rules/cycles/private imports (including private module components and aliases), and checks both new and stale entries against an explicit 44-entry `# phase 3` allowlist. No existing test was edited.
+
+- Focused 20.10 suite: `.venv/Scripts/python.exe -m pytest tests/unit/test_import_architecture.py tests/unit/test_fdf_model.py tests/unit/test_scf_validation.py tests/unit/test_campaign_manifest_plan.py tests/unit/test_campaign_plan.py -q` → `86 passed, 2 warnings`.
+- Required 70 regressions → `70 passed, 2 warnings in 2.47s`.
+- TASK 21 product gates: `.venv/Scripts/pytest.exe tests/unit/test_product_cli.py tests/unit/test_product_paths.py tests/unit/test_product_paths_portable.py tests/unit/test_product_admission.py tests/unit/test_product_execution.py -q` → `85 passed, 2 warnings in 136.85s`.
+- Full suite command: `$env:PYTHONPATH=(Resolve-Path src).Path; .venv/Scripts/pytest.exe tests -q -rfE --continue-on-collection-errors` → `20 failed, 1345 passed, 24 skipped, 2 warnings, 5 errors, 4 subtests passed in 304.40s`. Its 20 failed IDs and five collection-error IDs exactly match §0.2 `BASELINE_FAILURES`; there are no new failures. The 20 failure IDs are the full list recorded in §0.2; collection errors remain the same five historical namespace/fixture errors.
+- `ruff check .` → `All checks passed!`; `ruff format --check .` → `91 files already formatted`; configured `mypy --strict` → `Success: no issues found in 91 source files`.
+- `campaign_v2.py` outside the configured static set: Ruff before/after remains 2/2 (I001 line 2 and UP035 line 11, both untouched); strict mypy before/after remains 0/0. No whole-file formatting was run.
+- `git diff --check` → clean; V6 → `V6 GATE OK`. No SIESTA run.

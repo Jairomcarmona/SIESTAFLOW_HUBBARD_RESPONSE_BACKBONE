@@ -16,7 +16,7 @@ from fractions import Fraction
 from pathlib import Path
 from typing import cast
 
-from hubbardflow.execution.campaign_v2 import CampaignV2Error, resolve_fdf_includes
+from hubbardflow.siesta_backend.fdf_includes import FdfIncludeError, resolve_fdf_includes
 from hubbardflow.siesta_backend.fdf_labels import MANAGED_FDF_LABELS, canonical_fdf_label
 
 _BOHR_TO_ANGSTROM = 0.529177210903
@@ -408,7 +408,7 @@ def _rational_coordinates(
 def parse_effective_fdf(path: str | Path) -> FdfModel:
     """Parse one effective FDF, recording exact source normalization and digests.
 
-    `%include` expansion is delegated to the campaign parser so include
+    `%include` expansion is delegated to the shared SIESTA resolver so include
     semantics remain identical. LatticeParameters and unrecognized coordinate
     formats are rejected because interpreting them would add an unaudited
     geometry conversion.
@@ -416,7 +416,7 @@ def parse_effective_fdf(path: str | Path) -> FdfModel:
     source = Path(path)
     try:
         effective, _ = resolve_fdf_includes(source)
-    except (OSError, UnicodeError, CampaignV2Error) as exc:
+    except (OSError, UnicodeError, FdfIncludeError) as exc:
         raise FdfModelError(
             FdfErrorCode.UNSUPPORTED_SYNTAX, f"could not resolve effective FDF: {exc}"
         ) from exc
