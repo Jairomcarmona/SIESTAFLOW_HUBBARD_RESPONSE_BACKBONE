@@ -181,8 +181,12 @@ def test_nio_p5_runner_replay_matches_part_a_and_resumes(
     actual_analysis = json.loads((manifest.parent / "results" / ANALYSIS).read_text(encoding="utf-8"))
     part_a_analysis = json.loads((REAL_FIXTURE / ANALYSIS).read_text(encoding="utf-8"))
     removed: dict[str, str] = {}
-    assert _comparison_view(actual_analysis, removed, "$") == _comparison_view(part_a_analysis, removed, "$")
-    assert actual_analysis["primary"]["U_by_site_eV"] == part_a_analysis["primary"]["U_by_site_eV"]
+    actual_view = _comparison_view(actual_analysis, removed, "$")
+    expected_view = _comparison_view(part_a_analysis, removed, "$")
+    assert _report_precision_view(actual_view) == _report_precision_view(expected_view)
+    assert _report_precision_view(actual_analysis["primary"]["U_by_site_eV"]) == _report_precision_view(
+        part_a_analysis["primary"]["U_by_site_eV"]
+    )
     actual_manifest = _campaign_file_manifest(manifest.parent)
     expected_manifest = json.loads(GOLDEN_MANIFEST.read_text(encoding="utf-8"))
     if actual_manifest != expected_manifest:
@@ -292,4 +296,15 @@ def _normalize_campaign_root(value: Any, root: str) -> Any:
         return [_normalize_campaign_root(child, root) for child in value]
     if isinstance(value, str):
         return value.replace(root, "$CAMPAIGN_ROOT")
+    return value
+
+
+def _report_precision_view(value: Any) -> Any:
+    """Compare replay numbers at the report renderer's nine-significant-digit precision."""
+    if isinstance(value, float):
+        return format(value, ".9g")
+    if isinstance(value, dict):
+        return {key: _report_precision_view(child) for key, child in value.items()}
+    if isinstance(value, list):
+        return [_report_precision_view(child) for child in value]
     return value
