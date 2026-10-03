@@ -14,8 +14,9 @@ from typing import Any
 import pytest
 
 from hubbardflow.execution import campaign_v2, wsl_campaign_init
-from hubbardflow.execution.campaign_runner import campaign_status, run_campaign_worker
+from hubbardflow.execution.campaign_runner import campaign_status, render_campaign_report, run_campaign_worker
 from hubbardflow.execution.wsl_campaign_init import initialize_campaign
+from hubbardflow.reporting.lr_u_report import render_lr_u_report
 from hubbardflow.siesta_backend.siesta542_bare_profile import Siesta542PotentialShiftHamiltonianProfile
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -25,6 +26,7 @@ ANALYSIS = "lr_u_analysis.v3.json"
 GOLDEN_MANIFEST = REPLAY_FIXTURE / "campaign_manifest.sha256.json"
 GOLDEN_JSON_SNAPSHOT = REPLAY_FIXTURE / "campaign_json_snapshot.json"
 REPLAY_ANALYSIS = REPLAY_FIXTURE / "replay_analysis.v3.json"
+REPLAY_STATE_GATE = REPLAY_FIXTURE / "replay_i5_state_gate.json"
 _ATTEMPT = re.compile(r"attempt-\d+-[0-9a-f]{8}")
 _ATTEMPT_BYTES = re.compile(rb"attempt-\d+-[0-9a-f]{8}")
 _ATTEMPT_GROUP = re.compile(r"(?<=/attempts/)[0-9a-f]{20}")
@@ -242,9 +244,35 @@ def test_nio_p5_runner_replay_matches_part_a_and_resumes(
     replay_view = _analysis_comparison_view(actual_analysis, manifest.parent.parent.parent)
     _assert_replay_equivalent(replay_view, replay_golden)
 
+    state_gate_path = manifest.parent / "results" / "i5_state_gate.json"
+    assert state_gate_path.is_file()
+    actual_state_gate = json.loads(state_gate_path.read_text(encoding="utf-8"))
+    state_gate_golden = json.loads(REPLAY_STATE_GATE.read_text(encoding="utf-8"))
+    _assert_replay_equivalent(actual_state_gate, state_gate_golden)
+    pairs = actual_state_gate["pairs"]
+    assert len(pairs) == 4
+    assert all(pair["verdict"] == "PASS" for pair in pairs)
+    assert all(
+        check["outcome"] == "NOT_AVAILABLE"
+        for pair in pairs
+        for amplitude in pair["amplitudes"]
+        for sign in ("positive", "negative")
+        for check in amplitude[sign]["checks"]
+        if check["check"] == "G4"
+    )
+    assert "## I.5 state consistency (diagnostic)" in render_campaign_report(manifest)
+    node_evidence = json.loads((manifest.parent / ".siestaflow" / "node-evidence.json").read_text())
+    assert node_evidence["nodes"]["matrix-analysis"]["report_sha256"] == hashlib.sha256(
+        render_lr_u_report(actual_analysis).encode("utf-8")
+    ).hexdigest()
+
     actual_manifest = _campaign_file_manifest(manifest.parent)
     expected_manifest = json.loads(GOLDEN_MANIFEST.read_text(encoding="utf-8"))
-    for analysis_artifact in ("results/lr_u_analysis.v3.json", "results/LR_U_REPORT.v3.md"):
+    for analysis_artifact in (
+        "results/lr_u_analysis.v3.json",
+        "results/LR_U_REPORT.v3.md",
+        "results/i5_state_gate.json",
+    ):
         assert analysis_artifact not in actual_manifest
         assert analysis_artifact not in expected_manifest
     if actual_manifest != expected_manifest:
@@ -418,7 +446,11 @@ def _campaign_file_manifest(root: Path) -> dict[str, str]:
     result: dict[str, str] = {}
     for path in sorted(item for item in root.rglob("*") if item.is_file()):
         relative = _normalize_attempt_path(path.relative_to(root).as_posix())
-        if relative in {"results/lr_u_analysis.v3.json", "results/LR_U_REPORT.v3.md"}:
+        if relative in {
+            "results/lr_u_analysis.v3.json",
+            "results/LR_U_REPORT.v3.md",
+            "results/i5_state_gate.json",
+        }:
             continue
         raw = path.read_bytes()
         try:
@@ -453,7 +485,7 @@ def _campaign_json_snapshot(root: Path) -> dict[str, Any]:
     result: dict[str, Any] = {}
     for path in sorted(item for item in root.rglob("*") if item.is_file()):
         relative = _normalize_attempt_path(path.relative_to(root).as_posix())
-        if relative == "results/lr_u_analysis.v3.json":
+        if relative in {"results/lr_u_analysis.v3.json", "results/i5_state_gate.json"}:
             continue
         try:
             value = json.loads(path.read_bytes())

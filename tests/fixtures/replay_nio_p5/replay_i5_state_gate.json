@@ -1,0 +1,2602 @@
+{
+  "pairs": [
+    {
+      "admissible_amplitudes_ev": [
+        0.02,
+        0.04,
+        0.06
+      ],
+      "amplitudes": [
+        {
+          "admissible": true,
+          "amplitude_ev": 0.02,
+          "excluded_by_monotone_rule": false,
+          "negative": {
+            "alpha_ev": -0.02,
+            "checks": [
+              {
+                "atom_index": null,
+                "check": "G1",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 1,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999999100739976,
+                  "epsilon": 0.009470555922883293,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 1
+              },
+              {
+                "atom_index": 1,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 1,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999999975506668,
+                  "epsilon": 0.0001464880162414516,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 2
+              },
+              {
+                "atom_index": 1,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 2,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999999959300798,
+                  "epsilon": 0.00014627988603799718,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 1
+              },
+              {
+                "atom_index": 2,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 2,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999998645690639,
+                  "epsilon": 0.00932082664400303,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 2
+              },
+              {
+                "atom_index": 2,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": null,
+                "check": "G4",
+                "details": {},
+                "outcome": "NOT_AVAILABLE",
+                "reasons": [],
+                "spin": null
+              }
+            ]
+          },
+          "positive": {
+            "alpha_ev": 0.02,
+            "checks": [
+              {
+                "atom_index": null,
+                "check": "G1",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 1,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999999358958419,
+                  "epsilon": 0.009346562735538348,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 1
+              },
+              {
+                "atom_index": 1,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 1,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999999979323428,
+                  "epsilon": 0.00014613154171770447,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 2
+              },
+              {
+                "atom_index": 1,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 2,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999999962817998,
+                  "epsilon": 0.00014633766396903423,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 1
+              },
+              {
+                "atom_index": 2,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 2,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999998386087351,
+                  "epsilon": 0.009493397198932853,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 2
+              },
+              {
+                "atom_index": 2,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": null,
+                "check": "G4",
+                "details": {},
+                "outcome": "NOT_AVAILABLE",
+                "reasons": [],
+                "spin": null
+              }
+            ]
+          },
+          "reasons": []
+        },
+        {
+          "admissible": true,
+          "amplitude_ev": 0.04,
+          "excluded_by_monotone_rule": false,
+          "negative": {
+            "alpha_ev": -0.04,
+            "checks": [
+              {
+                "atom_index": null,
+                "check": "G1",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 1,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999996788081393,
+                  "epsilon": 0.009530401661116319,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 1
+              },
+              {
+                "atom_index": 1,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 1,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999999893438067,
+                  "epsilon": 0.0001466691914409044,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 2
+              },
+              {
+                "atom_index": 1,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 2,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.999999985169475,
+                  "epsilon": 0.00014625312708546866,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 1
+              },
+              {
+                "atom_index": 2,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 2,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999994182846812,
+                  "epsilon": 0.009242702551410381,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 2
+              },
+              {
+                "atom_index": 2,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": null,
+                "check": "G4",
+                "details": {},
+                "outcome": "NOT_AVAILABLE",
+                "reasons": [],
+                "spin": null
+              }
+            ]
+          },
+          "positive": {
+            "alpha_ev": 0.04,
+            "checks": [
+              {
+                "atom_index": null,
+                "check": "G1",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 1,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999997304782298,
+                  "epsilon": 0.009286952058450294,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 1
+              },
+              {
+                "atom_index": 1,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 1,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999999901638916,
+                  "epsilon": 0.00014595512696134218,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 2
+              },
+              {
+                "atom_index": 1,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 2,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999999870228178,
+                  "epsilon": 0.00014636662639722919,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 1
+              },
+              {
+                "atom_index": 2,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 2,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.999999311187872,
+                  "epsilon": 0.009584706233372693,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 2
+              },
+              {
+                "atom_index": 2,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": null,
+                "check": "G4",
+                "details": {},
+                "outcome": "NOT_AVAILABLE",
+                "reasons": [],
+                "spin": null
+              }
+            ]
+          },
+          "reasons": []
+        },
+        {
+          "admissible": true,
+          "amplitude_ev": 0.06,
+          "excluded_by_monotone_rule": false,
+          "negative": {
+            "alpha_ev": -0.06,
+            "checks": [
+              {
+                "atom_index": null,
+                "check": "G1",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 1,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999990465010921,
+                  "epsilon": 0.009596606425139124,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 1
+              },
+              {
+                "atom_index": 1,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 1,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999999808789258,
+                  "epsilon": 0.00014685224616975236,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 2
+              },
+              {
+                "atom_index": 1,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 2,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999999723532031,
+                  "epsilon": 0.00014622531662736798,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 1
+              },
+              {
+                "atom_index": 2,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 2,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999987418099153,
+                  "epsilon": 0.009161720849108827,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 2
+              },
+              {
+                "atom_index": 2,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": null,
+                "check": "G4",
+                "details": {},
+                "outcome": "NOT_AVAILABLE",
+                "reasons": [],
+                "spin": null
+              }
+            ]
+          },
+          "positive": {
+            "alpha_ev": 0.06,
+            "checks": [
+              {
+                "atom_index": null,
+                "check": "G1",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 1,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999995045155275,
+                  "epsilon": 0.009224543657690824,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 1
+              },
+              {
+                "atom_index": 1,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 1,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999999823293394,
+                  "epsilon": 0.00014578167554441912,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 2
+              },
+              {
+                "atom_index": 1,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 2,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999999688068664,
+                  "epsilon": 0.00014639570948075963,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 1
+              },
+              {
+                "atom_index": 2,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 2,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999984633546223,
+                  "epsilon": 0.00967693852304671,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 2
+              },
+              {
+                "atom_index": 2,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": null,
+                "check": "G4",
+                "details": {},
+                "outcome": "NOT_AVAILABLE",
+                "reasons": [],
+                "spin": null
+              }
+            ]
+          },
+          "reasons": []
+        }
+      ],
+      "column_id": "NiLR0",
+      "excluded_amplitudes_ev": [],
+      "mode": "BARE",
+      "policy_id": "i5-state-policy-v1",
+      "reasons": [],
+      "smoothness": {
+        "atom_index": null,
+        "check": "G3",
+        "details": {},
+        "outcome": "NOT_ESTABLISHED",
+        "reasons": [
+          "SMOOTHNESS_REQUIRES_SCF_LADDER"
+        ],
+        "spin": null
+      },
+      "verdict": "PASS"
+    },
+    {
+      "admissible_amplitudes_ev": [
+        0.02,
+        0.04,
+        0.06
+      ],
+      "amplitudes": [
+        {
+          "admissible": true,
+          "amplitude_ev": 0.02,
+          "excluded_by_monotone_rule": false,
+          "negative": {
+            "alpha_ev": -0.02,
+            "checks": [
+              {
+                "atom_index": null,
+                "check": "G1",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 1,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.999999999610707,
+                  "epsilon": 0.009407743090487352,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 1
+              },
+              {
+                "atom_index": 1,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 1,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999999994908975,
+                  "epsilon": 0.0001463987475033636,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 2
+              },
+              {
+                "atom_index": 1,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 2,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999999993452195,
+                  "epsilon": 0.00014631735919758815,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 1
+              },
+              {
+                "atom_index": 2,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 2,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.999999981206359,
+                  "epsilon": 0.009372587095555742,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 2
+              },
+              {
+                "atom_index": 2,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": null,
+                "check": "G4",
+                "details": {},
+                "outcome": "NOT_AVAILABLE",
+                "reasons": [],
+                "spin": null
+              }
+            ]
+          },
+          "positive": {
+            "alpha_ev": 0.02,
+            "checks": [
+              {
+                "atom_index": null,
+                "check": "G1",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 1,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 1.0,
+                  "epsilon": 0.009403319689503498,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 1
+              },
+              {
+                "atom_index": 1,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 1,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999999994838376,
+                  "epsilon": 0.00014621900061726801,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 2
+              },
+              {
+                "atom_index": 1,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 2,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.999999999344948,
+                  "epsilon": 0.00014630133233047105,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 1
+              },
+              {
+                "atom_index": 2,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 2,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.999999967990959,
+                  "epsilon": 0.009443432077125474,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 2
+              },
+              {
+                "atom_index": 2,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": null,
+                "check": "G4",
+                "details": {},
+                "outcome": "NOT_AVAILABLE",
+                "reasons": [],
+                "spin": null
+              }
+            ]
+          },
+          "reasons": []
+        },
+        {
+          "admissible": true,
+          "amplitude_ev": 0.04,
+          "excluded_by_monotone_rule": false,
+          "negative": {
+            "alpha_ev": -0.04,
+            "checks": [
+              {
+                "atom_index": null,
+                "check": "G1",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 1,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999999984399159,
+                  "epsilon": 0.009412174819003005,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 1
+              },
+              {
+                "atom_index": 1,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 1,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999999984014687,
+                  "epsilon": 0.00014648908645642337,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 2
+              },
+              {
+                "atom_index": 1,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 2,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999999982329248,
+                  "epsilon": 0.00014632484516444554,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 1
+              },
+              {
+                "atom_index": 2,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 2,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999999149679175,
+                  "epsilon": 0.009337952245835134,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 2
+              },
+              {
+                "atom_index": 2,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": null,
+                "check": "G4",
+                "details": {},
+                "outcome": "NOT_AVAILABLE",
+                "reasons": [],
+                "spin": null
+              }
+            ]
+          },
+          "positive": {
+            "alpha_ev": 0.04,
+            "checks": [
+              {
+                "atom_index": null,
+                "check": "G1",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 1,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999999996304874,
+                  "epsilon": 0.009403214254916477,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 1
+              },
+              {
+                "atom_index": 1,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 1,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999999979603271,
+                  "epsilon": 0.00014613038949519034,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 2
+              },
+              {
+                "atom_index": 1,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 2,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.999999997673535,
+                  "epsilon": 0.00014629278106731105,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 1
+              },
+              {
+                "atom_index": 2,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 2,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999998974903785,
+                  "epsilon": 0.009475106748262737,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 2
+              },
+              {
+                "atom_index": 2,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": null,
+                "check": "G4",
+                "details": {},
+                "outcome": "NOT_AVAILABLE",
+                "reasons": [],
+                "spin": null
+              }
+            ]
+          },
+          "reasons": []
+        },
+        {
+          "admissible": true,
+          "amplitude_ev": 0.06,
+          "excluded_by_monotone_rule": false,
+          "negative": {
+            "alpha_ev": -0.06,
+            "checks": [
+              {
+                "atom_index": null,
+                "check": "G1",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 1,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999999964839568,
+                  "epsilon": 0.009416508574578871,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 1
+              },
+              {
+                "atom_index": 1,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 1,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999999959682251,
+                  "epsilon": 0.00014657947436481472,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 2
+              },
+              {
+                "atom_index": 1,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 2,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.999999995695809,
+                  "epsilon": 0.00014633339804391365,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 1
+              },
+              {
+                "atom_index": 2,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 2,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999998194192391,
+                  "epsilon": 0.009308065206878763,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 2
+              },
+              {
+                "atom_index": 2,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": null,
+                "check": "G4",
+                "details": {},
+                "outcome": "NOT_AVAILABLE",
+                "reasons": [],
+                "spin": null
+              }
+            ]
+          },
+          "positive": {
+            "alpha_ev": 0.06,
+            "checks": [
+              {
+                "atom_index": null,
+                "check": "G1",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 1,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999991442415029,
+                  "epsilon": 0.009398877477939778,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 1
+              },
+              {
+                "atom_index": 1,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 1,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999999961713733,
+                  "epsilon": 0.00014604110977118402,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 2
+              },
+              {
+                "atom_index": 1,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 2,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999999947552389,
+                  "epsilon": 0.00014628531185395776,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 1
+              },
+              {
+                "atom_index": 2,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 2,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999997658196661,
+                  "epsilon": 0.009511828293961503,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 2
+              },
+              {
+                "atom_index": 2,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": null,
+                "check": "G4",
+                "details": {},
+                "outcome": "NOT_AVAILABLE",
+                "reasons": [],
+                "spin": null
+              }
+            ]
+          },
+          "reasons": []
+        }
+      ],
+      "column_id": "NiLR0",
+      "excluded_amplitudes_ev": [],
+      "mode": "SCREENED",
+      "policy_id": "i5-state-policy-v1",
+      "reasons": [],
+      "smoothness": {
+        "atom_index": null,
+        "check": "G3",
+        "details": {},
+        "outcome": "NOT_ESTABLISHED",
+        "reasons": [
+          "SMOOTHNESS_REQUIRES_SCF_LADDER"
+        ],
+        "spin": null
+      },
+      "verdict": "PASS"
+    },
+    {
+      "admissible_amplitudes_ev": [
+        0.02,
+        0.04,
+        0.06
+      ],
+      "amplitudes": [
+        {
+          "admissible": true,
+          "amplitude_ev": 0.02,
+          "excluded_by_monotone_rule": false,
+          "negative": {
+            "alpha_ev": -0.02,
+            "checks": [
+              {
+                "atom_index": null,
+                "check": "G1",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 1,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999998645690639,
+                  "epsilon": 0.00932082664400303,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 1
+              },
+              {
+                "atom_index": 1,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 1,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999999959300798,
+                  "epsilon": 0.00014627988603799718,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 2
+              },
+              {
+                "atom_index": 1,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 2,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999999975506668,
+                  "epsilon": 0.0001464880162414516,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 1
+              },
+              {
+                "atom_index": 2,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 2,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999999100739976,
+                  "epsilon": 0.009470555922883293,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 2
+              },
+              {
+                "atom_index": 2,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": null,
+                "check": "G4",
+                "details": {},
+                "outcome": "NOT_AVAILABLE",
+                "reasons": [],
+                "spin": null
+              }
+            ]
+          },
+          "positive": {
+            "alpha_ev": 0.02,
+            "checks": [
+              {
+                "atom_index": null,
+                "check": "G1",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 1,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999998386087351,
+                  "epsilon": 0.009493397198932853,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 1
+              },
+              {
+                "atom_index": 1,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 1,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999999962817998,
+                  "epsilon": 0.00014633766396903423,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 2
+              },
+              {
+                "atom_index": 1,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 2,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999999979323428,
+                  "epsilon": 0.00014613154171770447,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 1
+              },
+              {
+                "atom_index": 2,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 2,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999999358958419,
+                  "epsilon": 0.009346562735538348,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 2
+              },
+              {
+                "atom_index": 2,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": null,
+                "check": "G4",
+                "details": {},
+                "outcome": "NOT_AVAILABLE",
+                "reasons": [],
+                "spin": null
+              }
+            ]
+          },
+          "reasons": []
+        },
+        {
+          "admissible": true,
+          "amplitude_ev": 0.04,
+          "excluded_by_monotone_rule": false,
+          "negative": {
+            "alpha_ev": -0.04,
+            "checks": [
+              {
+                "atom_index": null,
+                "check": "G1",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 1,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999994182846812,
+                  "epsilon": 0.009242702551410381,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 1
+              },
+              {
+                "atom_index": 1,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 1,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.999999985169475,
+                  "epsilon": 0.00014625312708546866,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 2
+              },
+              {
+                "atom_index": 1,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 2,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999999893438067,
+                  "epsilon": 0.0001466691914409044,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 1
+              },
+              {
+                "atom_index": 2,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 2,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999996788081393,
+                  "epsilon": 0.009530401661116319,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 2
+              },
+              {
+                "atom_index": 2,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": null,
+                "check": "G4",
+                "details": {},
+                "outcome": "NOT_AVAILABLE",
+                "reasons": [],
+                "spin": null
+              }
+            ]
+          },
+          "positive": {
+            "alpha_ev": 0.04,
+            "checks": [
+              {
+                "atom_index": null,
+                "check": "G1",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 1,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.999999311187872,
+                  "epsilon": 0.009584706233372693,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 1
+              },
+              {
+                "atom_index": 1,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 1,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999999870228178,
+                  "epsilon": 0.00014636662639722919,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 2
+              },
+              {
+                "atom_index": 1,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 2,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999999901638916,
+                  "epsilon": 0.00014595512696134218,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 1
+              },
+              {
+                "atom_index": 2,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 2,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999997304782298,
+                  "epsilon": 0.009286952058450294,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 2
+              },
+              {
+                "atom_index": 2,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": null,
+                "check": "G4",
+                "details": {},
+                "outcome": "NOT_AVAILABLE",
+                "reasons": [],
+                "spin": null
+              }
+            ]
+          },
+          "reasons": []
+        },
+        {
+          "admissible": true,
+          "amplitude_ev": 0.06,
+          "excluded_by_monotone_rule": false,
+          "negative": {
+            "alpha_ev": -0.06,
+            "checks": [
+              {
+                "atom_index": null,
+                "check": "G1",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 1,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999987418099153,
+                  "epsilon": 0.009161720849108827,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 1
+              },
+              {
+                "atom_index": 1,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 1,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999999723532031,
+                  "epsilon": 0.00014622531662736798,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 2
+              },
+              {
+                "atom_index": 1,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 2,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999999808740537,
+                  "epsilon": 0.00014685124993918196,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 1
+              },
+              {
+                "atom_index": 2,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 2,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999990465010921,
+                  "epsilon": 0.009596606425139124,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 2
+              },
+              {
+                "atom_index": 2,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": null,
+                "check": "G4",
+                "details": {},
+                "outcome": "NOT_AVAILABLE",
+                "reasons": [],
+                "spin": null
+              }
+            ]
+          },
+          "positive": {
+            "alpha_ev": 0.06,
+            "checks": [
+              {
+                "atom_index": null,
+                "check": "G1",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 1,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999984633546223,
+                  "epsilon": 0.00967693852304671,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 1
+              },
+              {
+                "atom_index": 1,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 1,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999999688068664,
+                  "epsilon": 0.00014639570948075963,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 2
+              },
+              {
+                "atom_index": 1,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 2,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999999823293394,
+                  "epsilon": 0.00014578167554441912,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 1
+              },
+              {
+                "atom_index": 2,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 2,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999995045155275,
+                  "epsilon": 0.009224543657690824,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 2
+              },
+              {
+                "atom_index": 2,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": null,
+                "check": "G4",
+                "details": {},
+                "outcome": "NOT_AVAILABLE",
+                "reasons": [],
+                "spin": null
+              }
+            ]
+          },
+          "reasons": []
+        }
+      ],
+      "column_id": "NiLR1",
+      "excluded_amplitudes_ev": [],
+      "mode": "BARE",
+      "policy_id": "i5-state-policy-v1",
+      "reasons": [],
+      "smoothness": {
+        "atom_index": null,
+        "check": "G3",
+        "details": {},
+        "outcome": "NOT_ESTABLISHED",
+        "reasons": [
+          "SMOOTHNESS_REQUIRES_SCF_LADDER"
+        ],
+        "spin": null
+      },
+      "verdict": "PASS"
+    },
+    {
+      "admissible_amplitudes_ev": [
+        0.02,
+        0.04,
+        0.06
+      ],
+      "amplitudes": [
+        {
+          "admissible": true,
+          "amplitude_ev": 0.02,
+          "excluded_by_monotone_rule": false,
+          "negative": {
+            "alpha_ev": -0.02,
+            "checks": [
+              {
+                "atom_index": null,
+                "check": "G1",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 1,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.999999981206359,
+                  "epsilon": 0.009372587095555742,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 1
+              },
+              {
+                "atom_index": 1,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 1,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999999993452195,
+                  "epsilon": 0.00014631735919758815,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 2
+              },
+              {
+                "atom_index": 1,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 2,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999999994908975,
+                  "epsilon": 0.0001463987475033636,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 1
+              },
+              {
+                "atom_index": 2,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 2,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.999999999610707,
+                  "epsilon": 0.009407743090487352,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 2
+              },
+              {
+                "atom_index": 2,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": null,
+                "check": "G4",
+                "details": {},
+                "outcome": "NOT_AVAILABLE",
+                "reasons": [],
+                "spin": null
+              }
+            ]
+          },
+          "positive": {
+            "alpha_ev": 0.02,
+            "checks": [
+              {
+                "atom_index": null,
+                "check": "G1",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 1,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.999999967990959,
+                  "epsilon": 0.009443432077125474,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 1
+              },
+              {
+                "atom_index": 1,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 1,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.999999999344948,
+                  "epsilon": 0.00014630133233047105,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 2
+              },
+              {
+                "atom_index": 1,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 2,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999999994838376,
+                  "epsilon": 0.00014621900061726801,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 1
+              },
+              {
+                "atom_index": 2,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 2,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 1.0,
+                  "epsilon": 0.009403319689503498,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 2
+              },
+              {
+                "atom_index": 2,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": null,
+                "check": "G4",
+                "details": {},
+                "outcome": "NOT_AVAILABLE",
+                "reasons": [],
+                "spin": null
+              }
+            ]
+          },
+          "reasons": []
+        },
+        {
+          "admissible": true,
+          "amplitude_ev": 0.04,
+          "excluded_by_monotone_rule": false,
+          "negative": {
+            "alpha_ev": -0.04,
+            "checks": [
+              {
+                "atom_index": null,
+                "check": "G1",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 1,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999999149679175,
+                  "epsilon": 0.009337952245835134,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 1
+              },
+              {
+                "atom_index": 1,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 1,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999999982329248,
+                  "epsilon": 0.00014632484516444554,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 2
+              },
+              {
+                "atom_index": 1,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 2,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999999984014687,
+                  "epsilon": 0.00014648908645642337,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 1
+              },
+              {
+                "atom_index": 2,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 2,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999999984399159,
+                  "epsilon": 0.009412174819003005,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 2
+              },
+              {
+                "atom_index": 2,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": null,
+                "check": "G4",
+                "details": {},
+                "outcome": "NOT_AVAILABLE",
+                "reasons": [],
+                "spin": null
+              }
+            ]
+          },
+          "positive": {
+            "alpha_ev": 0.04,
+            "checks": [
+              {
+                "atom_index": null,
+                "check": "G1",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 1,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999998974903785,
+                  "epsilon": 0.009475106748262737,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 1
+              },
+              {
+                "atom_index": 1,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 1,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.999999997673535,
+                  "epsilon": 0.00014629278106731105,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 2
+              },
+              {
+                "atom_index": 1,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 2,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999999979603271,
+                  "epsilon": 0.00014613038949519034,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 1
+              },
+              {
+                "atom_index": 2,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 2,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999999996304874,
+                  "epsilon": 0.009403214254916477,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 2
+              },
+              {
+                "atom_index": 2,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": null,
+                "check": "G4",
+                "details": {},
+                "outcome": "NOT_AVAILABLE",
+                "reasons": [],
+                "spin": null
+              }
+            ]
+          },
+          "reasons": []
+        },
+        {
+          "admissible": true,
+          "amplitude_ev": 0.06,
+          "excluded_by_monotone_rule": false,
+          "negative": {
+            "alpha_ev": -0.06,
+            "checks": [
+              {
+                "atom_index": null,
+                "check": "G1",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 1,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999998194192391,
+                  "epsilon": 0.009308065206878763,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 1
+              },
+              {
+                "atom_index": 1,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 1,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.999999995695809,
+                  "epsilon": 0.00014633339804391365,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 2
+              },
+              {
+                "atom_index": 1,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 2,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999999959682251,
+                  "epsilon": 0.00014657947436481472,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 1
+              },
+              {
+                "atom_index": 2,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 2,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999999964839568,
+                  "epsilon": 0.009416508574578871,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 2
+              },
+              {
+                "atom_index": 2,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": null,
+                "check": "G4",
+                "details": {},
+                "outcome": "NOT_AVAILABLE",
+                "reasons": [],
+                "spin": null
+              }
+            ]
+          },
+          "positive": {
+            "alpha_ev": 0.06,
+            "checks": [
+              {
+                "atom_index": null,
+                "check": "G1",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 1,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999997658196661,
+                  "epsilon": 0.009511828293961503,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 1
+              },
+              {
+                "atom_index": 1,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 1,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999999947552389,
+                  "epsilon": 0.00014628531185395776,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 2
+              },
+              {
+                "atom_index": 1,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 2,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999999961713733,
+                  "epsilon": 0.00014604110977118402,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 1
+              },
+              {
+                "atom_index": 2,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": 2,
+                "check": "G2",
+                "details": {
+                  "cosine_squared": 0.9999991442415029,
+                  "epsilon": 0.009398877477939778,
+                  "k": 3
+                },
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": 2
+              },
+              {
+                "atom_index": 2,
+                "check": "G3a",
+                "details": {},
+                "outcome": "PASS",
+                "reasons": [],
+                "spin": null
+              },
+              {
+                "atom_index": null,
+                "check": "G4",
+                "details": {},
+                "outcome": "NOT_AVAILABLE",
+                "reasons": [],
+                "spin": null
+              }
+            ]
+          },
+          "reasons": []
+        }
+      ],
+      "column_id": "NiLR1",
+      "excluded_amplitudes_ev": [],
+      "mode": "SCREENED",
+      "policy_id": "i5-state-policy-v1",
+      "reasons": [],
+      "smoothness": {
+        "atom_index": null,
+        "check": "G3",
+        "details": {},
+        "outcome": "NOT_ESTABLISHED",
+        "reasons": [
+          "SMOOTHNESS_REQUIRES_SCF_LADDER"
+        ],
+        "spin": null
+      },
+      "verdict": "PASS"
+    }
+  ],
+  "policy_id": "i5-state-policy-v1",
+  "schema_version": "hubbardflow.i5_state_gate.v1"
+}

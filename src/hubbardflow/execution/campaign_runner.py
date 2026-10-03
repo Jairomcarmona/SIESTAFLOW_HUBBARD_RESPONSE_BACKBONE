@@ -32,6 +32,7 @@ from hubbardflow.domain.response_grid_reproducibility import (
 )
 from hubbardflow.domain.lr_campaign_contract import LinearResponseBareCampaignContract
 from hubbardflow.domain.matrix_lr import ResponseObservation
+from hubbardflow.domain.state_gate_results import StateGateReason
 from hubbardflow.domain.symmetry_reduction import PerturbationSpec, ResponseMode
 from hubbardflow.execution.campaign_v2 import (
     CampaignV2Error, load_campaign_v2, sha256_file, validate_lr_config,
@@ -52,6 +53,11 @@ from hubbardflow.execution.dag_contract import NodeState
 from hubbardflow.execution.execution_profile import ExecutionProfile
 from hubbardflow.execution.observation_assembly import ObservationAssembler
 from hubbardflow.execution.response_grid_context import response_grid_source_campaign_context
+from hubbardflow.execution.state_gate_step import (
+    failed_state_gate_mapping,
+    state_gate_mapping,
+    write_state_gate_file,
+)
 from hubbardflow.siesta_backend.response_grid_semantics import extract_siesta_response_cell
 from hubbardflow.execution.generic_executor import (
     ExecutionContractError, GenericDagExecutor, NodeReceipt, dag_digest,
@@ -1051,7 +1057,16 @@ class CampaignRunner:
         final_path = self.results / ("lr_u_analysis.v3.json" if is_v3 else "lr_u_analysis.v2.json")
         report_path = self.results / ("LR_U_REPORT.v3.md" if is_v3 else "LR_U_REPORT.md")
         write_lr_analysis_v2(final_path, result)
-        write_lr_u_report(report_path, result)
+        state_gate = self._read_state_gate_for_report()
+        write_lr_u_report(report_path, result, state_gate=state_gate)
+
+    def _read_state_gate_for_report(self) -> Mapping[str, Any] | None:
+        path = self.results / "i5_state_gate.json"
+        try:
+            value = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            return None
+        return value if isinstance(value, Mapping) else None
 
     def _execute_adaptive_gate(self, node: LRDagNode) -> NodeReceipt:
         assert self.adaptive_policy is not None and self.adaptive_state is not None
@@ -1721,8 +1736,32 @@ class CampaignRunner:
                 magnetic_diagnostics=magnetic,
             )
         write_lr_analysis_v2(evidence_path, analysis)
-        write_lr_u_report(report_path, analysis)
+        state_gate_path = self.results / "i5_state_gate.json"
+        try:
+            state_gate = state_gate_mapping(
+                dag=self.dag,
+                specs=self.specs,
+                records=self.records,
+                checkpoint=self._checkpoint(),
+                sites=self.sites,
+                alpha_grid_ev=alpha_grid,
+                bare_profile=self.admitted.factory.bare_profile,
+                covered=not adaptive and self.shadow is None,
+            )
+        except Exception:
+            state_gate = failed_state_gate_mapping(self.sites, StateGateReason.INVALID_STATE_EVIDENCE)
+        try:
+            write_state_gate_file(state_gate_path, state_gate)
+            report_state_gate = json.loads(state_gate_path.read_text(encoding="utf-8"))
+        except Exception:  # noqa: BLE001 - I.5 persistence must not fail the U analysis.
+            report_state_gate = failed_state_gate_mapping(
+                self.sites, StateGateReason.INVALID_STATE_EVIDENCE
+            )
+        write_lr_u_report(report_path, analysis, state_gate=report_state_gate)
         digest = sha256_file(evidence_path)
+        # Keep the analysis-node record tied to the canonical LR-U report. The
+        # separate I.5 diagnostic section must not change node-evidence.json.
+        canonical_report_digest = sha256(render_lr_u_report(analysis).encode("utf-8")).hexdigest()
         receipt = NodeReceipt(node.node_id, NodeState.VALIDATED, digest)
         if adaptive:
             assert self.adaptive_state is not None and round_state is not None
@@ -1742,7 +1781,7 @@ class CampaignRunner:
         self._record_receipt(node, receipt, {
             "kind": "analysis", "evidence_path": str(evidence_path),
             "evidence_sha256": digest, "report_path": str(report_path),
-            "report_sha256": sha256_file(report_path),
+            "report_sha256": canonical_report_digest,
             "numerical_status": analysis.get("numerical_status"),
         })
         return receipt
@@ -1857,11 +1896,16 @@ def render_campaign_report(manifest_path: str | Path) -> str:
         analysis_path = root / "results" / "lr_u_analysis.v2.json"
     if analysis_path.is_file():
         analysis = json.loads(analysis_path.read_text(encoding="utf-8"))
+        state_gate_path = root / "results" / "i5_state_gate.json"
+        try:
+            state_gate = json.loads(state_gate_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            state_gate = None
         report_path = root / "results" / (
             "LR_U_REPORT.v3.md" if analysis.get("schema_version") == "siestaflow.lr_u_analysis.v3"
             else "LR_U_REPORT.md"
         )
-        report = render_lr_u_report(analysis)
+        report = render_lr_u_report(analysis, state_gate=state_gate)
         report_path.parent.mkdir(parents=True, exist_ok=True)
         report_path.write_text(report, encoding="utf-8", newline="\n")
         return report
