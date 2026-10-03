@@ -33,6 +33,7 @@ from hubbardflow.execution.product_models import (
     ProductError,
     ProductReason,
     ProductSnapshot,
+    V6ProtectionStatus,
     canonical,
     json_object,
 )
@@ -251,9 +252,9 @@ def _raw_config_digest(raw: Mapping[str, object]) -> str:
     return sha256(canonical(hashes).encode()).hexdigest()
 
 
-def protect_product_destination(root: Path) -> None:
+def protect_product_destination(root: Path) -> V6ProtectionStatus:
     """Preserve the public adapter while protecting the complete V6 inventory."""
-    _protect_product_destination(root)
+    return _protect_product_destination(root)
 
 
 def freeze_product_snapshot(root: Path, snapshot: ProductSnapshot) -> None:
@@ -373,6 +374,7 @@ def product_execution_boundary(
     reasons.extend(snapshot.reasons)
     if snapshot.status is not PlanStatus.READY and override_reason is None:
         reasons.append(ProductReason.PLAN_NOT_READY)
+    v6_protection = protect_product_destination(root)
     receipt = ProductBoundary(
         command,
         snapshot.campaign_identity,
@@ -382,8 +384,8 @@ def product_execution_boundary(
         override_reason,
         partition,
         account,
+        v6_protection,
     )
-    protect_product_destination(root)
     text = canonical(receipt.to_mapping()) + "\n"
     path = root / f"{command.value}.{sha256(text.encode()).hexdigest()}.receipt.json"
     if path.exists():

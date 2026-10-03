@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
+import tempfile
 from dataclasses import replace
 from pathlib import Path
 
@@ -19,6 +21,24 @@ from hubbardflow.execution.product_plan import (
     resolve_product_snapshot,
 )
 from hubbardflow.reporting.product_report import render_product_report
+
+
+def _write_report_atomically(path: Path, text: str) -> None:
+    """Replace a checked product report only after its full content is written."""
+    descriptor, temporary_name = tempfile.mkstemp(
+        prefix=f".{path.name}.",
+        suffix=".tmp",
+        dir=path.parent,
+    )
+    temporary = Path(temporary_name)
+    try:
+        with os.fdopen(descriptor, "w", encoding="utf-8", newline="\n") as stream:
+            stream.write(text)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(temporary, path)
+    finally:
+        temporary.unlink(missing_ok=True)
 
 
 def add_product_options(parser: argparse.ArgumentParser) -> None:
@@ -138,7 +158,7 @@ def product_command(args: argparse.Namespace) -> int:
             account=getattr(args, "account", None),
         )
     report = root / ("plan_report.md" if boundary is None else f"{args.command}_report.md")
-    report.write_text(render_product_report(snapshot, boundary), encoding="utf-8", newline="\n")
+    _write_report_atomically(report, render_product_report(snapshot, boundary))
     result = snapshot.to_mapping() if boundary is None else boundary.to_mapping()
     result["campaign_identity"] = snapshot.campaign_identity
     result["artifact_directory"] = str(root)

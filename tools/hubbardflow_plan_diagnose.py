@@ -20,6 +20,7 @@ from hubbardflow.domain.coverage import (
 from hubbardflow.domain.state_evidence import EvidenceStatus
 from hubbardflow.domain.subspace_inventory import build_inventory
 from hubbardflow.domain.symmetry_operation_models import bind_symmetry_model, coverage_policy_v1
+from hubbardflow.execution.product_paths import protect_product_destination
 from hubbardflow.siesta_backend.coverage_reference import build_coverage_reference_evidence
 from hubbardflow.siesta_backend.fdf_model import FdfModelError, parse_effective_fdf, species_identity
 
@@ -212,6 +213,9 @@ def main() -> None:
     destinations = {args.json.resolve(), args.markdown.resolve()}
     if len(destinations) != 2 or sources & destinations:
         parser.error("diagnostic destinations must be distinct and must not overwrite either source")
+    for destination in sorted(destinations, key=str):
+        protect_product_destination(destination.parent)
+        protect_product_destination(destination)
     report = diagnose(
         args.fdf,
         args.reference_output,
@@ -220,8 +224,10 @@ def main() -> None:
         allow_spin_flip=args.allow_spin_flip,
         allow_rotations=args.allow_rotations,
     )
-    args.json.write_text(report.json_text(), encoding="utf-8", newline="\n")
-    args.markdown.write_text(report.markdown_text(), encoding="utf-8", newline="\n")
+    with args.json.open("x", encoding="utf-8", newline="\n") as stream:
+        stream.write(report.json_text())
+    with args.markdown.open("x", encoding="utf-8", newline="\n") as stream:
+        stream.write(report.markdown_text())
 
 
 if __name__ == "__main__":

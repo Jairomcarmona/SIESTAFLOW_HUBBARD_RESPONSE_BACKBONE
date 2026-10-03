@@ -37,9 +37,9 @@ def test_named_frozen_paths_and_descendants_are_rejected(path: str, child: str) 
 def test_every_manifest_path_is_rejected_read_only(monkeypatch: pytest.MonkeyPatch) -> None:
     manifest = ROOT / "docs/history/SCIENTIFIC_BASELINE_V6.sha256"
     before = sha256(manifest.read_bytes()).hexdigest()
-    frozen = product_paths._frozen_files()
+    frozen = product_paths._frozen_files(ROOT)
     # Reuse the unchanged read-only inventory while checking every destination.
-    monkeypatch.setattr(product_paths, "_frozen_files", lambda: frozen)
+    monkeypatch.setattr(product_paths, "_frozen_files", lambda _workspace: frozen)
     for line in manifest.read_text(encoding="utf-8").splitlines():
         _, relative = line.split(maxsplit=1)
         with pytest.raises(ProductError, match="frozen V6"):

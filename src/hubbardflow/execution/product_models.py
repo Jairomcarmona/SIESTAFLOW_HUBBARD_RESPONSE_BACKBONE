@@ -57,6 +57,11 @@ class DownstreamStatus(str, Enum):
     NOT_ASSESSED = "NOT_ASSESSED"
 
 
+class V6ProtectionStatus(str, Enum):
+    PROTECTED = "PROTECTED"
+    NO_WORKSPACE_ON_PATH = "NO_WORKSPACE_ON_PATH"
+
+
 def canonical(value: object) -> str:
     """Canonical JSON rejects nonfinite numbers rather than storing silent NaNs."""
     return json.dumps(value, sort_keys=True, separators=(",", ":"), allow_nan=False)
@@ -180,12 +185,14 @@ class ProductBoundary:
     override_reason: str | None
     partition: str | None
     account: str | None
+    v6_protection: V6ProtectionStatus = V6ProtectionStatus.PROTECTED
 
     def __post_init__(self) -> None:
         if (
             not isinstance(self.command, ProductCommand)
             or self.command is ProductCommand.PLAN
             or not isinstance(self.plan_status, PlanStatus)
+            or not isinstance(self.v6_protection, V6ProtectionStatus)
             or any(not isinstance(reason, ProductReason) for reason in self.reasons)
         ):
             raise ProductError("execution command, states and reasons must be enums")
@@ -211,6 +218,7 @@ class ProductBoundary:
             "override_reason": self.override_reason,
             "partition": self.partition,
             "account": self.account,
+            "v6_protection": self.v6_protection.value,
             "downstream_status": DownstreamStatus.NOT_ASSESSED.value,
         }
 
@@ -231,4 +239,5 @@ class ProductBoundary:
             cast(str | None, row["override_reason"]),
             cast(str | None, row["partition"]),
             cast(str | None, row["account"]),
+            V6ProtectionStatus(cast(str, row.get("v6_protection", V6ProtectionStatus.PROTECTED.value))),
         )
