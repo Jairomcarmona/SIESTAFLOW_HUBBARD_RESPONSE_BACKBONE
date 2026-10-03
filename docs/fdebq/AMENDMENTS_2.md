@@ -87,3 +87,26 @@ Record these deviations without implementing them in TASK 22:
 - §I.5.3 total-moment quantization.
 - §I.5.6 hysteresis.
 - §I.5.7 Hellmann–Feynman.
+
+### R11 — margen de referencia para definir k en G2
+
+`k` es una propiedad solo de la referencia. Se define usando el margen de la referencia contra sí misma,
+`ε_ref = 4W/(Δ_ref − 2W)`, y exige `Δ₁ − Δ₂ > 4W`, `Δ₁ > 4W` y `ε_ref < 1/2`. Si alguna condición no se cumple, el resultado es `NOT_DEFINED` para ese átomo y espín.
+
+En cada punto se aplica el margen completo
+`ε = 2[W/(Δ_ref − 2W) + W/(Δ_pt − 2W)]`:
+
+- Si `ε ≥ 1/2`, o la separación del punto no es única (`Δ₁ − Δ₂ ≤ 4W` en el punto), el resultado es `SUBSPACE_AMBIGUOUS` y falla cerrado.
+- De lo contrario, pasa si `c − ε > 1/2`; es `ORBITAL_ORDER_CHANGED` si `c + ε < 1/2`; cualquier otro caso es `SUBSPACE_AMBIGUOUS`.
+- Una ambigüedad del punto nunca se convierte en `NOT_DEFINED`.
+
+La prueba obligatoria usa `W=2.5e−5`, `Δ_ref=0.1`, `Δ_pt=1.1e−4`, `c=1` y debe producir `SUBSPACE_AMBIGUOUS`.
+
+### R12 — E_F y precisión propia del `.EIG` en G4
+
+G4 usa el E_F del encabezado del `.EIG` de cada corrida, no el E_F de stdout. Cada energía `.EIG`, incluido su E_F, tiene su propio quantum `q`, una unidad del último dígito impreso de la mantisa según el exponente.
+
+- Un eigenvalor es ambiguo cuando `|ε − E_F| ≤ q(ε)/2 + q(E_F)/2`; la igualdad está incluida y produce `BAND_COUNT_AMBIGUOUS`. La aplicabilidad en la referencia usa la misma regla: si un eigenvalor de referencia es ambiguo, G4 es `NOT_APPLICABLE`.
+- El E_F de stdout se usa solo como chequeo de consistencia. Si `|E_F_stdout − E_F_EIG| > (semiancho de stdout) + q(E_F_EIG)/2`, la evidencia del punto es inconsistente y G4 queda `NOT_ESTABLISHED`, con razón `EIG_STDOUT_FERMI_MISMATCH`.
+- La prueba del nivel `−0.450851396E+01` frente al E_F `−0.450851397E+01` debe producir `BAND_COUNT_AMBIGUOUS`.
+- La salida real `bare_p0p04` pasa el chequeo: diferencia de Fermi `3e−8 eV`, dentro de `5e−7 + 5e−9 eV`.
