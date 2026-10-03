@@ -324,3 +324,7 @@ La auditoría científica detuvo 20.2 antes de implementar. La especificación �
 ## Phase 2 close — RISK_UNCOVERED en 20.4
 
 La regla nueva de 20.4 exige `MATCH` cuando los bytes canónicos coinciden y la diferencia cruda se limita a los campos de etiqueta. Eso invierte directamente la expectativa del test existente `tests/unit/test_split_generated_identity.py::test_real_archive_label_only_difference_is_never_a_positive`. El ítem solo autoriza añadir tests; §0.1.5 prohíbe editar este test existente porque 20.4 no lo nombra. No hay implementación que cumpla a la vez la regla de veredicto y las dos expectativas. Se requiere corregir explícitamente el alcance de edición de tests o la aceptación antes de implementar 20.4.
+
+## Phase 2 close — RISK_UNCOVERED en 20.5
+
+La auditoría científica detuvo 20.5. La nueva aceptación de exactitud discreta contradice `tests/unit/test_symmetry_operations.py::test_f8_records_incommensurate_translation_without_excluding_candidate`, que exige `EXACT_TRANSLATION` para t=1/4 y `InitMesh=(3,3,3)`; el ítem no autoriza editar el test existente. Además, una rotación válida para la celda `((1,0,0),(1,1,0),(0,0,1))` queda fuera de la enumeración interna actual. Una simulación de la API de spglib elevó candidatos 8→10, pero spglib real no está instalado y no se afirma que la haya encontrado. La equivalencia entre rutas no está probada. Se requiere resolver el conflicto de test/aceptación y verificar el alcance de búsqueda antes de implementar. No se modificó código de 20.5.

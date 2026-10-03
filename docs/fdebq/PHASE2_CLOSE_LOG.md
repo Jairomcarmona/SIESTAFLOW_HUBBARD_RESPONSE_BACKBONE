@@ -79,6 +79,25 @@ Base: `84b8eb6` (`origin/fdebq/r2-task15-species-split`). Branch: `fdebq/r3-task
 
 - Do not implement: the required acceptance (`canonical_ion_bytes` equal and raw diff limited to relabel fields ⇒ `MATCH`) necessarily changes the outcome of the existing `tests/unit/test_split_generated_identity.py::test_real_archive_label_only_difference_is_never_a_positive`, whose asserted behavior is the opposite for canonical-equal alias ions. §20.4 lists only new tests; §0.1.5 prohibits editing this existing test unless the item explicitly names it. No production-code workaround can satisfy both requirements and the exact verdict rule. This is recorded as `RISK_UNCOVERED`; ask for an explicit specification/test-scope correction before 20.4.
 
+## 20.5 premise checks
+
+| Item / premise | Result | Command and evidence |
+|---|---|---|
+| 20.5/P1 | TRUE | `Get-Content src/hubbardflow/domain/symmetry_operation_models.py` lines 349–354: `exactness_class` is `EXACT_TRANSLATION` whenever `rotation_int == IDENTITY`, without checking ε, mapping, or mesh. |
+| 20.5/P2 | TRUE | `Get-Content src/hubbardflow/domain/symmetry_operations.py` lines 136–145: F8 is exempted from the ambiguous exclusion for identity-rotation operations; the F8 classifier only records commensurability. |
+| 20.5/P3 | TRUE | `rg -n 'EXACT_IN_CONTINUUM_ONLY|no conmensurables' docs/fdebq/HUBBARDFLOW_PERTURBATION_PLANNING_REVIEW.md` and §D.3 lines 145–154: noncommensurate translations are classified `EXACT_IN_CONTINUUM_ONLY` and require shadows/validation. |
+| 20.5/P4 | TRUE | `Get-Content src/hubbardflow/domain/symmetry_operations.py` lines 50–57 builds positions from float `coordinates_fractional` modulo 1; lines 383–394 use `Fraction(str(t))`, mesh, and the in-band atom matching. |
+| 20.5/P5 | TRUE | `Get-Content src/hubbardflow/domain/coverage.py` lines 192–199: `matching` is filtered in operation order and `maps.append((member, matching[0]))` selects its first entry. |
+| 20.5/P6 | TRUE | Venv Python toy probe imported `_toy(4, nonpolarized=True)` and ran `qualify_coverage` with `allow_spin_flip=True`: `NONPOLARIZED True SPIN_FLIP_OPERATIONS 32`; first ε=−1 operation F7 status `AMBIGUOUS`; coverage remains explicit in computed columns. |
+| 20.5/P7 | TRUE (conditional path, not available locally) | `Get-Content src/hubbardflow/domain/symmetry_operations.py` lines 65–82 dynamically imports optional `spglib`; `rg -n spglib pyproject.toml` produced no matches; `importlib.util.find_spec('spglib')` returned `None` here. No extra operation was observed locally. |
+| 20.5/P8 | TRUE | Pure Python probe parsed the actual four-atom `campaigns/nio_pbe_adaptive_20260928/reference_pbe.fdf`, built a `SymmetryModel` and called `candidate_operations`: `CAMPAIGN_NIO_ATOMS 4 CANDIDATES 16`. `Operation.to_mapping` serializes `exactness_class`; campaign planner source declares `campaign-planner-v1`. §0.2.5 scan found no current campaign markers. |
+
+### 20.5 disposition
+
+- Auditor verdict: `RISK_UNCOVERED`; no implementation. The exactness correction matches review §D.3/F8, but the acceptance conflicts with existing test `tests/unit/test_symmetry_operations.py::test_f8_records_incommensurate_translation_without_excluding_candidate`, which expects `EXACT_TRANSLATION` for t=1/4 and mesh 3³; §20.5 does not authorize editing this test, so the requested behavior would add a failure.
+- Auditor's pure geometry probe also showed that a valid metric-preserving rotation for lattice `((1,0,0),(1,1,0),(0,0,1))` lies outside the internal signed-axis-permutation enumeration. A simulated `spglib.get_symmetry` that returned that operation changed the candidate count 8→10. The auditor did not run real spglib (not installed here) and did not claim that spglib found this operation. The production equivalence of both search paths remains unverified.
+- 20.8 depends on 20.3's v2 ladder protocol, which is blocked on 20.2; 20.10 and 20.11 also refer to 20.5 changes. Do not implement dependent items until their prerequisite risks are resolved; continue with independent items only.
+
 ## 20.7 checks
 
 - Implemented rejection before legacy dispatch: a non-`.fdf` `run` with any of the ten product options exits 2 and names every supplied option. The new parametrized test covers each option individually; focused result: `10 passed`.
