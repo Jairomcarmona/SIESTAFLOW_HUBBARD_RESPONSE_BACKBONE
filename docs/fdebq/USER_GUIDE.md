@@ -48,6 +48,28 @@ corresponding config fields and enter the frozen provenance.
 | FAIL | Unsupported inventory or invalid input cannot be executed; correct the source. |
 | AMBIGUOUS | An F1–F8 condition inside a declared band is inconclusive. It excludes reduction and retains explicit perturbations. |
 
+The `run system.fdf` product route can execute a plan through the legacy campaign
+runner only when it has an explicit fixed grid, a valid inventory, direct runs
+for every site and mode, no adaptive policy, no reductions, no optional spin
+flip/rotation/species split, and coverage set to `DISABLED` or `DIAGNOSTIC`.
+For this route, missing reference and parent-DM evidence remain coverage
+diagnostics; the plan still records them. Reduced or calibrated plans retain
+the I.5 and pilot-reuse execution requirements, and `--override-plan-state`
+cannot bypass those requirements.
+
+| Plan shape | Product execution | State handling |
+|---|---|---|
+| Explicit fixed grid; every site/mode direct; no adaptive policy or optional symmetry | Admissible through `run system.fdf --profile P --name N` in a Linux shell | I.5 and pilot reuse are `NOT_REQUIRED`; reference/parent-DM findings remain coverage diagnostics |
+| Reduced, calibrated, staged split, incomplete inventory, or unsupported coverage | Blocked with a receipt | Existing I.5, pilot reuse and plan-state requirements remain in force; an override does not admit execution |
+
+The executable route freezes the merged path-resolved lr-config and hashes its
+source inputs before initialization. It verifies the byte-preserving source
+FDF/config copies, includes and declared dependency copies before starting the
+legacy worker. An existing `execution_link.json` means the campaign already
+has a linked run; continue it with `hubbardflow resume <campaign.v2.json>`.
+On Windows, run the command from a Linux shell such as WSL. `submit` remains a
+receipt-only request.
+
 Default sidecar location is `.hubbardflow/<FDF stem>` in the current directory;
 use `--output-dir` to choose a distinct location outside frozen V6 directories.
 Destination protection reads every path in `SCIENTIFIC_BASELINE_V6.sha256`,

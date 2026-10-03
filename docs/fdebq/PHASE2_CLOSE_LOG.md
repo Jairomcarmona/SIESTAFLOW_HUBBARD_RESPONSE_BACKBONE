@@ -144,3 +144,38 @@ No premises were evaluated for implementation because its required golden includ
 ## 20.10 disposition — prerequisite blocked
 
 No premises were evaluated for implementation because acceptance item 2 requires the optional `spglib` import to be removed by 20.5 and checks updated module layering after that change. The 20.5 audit stopped before implementation; no import resolver was moved and no architecture allowlist/test was authored ahead of that prerequisite.
+
+## TASK 21 premise checks
+
+| Premise | Result | Command and evidence |
+|---|---|---|
+| P1 | TRUE | `Get-Content src/hubbardflow/execution/product_plan.py` around `product_execution_boundary` (lines 358–374): its reasons begin unconditionally with `SCIENTIFIC_STATE_NOT_ESTABLISHED` and `PILOT_REUSE_NOT_ESTABLISHED`, regardless of coverage/reduction/grid. |
+| P2 | TRUE | Python probe called `resolve_campaign_planning` on a valid synthetic fixed-grid input with no reference output or parent DM: status `NOT_ESTABLISHED`; reasons `DISABLED_OR_FIXED`, `PARENT_DM_NOT_ESTABLISHED`, `REFERENCE_NOT_ADMISSIBLE`. |
+| P3 | TRUE | Python probe called legacy `_build_dag` with two explicit amplitudes and found the `('reference', 'REFERENCE')` node. |
+| P4 | TRUE | Python `inspect.signature` showed public `run_campaign_worker(manifest_path, mode) -> int` and `initialize_campaign(*, fdf_path, lr_config_path, profile_path, name, pointer_path=None, campaign_root=None) -> dict[str, Any]`; CLI source calls the worker for the legacy run branch. |
+| P5 | TRUE | Python validation probe loaded the versioned adaptive policy from `benchmarks/lr_u/CoO/lr-config.json`, applied it to a valid fixed-grid input and normalized successfully with `alpha_strategy=FIXED_PROTOCOL_GRID` and an adaptive policy present. |
+| P6 | TRUE | `freeze_product_snapshot` in `product_plan.py` writes only `product_plan.json`, `product_campaign.lock`, and `resolved_perturbation_plan.json`; it does not freeze lr-config bytes. `product_cli.py` merges `--reference-output`/`--reference-dm` into the request before planning. |
+| P7 | TRUE | `rg -n "sbatch" src/hubbardflow/execution/campaign_runner.py` returned no matches; the campaign runner launches tasks within its current execution environment. |
+| P8 | TRUE (none) | `rg -n "FakeSiesta|fake_siesta|fake-SIESTA|fake.*SIESTA|run_campaign_worker|CampaignRunner\\(" tests/unit` found only two tests monkeypatching/forbidding `run_campaign_worker`; no end-to-end fake-SIESTA legacy-runner harness exists. |
+
+Pre-change static baseline for pre-existing `src/hubbardflow/cli.py` (outside pyproject's configured file lists): `ruff check --output-format=json` → 2 diagnostics; `mypy --strict src/hubbardflow/cli.py` → 7 errors. No formatting pass was run on this file.
+
+## TASK 21 implementation and gates
+
+- Implemented a pure admission predicate for fixed, explicit, direct legacy-equivalent plans. Coverage remains recorded as `DISABLED` or `DIAGNOSTIC`; reduced, adaptive, split, and optional-symmetry plans remain blocked by their existing requirements.
+- Product snapshots now freeze the merged path-resolved lr-config and SHA256 map of the FDF, recursive includes, referenced outputs/DM, pseudopotentials, static artifacts, registry/version, and planning references. The frozen config's grid is sorted to preserve the existing order-invariant plan identity.
+- Linux `run system.fdf --profile P --name N [--campaign-root R]` initializes using the frozen config, checks copied source/profile hashes and campaign inventory, compares canonical run-spec sets in JSON, creates an exclusive `execution_link.json`, and invokes the legacy worker. Existing links direct users to resume. Windows returns a WSL requirement; no-profile run remains receipt-only; `submit` is unchanged.
+- No SIESTA executable or SIESTA campaign was run. The new integration test replaces `run_campaign_worker` with a test double and checks initialization/materialized FDF identity only.
+- Focused product suite: `python -m pytest tests/unit/test_product_cli.py tests/unit/test_product_paths.py tests/unit/test_product_paths_portable.py tests/unit/test_product_admission.py tests/unit/test_product_execution.py -q` → `85 passed, 2 warnings`; includes FDF and pseudopotential TOCTOU mutations that stop before the worker.
+- Scientific regression suite: `python -m pytest tests/unit/test_lr_analysis_v2.py tests/unit/test_matrix_lr.py tests/unit/test_quantized_response.py tests/unit/test_u_certification.py -q` → `70 passed, 2 warnings`.
+- Configured static gates: Ruff `All checks passed`; format `90 files already formatted`; `mypy --strict` `Success: no issues found in 90 source files`.
+- Pre-existing `src/hubbardflow/cli.py` static comparison: Ruff `2 → 2` and strict mypy `7 → 7`; no diagnostics on the added argument lines. It was not reformatted; phase-3 debt is recorded in `BLOCKERS.md`.
+- V6: `bash tools/check_v6_integrity.sh` → `V6 GATE OK`.
+
+## Final complete-suite comparison
+
+- Command: `.venv/Scripts/pytest.exe tests -q -rfE --continue-on-collection-errors`; import check resolved `hubbardflow.__file__` to this checkout's `src/hubbardflow/__init__.py`.
+- Result: `20 failed, 1270 passed, 24 skipped, 2 warnings, 5 errors, 4 subtests passed in 355.78s`.
+- The five collection errors are exactly the five IDs recorded in `BASELINE_FAILURES`. The 20 failing test IDs are also exactly the same 20 IDs recorded there. No new failing test or collection error; there are 34 more passing tests than the corrected baseline.
+- The five collection errors: adversarial `test_method2_reference.py` and `test_phase4_alpha0_control.py` (`siestaflow_hubbard` absent); `test_nio_polynomial_analysis.py` (historical analyzer missing); `test_nio_shared_lru_regression.py` (`lru_core` absent); and `test_stage_ub_baseline_summary.py` (`siestaflow_hubbard` absent).
+- All 20 failure IDs are enumerated in the corrected §0.2 `BASELINE_FAILURES` list above; the current pytest short summary reproduced that exact list.

@@ -3,14 +3,27 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import tempfile
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import replace
 from pathlib import Path
+from typing import cast
 
 from hubbardflow.domain.perturbation_plan import AlphaStrategy
 from hubbardflow.execution.campaign_plan import CampaignCoverage
+from hubbardflow.execution.campaign_v2 import (
+    load_campaign_v2,
+    resolve_fdf_includes,
+    verify_campaign_inventory,
+)
+from hubbardflow.execution.product_admission import (
+    ExecutionAdmission,
+    ExecutionAdmissionStatus,
+    execution_admission,
+)
 from hubbardflow.execution.product_models import ProductCommand, ProductError, json_object
 from hubbardflow.execution.product_plan import (
     ProductRequest,
@@ -20,6 +33,7 @@ from hubbardflow.execution.product_plan import (
     protect_product_destination,
     resolve_product_snapshot,
 )
+from hubbardflow.execution.wsl_campaign_init import initialize_campaign
 from hubbardflow.reporting.product_report import render_product_report
 
 
@@ -98,11 +112,154 @@ def _request(args: argparse.Namespace, fdf: Path) -> ProductRequest:
     )
 
 
+def _sha256(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _verify_campaign_inputs(
+    campaign: dict[str, object], snapshot: object, profile_path: Path, frozen_config: dict[str, object]
+) -> None:
+    from hubbardflow.execution.product_models import ProductSnapshot
+
+    if not isinstance(snapshot, ProductSnapshot):
+        raise ProductError("execution requires a verified product snapshot")
+    root = Path(str(campaign["_campaign_root"]))
+    input_rows = cast(Sequence[Mapping[str, object]], campaign["input_files"])
+    rows = {str(row["path"]): str(row["sha256"]) for row in input_rows}
+    input_hashes = json_object(snapshot.input_sha256_json)
+
+    def require_copy(relative: str, expected: str) -> None:
+        declared = rows.get(relative)
+        if declared != expected:
+            raise ProductError(f"campaign input hash disagrees with frozen source evidence: {relative}")
+        if _sha256(root / relative) != expected:
+            raise ProductError(f"campaign source copy changed before execution: {relative}")
+
+    request = ProductRequest.from_mapping(json_object(snapshot.request_json))
+    source_fdf = str(Path(request.fdf).resolve(strict=True))
+    require_copy("provenance/source_reference.fdf", str(input_hashes[source_fdf]))
+    config_digest = snapshot.frozen_lr_config_sha256
+    if config_digest is None:
+        raise ProductError("frozen lr-config digest is missing")
+    require_copy("provenance/source_lr_config.json", config_digest)
+    _, includes = resolve_fdf_includes(Path(request.fdf))
+    for index, source in enumerate(includes):
+        source_key = str(source.resolve(strict=True))
+        relative = f"provenance/fdf_includes/{index:03d}_{source.name}"
+        require_copy(relative, str(input_hashes[source_key]))
+    for label, source_value in sorted(
+        cast(dict[str, str], frozen_config.get("pseudopotentials", {})).items()
+    ):
+        source_key = str(Path(source_value).resolve(strict=True))
+        require_copy(f"pseudopotentials/{label}.psml", str(input_hashes[source_key]))
+    for destination, source_value in sorted(
+        cast(dict[str, str], frozen_config.get("static_artifacts", {})).items()
+    ):
+        source_key = str(Path(source_value).resolve(strict=True))
+        require_copy(f"static/{destination}", str(input_hashes[source_key]))
+    for field, relative in (
+        ("compatibility_registry", "software/backend_compatibility.json"),
+        ("version_text_source", "software/siesta_version.txt"),
+        ("planning_reference_output", "planning/planning_reference_output"),
+        ("planning_reference_dm", "planning/planning_reference_dm"),
+    ):
+        value = frozen_config.get(field)
+        if value is not None:
+            source_key = str(Path(str(value)).resolve(strict=True))
+            require_copy(relative, str(input_hashes[source_key]))
+    profile_digest = _sha256(profile_path)
+    require_copy("execution_profile.json", profile_digest)
+    verify_campaign_inventory(campaign)
+
+
+def _execute_product_campaign(
+    root: Path,
+    snapshot: object,
+    *,
+    profile_path: Path,
+    name: str,
+    campaign_root: Path | None,
+) -> int:
+    from hubbardflow.execution.campaign_runner import run_campaign_worker
+    from hubbardflow.execution.product_models import ProductSnapshot, canonical
+
+    if not isinstance(snapshot, ProductSnapshot) or snapshot.planning is None:
+        raise ProductError("admissible product execution requires a frozen resolved plan")
+    if (root / "execution_link.json").exists():
+        raise ProductError(
+            "this product already has an execution link; continue with hubbardflow resume <campaign.v2.json>"
+        )
+    config_text = snapshot.frozen_lr_config_json
+    if config_text is None:
+        raise ProductError("admissible product execution requires a frozen lr-config")
+    frozen_config = json_object(config_text)
+    campaign_parent = (campaign_root or root / "campaigns").resolve()
+    destination = campaign_parent / name
+    protect_product_destination(destination)
+    if not name or Path(name).name != name or name in {".", ".."}:
+        raise ProductError("campaign name must be one safe path component")
+
+    handle, temporary_name = tempfile.mkstemp(prefix=".lr-config-frozen-", suffix=".json", dir=root)
+    temporary_config = Path(temporary_name)
+    try:
+        with os.fdopen(handle, "w", encoding="utf-8", newline="\n") as stream:
+            stream.write(config_text + "\n")
+            stream.flush()
+            os.fsync(stream.fileno())
+        initialized = initialize_campaign(
+            fdf_path=ProductRequest.from_mapping(json_object(snapshot.request_json)).fdf,
+            lr_config_path=str(temporary_config),
+            profile_path=str(profile_path.resolve(strict=True)),
+            name=name,
+            campaign_root=str(campaign_parent),
+        )
+    finally:
+        temporary_config.unlink(missing_ok=True)
+    manifest_path = Path(str(initialized["manifest_path"])).resolve(strict=True)
+    campaign = load_campaign_v2(manifest_path)
+    _verify_campaign_inputs(campaign, snapshot, profile_path.resolve(strict=True), frozen_config)
+    campaign_plan_path = manifest_path.parent / str(campaign["resolved_perturbation_plan_file"])
+    campaign_plan = json_object(campaign_plan_path.read_text(encoding="utf-8"))
+    expected_runs = [run.to_mapping() for run in snapshot.planning.plan.run_specs]
+    actual_runs = campaign_plan.get("run_specs")
+    if not isinstance(actual_runs, list):
+        raise ProductError("initialized campaign plan has no run-spec list")
+
+    def canonical_runs(values: Sequence[object]) -> list[str]:
+        return sorted(canonical(value) for value in values)
+
+    if canonical_runs(expected_runs) != canonical_runs(actual_runs):
+        raise ProductError("initialized campaign run specs differ from the frozen product plan")
+    link = {
+        "schema": "hubbardflow.product_execution_link.v1",
+        "campaign_path": str(manifest_path),
+        "manifest_sha256": _sha256(manifest_path),
+        "product_plan_digest": snapshot.planning.plan.digest,
+    }
+    link_path = root / "execution_link.json"
+    with link_path.open("x", encoding="utf-8", newline="\n") as stream:
+        stream.write(canonical(link) + "\n")
+    worker = cast(Callable[[str | Path, str], int], run_campaign_worker)
+    return worker(manifest_path, "run")
+
+
 def product_command(args: argparse.Namespace) -> int:
     """Plan or verify the frozen plan before recording a blocked execution request."""
+    if args.command == "run" and getattr(args, "profile", None) is not None:
+        if os.name == "nt":
+            raise ProductError(
+                "product execution requires a Linux shell; run the command inside WSL with the FDF, "
+                "lr-config, profile and output paths available there"
+            )
+        if not getattr(args, "name", None):
+            raise ProductError("product execution with --profile requires --name")
     fdf = Path(args.campaign if args.command == "run" else args.fdf_file)
     root = Path(args.output_dir or (Path.cwd() / ".hubbardflow" / fdf.stem)).resolve()
     protect_product_destination(root)
+    if args.command == "run" and (root / "execution_link.json").exists():
+        raise ProductError(
+            "this product already has an execution link; continue with hubbardflow resume <campaign.v2.json>"
+        )
     if args.command != "plan" and (root / "product_plan.json").exists():
         snapshot = load_product_snapshot(root)
         frozen_request = ProductRequest.from_mapping(json_object(snapshot.request_json))
@@ -148,7 +305,15 @@ def product_command(args: argparse.Namespace) -> int:
         # Reload the immutable TASK 12 plan and campaign identity at this boundary.
         snapshot = load_product_snapshot(root)
     boundary = None
+    admission: ExecutionAdmission | None = None
     if args.command != "plan":
+        if args.command == "run" and getattr(args, "profile", None) is not None:
+            config = (
+                None
+                if snapshot.frozen_lr_config_json is None
+                else json_object(snapshot.frozen_lr_config_json)
+            )
+            admission = execution_admission(snapshot, config)
         boundary = product_execution_boundary(
             root,
             snapshot,
@@ -156,6 +321,7 @@ def product_command(args: argparse.Namespace) -> int:
             override_reason=args.override_plan_state,
             partition=getattr(args, "partition", None),
             account=getattr(args, "account", None),
+            admission=admission,
         )
     report = root / ("plan_report.md" if boundary is None else f"{args.command}_report.md")
     _write_report_atomically(report, render_product_report(snapshot, boundary))
@@ -164,4 +330,19 @@ def product_command(args: argparse.Namespace) -> int:
     result["artifact_directory"] = str(root)
     result["report"] = str(report)
     print(json.dumps(result, indent=2, sort_keys=True, allow_nan=False))
+    if (
+        args.command == "run"
+        and admission is not None
+        and admission.status is ExecutionAdmissionStatus.ADMISSIBLE_LEGACY_EQUIVALENT
+    ):
+        profile_path = Path(args.profile).resolve(strict=True)
+        campaign_root_value = getattr(args, "campaign_root", None)
+        campaign_root = None if campaign_root_value is None else Path(campaign_root_value).resolve()
+        return _execute_product_campaign(
+            root,
+            snapshot,
+            profile_path=profile_path,
+            name=args.name,
+            campaign_root=campaign_root,
+        )
     return 0 if boundary is None else 3

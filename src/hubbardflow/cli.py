@@ -250,6 +250,9 @@ def main(argv: list[str] | None = None) -> int:
         control.add_argument("campaign", help="FDF product input (run), Windows pointer JSON (local_wsl), or campaign.v2.json (Linux/Slurm)")
         if command == "run":
             add_product_options(control)
+            control.add_argument("--profile", help="validated Linux execution profile for product execution")
+            control.add_argument("--name", help="campaign directory name for product execution")
+            control.add_argument("--campaign-root", help="Linux parent directory for the initialized campaign")
     # Private WSL implementation commands; public users should use the pointer.
     internal = sub.add_parser("_init", help=argparse.SUPPRESS)
     internal.add_argument("fdf_wsl")

@@ -26,6 +26,10 @@ from hubbardflow.execution.campaign_plan import (
 )
 from hubbardflow.execution.campaign_split import stage_campaign_split, verify_campaign_split_staging
 from hubbardflow.execution.campaign_v2 import resolve_fdf_includes, validate_lr_config, validate_reference_fdf
+from hubbardflow.execution.product_admission import (
+    ExecutionAdmission,
+    ExecutionAdmissionStatus,
+)
 from hubbardflow.execution.product_models import (
     LOCK_SCHEMA,
     ProductBoundary,
@@ -137,6 +141,10 @@ def resolve_product_snapshot(request: ProductRequest) -> ProductSnapshot:
     fdf = Path(request.fdf)
     model = parse_effective_fdf(fdf)
     raw = _config(request)
+    frozen_config = None if raw is None else dict(raw)
+    if frozen_config is not None and isinstance(frozen_config.get("alpha_grid_ev"), list):
+        frozen_config["alpha_grid_ev"] = sorted(cast(list[float], frozen_config["alpha_grid_ev"]))
+    frozen_lr_config_json = None if frozen_config is None else canonical(frozen_config)
     split_staging = None
     if raw is not None and raw.get("auto_split_species") is True:
         with TemporaryDirectory(prefix="hubbardflow-product-split-") as temporary:
@@ -219,6 +227,7 @@ def resolve_product_snapshot(request: ProductRequest) -> ProductSnapshot:
         status = PlanStatus.FAIL
     else:
         status = PlanStatus.NOT_ESTABLISHED if planning is None else planning.plan.status
+    input_sha256_json = _input_file_hashes(request, raw)
     return ProductSnapshot(
         canonical(request.to_mapping()),
         inventory,
@@ -230,7 +239,35 @@ def resolve_product_snapshot(request: ProductRequest) -> ProductSnapshot:
         detail,
         diagnostic_coverage,
         split_staging,
+        frozen_lr_config_json,
+        input_sha256_json,
     )
+
+
+def _input_file_hashes(request: ProductRequest, raw: Mapping[str, object] | None) -> str:
+    """Bind every source file used by the frozen plan, including FDF includes."""
+    paths: set[Path] = {Path(request.fdf).resolve(strict=True)}
+    for value in (request.reference_output, request.reference_dm):
+        if value is not None:
+            paths.add(Path(value).resolve(strict=True))
+    _, includes = resolve_fdf_includes(Path(request.fdf))
+    paths.update(path.resolve(strict=True) for path in includes)
+    if raw is not None:
+        for field in ("pseudopotentials", "static_artifacts"):
+            paths.update(
+                Path(value).resolve(strict=True)
+                for value in cast(Mapping[str, str], raw.get(field, {})).values()
+            )
+        for field in (
+            "compatibility_registry",
+            "version_text_source",
+            "planning_reference_output",
+            "planning_reference_dm",
+        ):
+            configured_path = raw.get(field)
+            if configured_path is not None:
+                paths.add(Path(cast(str, configured_path)).resolve(strict=True))
+    return canonical({str(path): sha256(path.read_bytes()).hexdigest() for path in sorted(paths, key=str)})
 
 
 def _raw_config_digest(raw: Mapping[str, object]) -> str:
@@ -363,6 +400,7 @@ def product_execution_boundary(
     override_reason: str | None,
     partition: str | None,
     account: str | None,
+    admission: ExecutionAdmission | None = None,
 ) -> ProductBoundary:
     """Record the admission request without bypassing missing scientific producers.
 
@@ -370,10 +408,16 @@ def product_execution_boundary(
     I.5 blocks this product route before materialization, local/MPI or SLURM
     launch. The legacy explicit campaign commands retain their existing runner.
     """
-    reasons = [ProductReason.SCIENTIFIC_STATE_NOT_ESTABLISHED, ProductReason.PILOT_REUSE_NOT_ESTABLISHED]
-    reasons.extend(snapshot.reasons)
-    if snapshot.status is not PlanStatus.READY and override_reason is None:
-        reasons.append(ProductReason.PLAN_NOT_READY)
+    legacy_admissible = (
+        admission is not None and admission.status is ExecutionAdmissionStatus.ADMISSIBLE_LEGACY_EQUIVALENT
+    )
+    if legacy_admissible:
+        reasons = list(snapshot.reasons)
+    else:
+        reasons = [ProductReason.SCIENTIFIC_STATE_NOT_ESTABLISHED, ProductReason.PILOT_REUSE_NOT_ESTABLISHED]
+        reasons.extend(snapshot.reasons)
+        if snapshot.status is not PlanStatus.READY and override_reason is None:
+            reasons.append(ProductReason.PLAN_NOT_READY)
     v6_protection = protect_product_destination(root)
     receipt = ProductBoundary(
         command,
@@ -385,6 +429,7 @@ def product_execution_boundary(
         partition,
         account,
         v6_protection,
+        None if admission is None else canonical(admission.to_mapping()),
     )
     text = canonical(receipt.to_mapping()) + "\n"
     path = root / f"{command.value}.{sha256(text.encode()).hexdigest()}.receipt.json"

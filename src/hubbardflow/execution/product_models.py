@@ -90,6 +90,8 @@ class ProductSnapshot:
     detail: str
     diagnostic_coverage: CoverageQualification | None
     split_staging: CampaignSplitStaging | None = None
+    frozen_lr_config_json: str | None = None
+    input_sha256_json: str = "{}"
 
     def __post_init__(self) -> None:
         if self.split_staging is not None:
@@ -113,6 +115,16 @@ class ProductSnapshot:
         require_sha256(self.source_fdf_sha256, "source FDF")
         if self.config_digest is not None:
             require_sha256(self.config_digest, "planning config")
+        if self.frozen_lr_config_json is not None:
+            object.__setattr__(
+                self, "frozen_lr_config_json", canonical(json_object(self.frozen_lr_config_json))
+            )
+        input_hashes = json_object(self.input_sha256_json)
+        for path, digest in input_hashes.items():
+            if not isinstance(path, str) or not isinstance(digest, str):
+                raise ProductError("input SHA256 map must contain string paths and digests")
+            require_sha256(digest, f"input {path}")
+        object.__setattr__(self, "input_sha256_json", canonical(input_hashes))
         if not isinstance(self.status, PlanStatus) or any(
             not isinstance(r, ProductReason) for r in self.reasons
         ):
@@ -144,6 +156,10 @@ class ProductSnapshot:
         }
         if self.split_staging is not None:
             result["split_staging"] = self.split_staging.to_mapping()
+        if self.frozen_lr_config_json is not None:
+            result["frozen_lr_config"] = json_object(self.frozen_lr_config_json)
+            result["frozen_lr_config_sha256"] = self.frozen_lr_config_sha256
+        result["input_sha256"] = json_object(self.input_sha256_json)
         return result
 
     @classmethod
@@ -153,7 +169,7 @@ class ProductSnapshot:
         if row.get("schema") != SCHEMA or row.get("downstream_status") != DownstreamStatus.NOT_ASSESSED.value:
             raise ProductError("unsupported product plan schema or downstream state")
         raw = row["planning"]
-        return cls(
+        snapshot = cls(
             canonical(row["request"]),
             inventory_from_mapping(cast(Mapping[str, object], row["inventory"])),
             None if raw is None else CampaignPlanning.from_mapping(cast(Mapping[str, object], raw)),
@@ -168,7 +184,18 @@ class ProductSnapshot:
             None
             if "split_staging" not in row
             else CampaignSplitStaging.from_mapping(cast(Mapping[str, object], row["split_staging"])),
+            None if row.get("frozen_lr_config") is None else canonical(row["frozen_lr_config"]),
+            canonical(row.get("input_sha256", {})),
         )
+        if row.get("frozen_lr_config_sha256") != snapshot.frozen_lr_config_sha256:
+            raise ProductError("frozen lr-config digest disagrees with its stored bytes")
+        return snapshot
+
+    @property
+    def frozen_lr_config_sha256(self) -> str | None:
+        if self.frozen_lr_config_json is None:
+            return None
+        return sha256((self.frozen_lr_config_json + "\n").encode()).hexdigest()
 
     @property
     def campaign_identity(self) -> str:
@@ -186,6 +213,7 @@ class ProductBoundary:
     partition: str | None
     account: str | None
     v6_protection: V6ProtectionStatus = V6ProtectionStatus.PROTECTED
+    execution_admission_json: str | None = None
 
     def __post_init__(self) -> None:
         if (
@@ -205,9 +233,15 @@ class ProductBoundary:
             raise ProductError("submit requires a user-selected partition")
         if self.account is not None and not self.account.strip():
             raise ProductError("SLURM account must be a nonempty user choice")
+        if self.execution_admission_json is not None:
+            object.__setattr__(
+                self,
+                "execution_admission_json",
+                canonical(json_object(self.execution_admission_json)),
+            )
 
     def to_mapping(self) -> dict[str, object]:
-        return {
+        result: dict[str, object] = {
             "schema": RECEIPT_SCHEMA,
             "command": self.command.value,
             "campaign_identity": self.campaign_identity,
@@ -221,6 +255,9 @@ class ProductBoundary:
             "v6_protection": self.v6_protection.value,
             "downstream_status": DownstreamStatus.NOT_ASSESSED.value,
         }
+        if self.execution_admission_json is not None:
+            result["execution_admission"] = json_object(self.execution_admission_json)
+        return result
 
     @classmethod
     def from_mapping(cls, row: Mapping[str, object]) -> ProductBoundary:
@@ -240,4 +277,5 @@ class ProductBoundary:
             cast(str | None, row["partition"]),
             cast(str | None, row["account"]),
             V6ProtectionStatus(cast(str, row.get("v6_protection", V6ProtectionStatus.PROTECTED.value))),
+            None if row.get("execution_admission") is None else canonical(row["execution_admission"]),
         )
