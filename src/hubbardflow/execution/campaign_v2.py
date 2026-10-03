@@ -16,6 +16,10 @@ from ..domain.scientific_profile import (
     resolve_scientific_profile, validate_xc_text,
 )
 from .execution_profile import ExecutionProfile, ProfileValidationError
+from .campaign_plan import CampaignCoverage, CampaignPlanError, inventory_sites
+from .campaign_coverage_policy import CampaignCoveragePolicyError, campaign_coverage_policy
+from ..domain.perturbation_plan import AlphaStrategy, ResolvedPerturbationPlan
+from ..domain.subspace_inventory import CorrelatedSubspaceInventory
 
 
 SCHEMA = "siestaflow.campaign.v2"
@@ -45,34 +49,14 @@ def _safe_relative(value: Any, label: str) -> str:
 
 
 def resolve_fdf_includes(source: Path) -> tuple[str, list[Path]]:
-    """Inline nested FDF includes at their original location, rejecting cycles."""
-    included: list[Path] = []
-    stack: list[Path] = []
-    include_re = re.compile(r"^\s*(?:%include|#include)\s+[\"']?([^\"'\s]+)", re.IGNORECASE)
+    """Preserve the public campaign exception contract for include expansion."""
+    from ..siesta_backend.fdf_includes import FdfIncludeError
+    from ..siesta_backend.fdf_includes import resolve_fdf_includes as resolve
 
-    def expand(path: Path) -> str:
-        resolved = path.resolve(strict=True)
-        if resolved in stack:
-            raise CampaignV2Error(f"FDF include cycle detected at {resolved}")
-        if not resolved.is_file():
-            raise CampaignV2Error(f"FDF include is not a file: {resolved}")
-        stack.append(resolved)
-        output: list[str] = []
-        for line in resolved.read_text(encoding="utf-8").splitlines():
-            match = include_re.match(line)
-            if match:
-                child = (resolved.parent / match.group(1)).resolve(strict=True)
-                included.append(child)
-                output.append(expand(child))
-            else:
-                output.append(line)
-        stack.pop()
-        return "\n".join(output) + "\n"
-
-    text = expand(source)
-    if re.search(r"^\s*(?:%include|#include)\b", text, re.IGNORECASE | re.MULTILINE):
-        raise CampaignV2Error("unsupported or unresolved FDF include directive")
-    return text, list(dict.fromkeys(included))
+    try:
+        return resolve(source)
+    except FdfIncludeError as exc:
+        raise CampaignV2Error(str(exc)) from exc
 
 
 def _fdf_block(text: str, name: str) -> list[str]:
@@ -196,10 +180,31 @@ def validate_psml(path: Path, expected_label: str, expected_z: int, functional: 
         )
 
 
-def validate_lr_config(payload: Mapping[str, Any], fdf_species: Mapping[str, int], projector_sites: list[str], atom_count: int) -> dict[str, Any]:
+def validate_lr_config(payload: Mapping[str, Any], fdf_species: Mapping[str, int], projector_sites: list[str], atom_count: int, *, inventory: CorrelatedSubspaceInventory | None = None) -> dict[str, Any]:
     if payload.get("schema") != CONFIG_SCHEMA:
         raise CampaignV2Error(f"lr-config schema must be {CONFIG_SCHEMA!r}")
+    try:
+        coverage_policy = campaign_coverage_policy(payload)
+    except CampaignCoveragePolicyError as exc:
+        raise CampaignV2Error(str(exc)) from exc
+    auto_split = payload.get("auto_split_species", False)
+    if type(auto_split) is not bool:
+        raise CampaignV2Error("auto_split_species must be a boolean")
+    if auto_split:
+        raise CampaignV2Error(
+            "STAGED_PENDING_GENERATED_IDENTITY: auto_split_species permits staging only; "
+            "verify actual SIESTA-generated .ion bytes before requesting production admission"
+        )
     sites = payload.get("sites")
+    if inventory is not None:
+        try:
+            expected_sites = dict(inventory_sites(inventory))
+        except CampaignPlanError as exc:
+            raise CampaignV2Error(str(exc)) from exc
+        if set(expected_sites) != set(projector_sites):
+            raise CampaignV2Error("inventory/DFTU.Proj labels disagree")
+        if "sites" not in payload:
+            sites = [{"site_id": label, "atom_index": index} for label, index in expected_sites.items()]
     if not isinstance(sites, list) or not sites:
         raise CampaignV2Error("lr-config requires a non-empty sites array")
     normalized_sites = []
@@ -217,10 +222,37 @@ def validate_lr_config(payload: Mapping[str, Any], fdf_species: Mapping[str, int
             raise CampaignV2Error(f"site {site_id} is not declared by DFTU.Proj")
         if site_id not in fdf_species:
             raise CampaignV2Error(f"site {site_id} is absent from ChemicalSpeciesLabel")
+        if inventory is not None and expected_sites.get(site_id) != atom_index:
+            raise CampaignV2Error(f"site {site_id} atom_index/species mismatch against inventory")
         seen_ids.add(site_id); seen_indices.add(atom_index)
         normalized_sites.append({"site_id": site_id, "atom_index": atom_index, "orbit_id": str(item.get("orbit_id", site_id))})
     if seen_ids != set(projector_sites):
         raise CampaignV2Error("lr-config sites must enumerate every DFTU.Proj site exactly once")
+    try:
+        coverage = CampaignCoverage(payload.get("coverage", "DIAGNOSTIC"))
+        raw_alpha_strategy = payload.get("alpha_strategy", "FIXED_PROTOCOL_GRID")
+        alpha_strategy = AlphaStrategy("CALIBRATED_GRID" if raw_alpha_strategy == "CALIBRATED" else raw_alpha_strategy)
+    except (ValueError, TypeError) as exc:
+        raise CampaignV2Error("unsupported coverage or alpha_strategy") from exc
+    if alpha_strategy is AlphaStrategy.CALIBRATED_GRID:
+        from ..domain.fdebq_models import CalibrationProtocol
+        raw_calibration = payload.get("calibration_protocol")
+        if not isinstance(raw_calibration, Mapping):
+            raise CampaignV2Error("CALIBRATED requires an explicit calibration_protocol with tau_u_ev")
+        try:
+            CalibrationProtocol.from_mapping(raw_calibration)
+        except ValueError as exc:
+            raise CampaignV2Error(f"invalid calibration_protocol: {exc}") from exc
+        raise CampaignV2Error(
+            "NOT_ESTABLISHED: SCIENTIFIC_STATE_NOT_ESTABLISHED; CALIBRATED production requires "
+            "the complete I.5 state gate, TASK17 SCF ESTIMATE and recorded T0–T4 validation"
+        )
+    planning_files = {}
+    for field in ("planning_reference_output", "planning_reference_dm"):
+        source = payload.get(field)
+        if source is not None and (not isinstance(source, str) or not Path(source).is_file()):
+            raise CampaignV2Error(f"{field} must name an existing file")
+        planning_files[field] = source
     alpha = payload.get("alpha_grid_ev")
     if not isinstance(alpha, list) or not alpha:
         raise CampaignV2Error("alpha_grid_ev must be a non-empty array of non-zero amplitudes")
@@ -330,6 +362,13 @@ def validate_lr_config(payload: Mapping[str, Any], fdf_species: Mapping[str, int
         "functional": xc_profile.xc_functional,
         "xc_profile": xc_profile.to_mapping(),
         "sites": normalized_sites,
+        "coverage": coverage.value,
+        "coverage_policy": coverage_policy.to_mapping(),
+        "allow_spin_flip": coverage_policy.allow_spin_flip,
+        "allow_rotations": coverage_policy.allow_rotations,
+        "alpha_strategy": alpha_strategy.value,
+        "auto_split_species": auto_split,
+        **planning_files,
         "alpha_grid_ev": sorted(values),
         "pseudopotentials": {str(key): str(Path(value).resolve()) for key, value in pseudopotentials.items()},
         "static_artifacts": normalized_static,
@@ -442,10 +481,63 @@ def load_campaign_v2(path: str | Path) -> dict[str, Any]:
     ).encode()).hexdigest()
     if payload.get("input_identity") != calculated_identity:
         raise CampaignV2Error("campaign input identity does not match its declared inventory")
+    plan: ResolvedPerturbationPlan | None = None
+    if payload.get("resolved_perturbation_plan_file") is None and {"resolved_perturbation_plan.json", "campaign.lock"} & seen_input_paths:
+        raise CampaignV2Error("campaign plan metadata is missing from its manifest")
+    if payload.get("resolved_perturbation_plan_file") is not None:
+        from .campaign_plan import verify_frozen_campaign_plan
+
+        if (payload["resolved_perturbation_plan_file"] != "resolved_perturbation_plan.json"
+                or payload.get("campaign_lock_file") != "campaign.lock"
+                or payload["reference_fdf"] != "reference.fdf"
+                or payload["contract_file"] != "backend_contract.json"
+                or payload["lr_config_file"] != "lr_config.json"
+                or payload["execution_profile_file"] != "execution_profile.json"):
+            raise CampaignV2Error("unsupported campaign plan/lock paths")
+        config = json.loads((candidate.parent / payload["lr_config_file"]).read_text(encoding="utf-8"))
+        from .campaign_plan import campaign_inventory
+
+        inventory = campaign_inventory(candidate.parent / payload["reference_fdf"], tuple(sorted({Path(p).parent for p in config["pseudopotentials"].values()}, key=str)))
+        text, _ = resolve_fdf_includes(candidate.parent / payload["reference_fdf"])
+        _, species, projectors = validate_reference_fdf(text, payload["functional"])
+        normalized = validate_lr_config(config, species, projectors, int(_single_fdf_value(text, "NumberOfAtoms") or "0"), inventory=inventory)
+        by_site = {item["site_id"]: item for item in normalized["sites"]}
+        expected_sites = [{"index": index, **by_site[site]} for index, site in enumerate(projectors)]
+        expected_manifest = {
+            "sites": expected_sites,
+            **{field: normalized[field] for field in (
+                "functional", "xc_profile", "alpha_grid_ev", "analysis_policy", "adaptive_alpha_policy",
+                "alpha_selection_policy", "magnetic_moment_tolerance_muB", "observables", "material", "coverage",
+            )},
+            "fixed_grid": normalized["adaptive_alpha_policy"] is None,
+            "automatic_alpha_refinement": normalized["adaptive_alpha_policy"] is not None,
+        }
+        for field, expected in expected_manifest.items():
+            # Canonical JSON equality also distinguishes bool from int; no
+            # mutable manifest field may replace a frozen execution input.
+            if field not in payload:
+                raise CampaignV2Error(f"campaign {field} disagrees with its frozen config")
+            try:
+                actual_json = json.dumps(payload[field], sort_keys=True, allow_nan=False)
+                expected_json = json.dumps(expected, sort_keys=True, allow_nan=False)
+            except (ValueError, TypeError) as exc:
+                raise CampaignV2Error(f"campaign {field} has invalid JSON values") from exc
+            if actual_json != expected_json:
+                raise CampaignV2Error(f"campaign {field} disagrees with its frozen config")
+        contract = json.loads((candidate.parent / payload["contract_file"]).read_text(encoding="utf-8"))
+        if payload["campaign_id"] != contract.get("campaign_id"):
+            raise CampaignV2Error("campaign_id disagrees with its frozen backend contract")
+        try:
+            plan = verify_frozen_campaign_plan(candidate.parent, normalized)
+        except CampaignPlanError as exc:
+            raise CampaignV2Error(str(exc)) from exc
+        if payload.get("resolved_perturbation_plan_digest") != plan.digest or payload.get("coverage") != normalized["coverage"]:
+            raise CampaignV2Error("campaign manifest disagrees with its frozen plan")
     return {
         **payload, "_manifest_path": str(candidate), "_campaign_root": str(candidate.parent.resolve()),
         "_profile": profile, "_xc_profile": xc_profile.to_mapping(),
         "_adaptive_alpha_policy": adaptive_policy,
+        "_perturbation_plan": plan,
     }
 
 

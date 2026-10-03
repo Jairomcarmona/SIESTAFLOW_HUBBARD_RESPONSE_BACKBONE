@@ -1,0 +1,274 @@
+{
+  "archive": {
+    "input_files_sha256": {
+      "backend_contract.json": "030c00b7368e6238bb87ab46db0ee18510f1aec37190b56ce1f2c9e982d6cafe",
+      "execution_profile.json": "fbc9ff5ae47a6791d0e1ff962b6070f8690f1ffef475bafd8784a7388d755ae1",
+      "lr_config.json": "619895c0908c5c557a476151a9e06a63483254b7e0b814af084784ac07fd7cd6",
+      "provenance/source_lr_config.json": "34357c804b55ba1b64528e7032d4fe94c20779e2ebedcb77e4c8d872a94cd14a",
+      "provenance/source_reference.fdf": "b4fb34e642d862be6949a5b2033a60c5b9fcae56119879583bb3eaf237620ee7",
+      "pseudopotentials/NiLR0.psml": "192eb05ffb64671715e570e2ca9a99a551cf15544984592082d43004f8554e06",
+      "pseudopotentials/NiLR1.psml": "192eb05ffb64671715e570e2ca9a99a551cf15544984592082d43004f8554e06",
+      "pseudopotentials/O.psml": "224ded5c59176d9bcb76d19b7a4a68a48d5dffabf8b262f64d5760250e87c35e",
+      "reference.fdf": "b4fb34e642d862be6949a5b2033a60c5b9fcae56119879583bb3eaf237620ee7",
+      "software/backend_compatibility.json": "5189620dfa1e8b6090cbdbb9c36c412835d16feb5c50bbc82b16c139d3bcff2e",
+      "software/siesta_version.txt": "bb5a9b03dfaec9953401a7ef8db045149461047c44f15f9c5bf7758900b5f3ee"
+    },
+    "lr_config_file": "lr_config.json",
+    "manifest_sha256": "0917d0ca393f167aaff02f5730d0a6a549ea35cbc17ddbe818cb662b3d073b4f",
+    "node_evidence_sha256": "0e8d0b0bb781437b59942f8bae33204401bb116b32d40a4762aa33a2c174e1be",
+    "reference_fdf": "reference.fdf"
+  },
+  "archived_lr_config": {
+    "adaptive_alpha_policy": null,
+    "alpha_grid_ev": [
+      -0.06,
+      -0.04,
+      -0.02,
+      0.02,
+      0.04,
+      0.06
+    ],
+    "analysis_policy": {
+      "estimator": "polynomial",
+      "matrix_for_inversion": "raw",
+      "minimum_residual_dof": 1,
+      "polynomial_degree": 3
+    },
+    "compatibility_registry": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/software/backend_compatibility.json",
+    "declared_executable": "siesta",
+    "functional": "PBE",
+    "magnetic_moment_tolerance_muB": 0.1,
+    "material": "NiO-AFMII-PBE-adaptive-20260928",
+    "pseudopotentials": {
+      "NiLR0": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/pseudopotentials/NiLR0.psml",
+      "NiLR1": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/pseudopotentials/NiLR1.psml",
+      "O": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/pseudopotentials/O.psml"
+    },
+    "reference_dm_name": "NIO_PBE_REFERENCE.DM",
+    "schema": "siestaflow.lr_config.v2",
+    "sites": [
+      {
+        "atom_index": 1,
+        "orbit_id": "NiLR0",
+        "site_id": "NiLR0"
+      },
+      {
+        "atom_index": 2,
+        "orbit_id": "NiLR1",
+        "site_id": "NiLR1"
+      }
+    ],
+    "static_artifacts": {},
+    "version_text_source": "/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/software/siesta_version.txt"
+  },
+  "archived_lr_config_source_text": "{\n  \"adaptive_alpha_policy\": null,\n  \"alpha_grid_ev\": [\n    -0.06,\n    -0.04,\n    -0.02,\n    0.02,\n    0.04,\n    0.06\n  ],\n  \"analysis_policy\": {\n    \"estimator\": \"polynomial\",\n    \"matrix_for_inversion\": \"raw\",\n    \"minimum_residual_dof\": 1,\n    \"polynomial_degree\": 3\n  },\n  \"compatibility_registry\": \"/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/software/backend_compatibility.json\",\n  \"declared_executable\": \"siesta\",\n  \"functional\": \"PBE\",\n  \"magnetic_moment_tolerance_muB\": 0.1,\n  \"material\": \"NiO-AFMII-PBE-adaptive-20260928\",\n  \"pseudopotentials\": {\n    \"NiLR0\": \"/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/pseudopotentials/NiLR0.psml\",\n    \"NiLR1\": \"/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/pseudopotentials/NiLR1.psml\",\n    \"O\": \"/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/pseudopotentials/O.psml\"\n  },\n  \"reference_dm_name\": \"NIO_PBE_REFERENCE.DM\",\n  \"schema\": \"siestaflow.lr_config.v2\",\n  \"sites\": [\n    {\n      \"atom_index\": 1,\n      \"orbit_id\": \"NiLR0\",\n      \"site_id\": \"NiLR0\"\n    },\n    {\n      \"atom_index\": 2,\n      \"orbit_id\": \"NiLR1\",\n      \"site_id\": \"NiLR1\"\n    }\n  ],\n  \"static_artifacts\": {},\n  \"version_text_source\": \"/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/software/siesta_version.txt\"\n}\n",
+  "materialized_fdf_sha256": {
+    "reference": "b4fb34e642d862be6949a5b2033a60c5b9fcae56119879583bb3eaf237620ee7",
+    "response:lr_s000_m0p02_bare": "bfa49c6dfd9ea3bbbb3e9d176eef868b0fd3b854a014bea35ad162baff826a9b",
+    "response:lr_s000_m0p02_screened": "6b58dfc0a005de8af4c453b88f76bd2fc6a9cb77f04c34cadfd24ce523576c1f",
+    "response:lr_s000_m0p04_bare": "e4c908b534a714bc1b1d3899a56456bdcb11f40088c01a4f8290272718df697c",
+    "response:lr_s000_m0p04_screened": "ced272c74909782c8c6d3c04941568154b5f2e838a46826e622047272a267150",
+    "response:lr_s000_m0p06_bare": "8c456bf2107afacd44d21ac6596c536312d3fb569320d07ef319ef291bee277b",
+    "response:lr_s000_m0p06_screened": "5b9ec5f64ea05290f35c411280a69a304a20362ff7ed0ec8b90ad0ac0bf22f98",
+    "response:lr_s000_p0p02_bare": "7db558879c3ef94b284ccbf1282c3906b47e8b14fbe360b7dcecf20e33ee6c3b",
+    "response:lr_s000_p0p02_screened": "b019668ecb18c45d0f0895c6fa0c40cb206c4c78dc5ee640d8283baf3c120dfb",
+    "response:lr_s000_p0p04_bare": "c4a233cec7dced236bad89f8b5ddee1d61686ddac4619292e80dd32344064433",
+    "response:lr_s000_p0p04_screened": "0800a9ee7ba8adc3bae372457114abadccfd00322da32cf43dc344efd994f4fd",
+    "response:lr_s000_p0p06_bare": "b1181a92d720ca273dfbadb34164ad53844490b4a3613667dfb470515b2bea12",
+    "response:lr_s000_p0p06_screened": "3d4645f1bc0f495240b6aeb8404cbfce4d792ea5fb86540cf204668de9828f70",
+    "response:lr_s001_m0p02_bare": "3ca1d004f9ff5369198ef5828a34ae12f076fc459a59f8c47e777cf223f45a6d",
+    "response:lr_s001_m0p02_screened": "eaa2e7c7ec6fc4aac964df2b2d6a88e71402f89551987891b1e3a7f1c512cb95",
+    "response:lr_s001_m0p04_bare": "d6c1c06d42d96ea19ad17bffdd4468fe52bd657c8e436f53fb5738aea29cb4d7",
+    "response:lr_s001_m0p04_screened": "21c2b330a501c742bb6abad377f8abea815a83a34e74fae7691fd008776a195e",
+    "response:lr_s001_m0p06_bare": "0cea98c3b2e7e428bef703931cb732e7aab11f39ce3fe8f7a83105565f8b00aa",
+    "response:lr_s001_m0p06_screened": "e747150758675410281a0539b0a1bdd0d37b86f8a4438769dbf06d23d8a266a9",
+    "response:lr_s001_p0p02_bare": "757f2b41a2e02b53281563358e15576caa263ce1eb783d2ceac008328f09c255",
+    "response:lr_s001_p0p02_screened": "65c909c85914773b47ea3e2e770cc34ccd162633396ba200ed2e46cae672ed4e",
+    "response:lr_s001_p0p04_bare": "e9e5d07fed4e2758265470a3507b1ee9e1cfc4bedfc431353b0cd94479755bb8",
+    "response:lr_s001_p0p04_screened": "dd3b000669cf92ddec455d1aeee12ee160730515655a7079134ba22cc951b280",
+    "response:lr_s001_p0p06_bare": "6e377cd84f9a11691d5d86831e9cdafbbebcac317a913483adda307a218c31e9",
+    "response:lr_s001_p0p06_screened": "5d15274f023766b59bd54fcaee65a88e779fa3e44afc3cea5993222d4acc5940"
+  },
+  "response_identities": [
+    {
+      "alpha_ev": -0.06,
+      "atom_index": 1,
+      "label": "NiLR0",
+      "mode": "BARE"
+    },
+    {
+      "alpha_ev": -0.04,
+      "atom_index": 1,
+      "label": "NiLR0",
+      "mode": "BARE"
+    },
+    {
+      "alpha_ev": -0.02,
+      "atom_index": 1,
+      "label": "NiLR0",
+      "mode": "BARE"
+    },
+    {
+      "alpha_ev": 0.02,
+      "atom_index": 1,
+      "label": "NiLR0",
+      "mode": "BARE"
+    },
+    {
+      "alpha_ev": 0.04,
+      "atom_index": 1,
+      "label": "NiLR0",
+      "mode": "BARE"
+    },
+    {
+      "alpha_ev": 0.06,
+      "atom_index": 1,
+      "label": "NiLR0",
+      "mode": "BARE"
+    },
+    {
+      "alpha_ev": -0.06,
+      "atom_index": 1,
+      "label": "NiLR0",
+      "mode": "SCREENED"
+    },
+    {
+      "alpha_ev": -0.04,
+      "atom_index": 1,
+      "label": "NiLR0",
+      "mode": "SCREENED"
+    },
+    {
+      "alpha_ev": -0.02,
+      "atom_index": 1,
+      "label": "NiLR0",
+      "mode": "SCREENED"
+    },
+    {
+      "alpha_ev": 0.02,
+      "atom_index": 1,
+      "label": "NiLR0",
+      "mode": "SCREENED"
+    },
+    {
+      "alpha_ev": 0.04,
+      "atom_index": 1,
+      "label": "NiLR0",
+      "mode": "SCREENED"
+    },
+    {
+      "alpha_ev": 0.06,
+      "atom_index": 1,
+      "label": "NiLR0",
+      "mode": "SCREENED"
+    },
+    {
+      "alpha_ev": -0.06,
+      "atom_index": 2,
+      "label": "NiLR1",
+      "mode": "BARE"
+    },
+    {
+      "alpha_ev": -0.04,
+      "atom_index": 2,
+      "label": "NiLR1",
+      "mode": "BARE"
+    },
+    {
+      "alpha_ev": -0.02,
+      "atom_index": 2,
+      "label": "NiLR1",
+      "mode": "BARE"
+    },
+    {
+      "alpha_ev": 0.02,
+      "atom_index": 2,
+      "label": "NiLR1",
+      "mode": "BARE"
+    },
+    {
+      "alpha_ev": 0.04,
+      "atom_index": 2,
+      "label": "NiLR1",
+      "mode": "BARE"
+    },
+    {
+      "alpha_ev": 0.06,
+      "atom_index": 2,
+      "label": "NiLR1",
+      "mode": "BARE"
+    },
+    {
+      "alpha_ev": -0.06,
+      "atom_index": 2,
+      "label": "NiLR1",
+      "mode": "SCREENED"
+    },
+    {
+      "alpha_ev": -0.04,
+      "atom_index": 2,
+      "label": "NiLR1",
+      "mode": "SCREENED"
+    },
+    {
+      "alpha_ev": -0.02,
+      "atom_index": 2,
+      "label": "NiLR1",
+      "mode": "SCREENED"
+    },
+    {
+      "alpha_ev": 0.02,
+      "atom_index": 2,
+      "label": "NiLR1",
+      "mode": "SCREENED"
+    },
+    {
+      "alpha_ev": 0.04,
+      "atom_index": 2,
+      "label": "NiLR1",
+      "mode": "SCREENED"
+    },
+    {
+      "alpha_ev": 0.06,
+      "atom_index": 2,
+      "label": "NiLR1",
+      "mode": "SCREENED"
+    }
+  ],
+  "schema": "hubbardflow.phase2_golden.v1",
+  "scientific_values": {
+    "adaptive_alpha_policy": null,
+    "alpha_grid_ev": [
+      -0.06,
+      -0.04,
+      -0.02,
+      0.02,
+      0.04,
+      0.06
+    ],
+    "analysis_policy": {
+      "estimator": "polynomial",
+      "matrix_for_inversion": "raw",
+      "minimum_residual_dof": 1,
+      "polynomial_degree": 3
+    },
+    "functional": "PBE",
+    "magnetic_moment_tolerance_muB": 0.1,
+    "material": "NiO-AFMII-PBE-adaptive-20260928"
+  },
+  "sites": [
+    {
+      "atom_index": 1,
+      "index": 0,
+      "orbit_id": "NiLR0",
+      "site_id": "NiLR0"
+    },
+    {
+      "atom_index": 2,
+      "index": 1,
+      "orbit_id": "NiLR1",
+      "site_id": "NiLR1"
+    }
+  ],
+  "system": "NiO-P5"
+}

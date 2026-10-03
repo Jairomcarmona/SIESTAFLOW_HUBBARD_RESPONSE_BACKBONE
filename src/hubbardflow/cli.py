@@ -224,8 +224,11 @@ def _internal_report(manifest_path: str) -> str:
 
 
 def main(argv: list[str] | None = None) -> int:
+    from hubbardflow.product_cli import add_product_commands, add_product_options, product_command
+
     parser = argparse.ArgumentParser(description="HubbardFlow Linux/Slurm and PowerShell-to-WSL campaign CLI")
     sub = parser.add_subparsers(dest="command", required=True)
+    add_product_commands(sub)
     audit = sub.add_parser("audit-fdf", help="run the existing read-only FDF consistency audit")
     audit.add_argument("fdf_file", help="FDF path")
     init = sub.add_parser("init", help="create a fixed-grid or policy-driven adaptive v2 campaign as a WSL pointer or direct Linux manifest")
@@ -236,7 +239,7 @@ def main(argv: list[str] | None = None) -> int:
     init.add_argument("--pointer", help="Windows path for the campaign pointer JSON")
     init.add_argument("--campaign-root", help="Linux parent directory for direct manifest campaigns (defaults to cwd)")
     controls = {
-        "run": "start the campaign worker in WSL",
+        "run": "consume an FDF product plan, or start an existing campaign worker",
         "resume": "resume an interrupted campaign in WSL",
         "status": "read the durable campaign status",
         "report": "regenerate the report from the saved analysis JSON",
@@ -244,7 +247,12 @@ def main(argv: list[str] | None = None) -> int:
     }
     for command, description in controls.items():
         control = sub.add_parser(command, help=description)
-        control.add_argument("campaign", help="Windows pointer JSON (local_wsl) or direct campaign.v2.json manifest (Linux/Slurm)")
+        control.add_argument("campaign", help="FDF product input (run), Windows pointer JSON (local_wsl), or campaign.v2.json (Linux/Slurm)")
+        if command == "run":
+            add_product_options(control)
+            control.add_argument("--profile", help="validated Linux execution profile for product execution")
+            control.add_argument("--name", help="campaign directory name for product execution")
+            control.add_argument("--campaign-root", help="Linux parent directory for the initialized campaign")
     # Private WSL implementation commands; public users should use the pointer.
     internal = sub.add_parser("_init", help=argparse.SUPPRESS)
     internal.add_argument("fdf_wsl")
@@ -267,10 +275,30 @@ def main(argv: list[str] | None = None) -> int:
 
     args = parser.parse_args(argv)
     try:
+        if args.command == "run" and Path(args.campaign).suffix.casefold() != ".fdf":
+            product_options = (
+                ("--lr-config", args.lr_config),
+                ("--reference-output", args.reference_output),
+                ("--reference-dm", args.reference_dm),
+                ("--coverage", args.coverage),
+                ("--alpha-strategy", args.alpha_strategy),
+                ("--identity-dir", args.identity_dir),
+                ("--allow-spin-flip", args.allow_spin_flip),
+                ("--allow-rotations", args.allow_rotations),
+                ("--output-dir", args.output_dir),
+                ("--override-plan-state", args.override_plan_state),
+            )
+            supplied_options = [name for name, value in product_options if value is not None]
+            if supplied_options:
+                raise ValueError(
+                    "product options require an FDF target: " + ", ".join(supplied_options)
+                )
         if args.command == "audit-fdf":
             audit_fdf(args)
         elif args.command == "init":
             _public_init(args)
+        elif args.command in {"plan", "submit"} or (args.command == "run" and Path(args.campaign).suffix.casefold() == ".fdf"):
+            return product_command(args)
         elif args.command in {"run", "resume", "status", "report", "stop"}:
             result = _public_control(args)
             return 0 if result is None else result

@@ -22,6 +22,7 @@ from .campaign_v2 import (
     validate_lr_config, validate_psml, validate_reference_fdf,
 )
 from .execution_profile import ExecutionProfile, ProfileValidationError
+from .campaign_plan import campaign_inventory, freeze_campaign_plan, resolve_campaign_planning
 
 
 def _source_file(value: Any, base: Path, label: str) -> Path:
@@ -132,6 +133,27 @@ def initialize_campaign(
                 raise CampaignV2Error(f"static_artifacts destination collides with pseudopotential {relative}")
             static_sources[relative] = _source_file(source, config_base, f"static_artifacts.{destination}")
 
+        # D6 admits opt-in staging only. This manifest cannot be loaded by the
+        # production campaign runner and carries no executable plan or DAG.
+        from .campaign_split import stage_campaign_split
+        from hubbardflow.siesta_backend.semantic_split_models import SemanticSpeciesSplitError
+        pending_config = {
+            **raw_config,
+            "pseudopotentials": {key.split(".", 1)[1]: str(source) for key, source in declared_sources.items()},
+            "static_artifacts": {key: str(source) for key, source in static_sources.items()},
+        }
+        try:
+            staged = stage_campaign_split(input_fdf, pending_config, root)
+        except SemanticSpeciesSplitError as exc:
+            raise CampaignV2Error(str(exc)) from exc
+        if staged is not None:
+            return {
+                "status": staged.status.value,
+                "staging_manifest_path": str(root / "species_split/species_split_staging.json"),
+                "staging_digest": staged.digest,
+                "auto_split_species": True,
+            }
+
         # Copy the source inventory into Linux ext4; the response factory then
         # stages only the referenced assets into each node's private directory.
         reference_path = root / "reference.fdf"
@@ -143,6 +165,9 @@ def initialize_campaign(
             copied_sources.append((rel, _copy(source, root, rel)))
 
         config_payload = dict(raw_config)
+        for field in ("planning_reference_output", "planning_reference_dm"):
+            if raw_config.get(field) is not None:
+                config_payload[field] = str(_source_file(raw_config[field], config_base, field))
         normalized_pseudopotentials: dict[str, str] = {}
         static_node_paths: dict[str, str] = {}
         all_inputs: dict[str, Path] = {"reference.fdf": reference_path}
@@ -171,13 +196,13 @@ def initialize_campaign(
 
         config_payload.update({
             "functional": functional,
-            "xc_profile": normalized["xc_profile"],
             "pseudopotentials": normalized_pseudopotentials,
             "static_artifacts": static_node_paths,
             "compatibility_registry": str(registry_target),
             "version_text_source": str(version_target),
         })
-        normalized = validate_lr_config(config_payload, fdf_species, projector_sites, atom_count)
+        inventory = campaign_inventory(reference_path, (root / "pseudopotentials",))
+        normalized = validate_lr_config(config_payload, fdf_species, projector_sites, atom_count, inventory=inventory)
         if normalized["functional"] != functional:
             raise CampaignV2Error("lr-config and reference FDF functionals differ")
         if normalized["alpha_selection_policy"] is not None:
@@ -232,7 +257,24 @@ def initialize_campaign(
             "version_text_source": str(version_target),
             "declared_executable": normalized["declared_executable"],
             "magnetic_moment_tolerance_muB": tolerance,
+            "coverage": normalized["coverage"],
+            "coverage_policy": normalized["coverage_policy"],
+            "alpha_strategy": normalized["alpha_strategy"],
+            "auto_split_species": normalized["auto_split_species"],
         }
+        for field in ("planning_reference_output", "planning_reference_dm"):
+            if raw_config.get(field) is not None:
+                source = _source_file(raw_config[field], config_base, field)
+                rel = f"planning/{field}"
+                target = _copy(source, root, rel)
+                all_inputs[rel] = target
+                lr_config[field] = str(target)
+        normalized = validate_lr_config(lr_config, fdf_species, projector_sites, atom_count, inventory=inventory)
+        planning = resolve_campaign_planning(reference_path, normalized)
+        resolved_plan = planning.plan
+        freeze_campaign_plan(root, planning, normalized)
+        all_inputs["resolved_perturbation_plan.json"] = root / "resolved_perturbation_plan.json"
+        all_inputs["campaign.lock"] = root / "campaign.lock"
         config_target = root / "lr_config.json"
         _write_json(config_target, lr_config)
         all_inputs["lr_config.json"] = config_target
@@ -258,6 +300,10 @@ def initialize_campaign(
             "functional": functional,
             "xc_profile": normalized["xc_profile"],
             "reference_fdf": "reference.fdf",
+            "resolved_perturbation_plan_file": "resolved_perturbation_plan.json",
+            "resolved_perturbation_plan_digest": resolved_plan.digest,
+            "campaign_lock_file": "campaign.lock",
+            "coverage": normalized["coverage"],
             "contract_file": "backend_contract.json",
             "lr_config_file": "lr_config.json",
             "execution_profile_file": "execution_profile.json",

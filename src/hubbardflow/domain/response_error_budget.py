@@ -25,6 +25,7 @@ from hubbardflow.domain.response_budget_models import (
     OddEvenDecomposition,
     OrderStatus,
     PointObservation,
+    PrintedResponseBudget,
     QualificationCap,
     ReciprocityResidual,
     ResponseBudgetError,
@@ -49,12 +50,14 @@ __all__ = [
     "OddEvenDecomposition",
     "OrderStatus",
     "PointObservation",
+    "PrintedResponseBudget",
     "QualificationCap",
     "ReciprocityResidual",
     "ResponseBudgetError",
     "candidate_budgets",
     "decompose",
     "element_report",
+    "printed_response_budget",
     "reciprocity",
     "u_influence",
     "verify_order",
@@ -197,6 +200,22 @@ def _tail(dec: OddEvenDecomposition, moments: EstimatorMoments, p_used: int) -> 
     if not bounds:
         raise ResponseBudgetError("truncation requires enough amplitudes for its divided difference")
     return abs(moments.principal(p_used)) * max(bounds)
+
+
+def printed_response_budget(series: ElementSeries, estimator: EstimatorSpec) -> PrintedResponseBudget:
+    """Apply the declared column functional with TASK 2's additive print radius.
+
+    A single amplitude is sufficient: shadows compare the same finite-amplitude
+    estimator, so this gate neither selects an estimator nor invents a tail or
+    an SCF floor. TASK 17 must supply its ESTIMATE separately.
+    """
+    dec = decompose(series, NoiseModel(0.0, 0.0, BoundKind.BOUND))
+    value, radius = _value_noise(dec, estimator_moments(estimator))
+    return PrintedResponseBudget(
+        _derived_finite(value, "estimate_e_per_ev"),
+        _derived_finite(radius, "print_bound_e_per_ev"),
+        BoundKind.BOUND,
+    )
 
 
 def _candidate(

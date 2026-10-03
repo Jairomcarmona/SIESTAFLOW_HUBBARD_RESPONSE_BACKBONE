@@ -1,8 +1,14 @@
 import re
-from typing import List, Dict, Optional, Any
+from typing import List, Dict, Optional, Any, TYPE_CHECKING
 from dataclasses import dataclass
 from hubbardflow.siesta_backend.fdf_validator import FdfValidator, FdfParser
 from hubbardflow.siesta_backend.dftu_models import DftuProjector, DftuProjectorBlock
+
+if TYPE_CHECKING:
+    from hubbardflow.siesta_backend.semantic_species_split import (
+        SemanticSpeciesSplitPolicy,
+        SemanticSpeciesSplitResult,
+    )
 
 
 class LegacyBareMaterializationDisabledError(ValueError):
@@ -498,14 +504,51 @@ def materialize_split_species_fdf(
     content: str,
     target_species: str,
     new_prefix: str,
-) -> tuple[str, list[str]]:
+    *,
+    semantic_policy: "SemanticSpeciesSplitPolicy | None" = None,
+    source_fdf_path: str | None = None,
+    search_dirs: tuple[str, ...] = (),
+    output_directory: str | None = None,
+) -> "tuple[str, list[str]] | SemanticSpeciesSplitResult":
     """
     Splits all atoms of `target_species` in FDF content into distinct species aliases:
     f"{new_prefix}0", f"{new_prefix}1", ..., f"{new_prefix}{N-1}".
 
     Returns (modified_fdf_content, list_of_new_species_labels).
     Supports arbitrary N.
+
+    The legacy three-argument call remains unchanged. An explicit semantic
+    policy selects the audited TASK15 helper and returns its typed pending
+    result; staging never admits a production campaign by itself.
     """
+    if semantic_policy is not None:
+        from pathlib import Path
+        from hubbardflow.siesta_backend.fdf_model import parse_effective_fdf
+        from hubbardflow.siesta_backend.semantic_species_split import (
+            SemanticSplitCode,
+            SemanticSpeciesSplitError,
+            materialize_semantic_split_species_fdf,
+        )
+        if not semantic_policy.auto_split_species:
+            raise SemanticSpeciesSplitError(
+                SemanticSplitCode.SHARED_LABEL_NEEDS_SPLIT,
+                "automatic species splitting requires explicit opt-in",
+            )
+        if source_fdf_path is None or output_directory is None:
+            raise SemanticSpeciesSplitError(
+                SemanticSplitCode.INVALID_SPLIT_INPUT,
+                "semantic materialization requires source_fdf_path and output_directory",
+            )
+        if content != parse_effective_fdf(source_fdf_path).effective_text:
+            raise SemanticSpeciesSplitError(
+                SemanticSplitCode.INVALID_SPLIT_INPUT,
+                "content must equal the authoritative effective source FDF",
+            )
+        return materialize_semantic_split_species_fdf(
+            Path(source_fdf_path), target_species, new_prefix,
+            Path(output_directory), tuple(Path(item) for item in search_dirs),
+            policy=semantic_policy,
+        )
     # 1. Parse ChemicalSpeciesLabel to find species index and atomic number for target_species
     spec_block_m = re.search(
         r"%block\s+ChemicalSpeciesLabel(.*?)%endblock\s+ChemicalSpeciesLabel",

@@ -1,16 +1,16 @@
-from pathlib import Path
 from dataclasses import replace
+from pathlib import Path
 
 import pytest
 
-from hubbardflow.domain.response_grid_reproducibility import (
-    _VALIDATION_TOKEN,
-    ValidatedResponseGridCalibration,
-    ResponseGridCalibrationError,
-    _validate_independent_execution_identities,
-)
 from hubbardflow.domain.lr_analysis_v2 import _response_grid_empirical_widths
 from hubbardflow.domain.matrix_lr import ResponseObservation
+from hubbardflow.domain.response_grid_reproducibility import (
+    _VALIDATION_TOKEN,
+    ResponseGridCalibrationError,
+    ValidatedResponseGridCalibration,
+    _validate_independent_execution_identities,
+)
 
 
 def _campaign(root: Path, campaign_id: str, attempt_id: str) -> dict[str, object]:
@@ -47,11 +47,17 @@ def test_identical_dm_and_outputs_are_admissible_with_distinct_attempts(tmp_path
         reference_dm_sha256s=("a" * 64, "a" * 64, "a" * 64),
         replica_source_roots=(str(root_a), str(root_b), str(tmp_path / "campaign-c")),
         reference_execution_attempt_ids=(
-            "attempt-100-aaaaaaaa", "attempt-200-bbbbbbbb", "attempt-300-cccccccc",
+            "attempt-100-aaaaaaaa",
+            "attempt-200-bbbbbbbb",
+            "attempt-300-cccccccc",
         ),
         execution_attempt_ids=(
-            "attempt-100-aaaaaaaa", "attempt-200-bbbbbbbb", "attempt-300-cccccccc",
-            "attempt-101-aaaaaaaa", "attempt-201-bbbbbbbb", "attempt-301-cccccccc",
+            "attempt-100-aaaaaaaa",
+            "attempt-200-bbbbbbbb",
+            "attempt-300-cccccccc",
+            "attempt-101-aaaaaaaa",
+            "attempt-201-bbbbbbbb",
+            "attempt-301-cccccccc",
         ),
         safety_factor=1.0,
         deterministic_floor_e=1e-6,
@@ -113,36 +119,49 @@ def test_primary_campaign_root_or_attempt_cannot_be_reused(tmp_path: Path) -> No
 
     with pytest.raises(ResponseGridCalibrationError, match="distinct UUIDs and source roots"):
         _validate_independent_execution_identities(
-            [record], primary_campaign_id="replica-uuid", primary_source_root=primary_root,
+            [record],
+            primary_campaign_id="replica-uuid",
+            primary_source_root=primary_root,
         )
     copied_root_record = _campaign(primary_root, "different-replica-uuid", "attempt-301-dddddddd")
     with pytest.raises(ResponseGridCalibrationError, match="distinct UUIDs and source roots"):
         _validate_independent_execution_identities(
-            [copied_root_record], primary_campaign_id="primary-uuid", primary_source_root=primary_root,
+            [copied_root_record],
+            primary_campaign_id="primary-uuid",
+            primary_source_root=primary_root,
         )
     with pytest.raises(ResponseGridCalibrationError, match="reuses a runner attempt"):
         _validate_independent_execution_identities(
-            [record], primary_campaign_id="primary-uuid", primary_source_root=primary_root,
+            [record],
+            primary_campaign_id="primary-uuid",
+            primary_source_root=primary_root,
             primary_attempt_ids={"attempt-300-cccccccc"},
         )
 
     calibration = ValidatedResponseGridCalibration(
-        campaign_context_sha256="c" * 64, lock_sha256="d" * 64, result_sha256="e" * 64,
+        campaign_context_sha256="c" * 64,
+        lock_sha256="d" * 64,
+        result_sha256="e" * 64,
         replica_count=3,
         replica_campaign_ids=("replica-a", "replica-b", "replica-c"),
         reference_dm_sha256s=("a" * 64, "a" * 64, "a" * 64),
         replica_source_roots=(str(replica_root), str(replica_root), str(replica_root)),
         reference_execution_attempt_ids=("attempt-300-cccccccc", "attempt-b", "attempt-c"),
         execution_attempt_ids=("attempt-300-cccccccc", "attempt-b", "attempt-c"),
-        safety_factor=1.0, deterministic_floor_e=1e-6,
-        observed_replicas_by_coordinate={}, replica_print_half_widths_by_coordinate={},
+        safety_factor=1.0,
+        deterministic_floor_e=1e-6,
+        observed_replicas_by_coordinate={},
+        replica_print_half_widths_by_coordinate={},
         scope="EMPIRICAL_RESPONSE_GRID_REPRODUCIBILITY_CONDITIONAL_ON_VERIFIED_NODE_EVIDENCE",
         _token=_VALIDATION_TOKEN,
     )
     observation = ResponseObservation(0, 0.1, [0], [0.5], [0.4], [0.3], parent_dm_sha256="a" * 64)
     widths, evidence = _response_grid_empirical_widths(
-        [observation], {(0, 0.1, "bare"): [0.0], (0, 0.1, "screened"): [0.0]},
-        calibration, primary_campaign_id="primary-uuid", primary_source_root=str(primary_root),
+        [observation],
+        {(0, 0.1, "bare"): [0.0], (0, 0.1, "screened"): [0.0]},
+        calibration,
+        primary_campaign_id="primary-uuid",
+        primary_source_root=str(primary_root),
         primary_execution_attempt_ids=("attempt-300-cccccccc",),
     )
     assert widths is None
@@ -154,8 +173,11 @@ def test_primary_campaign_root_or_attempt_cannot_be_reused(tmp_path: Path) -> No
         execution_attempt_ids=("attempt-a", "attempt-b", "attempt-c"),
     )
     widths, evidence = _response_grid_empirical_widths(
-        [observation], {(0, 0.1, "bare"): [0.0], (0, 0.1, "screened"): [0.0]},
-        root_shared_calibration, primary_campaign_id="primary-uuid", primary_source_root=str(primary_root),
+        [observation],
+        {(0, 0.1, "bare"): [0.0], (0, 0.1, "screened"): [0.0]},
+        root_shared_calibration,
+        primary_campaign_id="primary-uuid",
+        primary_source_root=str(primary_root),
         primary_execution_attempt_ids=("attempt-primary",),
     )
     assert widths is None

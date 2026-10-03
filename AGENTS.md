@@ -39,8 +39,15 @@ Layering (respect it strictly):
 4. Never select alpha, a window, an estimator or a stopping rule using the value
    of U, the stability of U between rounds, agreement with experiment/literature,
    or to improve a condition number.
-5. Never infer site equivalences. Use only equivalences declared by
-   `domain/symmetry_reduction.py` with its passed evidence.
+5. Never infer site equivalences from element, label, coordination or chemical similarity, nor from the
+   similarity of U values. Equivalences may be used to reduce perturbations only through a
+   `CoverageQualification` produced by `domain/coverage.py`: operations satisfying F1–F8
+   (`docs/fdebq/HUBBARDFLOW_PERTURBATION_PLANNING_REVIEW.md` §F) with declared tolerance bands, a mandatory shadow
+   column per reduced class, and fallback to explicit perturbation of the whole class on any failure.
+   User-declared equivalences may only restrict a reduction, never add one.
+5b. Features listed as 'disabled by flag' in `docs/fdebq/CODEX_TASKS_PHASE2.md` (spin-flip ε=−1, rotations,
+   automatic species splitting, calibrated α grid, optional shadow) must stay disabled by default and may be enabled
+   only by an explicit policy value that is recorded in the plan digest.
 6. Never invent numerical thresholds. Every tolerance lives in a versioned,
    explicit policy/protocol object and enters its digest. No hidden defaults.
 7. Never introduce `File.DM.Init`; the restart route is `DM.UseSaveDM true`
@@ -50,6 +57,9 @@ Layering (respect it strictly):
    `docs/architecture/SCIENTIFIC_DECOUPLING_VERIFICATION.md`). Report them; don't touch them.
 9. Never change existing behaviour of the FIXED_PROTOCOL_GRID path (V6
    reproduction) unless a task explicitly says so.
+10. `tests/unit/test_import_architecture.py` must pass; its allowlists may only shrink.
+11. Never import a private name (leading underscore) from another module, never call a
+    private method of another class; existing cases are allowlisted for Phase 3.
 
 ## 3. Code style
 

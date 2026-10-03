@@ -1,0 +1,152 @@
+{
+  "diagnostic_only": true,
+  "input_file_sha256": "3c86abab6daf4c0c00a10da6a7e060470e54bcc5364f70a0e2932285c24941e6",
+  "inventory": [
+    {
+      "atom_index": 0,
+      "identity_digest": "30532b988e97b048335f96b7ed97bca58fb8a8a2bb72b416506648ca0f98c888",
+      "l": 2,
+      "n": 3,
+      "site_id": "MnLR00@0:3:2",
+      "species_label": "MnLR00"
+    },
+    {
+      "atom_index": 1,
+      "identity_digest": "30532b988e97b048335f96b7ed97bca58fb8a8a2bb72b416506648ca0f98c888",
+      "l": 2,
+      "n": 3,
+      "site_id": "MnLR01@1:3:2",
+      "species_label": "MnLR01"
+    },
+    {
+      "atom_index": 4,
+      "identity_digest": "30532b988e97b048335f96b7ed97bca58fb8a8a2bb72b416506648ca0f98c888",
+      "l": 2,
+      "n": 3,
+      "site_id": "MnLR02@4:3:2",
+      "species_label": "MnLR02"
+    },
+    {
+      "atom_index": 5,
+      "identity_digest": "30532b988e97b048335f96b7ed97bca58fb8a8a2bb72b416506648ca0f98c888",
+      "l": 2,
+      "n": 3,
+      "site_id": "MnLR03@5:3:2",
+      "species_label": "MnLR03"
+    },
+    {
+      "atom_index": 8,
+      "identity_digest": "30532b988e97b048335f96b7ed97bca58fb8a8a2bb72b416506648ca0f98c888",
+      "l": 2,
+      "n": 3,
+      "site_id": "MnLR04@8:3:2",
+      "species_label": "MnLR04"
+    },
+    {
+      "atom_index": 9,
+      "identity_digest": "30532b988e97b048335f96b7ed97bca58fb8a8a2bb72b416506648ca0f98c888",
+      "l": 2,
+      "n": 3,
+      "site_id": "MnLR05@9:3:2",
+      "species_label": "MnLR05"
+    },
+    {
+      "atom_index": 12,
+      "identity_digest": "30532b988e97b048335f96b7ed97bca58fb8a8a2bb72b416506648ca0f98c888",
+      "l": 2,
+      "n": 3,
+      "site_id": "MnLR06@12:3:2",
+      "species_label": "MnLR06"
+    },
+    {
+      "atom_index": 13,
+      "identity_digest": "30532b988e97b048335f96b7ed97bca58fb8a8a2bb72b416506648ca0f98c888",
+      "l": 2,
+      "n": 3,
+      "site_id": "MnLR07@13:3:2",
+      "species_label": "MnLR07"
+    },
+    {
+      "atom_index": 16,
+      "identity_digest": "30532b988e97b048335f96b7ed97bca58fb8a8a2bb72b416506648ca0f98c888",
+      "l": 2,
+      "n": 3,
+      "site_id": "MnLR08@16:3:2",
+      "species_label": "MnLR08"
+    },
+    {
+      "atom_index": 17,
+      "identity_digest": "30532b988e97b048335f96b7ed97bca58fb8a8a2bb72b416506648ca0f98c888",
+      "l": 2,
+      "n": 3,
+      "site_id": "MnLR09@17:3:2",
+      "species_label": "MnLR09"
+    },
+    {
+      "atom_index": 20,
+      "identity_digest": "30532b988e97b048335f96b7ed97bca58fb8a8a2bb72b416506648ca0f98c888",
+      "l": 2,
+      "n": 3,
+      "site_id": "MnLR10@20:3:2",
+      "species_label": "MnLR10"
+    },
+    {
+      "atom_index": 21,
+      "identity_digest": "30532b988e97b048335f96b7ed97bca58fb8a8a2bb72b416506648ca0f98c888",
+      "l": 2,
+      "n": 3,
+      "site_id": "MnLR11@21:3:2",
+      "species_label": "MnLR11"
+    },
+    {
+      "atom_index": 24,
+      "identity_digest": "30532b988e97b048335f96b7ed97bca58fb8a8a2bb72b416506648ca0f98c888",
+      "l": 2,
+      "n": 3,
+      "site_id": "MnLR12@24:3:2",
+      "species_label": "MnLR12"
+    },
+    {
+      "atom_index": 25,
+      "identity_digest": "30532b988e97b048335f96b7ed97bca58fb8a8a2bb72b416506648ca0f98c888",
+      "l": 2,
+      "n": 3,
+      "site_id": "MnLR13@25:3:2",
+      "species_label": "MnLR13"
+    },
+    {
+      "atom_index": 28,
+      "identity_digest": "30532b988e97b048335f96b7ed97bca58fb8a8a2bb72b416506648ca0f98c888",
+      "l": 2,
+      "n": 3,
+      "site_id": "MnLR14@28:3:2",
+      "species_label": "MnLR14"
+    },
+    {
+      "atom_index": 29,
+      "identity_digest": "30532b988e97b048335f96b7ed97bca58fb8a8a2bb72b416506648ca0f98c888",
+      "l": 2,
+      "n": 3,
+      "site_id": "MnLR15@29:3:2",
+      "species_label": "MnLR15"
+    }
+  ],
+  "output_sha256": "0bb4f72658fd1b72a668949b71c532e82d00862f7b63271b7d07533f935dd10c",
+  "reasons": [
+    "INVENTORY_NOT_ESTABLISHED",
+    "SPECIES_IDENTITY_NOT_ESTABLISHED"
+  ],
+  "reference_admission": {
+    "echoed_input_sha256": "00e984e118d195c7a3cf52bd4ad03aefacfd4dc1e1657f7a121a5afda0a63414",
+    "input_file_sha256": "3c86abab6daf4c0c00a10da6a7e060470e54bcc5364f70a0e2932285c24941e6",
+    "input_output_consistent": true,
+    "nonpolarized_verified": false,
+    "parent_dm_sha256": null,
+    "perturbation_detected": false,
+    "status": "ADMISSIBLE"
+  },
+  "reference_status": "ADMISSIBLE",
+  "schema": "hubbardflow.coverage_diagnostic.v1",
+  "strategy": "ALL_SUBSPACES",
+  "would_reduce_to": 16
+}
