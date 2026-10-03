@@ -10,7 +10,7 @@ from __future__ import annotations
 import math
 import re
 
-from hubbardflow.domain.state_gate import (
+from hubbardflow.domain.state_gate_types import (
     AtomPointState,
     BandEvidenceStatus,
     PointState,
@@ -179,13 +179,15 @@ def _final_mulliken_sz(output_text: str, atom_indices: tuple[int, ...]) -> dict[
     return tables[-1][1]
 
 
-def _parse_eig(eig_text: str, fermi_energy_ev: float) -> tuple[PrintedBandEnergy, ...]:
+def _parse_eig(eig_text: str) -> tuple[str, float, tuple[PrintedBandEnergy, ...]]:
     lines = eig_text.splitlines()
     if len(lines) < 3:
         raise PointStateEvidenceError(".EIG file is truncated before its spectrum")
     fermi_token = lines[0].strip()
     if not _EIG_NUMBER.fullmatch(fermi_token):
         raise PointStateEvidenceError(".EIG first line is not a Fermi energy")
+    fermi_energy_ev = _normal_number(fermi_token)
+    fermi_quantum_ev = _quantum(fermi_token)
     header = lines[1].split()
     if len(header) != 3 or not all(token.isdigit() for token in header):
         raise PointStateEvidenceError(".EIG second line must contain k-point, spin, and band counts")
@@ -228,11 +230,12 @@ def _parse_eig(eig_text: str, fermi_energy_ev: float) -> tuple[PrintedBandEnergy
                         kpoint=kpoint,
                         spin=spin + 1,
                         energy_ev=energy_ev,
+                        energy_token=token,
                         distance_to_fermi_ev=abs(energy_ev - fermi_energy_ev),
                         print_quantum_ev=_quantum(token),
                     )
                 )
-    return tuple(result)
+    return fermi_token, fermi_quantum_ev, tuple(result)
 
 
 def build_point_state(
@@ -246,7 +249,9 @@ def build_point_state(
     ]
     if not fermi_tokens:
         raise PointStateEvidenceError("SIESTA output has no printed Fermi line")
-    fermi_energy_ev = _normal_number(fermi_tokens[-1])
+    fermi_stdout_token = fermi_tokens[-1]
+    fermi_stdout_energy_ev = _normal_number(fermi_stdout_token)
+    fermi_stdout_half_width_ev = 0.5 * _quantum(fermi_stdout_token)
 
     blocks = _selected_matrix_blocks(event, output_text)
     mulliken = _final_mulliken_sz(output_text, tuple(block[0] for block in blocks))
@@ -261,10 +266,22 @@ def build_point_state(
         )
         for atom_index, matrix_up, matrix_down, quantum in blocks
     )
-    bands = () if eig_text is None else _parse_eig(eig_text, fermi_energy_ev)
+    if eig_text is None:
+        fermi_token = fermi_stdout_token
+        fermi_energy_ev = fermi_stdout_energy_ev
+        fermi_quantum_ev = _quantum(fermi_stdout_token)
+        bands: tuple[PrintedBandEnergy, ...] = ()
+    else:
+        fermi_token, fermi_quantum_ev, bands = _parse_eig(eig_text)
+        fermi_energy_ev = _normal_number(fermi_token)
     return PointState(
         atoms=atoms,
         fermi_energy_ev=fermi_energy_ev,
+        fermi_energy_token=fermi_token,
+        fermi_print_quantum_ev=fermi_quantum_ev,
+        fermi_stdout_energy_ev=fermi_stdout_energy_ev,
+        fermi_stdout_token=fermi_stdout_token,
+        fermi_stdout_half_width_ev=fermi_stdout_half_width_ev,
         band_evidence_status=BandEvidenceStatus.NOT_AVAILABLE
         if eig_text is None
         else BandEvidenceStatus.AVAILABLE,

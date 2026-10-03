@@ -132,3 +132,24 @@ El auditor científico independiente revisó TASK 22 §22.4, D13a–c y las secc
 **Decisión requerida:** especificar si G4 toma E_F del stdout, el encabezado `.EIG`, o incluye un margen por la incertidumbre del E_F; confirmar también el tratamiento inclusivo en la frontera de un quantum.
 
 No implementar G2/G4 ni avanzar a 22.5/22.6 hasta recibir estas respuestas del autor. La revisión también recalca que un `PASS` de TASK 22 solo certificará los controles implementados: G3 suavidad queda `NOT_ESTABLISHED` por D13a, y no se afirmarán exactitud SCF, histéresis ni consistencia energética.
+
+### Resolución del autor y ejecución de 22.4
+
+El autor resolvió ambas reglas en `AMENDMENTS_2.md` como R11 y R12 (commit `72539b8`). El auditor científico independiente confirmó que las resoluciones cierran las ambigüedades y que no queda bloqueo científico para 22.4.
+
+- **R11/G2:** `k` depende solo de la referencia: `ε_ref = 4W/(Δ_ref−2W)`, junto con `Δ1−Δ2 > 4W`, `Δ1 > 4W` y `ε_ref < 1/2`; si falla, G2 es `NOT_DEFINED` para ese átomo/espín. En cada punto se evalúa el margen completo. `ε ≥ 1/2` o separación no única del punto produce `SUBSPACE_AMBIGUOUS`; con margen restante, los criterios estrictos de `c−ε > 1/2` y `c+ε < 1/2` definen PASS y `ORBITAL_ORDER_CHANGED`, y los demás casos son ambiguos. La prueba `test_r11_reference_defined_k_and_point_margin_is_ambiguous` incluye el ejemplo `W=2.5e−5`, `Δ_ref=0.1`, `Δ_pt=1.1e−4`, `c=1` y verifica `SUBSPACE_AMBIGUOUS`.
+- **R12/G4:** se usa el E_F y quantum del encabezado del `.EIG`; cada eigenvalor conserva su token y quantum individual. La banda es ambigua con límite inclusivo `|ε−E_F| ≤ q(ε)/2+q(E_F)/2`. La aplicabilidad de referencia usa la misma regla. El E_F de stdout solo comprueba consistencia con tolerancia semiancho(stdout)+q(E_F EIG)/2; un exceso da `NOT_ESTABLISHED:EIG_STDOUT_FERMI_MISMATCH`. Pruebas incluidas para el ejemplo fronterizo del auditor y para el chequeo de consistencia de `bare_p0p04` (diferencia `3e−8`, tolerancia `5e−7+5e−9`).
+
+Ediciones 22.4: `domain/state_gate.py` (records de entrada/wrapper), módulos puros `domain/state_gate_eval.py` y `domain/state_gate_results.py`, parser `siesta_backend/point_state_evidence.py`, `tests/unit/test_state_gate.py` y 50 fixtures comprimidos de la campaña NiO P5 (referencia más los 24 puntos BARE/SCREENED) en `tests/fixtures/i5_real_nio/`. No se editaron golden ni fixtures del replay. No se ejecutó SIESTA como parte de 22.4.
+
+El `verificador_luna` revisó el diff 22.4. Detectó que un punto con gap máximo desplazado y ε≥1/2 en el índice de referencia debía ser `SUBSPACE_AMBIGUOUS` según R11; se corrigió la precedencia (primero split no único, después margen en k de referencia, y luego cambio de k) y se añadió `test_r11_ambiguous_reference_index_margin_precedes_moved_gap_reason`. En la segunda revisión confirmó que el defecto quedó cerrado y que las pruebas adicionales R12 del límite inclusivo de referencia y de `bare_p0p04` corresponden a la resolución del autor; sin bloqueos pendientes.
+
+Verificación focal final antes del commit: `python -m pytest tests/unit/test_point_state_evidence.py tests/unit/test_state_gate.py -q` → `24 passed` (2 advertencias deprecadas existentes); `ruff check` sobre los cinco archivos Python del ítem → `All checks passed!`; `ruff format --check` → `5 files already formatted`; `MYPYPATH=src mypy --strict` sobre los cuatro módulos fuente → `Success: no issues found in 4 source files`.
+
+En el commit de este ítem se volverán a ejecutar y registrar todos los gates obligatorios del §0. Un `PASS` global sigue siendo diagnóstico de los controles implementados: G3 permanece `NOT_ESTABLISHED:SMOOTHNESS_REQUIRES_SCF_LADDER`; no se afirmará exactitud SCF, histéresis ni consistencia energética.
+
+### Corrección detectada por los gates post-commit 22.4
+
+La primera pasada post-commit detectó que el import diferido de `state_gate_eval` aún cuenta como ciclo arquitectónico entre `domain/state_gate.py` y `domain/state_gate_eval.py`. Se separaron los records de entrada a `domain/state_gate_types.py`; el evaluador y el parser SIESTA importan esos records directamente, y `state_gate.py` conserva la fachada pública. `tests/unit/test_point_state_evidence.py tests/unit/test_state_gate.py tests/unit/test_import_architecture.py` → `32 passed`; ruff indicó solo formato/imports en los archivos reestructurados, ya corregidos. `verificador_luna` revisó esta separación y confirmó que mantiene fields/validaciones, rompe el ciclo y deja commit-ready. No se ejecutó SIESTA.
+
+La primera invocación del replay en WSL falló por llamar `python` (no instalado allí); se verificó `/usr/bin/python3` y `/usr/bin/pytest`. Se repetirá como `python3 -m pytest` en la siguiente pasada completa; esto fue un problema de intérprete de la invocación, no una premisa falsa del ítem.
