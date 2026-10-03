@@ -43,14 +43,15 @@ The output stopped at `stepf: Fermi-Dirac step function` (1071 lines),
 04:26:33.189 local time. The output's mtime was 04:26:33.183620; the nohup
 `run.log` was last written at 04:26:33.189. The `run.pid` record was written at
 04:26:28.140. The launch shell used `nohup ... &` followed by `sleep 4`; the
-`wsl.exe` command returned after about 7.9 seconds. An exact terminal-return
-wall-clock timestamp was not recorded, so it cannot be compared more finely.
-The close timing is consistent with the author's SIGHUP hypothesis: SIESTA
-stopped writing at the worker's termination, around the time the launching
-shell returned. It does not prove that SIGHUP caused the MPI abort; no signal
-trace was recorded.
+`wsl.exe` invocation duration was recorded as about 7.9 seconds, implying a
+rough return time near 04:26:36 if measured from the `run.pid` timestamp. No
+exact terminal-return timestamp or outer `wsl.exe` command transcript was
+saved. On that approximate timeline `siesta.out` stopped about three seconds
+before `wsl.exe` returned, so the recorded times **contradict** the specific
+claim that it stopped writing seconds after the launch command finished. They
+do not establish what stopped SIESTA, and no signal trace was recorded.
 
-The exact first `run` command was:
+The exact `run` command passed to the launch shell was:
 
 ```sh
 nohup env PYTHONPATH="$code/src" "$py" -m hubbardflow.cli run inputs/reference.fdf --lr-config inputs/lr_config.json --profile inputs/execution_profile.json --name nio_p5_product --output-dir product > run.log 2>&1 < /dev/null &
