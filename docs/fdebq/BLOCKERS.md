@@ -390,3 +390,15 @@ The extra failure in `tests/unit/test_scf_validation.py::test_materializer_rejec
 ## Phase 2 close — 20.9 initial difference superseded by R10
 
 R10 clarified the plan-ID versus manifest-ID namespaces. The current-code rerun now matches the archived NiO P5 manifest sites and all 24 DAG identities in manifest space, and all 24 materialized FDF SHA256 values match node-evidence. The earlier R4 stop was based on comparing the base-0 plan site ID directly to the manifest's DFTU label; that comparison is superseded. CoO, MnO v3r2 and Cu3N remain NOT_COVERED as R4 states.
+
+## Phase 2 close — 20.5 resolved under R9
+
+`b6a85d1` implements 20.5. R9 replaces the prior R3 stop: exact rational, mesh-commensurate translations must be retained, while the accepted loss of near-symmetry candidates is a conservative Phase 3 limitation. The requested fresh ring4/ring8 probe and independent auditor `RISK_COVERED` verdict are recorded in `PHASE2_CLOSE_LOG.md`. Resolve the old active-stop wording above as historical only.
+
+## Phase 2 close — 20.11 `PREMISE_FALSE`
+
+R10 leaves only the NiO P5 archive chain in 20.9's compatible golden; CoO, MnO and Cu3N are recorded `NOT_COVERED`. Since 20.11 requires four DISABLED 20.9 plan digests, its required input set is incomplete. Do not fabricate substitute archive digests from unrelated equivalence goldens; see `PHASE2_CLOSE_LOG.md`. Skip 20.11 and continue with independent 20.10.
+
+## Phase 2 close — 20.10 dependency cleared
+
+The 20.5 prerequisite was implemented in `b6a85d1`: optional `spglib` enumeration is absent and the current planner version is `campaign-planner-v2`. Continue with 20.10's premise checks and architecture work.

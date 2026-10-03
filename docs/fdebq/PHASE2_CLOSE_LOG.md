@@ -746,3 +746,18 @@ Orchestrator final gates after the lr-config binding hardening (2026-10-03):
 - Strict mypy configured sources → `Success: no issues found in 91 source files`; new files → `Success: no issues found in 2 source files`.
 - V6: `bash tools/check_v6_integrity.sh` → `V6 GATE OK`.
 - `git diff --check` → clean. No SIESTA run.
+
+### R9 supersedes the historical 20.5 stop
+
+The prior R3 counterexample concerns a near-symmetry offset by `0.75*tau`; R9 explicitly accepts losing that non-exact candidate and requires tracking it for Phase 3 before TASK 22 reductions. The exact-translation condition remains strict. Fresh no-spglib probe using `candidate_operations` on `_ring((0.8,)*4)` and `_ring((0.8,)*8)` with `EquivalenceBands(1e-9, 1e-6)` found all rational translations:
+
+```text
+n=4 exact_translation_count=4 expected_count=4 all_present=True values=[('0', '0', '0'), ('1/2', '0', '0'), ('1/4', '0', '0'), ('3/4', '0', '0')]
+n=8 exact_translation_count=8 expected_count=8 all_present=True values=[('0', '0', '0'), ('1/2', '0', '0'), ('1/4', '0', '0'), ('1/8', '0', '0'), ('3/4', '0', '0'), ('3/8', '0', '0'), ('5/8', '0', '0'), ('7/8', '0', '0')]
+```
+
+Independent `auditor_cientifico` re-audit under R9 returned `RISK_COVERED`. It also confirmed the R5 edit is confined to the authorized F8 assertion, exact rational maps require ε=+1 and mesh commensurability, planner version v2 is in the digest, and flags remain off by default. The retained limitations are (1) non-orthogonal rotation enumeration and (2) near-symmetry detection without spglib; both are conservative lost-savings limitations and must be resolved before enabling reductions in TASK 22. The existing 20.5 implementation is commit `b6a85d1`; the stale R3 stop is historical only.
+
+### 20.11 four-plan golden premise check
+
+R10 supersedes 20.9's four-archive equivalence comparison with one compatible archived chain (NiO P5); it explicitly marks CoO, MnO and Cu3N `NOT_COVERED` for 20.9 archive equivalence. `rg --files tests/fixtures/phase2_golden` returned only `tests/fixtures/phase2_golden/nio_p5.json`, and the R10 section above records no archived plan/node-evidence golden for those other three. The 20.11 change explicitly requires pinning four DISABLED plan digests belonging to 20.9. Thus the stated four-plan input is absent under the R10 scope. Record this premise as `PREMISE_FALSE`; do not derive replacement historical digests from unrelated TASK 13/TASK 21 equivalence evidence. Skip the complete 20.11 item and continue to independent 20.10.
