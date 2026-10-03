@@ -39,6 +39,7 @@ from hubbardflow.execution.campaign_v2 import (
 )
 from hubbardflow.execution.campaign_plan import campaign_inventory
 from hubbardflow.execution.campaign_shadow import CampaignShadow
+from hubbardflow.execution.campaign_store import CampaignStore, atomic_json as _atomic_json
 from hubbardflow.execution.dag_contract import NodeState
 from hubbardflow.execution.execution_profile import ExecutionProfile
 from hubbardflow.execution.response_grid_context import response_grid_source_campaign_context
@@ -94,13 +95,6 @@ def _validate_resume_config(
     return validate_lr_config(
         config, fdf_species, projector_sites, atom_count, inventory=inventory,
     )
-
-
-def _atomic_json(path: Path, payload: Mapping[str, Any]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = path.with_suffix(path.suffix + ".tmp")
-    temporary.write_text(json.dumps(payload, sort_keys=True, indent=2, allow_nan=False) + "\n", encoding="utf-8")
-    temporary.replace(path)
 
 
 def _digest(value: Any) -> str:
@@ -465,6 +459,7 @@ class CampaignRunner:
             if self.shadow is not None:
                 self.shadow.install(self)
         self.records_path = self.control / "node-evidence.json"
+        self.store = CampaignStore(self.records_path, lambda: self.executor.checkpoint)
         self.records = self._load_records()
         self.reference_fdf = fdf_path
         self.reference_dm_name = self.config["reference_dm_name"]
@@ -613,18 +608,7 @@ class CampaignRunner:
         )
 
     def _load_records(self) -> dict[str, Any]:
-        try:
-            value = json.loads(self.records_path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError):
-            return {}
-        if not isinstance(value, dict):
-            return {}
-        identity = value.get("identity")
-        expected = self._identity()
-        if identity != expected:
-            raise ExecutionContractError("node evidence belongs to a different campaign input/DAG identity")
-        records = value.get("nodes", {})
-        return records if isinstance(records, dict) else {}
+        return self.store.load_records(self._identity())
 
     def _identity(self) -> dict[str, str]:
         if getattr(self, "shadow", None) is not None:
@@ -646,10 +630,17 @@ class CampaignRunner:
         }
 
     def _save_records(self) -> None:
-        _atomic_json(self.records_path, {"identity": self._identity(), "nodes": self.records})
+        self.save_records()
+
+    def save_records(self) -> None:
+        self.store.records = self.records
+        self.store.save_records(self._identity())
 
     def _checkpoint(self) -> dict[str, NodeReceipt]:
-        return self.executor.checkpoint.load()
+        return self.checkpoint()
+
+    def checkpoint(self) -> dict[str, NodeReceipt]:
+        return self.store.checkpoint()
 
     def _reserve_adaptive_node(self, node: LRDagNode) -> bool:
         if self.adaptive_policy is None or self.adaptive_state is None:
@@ -871,60 +862,15 @@ class CampaignRunner:
                 self.factory.reference_completed(dm, reference_node.scf_level_id or "base")
 
     def _archive_unvalidated_attempts(self, node_ids: set[str]) -> None:
-        archive = self.control / "archive" / "attempts"
-        for node_id in node_ids:
-            key = sha256(node_id.encode()).hexdigest()[:20]
-            node_root = self.control / "attempts" / key
-            if not node_root.is_dir():
-                continue
-            for attempt in list(node_root.iterdir()):
-                if not attempt.is_dir():
-                    continue
-                destination = archive / key / f"{attempt.name}-{time.time_ns()}"
-                destination.parent.mkdir(parents=True, exist_ok=True)
-                try:
-                    attempt.replace(destination)
-                except OSError:
-                    # Keep the original forensic data and do not reuse it; the
-                    # next materialization always receives a unique attempt ID.
-                    pass
+        self.store.archive_unvalidated_attempts(self.control, node_ids)
 
     def _archive_orphaned_attempts(self, receipts: Mapping[str, NodeReceipt]) -> None:
-        """Archive partial/orphan attempts while retaining validated node dirs."""
-        retained: set[Path] = set()
-        for node_id, receipt in receipts.items():
-            record = self.records.get(node_id, {})
-            command = record.get("command", {}) if isinstance(record, dict) else {}
-            if receipt.state is NodeState.VALIDATED and isinstance(command, dict) and command.get("cwd"):
-                retained.add(Path(command["cwd"]).parent.resolve())
-        attempts_root = self.control / "attempts"
-        if not attempts_root.is_dir():
-            return
-        archive_root = self.control / "archive" / "attempts"
-        for node_root in attempts_root.iterdir():
-            if not node_root.is_dir():
-                continue
-            for attempt in list(node_root.iterdir()):
-                if not attempt.is_dir() or attempt.resolve() in retained:
-                    continue
-                destination = archive_root / node_root.name / f"{attempt.name}-{time.time_ns()}"
-                destination.parent.mkdir(parents=True, exist_ok=True)
-                try:
-                    attempt.replace(destination)
-                except OSError:
-                    pass
+        self.store.records = self.records
+        self.store.archive_orphaned_attempts(self.control, receipts)
 
     def _record_receipt(self, node: LRDagNode, receipt: NodeReceipt, extra: Mapping[str, Any] | None = None) -> None:
-        self.records[node.node_id] = {
-            "state": receipt.state.value,
-            "evidence_digest": receipt.evidence_digest,
-            "recorded_epoch": time.time(),
-            **dict(extra or {}),
-        }
-        self._save_records()
-        receipts = self._checkpoint()
-        receipts[node.node_id] = receipt
-        self.executor.checkpoint.save(receipts)
+        self.store.records = self.records
+        self.store.record_receipt(self._identity(), node, receipt, extra)
 
     def _command_record(self, node: LRDagNode, command: Any, receipt: NodeReceipt) -> dict[str, Any]:
         spec = self.admitted.factory.artifacts[node.node_id]

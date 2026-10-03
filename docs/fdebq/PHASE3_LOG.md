@@ -176,3 +176,25 @@ The Part A fixture files and detached campaign remain unmodified during Phase
   `SlurmAllocationExecutor` passes its validated mapping to the delegated local
   executor. The new test confirms the profile value reaches a child process and
   mocked `scontrol` while `os.environ` remains unchanged.
+- Post-commit `0d0c68a` full suites passed: Windows 1,351 passed, 25 skipped,
+  20 xfailed in 287.36 seconds; WSL 1,356 passed, 20 skipped, 20 xfailed in
+  608.20 seconds. Ruff, format, configured strict mypy (91 source files),
+  product tests (23 including P5 golden), science/architecture tests (78), and
+  V6 also passed. The replay is included in both full suites; Windows skips it
+  and WSL executes it.
+
+## 3.4 Persistence store
+
+- Extracted record loading/saving, live checkpoint access, receipt persistence,
+  and unvalidated/orphan attempt archiving to `CampaignStore`. Its checkpoint
+  accessor resolves `runner.executor.checkpoint` on each operation, so a
+  shadow/adaptive graph replacement is observed without retaining the previous
+  manager. `CampaignRunner` retains delegators and public `checkpoint()` /
+  `save_records()` methods; `save_records()` computes the current identity.
+- `CampaignShadow` now uses the public runner methods for checkpoint reads and
+  record saves. Receipt persistence still writes the record before saving the
+  checkpoint. The standalone `atomic_json` helper moved into the store module
+  and remains imported as the runner's private alias.
+- Added a test that records initial evidence, invokes the real shadow barrier
+  to expand/install a replacement graph, then saves and reloads through the
+  store and confirms the new checkpoint manager is used.

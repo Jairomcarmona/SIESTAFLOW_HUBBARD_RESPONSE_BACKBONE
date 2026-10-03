@@ -128,7 +128,7 @@ class CampaignShadow:
             (),
             ShadowReason.INCOMPLETE_RESPONSE_EVIDENCE,
         )
-        failed = runner._checkpoint()[node.node_id]
+        failed = runner.checkpoint()[node.node_id]
         self.failed_runs.append(
             {
                 "node_id": node.node_id,
@@ -136,10 +136,10 @@ class CampaignShadow:
                 "record": runner.records[node.node_id],
             }
         )
-        receipts = {k: v for k, v in runner._checkpoint().items() if k != node.node_id}
+        receipts = {k: v for k, v in runner.checkpoint().items() if k != node.node_id}
         runner.executor.checkpoint.save(receipts)
         runner.records.pop(node.node_id, None)
-        runner._save_records()
+        runner.save_records()
         return self._expand(runner, (outcome,))
 
     def _data(
@@ -215,10 +215,10 @@ class CampaignShadow:
     def replay_barrier(self, runner: CampaignRunner) -> None:
         """Resume grants no shadow status from JSON; recompute derived evidence."""
         derived = {"alpha-diagnostic-gate", "matrix-analysis"}
-        runner.executor.checkpoint.save({k: v for k, v in runner._checkpoint().items() if k not in derived})
+        runner.executor.checkpoint.save({k: v for k, v in runner.checkpoint().items() if k not in derived})
         for key in derived:
             runner.records.pop(key, None)
-        runner._save_records()
+        runner.save_records()
 
     def analysis_data(
         self, runner: CampaignRunner

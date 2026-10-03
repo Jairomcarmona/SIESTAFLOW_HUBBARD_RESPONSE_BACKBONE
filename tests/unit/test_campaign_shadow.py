@@ -37,6 +37,7 @@ from hubbardflow.domain.symmetry_reduction import ResponseMode
 from hubbardflow.execution.campaign_runner import CampaignRunner, _build_dag, _Heartbeat
 from hubbardflow.execution.campaign_shadow import CampaignShadow
 from hubbardflow.execution.campaign_shadow_inputs import build_shadow_dag, observation_series
+from hubbardflow.execution.campaign_store import CampaignStore
 from hubbardflow.execution.dag_contract import NodeState
 from hubbardflow.execution.generic_executor import (
     ExecutionContractError,
@@ -143,6 +144,7 @@ def _runner(
     else:
         runner.dag, runner.specs = _build_dag(runner.sites, runner.alpha_grid)
         runner.executor = GenericDagExecutor(runner.dag, runner.checkpoint_path)
+    runner.store = CampaignStore(runner.records_path, lambda: runner.executor.checkpoint)
     runner.records = runner._load_records()
     executed: list[str] = []
     heartbeat = _Heartbeat(runner.control / "state.json", campaign_id="synthetic")
@@ -255,6 +257,34 @@ def test_failed_shadow_expands_and_equals_explicit_raw_matrix(
     assert shadow["outcomes"][0]["status"] == "REJECTED_EXPANDED"
     assert shadow["outcomes"][0]["reason"] == "OUTSIDE_PRINT_BOUNDS"
     assert len(shadow["outcomes"][0]["comparisons"]) == 8
+
+
+def test_store_uses_post_expansion_checkpoint_and_round_trips_records(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    runner, _, _ = _runner(tmp_path, monkeypatch, _plan(), fail=True)
+    assert runner.shadow is not None
+    initial_checkpoint = runner.executor.checkpoint
+
+    for node in runner.dag.nodes:
+        if node.kind.value == "PERTURBATION":
+            runner._record_receipt(node, NodeReceipt(node.node_id, NodeState.VALIDATED, DIGEST))
+
+    # The real barrier observes incomplete evidence, expands the plan, and
+    # installs a replacement executor after the runner/store already exist.
+    assert runner.shadow.prepare(runner) is False
+    assert runner.executor.checkpoint is not initial_checkpoint
+
+    node = runner.dag.nodes[0]
+    receipt = NodeReceipt(node.node_id, NodeState.VALIDATED, DIGEST)
+    runner._record_receipt(node, receipt, {"kind": "post-expansion-store-test"})
+    assert runner.checkpoint()[node.node_id] == receipt
+
+    reloaded = CampaignStore(runner.records_path, lambda: runner.executor.checkpoint)
+    records = reloaded.load_records(runner._identity())
+    assert records[node.node_id]["kind"] == "post-expansion-store-test"
+    assert reloaded.checkpoint()[node.node_id] == receipt
 
 
 def test_production_without_complete_orbital_gap_and_smoothness_gate_expands(

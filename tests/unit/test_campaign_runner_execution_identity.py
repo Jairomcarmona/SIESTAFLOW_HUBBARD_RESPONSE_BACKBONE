@@ -5,6 +5,7 @@ from types import SimpleNamespace
 from hubbardflow.execution.campaign_runner import CampaignRunner
 from hubbardflow.execution.dag_contract import NodeState
 from hubbardflow.execution.generic_executor import NodeReceipt
+from hubbardflow.execution.campaign_store import CampaignStore
 
 
 class _Checkpoint:
@@ -65,6 +66,7 @@ def test_runtime_identity_uses_only_receipted_active_grid_and_scf_level(tmp_path
     runner.records = {}
     receipts = {}
     runner.executor = SimpleNamespace(checkpoint=_Checkpoint(receipts))
+    runner.store = CampaignStore(root / "node-evidence.json", lambda: runner.executor.checkpoint)
 
     reference = _source(root, "reference:strict", "REFERENCE_SCREENED", "aaaaaaaa", receipts, runner.records)
     bare = _source(root, "response:strict:bare", "BARE", "bbbbbbbb", receipts, runner.records)
