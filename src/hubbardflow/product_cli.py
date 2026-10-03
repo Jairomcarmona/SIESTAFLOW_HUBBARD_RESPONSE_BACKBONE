@@ -181,6 +181,7 @@ def _execute_product_campaign(
     campaign_root: Path | None,
 ) -> int:
     from hubbardflow.execution.campaign_runner import run_campaign_worker
+    from hubbardflow.execution.execution_profile import ExecutionProfile
     from hubbardflow.execution.product_models import ProductSnapshot, canonical
 
     if not isinstance(snapshot, ProductSnapshot) or snapshot.planning is None:
@@ -193,7 +194,23 @@ def _execute_product_campaign(
     if config_text is None:
         raise ProductError("admissible product execution requires a frozen lr-config")
     frozen_config = json_object(config_text)
-    campaign_parent = (campaign_root or root / "campaigns").resolve()
+    profile = ExecutionProfile.from_mapping(json_object(profile_path.read_text(encoding="utf-8")))
+    pointer_path: Path | None = None
+    if profile.target == "local_wsl":
+        # Legacy local_wsl init always creates the campaign in the profile's
+        # workspace and writes a control pointer; mirror that instead of
+        # silently ignoring --campaign-root.
+        assert profile.wsl is not None
+        workspace = Path(profile.wsl.workspace_root).resolve()
+        if campaign_root is not None and campaign_root.resolve() != workspace:
+            raise ProductError(
+                f"local_wsl campaigns are created in the profile's wsl.workspace_root ({workspace}); "
+                "omit --campaign-root or set it to that path"
+            )
+        campaign_parent = workspace
+        pointer_path = root / "campaign.pointer.json"
+    else:
+        campaign_parent = (campaign_root or root / "campaigns").resolve()
     destination = campaign_parent / name
     protect_product_destination(destination)
     if not name or Path(name).name != name or name in {".", ".."}:
@@ -212,6 +229,7 @@ def _execute_product_campaign(
             profile_path=str(profile_path.resolve(strict=True)),
             name=name,
             campaign_root=str(campaign_parent),
+            pointer_path=None if pointer_path is None else str(pointer_path),
         )
     finally:
         temporary_config.unlink(missing_ok=True)

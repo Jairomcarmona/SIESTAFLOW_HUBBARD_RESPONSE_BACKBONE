@@ -193,6 +193,86 @@ def test_product_direct_grid_links_legacy_campaign_without_running_siesta(
     assert not any(tmp_path.rglob("*.out"))
 
 
+def test_local_wsl_product_campaign_uses_workspace_and_pointer(tmp_path: Path, monkeypatch: Any) -> None:
+    executable = tmp_path / "siesta"
+    executable.write_bytes(b"test backend identity; never executed")
+    fdf, raw_config, profile = inputs(tmp_path / "inputs")
+    _profile_with_test_backend(profile, executable)
+    _bind_test_backend(Path(raw_config["compatibility_registry"]), executable)
+    profile_data = json.loads(profile.read_text(encoding="utf-8"))
+    profile_data["target"] = "local_wsl"
+    profile_data.pop("slurm")
+    workspace = tmp_path / "wsl-workspace"
+    workspace_root = workspace.as_posix()
+    if len(workspace_root) >= 3 and workspace_root[1:3] == ":/":
+        workspace_root = workspace_root[2:]
+    profile_data["wsl"] = {
+        "distribution": "Ubuntu",
+        "python_executable": "/usr/bin/python3",
+        "workspace_root": workspace_root,
+    }
+    profile_data["allocation"]["total_cpus"] = 1
+    profile_data["runtime"]["launcher"] = {
+        "kind": "openmpi",
+        "command": ["mpirun.openmpi"],
+        "bootstrap": "local",
+        "processes_per_node": 1,
+    }
+    profile.write_text(json.dumps(profile_data), encoding="utf-8")
+    raw_config["coverage"] = "DISABLED"
+    raw_config["sites"] = normalized(fdf, raw_config)["sites"]
+    config_path = fdf.parent / "lr.json"
+    config_path.write_text(json.dumps(raw_config), encoding="utf-8")
+    request = ProductRequest(
+        str(fdf.resolve()),
+        str(config_path.resolve()),
+        None,
+        None,
+        CampaignCoverage.DISABLED,
+        None,
+        (str(fdf.parent.resolve()),),
+        None,
+        None,
+    )
+    snapshot = resolve_product_snapshot(request)
+    product_root = tmp_path / "product"
+    freeze_product_snapshot(product_root, snapshot)
+    frozen_snapshot = load_product_snapshot(product_root)
+    worker_calls: list[tuple[str, str]] = []
+
+    def fake_worker(manifest: Path, mode: str) -> int:
+        worker_calls.append((str(manifest), mode))
+        return 0
+
+    monkeypatch.setattr("hubbardflow.execution.campaign_runner.run_campaign_worker", fake_worker)
+    with pytest.raises(ProductError, match="workspace_root"):
+        _execute_product_campaign(
+            product_root,
+            frozen_snapshot,
+            profile_path=profile,
+            name="product-run",
+            campaign_root=tmp_path / "different-campaign-root",
+        )
+    assert worker_calls == []
+
+    assert (
+        _execute_product_campaign(
+            product_root,
+            frozen_snapshot,
+            profile_path=profile,
+            name="product-run",
+            campaign_root=None,
+        )
+        == 0
+    )
+    assert len(worker_calls) == 1 and worker_calls[0][1] == "run"
+    manifest_path = Path(worker_calls[0][0]).resolve()
+    assert manifest_path == (workspace / "product-run" / "campaign.v2.json").resolve()
+    pointer_path = product_root / "campaign.pointer.json"
+    pointer = json.loads(pointer_path.read_text(encoding="utf-8"))
+    assert Path(pointer["manifest_path"]).resolve() == manifest_path
+
+
 @pytest.mark.parametrize("changed_input", ["fdf", "pseudopotential"])
 def test_source_change_after_admission_stops_before_worker(
     tmp_path: Path, monkeypatch: Any, changed_input: str
