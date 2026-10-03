@@ -57,6 +57,19 @@ Base: `84b8eb6` (`origin/fdebq/r2-task15-species-split`). Branch: `fdebq/r3-task
 | 20.6/P4 | TRUE | `Get-Content src/hubbardflow/execution/product_paths.py` lines 45–49 checks `Path(relative).drive`; the WSL Linux probe printed an empty `Path("C:/outside").drive`. |
 | 20.6/P5 | TRUE | `rg -n 'setattr\(product_paths, "WORKSPACE"' tests/unit/test_product_paths.py` found four callers at lines 64, 78, 90, 99; the `test_missing_manifest_fails_closed` test is among them. |
 | 20.7/P1 | TRUE | `rg`/`Get-Content` showed `cli.py` attaches `add_product_options` to every `run`. Venv Python probe made a schema-valid v2 manifest, mocked `run_campaign_worker`, ran `cli.main(["run", manifest, "--output-dir", ignored])`; output was `exit: 17` and one worker call with mode `run`. |
+| 20.2/P1 | TRUE (author-specified source) | Recursive local search found no SIESTA 5.4.2 manual PDF. Per item instruction, recorded the spec author's verification: manual p.19 says FDF labels are case insensitive and `-`, `_`, `.` are ignored. |
+| 20.2/P2 | TRUE | `Get-Content src/hubbardflow/siesta_backend/fdf_model.py` lines 147–149 shows `_directives` uses `re.escape(key)` with `re.IGNORECASE`, which does not normalize punctuation. |
+| 20.2/P3 | TRUE | Same source lines 161–182 casefolds block names, but does not remove punctuation. |
+| 20.2/P4 | TRUE | `Get-Content src/hubbardflow/siesta_backend/coverage_reference.py` lines 34–47 uses literal regex labels `DFTU.PotentialShift` and `%block DFTU.proj`, case-insensitive only. |
+| 20.2/P5 | TRUE | Temporary-file Python probe built a minimal parseable FDF per spelling and called `parse_effective_fdf`: `Spin_Orbit T`, `spin.orbit true`, `Non-Collinear-Spin T` each returned `spin_orbit=False, noncollinear=False`. |
+
+## 20.2 pre-change FDF census
+
+- Command: Python `Path.rglob('*.fdf')` over the repository, excluding `.git` and virtual environments, then `parse_effective_fdf` on every path. Result: `197` repository FDFs; `130` parse before 20.2.
+- In the same census, `validate_reference_fdf(text, 'PBE')` accepted `40`; all `40` also parsed with the strict model (`LEGACY_AND_STRICT 40`, `LEGACY_NOT_STRICT` empty).
+- The item asks for an independent scientific audit before any implementation. No 20.2 code has been changed.
+- Auditor verdict: `RISK_UNCOVERED`, stop 20.2 before implementation. Evidence: the managed-label rule at §20.2.3 covers `ChemicalSpeciesLabel` because `fdf_builder.py` writes it and `fdf_model.py` reads it, so the punctuation variant must be rejected; §20.2 Acceptance also requires `Chemical_Species_Label` to be read. The specification does not define whether “read” means recognized before rejection or accepted as a block. No exception or scientific choice was inferred.
+- 20.3 explicitly depends on 20.2's canonical-label behavior, so it cannot proceed until the author resolves this risk. Continue with the next independent item in §3.
 
 ## 20.7 checks
 

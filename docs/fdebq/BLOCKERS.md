@@ -316,3 +316,7 @@ SIESTA campaigns were started.
 ## Phase 2 close — deuda preexistente de análisis estático
 
 `src/hubbardflow/execution/campaign_runner.py` no pertenece a los archivos configurados en `pyproject.toml`. En `84b8eb6` y después del cambio 20.1 mantiene 23 violaciones Ruff, 1 archivo no formateado y 24 errores mypy strict. La tarea no reformateará ni limpiará este módulo completo; esta deuda queda para Fase 3. No aumentó ningún conteo y las líneas modificadas no tienen diagnósticos Ruff ni mypy.
+
+## Phase 2 close — RISK_UNCOVERED en 20.2
+
+La auditoría científica detuvo 20.2 antes de implementar. La especificación §20.2.3 declara administradas las etiquetas que HubbardFlow escribe o lee; `fdf_builder.py` escribe `ChemicalSpeciesLabel` y `fdf_model.py` la lee. Por tanto, `Chemical_Species_Label` debe rechazarse como `NONCANONICAL_MANAGED_LABEL`, mientras §20.2 Acceptance también exige que se lea. No está definido si “is read” significa reconocerla antes del rechazo o aceptar el bloque. Resolverlo por código escogería qué FDF participa en el inventario y la campaña científica. Se requiere aclaración del autor y, si se espera aceptarla, una regla de etiquetas administradas corregida. No se implementó 20.2.
