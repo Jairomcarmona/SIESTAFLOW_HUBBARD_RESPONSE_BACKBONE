@@ -312,3 +312,7 @@ archived fixed-grid tests verify plan equivalence, frozen-plan consumption,
 identity invalidation and simulator prohibition. Full fake-SIESTA execution
 and kill/restart are deferred with the unavailable production chain. No
 SIESTA campaigns were started.
+
+## Phase 2 close — deuda preexistente de análisis estático
+
+`src/hubbardflow/execution/campaign_runner.py` no pertenece a los archivos configurados en `pyproject.toml`. En `84b8eb6` y después del cambio 20.1 mantiene 23 violaciones Ruff, 1 archivo no formateado y 24 errores mypy strict. La tarea no reformateará ni limpiará este módulo completo; esta deuda queda para Fase 3. No aumentó ningún conteo y las líneas modificadas no tienen diagnósticos Ruff ni mypy.

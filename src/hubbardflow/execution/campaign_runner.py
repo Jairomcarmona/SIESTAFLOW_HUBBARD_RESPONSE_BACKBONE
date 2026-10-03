@@ -70,6 +70,32 @@ HEARTBEAT_SECONDS = 15
 _F20_12_PATCH_SHA256 = "3539150217903b2665102a44396a9d84281fc91e1170819dc79e413af15d0116"
 
 
+def _validate_resume_config(
+    config: Mapping[str, Any],
+    fdf_path: Path,
+    fdf_species: Mapping[str, int],
+    projector_sites: list[str],
+    atom_count: int,
+    perturbation_plan: Any,
+) -> dict[str, Any]:
+    """Use the pre-plan validator for legacy manifests and strict inventory for frozen plans.
+
+    Campaigns initialized before Phase 2 have no frozen perturbation plan and
+    must retain their original FDF acceptance rules on resume. The strict
+    effective-FDF parser is part of inventory construction, so it applies only
+    when the manifest carries the Phase-2 plan that was validated at init.
+    """
+    if perturbation_plan is None:
+        return validate_lr_config(config, fdf_species, projector_sites, atom_count)
+    inventory = campaign_inventory(
+        fdf_path,
+        tuple(sorted({Path(p).parent for p in config["pseudopotentials"].values()}, key=str)),
+    )
+    return validate_lr_config(
+        config, fdf_species, projector_sites, atom_count, inventory=inventory,
+    )
+
+
 def _atomic_json(path: Path, payload: Mapping[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
@@ -382,9 +408,11 @@ class CampaignRunner:
         if atoms_match is None:
             raise CampaignV2Error("reference FDF lacks NumberOfAtoms")
         self.atom_count = int(atoms_match.group(1))
-        inventory = campaign_inventory(fdf_path, tuple(sorted({Path(p).parent for p in self.config["pseudopotentials"].values()}, key=str)))
-        self.config = validate_lr_config(self.config, fdf_species, projector_sites, self.atom_count, inventory=inventory)
         self.perturbation_plan = self.campaign["_perturbation_plan"]
+        self.config = _validate_resume_config(
+            self.config, fdf_path, fdf_species, projector_sites, self.atom_count,
+            self.perturbation_plan,
+        )
         if functional != self.campaign["functional"] or self.config["functional"] != functional:
             raise CampaignV2Error("campaign functional differs from effective reference FDF/config")
         if self.config["xc_profile"] != self.campaign["_xc_profile"]:
