@@ -331,9 +331,9 @@ R8 authorized repairing the alias fixture and asserting `MISMATCH` for raw-ident
 
 R3(a) resolves the specific existing F8-test conflict and authorizes its named test edit. R3(b) resolves the rotation enumeration issue as a known Phase 3 limitation. The active stop is the independent translation-loss counterexample: without spglib, the internal candidate search drops a valid t=0.25 translation within the declared geometry tolerance. Details and the auditor's exact evidence are in `PHASE2_CLOSE_LOG.md`. No 20.5 implementation was made.
 
-## Phase 2 close — 20.9 detenido por diferencia de NiO P5
+## Phase 2 close — intento inicial de 20.9 superseded by R10
 
-R4 designó `campaigns/nio_pbe_p5_20260928/` como la única cadena archivada compatible. La inicialización actual con coverage=DISABLED reproduce 24 run specs, los mismos átomos, modos y alphas de manifiesto/node-evidence, pero no reproduce el conjunto exacto `(site, atom, mode, alpha)`: los sitios actuales son `NiLR0@0:3:2` y `NiLR1@1:3:2`, frente a `NiLR0` y `NiLR1` archivados. La comparación se detiene según R4; no se cambió código ni se generaron entradas para corregir la diferencia. CoO, MnO y Cu3N quedan `NOT_COVERED` en el log.
+El bloqueo R4 reportado inicialmente comparaba ids del plan base 0 con etiquetas de manifiesto base 1. R10 define que esos son espacios distintos; la verificación exacta en espacio de manifiesto y de node-evidence queda registrada abajo y resolvió esa diferencia. CoO, MnO y Cu3N permanecen `NOT_COVERED`.
 
 
 ## Phase 2 close — 20.11 dependency
@@ -386,3 +386,7 @@ The required full suite was rerun with `--continue-on-collection-errors`. It rep
 ## R6 resolved the temporary full-suite delta
 
 The extra failure in `tests/unit/test_scf_validation.py::test_materializer_rejects_missing_parent_assets_and_unsafe_restart` was corrected in R6 by moving the canonical `File.DM.Init` guard ahead of FDF parsing. The existing test now passes unchanged, and the full suite again matches `BASELINE_FAILURES` exactly. See the R6 gate record in `PHASE2_CLOSE_LOG.md`.
+
+## Phase 2 close — 20.9 initial difference superseded by R10
+
+R10 clarified the plan-ID versus manifest-ID namespaces. The current-code rerun now matches the archived NiO P5 manifest sites and all 24 DAG identities in manifest space, and all 24 materialized FDF SHA256 values match node-evidence. The earlier R4 stop was based on comparing the base-0 plan site ID directly to the manifest's DFTU label; that comparison is superseded. CoO, MnO v3r2 and Cu3N remain NOT_COVERED as R4 states.
