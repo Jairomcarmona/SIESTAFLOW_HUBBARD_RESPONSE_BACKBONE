@@ -68,3 +68,22 @@ CIERRE: actualiza PHASE2_SUMMARY.md (tabla tarea, rama, commit, pruebas, estado,
 - **R8 (20.4).** Aplicar R5 a `test_exact_receipt_roundtrip_and_cli`: crear alias válidos con `relabel_ion_bytes(_ion("Mn", 25), "Mn", "MnLR0")` y `"MnLR1"`; mantener receipt positivo y código de salida 0. Ajustar, según corresponda, las aserciones SHA256 crudas y el estado del receipt. Añadir una prueba donde bytes crudos idénticos tengan una cabecera que no corresponda al alias y se espere `MISMATCH`.
 - **R9 (20.5; corrige R3).** No perder traslaciones clasificables como `EXACT_TRANSLATION`: mapeo racional exacto y conmensurable con la malla. Sin spglib, verificar con `_ring((0.8,)*4)` y `_ring((0.8,)*8)` que aparecen todas las traslaciones `k/4` y `k/8`; el autor indica que actualmente aparecen. La casi-simetría desplazada por `0.75*tau` nunca es exacta ni puede reducir; perderla solo elimina un disparador de expansión `AMBIGUOUS`. Esto se acepta dado que una reducción exige una operación exacta y sombra obligatoria, e I.5 impide reducciones en producción. Registrar en `BLOCKERS.md` la limitación de Fase 3 “detección de casi-simetrías sin spglib”, que debe resolverse antes de habilitar reducciones en TASK 22. Aplicar R5 a la prueba F8.
 - **R10 (20.9).** Los IDs del plan (`etiqueta@átomo:n:l`, átomo base 0) y los del manifiesto (etiqueta DFTU y `atom_index` base 1) son espacios de nombres distintos: `inventory_sites` aplica `atom_index + 1`. Comparar en el espacio del manifiesto los `sites` y las identidades de nodo del DAG recién inicializado contra el manifiesto y node-evidence archivados de NiO P5, usando `(etiqueta, atom_index, modo, alpha)`. Si no coincide exactamente, detenerse y reportar. El borrador 20.3 y la inicialización completa NiO P5 dependen de archivos disponibles en el entorno del agente; si algo no cuadra, detenerse sin improvisar.
+
+## TASK 22
+
+### D13a — G3 smoothness deferred
+
+G3 smoothness (§I.5.5) is deferred. Its rigorous form requires the SCF ladder error (“print + ladder”), which has no production evidence yet (T0–T4). With only print bounds and three amplitudes, `verify_order` cannot detect jumps at the largest amplitude or symmetric jumps, and it false-alarms on Sz under realistic SCF noise. The audit verified both by probe. Report G3 as `NOT_ESTABLISHED: SMOOTHNESS_REQUIRES_SCF_LADDER`. Replace it with threshold-free per-point checks for discrete branch changes: G2 subspace, G2b occupation count, G3a moment sign, and G4 band count.
+
+### D13b — G2 includes fully occupied channels
+
+G2 also applies to fully occupied channels, such as the NiO majority-spin t2g/eg split. A reordering is a real change of orbital polarization; report it as a diagnostic.
+
+### D13c — deviations recorded, not implemented
+
+Record these deviations without implementing them in TASK 22:
+
+- §I.5.1 dDmax/dHmax and iteration outliers (G1 uses node validation only).
+- §I.5.3 total-moment quantization.
+- §I.5.6 hysteresis.
+- §I.5.7 Hellmann–Feynman.
