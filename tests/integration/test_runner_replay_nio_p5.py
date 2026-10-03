@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import re
 import sys
 import time
@@ -22,6 +23,7 @@ REAL_FIXTURE = ROOT / "tests" / "fixtures" / "real_nio_p5_rerun"
 REPLAY_FIXTURE = ROOT / "tests" / "fixtures" / "replay_nio_p5"
 ANALYSIS = "lr_u_analysis.v3.json"
 GOLDEN_MANIFEST = REPLAY_FIXTURE / "campaign_manifest.sha256.json"
+REPLAY_ANALYSIS = REPLAY_FIXTURE / "replay_analysis.v3.json"
 _ATTEMPT = re.compile(r"attempt-\d+-[0-9a-f]{8}")
 _ATTEMPT_BYTES = re.compile(rb"attempt-\d+-[0-9a-f]{8}")
 _ATTEMPT_GROUP = re.compile(r"(?<=/attempts/)[0-9a-f]{20}")
@@ -31,6 +33,41 @@ _ATTEMPT_SUFFIX_BYTES = re.compile(rb"(?<=_)[0-9a-f]{12}(?=[/._]|$)")
 _DYNAMIC_INPUT_HASH_ROW = re.compile(rb"(\| (?:execution_profile|lr_config) \| [^|]+ \| )[0-9a-f]{64}( \|)")
 _EVIDENCE_DIGEST_ROW = re.compile(rb"(\| response:[^\n]*\| )[0-9a-f]{64}( \|)")
 _SHA256_TOKEN = re.compile(rb"(?<![0-9a-f])[0-9a-f]{64}(?![0-9a-f])")
+
+
+def test_analysis_comparator_accepts_physical_roundoff_at_measured_scale() -> None:
+    expected = {"primary": {"U_by_site_eV": {"0": 6.8}}}
+    actual = {"primary": {"U_by_site_eV": {"0": 6.8 * (1.0 + 1e-12)}}}
+
+    _assert_replay_equivalent(actual, expected)
+
+
+def test_analysis_comparator_rejects_physical_difference_above_tolerance() -> None:
+    expected = {"primary": {"U_by_site_eV": {"0": 6.8}}}
+    actual = {"primary": {"U_by_site_eV": {"0": 6.8 * (1.0 + 1e-6)}}}
+
+    with pytest.raises(AssertionError, match="primary.U_by_site_eV.0"):
+        _assert_replay_equivalent(actual, expected)
+
+
+def test_analysis_comparator_requires_exact_state_and_decision() -> None:
+    with pytest.raises(AssertionError, match="state"):
+        _assert_replay_equivalent({"state": "VALIDATED"}, {"state": "FAILED"})
+    with pytest.raises(AssertionError, match="decision"):
+        _assert_replay_equivalent({"decision": "ACCEPT"}, {"decision": "REJECT"})
+
+
+@pytest.mark.parametrize(
+    ("actual", "expected"),
+    [
+        ({"nodes": {"reference": {"state": "OK"}}}, {"nodes": {}}),
+        ({"rows": [{"id": "a"}]}, {"rows": [{"id": "a"}, {"id": "b"}]}),
+    ],
+    ids=("missing-node", "missing-row"),
+)
+def test_analysis_comparator_rejects_missing_nodes_or_rows(actual: Any, expected: Any) -> None:
+    with pytest.raises(AssertionError):
+        _assert_replay_equivalent(actual, expected)
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="campaign replay requires POSIX fcntl and executables")
@@ -183,12 +220,22 @@ def test_nio_p5_runner_replay_matches_part_a_and_resumes(
     removed: dict[str, str] = {}
     actual_view = _comparison_view(actual_analysis, removed, "$")
     expected_view = _comparison_view(part_a_analysis, removed, "$")
-    assert _report_precision_view(actual_view) == _report_precision_view(expected_view)
-    assert _report_precision_view(actual_analysis["primary"]["U_by_site_eV"]) == _report_precision_view(
-        part_a_analysis["primary"]["U_by_site_eV"]
-    )
+    _assert_replay_equivalent(actual_view, expected_view)
+    _assert_part_a_u_within_rounding_bound(actual_analysis, part_a_analysis)
+
+    analysis_path = manifest.parent / "results" / ANALYSIS
+    report_path = manifest.parent / "results" / "LR_U_REPORT.v3.md"
+    assert analysis_path.is_file() and analysis_path.stat().st_size > 0
+    assert report_path.is_file() and report_path.stat().st_size > 0
+    replay_golden = json.loads(REPLAY_ANALYSIS.read_text(encoding="utf-8"))
+    replay_view = _analysis_comparison_view(actual_analysis, manifest.parent.parent.parent)
+    _assert_replay_equivalent(replay_view, replay_golden)
+
     actual_manifest = _campaign_file_manifest(manifest.parent)
     expected_manifest = json.loads(GOLDEN_MANIFEST.read_text(encoding="utf-8"))
+    for analysis_artifact in ("results/lr_u_analysis.v3.json", "results/LR_U_REPORT.v3.md"):
+        assert analysis_artifact not in actual_manifest
+        assert analysis_artifact not in expected_manifest
     if actual_manifest != expected_manifest:
         differences = {
             path: {"actual": actual_manifest.get(path), "expected": expected_manifest.get(path)}
@@ -254,10 +301,97 @@ def _comparison_view(value: Any, removed: dict[str, str], path: str) -> Any:
     return value
 
 
+def _assert_replay_equivalent(actual: Any, expected: Any, path: str = "$") -> None:
+    """Compare exact structure and categorical fields with platform-safe float tolerances.
+
+    These tolerances are for numerical reproducibility of this test across platforms,
+    not scientific thresholds (AGENTS.md rule 6 does not apply). The author measured
+    a maximum relative difference of 2.6e-11 in physical results and 1.4e-9 in
+    ill-conditioned diagnostics across environments including NumPy 2.5.
+    """
+    if type(actual) is not type(expected):
+        raise AssertionError(f"{path}: type differs ({type(actual).__name__} != {type(expected).__name__})")
+    if isinstance(actual, dict):
+        actual_keys = set(actual)
+        expected_keys = set(expected)
+        if actual_keys != expected_keys:
+            raise AssertionError(
+                f"{path}: keys differ (missing={sorted(expected_keys - actual_keys, key=str)}, "
+                f"unexpected={sorted(actual_keys - expected_keys, key=str)})"
+            )
+        for key in sorted(actual_keys, key=str):
+            _assert_replay_equivalent(actual[key], expected[key], f"{path}.{key}")
+        return
+    if isinstance(actual, list):
+        if len(actual) != len(expected):
+            raise AssertionError(f"{path}: length differs ({len(actual)} != {len(expected)})")
+        for index, (actual_item, expected_item) in enumerate(zip(actual, expected, strict=True)):
+            _assert_replay_equivalent(actual_item, expected_item, f"{path}[{index}]")
+        return
+    if isinstance(actual, float):
+        if not math.isfinite(actual) or not math.isfinite(expected):
+            if actual != expected:
+                raise AssertionError(f"{path}: non-finite floats differ ({actual!r} != {expected!r})")
+            return
+        rel_tol, abs_tol = _float_tolerances(path)
+        if not math.isclose(actual, expected, rel_tol=rel_tol, abs_tol=abs_tol):
+            raise AssertionError(
+                f"{path}: floats differ ({actual!r} != {expected!r}; "
+                f"rel_tol={rel_tol:g}, abs_tol={abs_tol:g})"
+            )
+        return
+    if actual != expected:
+        raise AssertionError(f"{path}: values differ ({actual!r} != {expected!r})")
+
+
+def _float_tolerances(path: str) -> tuple[float, float]:
+    normalized = path.lower()
+    if "residual" in normalized or "diagnostic" in normalized:
+        return 1e-6, 1e-12
+    physical_fields = ("u_by_site_ev", "u_matrix_ev", "u_scalar", "interval", "half_width")
+    path_segments = [segment for segment in re.split(r"[.\[\]]+", normalized) if segment]
+    has_chi_field = any(segment == "chi" or segment.startswith(("chi0", "chi_")) for segment in path_segments)
+    if any(field in normalized for field in physical_fields) or has_chi_field:
+        return 1e-9, 1e-12
+    return 1e-6, 1e-12
+
+
+def _assert_part_a_u_within_rounding_bound(replay: dict[str, Any], part_a: dict[str, Any]) -> None:
+    replay_u = replay["primary"]["U_by_site_eV"]
+    part_a_u = part_a["primary"]["U_by_site_eV"]
+    half_width = replay["primary"]["rounding_bound"]["U_scalar_half_width_by_site_eV"]
+    if set(replay_u) != set(part_a_u) or set(replay_u) != set(half_width):
+        raise AssertionError("Part A and replay U/half-width site keys differ")
+    for site in sorted(replay_u):
+        difference = abs(float(replay_u[site]) - float(part_a_u[site]))
+        bound = float(half_width[site])
+        if difference > bound:
+            raise AssertionError(f"site {site}: |U_replay - U_PartA|={difference} exceeds half-width={bound}")
+
+
+def _analysis_comparison_view(value: Any, workspace_root: Path) -> Any:
+    removed: dict[str, str] = {}
+    comparable = _comparison_view(value, removed, "$")
+    comparable = _normalize_campaign_root(comparable, str(workspace_root))
+    return _normalize_named_root(comparable, str(ROOT), "$REPOSITORY_ROOT")
+
+
+def _normalize_named_root(value: Any, root: str, token: str) -> Any:
+    if isinstance(value, dict):
+        return {key: _normalize_named_root(child, root, token) for key, child in value.items()}
+    if isinstance(value, list):
+        return [_normalize_named_root(child, root, token) for child in value]
+    if isinstance(value, str):
+        return value.replace(root, token)
+    return value
+
+
 def _campaign_file_manifest(root: Path) -> dict[str, str]:
     result: dict[str, str] = {}
     for path in sorted(item for item in root.rglob("*") if item.is_file()):
         relative = _normalize_attempt_path(path.relative_to(root).as_posix())
+        if relative in {"results/lr_u_analysis.v3.json", "results/LR_U_REPORT.v3.md"}:
+            continue
         raw = path.read_bytes()
         try:
             value = json.loads(raw)
@@ -296,15 +430,4 @@ def _normalize_campaign_root(value: Any, root: str) -> Any:
         return [_normalize_campaign_root(child, root) for child in value]
     if isinstance(value, str):
         return value.replace(root, "$CAMPAIGN_ROOT")
-    return value
-
-
-def _report_precision_view(value: Any) -> Any:
-    """Compare replay numbers at the report renderer's nine-significant-digit precision."""
-    if isinstance(value, float):
-        return format(value, ".9g")
-    if isinstance(value, dict):
-        return {key: _report_precision_view(child) for key, child in value.items()}
-    if isinstance(value, list):
-        return [_report_precision_view(child) for child in value]
     return value
