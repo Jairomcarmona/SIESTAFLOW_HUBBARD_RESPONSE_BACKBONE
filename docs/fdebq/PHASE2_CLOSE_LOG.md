@@ -176,6 +176,6 @@ Pre-change static baseline for pre-existing `src/hubbardflow/cli.py` (outside py
 
 - Command: `.venv/Scripts/pytest.exe tests -q -rfE --continue-on-collection-errors`; import check resolved `hubbardflow.__file__` to this checkout's `src/hubbardflow/__init__.py`.
 - Result: `20 failed, 1270 passed, 24 skipped, 2 warnings, 5 errors, 4 subtests passed in 355.78s`.
-- The five collection errors are exactly the five IDs recorded in `BASELINE_FAILURES`. The 20 failing test IDs are also exactly the same 20 IDs recorded there. No new failing test or collection error; there are 34 more passing tests than the corrected baseline.
+- The five collection errors are exactly the five IDs recorded in `BASELINE_FAILURES`. The 20 failing test IDs are also exactly the same 20 IDs recorded there. No new failing test or collection error; there are 36 more passing tests than the corrected baseline.
 - The five collection errors: adversarial `test_method2_reference.py` and `test_phase4_alpha0_control.py` (`siestaflow_hubbard` absent); `test_nio_polynomial_analysis.py` (historical analyzer missing); `test_nio_shared_lru_regression.py` (`lru_core` absent); and `test_stage_ub_baseline_summary.py` (`siestaflow_hubbard` absent).
 - All 20 failure IDs are enumerated in the corrected §0.2 `BASELINE_FAILURES` list above; the current pytest short summary reproduced that exact list.
