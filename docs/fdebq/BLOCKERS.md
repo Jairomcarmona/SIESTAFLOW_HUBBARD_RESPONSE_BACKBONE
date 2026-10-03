@@ -320,3 +320,7 @@ SIESTA campaigns were started.
 ## Phase 2 close — RISK_UNCOVERED en 20.2
 
 La auditoría científica detuvo 20.2 antes de implementar. La especificación §20.2.3 declara administradas las etiquetas que HubbardFlow escribe o lee; `fdf_builder.py` escribe `ChemicalSpeciesLabel` y `fdf_model.py` la lee. Por tanto, `Chemical_Species_Label` debe rechazarse como `NONCANONICAL_MANAGED_LABEL`, mientras §20.2 Acceptance también exige que se lea. No está definido si “is read” significa reconocerla antes del rechazo o aceptar el bloque. Resolverlo por código escogería qué FDF participa en el inventario y la campaña científica. Se requiere aclaración del autor y, si se espera aceptarla, una regla de etiquetas administradas corregida. No se implementó 20.2.
+
+## Phase 2 close — RISK_UNCOVERED en 20.4
+
+La regla nueva de 20.4 exige `MATCH` cuando los bytes canónicos coinciden y la diferencia cruda se limita a los campos de etiqueta. Eso invierte directamente la expectativa del test existente `tests/unit/test_split_generated_identity.py::test_real_archive_label_only_difference_is_never_a_positive`. El ítem solo autoriza añadir tests; §0.1.5 prohíbe editar este test existente porque 20.4 no lo nombra. No hay implementación que cumpla a la vez la regla de veredicto y las dos expectativas. Se requiere corregir explícitamente el alcance de edición de tests o la aceptación antes de implementar 20.4.

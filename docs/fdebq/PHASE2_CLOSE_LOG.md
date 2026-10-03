@@ -62,6 +62,10 @@ Base: `84b8eb6` (`origin/fdebq/r2-task15-species-split`). Branch: `fdebq/r3-task
 | 20.2/P3 | TRUE | Same source lines 161–182 casefolds block names, but does not remove punctuation. |
 | 20.2/P4 | TRUE | `Get-Content src/hubbardflow/siesta_backend/coverage_reference.py` lines 34–47 uses literal regex labels `DFTU.PotentialShift` and `%block DFTU.proj`, case-insensitive only. |
 | 20.2/P5 | TRUE | Temporary-file Python probe built a minimal parseable FDF per spelling and called `parse_effective_fdf`: `Spin_Orbit T`, `spin.orbit true`, `Non-Collinear-Spin T` each returned `spin_orbit=False, noncollinear=False`. |
+| 20.4/P1 | TRUE | `Get-Content src/hubbardflow/siesta_backend/semantic_ion_identity.py`: `relabel_ion_bytes` replaces exactly one `<basis_specs>` header label and one value before `# Label`, preserves the width by padding, and raises `IonIdentityError` unless both audited fields are unique. `canonical_ion_bytes` calls it with sentinel `X`. |
+| 20.4/P2 | TRUE | Read-only Python diff of the two named V6 `.ion` files: both exist, each has 8119 lines; unified diff changes only FeLR0/FeLR1 at lines 5 and 79. No frozen file was written. |
+| 20.4/P3 | TRUE | Same read-only probe: raw SHA256 FeLR0=`da4c483af1ab2525ffa3818f37dff77e64944a11a98223afb69276f23b46b066`; FeLR1=`fe1760376a91af5a7c2b8af38e86551cb7008eddfed11eb286beeded98d1a541`. `split_generated_identity.py` adds `ION_BYTES_DIFFER` on raw digest inequality. |
+| 20.4/P4 | TRUE | Read-only Python inspection: both files have `Fe # Symbol`; `FeLR0`/`FeLR1` occur before `# Label`; each `<pseudopotential_header>` contains one `Fe`. The header content is unchanged between pair files. |
 
 ## 20.2 pre-change FDF census
 
@@ -70,6 +74,10 @@ Base: `84b8eb6` (`origin/fdebq/r2-task15-species-split`). Branch: `fdebq/r3-task
 - The item asks for an independent scientific audit before any implementation. No 20.2 code has been changed.
 - Auditor verdict: `RISK_UNCOVERED`, stop 20.2 before implementation. Evidence: the managed-label rule at §20.2.3 covers `ChemicalSpeciesLabel` because `fdf_builder.py` writes it and `fdf_model.py` reads it, so the punctuation variant must be rejected; §20.2 Acceptance also requires `Chemical_Species_Label` to be read. The specification does not define whether “read” means recognized before rejection or accepted as a block. No exception or scientific choice was inferred.
 - 20.3 explicitly depends on 20.2's canonical-label behavior, so it cannot proceed until the author resolves this risk. Continue with the next independent item in §3.
+
+## 20.4 disposition
+
+- Do not implement: the required acceptance (`canonical_ion_bytes` equal and raw diff limited to relabel fields ⇒ `MATCH`) necessarily changes the outcome of the existing `tests/unit/test_split_generated_identity.py::test_real_archive_label_only_difference_is_never_a_positive`, whose asserted behavior is the opposite for canonical-equal alias ions. §20.4 lists only new tests; §0.1.5 prohibits editing this existing test unless the item explicitly names it. No production-code workaround can satisfy both requirements and the exact verdict rule. This is recorded as `RISK_UNCOVERED`; ask for an explicit specification/test-scope correction before 20.4.
 
 ## 20.7 checks
 
