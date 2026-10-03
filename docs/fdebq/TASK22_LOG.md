@@ -100,3 +100,35 @@ Comando `rg -n 'campaign-planner-v3|def verify_frozen_campaign_plan' src/hubbard
 Edición autorizada añadida: `tests/unit/test_campaign_plan.py::test_resume_reports_explicit_planner_version_change` cambia solo la versión del plan congelado a `campaign-planner-v2` y exige el error literal `PLANNER_VERSION_CHANGED`, ambas versiones y la instrucción de re-inicializar. No se editaron aserciones existentes.
 
 Verificación local del ítem: `python -m pytest tests/unit/test_campaign_plan.py -q` → `28 passed`; `MYPYPATH=src mypy --strict src/hubbardflow/execution/campaign_plan.py` → `Success: no issues found in 1 source file`.
+
+## 22.4 — aclaraciones científicas pendientes para el autor
+
+El auditor científico independiente revisó TASK 22 §22.4, D13a–c y las secciones I, J, K, M y O de la revisión. Antes de implementar 22.4, el autor debe resolver las dos reglas siguientes; no se modificó lógica de 22.4.
+
+### Pregunta G2: qué margen define el k de referencia
+
+**Texto de la especificación.** `CODEX_TASK22_I5.md:176–183` define `k` desde el espectro de referencia y pide, además de un gap único/resuelto, que “the margin ε below is < 1/2”. Pero la única fórmula de `ε`, en `:191–193`, depende de ambos `Δ_ref` y `Δ_pt`; `Δ_pt` pertenece a un punto de amplitud concreta. Luego `:184–189` vuelve a usar propiedades del punto para decidir si falla.
+
+**Interpretaciones posibles y cambio de veredicto.**
+
+1. Definir `k` con un margen solo de referencia, equivalente a compararla consigo misma: `ε_ref = 2·[W/(Δ_ref−2W) + W/(Δ_ref−2W)] = 4W/(Δ_ref−2W)`. Si `ε_ref < 1/2`, se fija `k`; después se evalúa el margen completo de cada par referencia–punto. En el ejemplo auditado, el punto tiene split único en el mismo índice y bases idénticas (`c=1`), pero el margen completo supera 1/2, por lo que el resultado es `SUBSPACE_AMBIGUOUS` (fallo diagnóstico).
+2. Aplicar literalmente a la definición de `k` el `ε` completo que depende del punto. Con el mismo ejemplo, el requisito `ε<1/2` no define `k`; el resultado pasa a `NOT_DEFINED`, que la regla declara no-fallante. Esta lectura puede ocultar precisamente una ambigüedad del punto.
+
+**Ejemplo numérico verificado por el auditor:** `W=2.5e−5`, `Δ_ref=0.1`, `Δ_pt=1.1e−4`, segundo gap del punto `1e−6`, bases idénticas (`c=1`). La comparación de referencia consigo misma da `ε_ref=0.00100050025`; el margen del par da `ε=0.83383358346`. Por ello las dos lecturas producen `SUBSPACE_AMBIGUOUS` frente a `NOT_DEFINED`. Evidencia de la especificación: `CODEX_TASK22_I5.md:176–193`; el cálculo está registrado en la auditoría científica independiente de TASK 22.
+
+**Decisión requerida:** confirmar si el criterio de definición usa `ε_ref = 4W/(Δ_ref−2W)` y si un margen completo insuficiente en un punto produce `SUBSPACE_AMBIGUOUS`, o especificar otra regla.
+
+### Pregunta G4: origen y precisión de E_F respecto a q de `.EIG`
+
+**Texto de la especificación.** `CODEX_TASK22_I5.md:139–140` pone `E_F` en `PointState`; la premisa `:131–132` identifica el Fermi de stdout (`siesta: Fermi = ...`); pero G4 en `:202–208` compara niveles y cuenta bandas respecto al “own E_F” con umbral de un quantum de impresión `.EIG`. La especificación no dice cómo combinar la precisión, menor, del E_F de stdout con el quantum de las energías `.EIG`.
+
+**Interpretaciones posibles y cambio de veredicto.**
+
+1. Usar el E_F de stdout (actualmente leído por `point_state_evidence.py:244–249`) y comparar la distancia con solo `q_EIG` literal de `:203` y `:207`. Esto puede considerar resuelto un nivel que en la interpretación 2 es `BAND_COUNT_AMBIGUOUS`.
+2. Usar el E_F del encabezado `.EIG` y su precisión impresa para G4; alternativamente, conservar E_F de stdout y ampliar la región ambigua para cubrir también su semiancho (`5e−7 eV` en el ejemplo). La banda fronteriza se considera `BAND_COUNT_AMBIGUOUS`, en vez de resuelta y potencialmente `PASS`/`BAND_COUNT_CHANGED`.
+
+**Evidencia real.** En `tests/fixtures/i5_eig/bare_p0p04.EIG.xz`, la primera línea es `-0.450851397E+01` = `−4.508513970 eV`. La salida correspondiente imprime `siesta: Fermi = -4.508514` = `−4.508514 eV`; difieren `3e−8 eV`. El semiancho de la salida es `5e−7 eV`, mayor que el quantum de un eigenvalor cercano a ese E_F, `1e−8 eV`. NiO de esta corrida tiene el gap amplio; el problema afecta la interpretación en casos frontera. Ejemplo de nivel posible con formato `.EIG`, `−0.450851396E+01` = `−4.508513960 eV`, `q_EIG=1e−8`: dista `4e−8` del stdout E_F (resuelto bajo interpretación 1), pero exactamente `1e−8` del encabezado `.EIG` (ambiguo si el límite es inclusivo). Evidencia de formato y Fermi registrados en este log; el parser actual calcula distancias con stdout E_F (`point_state_evidence.py:231, 244–249`).
+
+**Decisión requerida:** especificar si G4 toma E_F del stdout, el encabezado `.EIG`, o incluye un margen por la incertidumbre del E_F; confirmar también el tratamiento inclusivo en la frontera de un quantum.
+
+No implementar G2/G4 ni avanzar a 22.5/22.6 hasta recibir estas respuestas del autor. La revisión también recalca que un `PASS` de TASK 22 solo certificará los controles implementados: G3 suavidad queda `NOT_ESTABLISHED` por D13a, y no se afirmarán exactitud SCF, histéresis ni consistencia energética.
