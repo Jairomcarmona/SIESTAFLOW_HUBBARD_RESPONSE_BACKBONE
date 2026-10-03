@@ -234,3 +234,6 @@ The Part A fixture files and detached campaign remain unmodified during Phase
   strict mypy (91 source files), strict mypy on the three extracted/test files,
   architecture (8 tests), focused observation/shadow/parser tests (39 passed,
   1 xfailed), and V6 integrity passed.
+
+
+- CI run 37128408454 confirmed the fixture commands now execute, then exposed checkout-root paths in four golden hashes (execution_profile.json, source_lr_config.json, node-evidence.json, and the rendered report). The replay manifest normalizes the repository root in text and JSON before hashing; the updated golden manifest reflects canonicalized output. The replay passes locally in WSL; CI is pending.

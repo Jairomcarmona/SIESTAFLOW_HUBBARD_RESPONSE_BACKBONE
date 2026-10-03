@@ -60,3 +60,6 @@ could not execute them. The correction stages both fixtures as `100755` and
 asserts their POSIX executable bits. The replay passes locally in WSL after
 the mode change; CI for that correction was pending when this summary was
 drafted.
+
+
+The executable-mode correction reached CI in run [37128408454](https://github.com/Jairomcarmona/SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE/actions/runs/37128408454): the replay now executes, but the golden manifest comparison found four environment-bound hashes differing because the fixture included absolute checkout paths. The replay comparison now normalizes the repository root in JSON and text artifacts; the golden manifest was regenerated from the canonicalized replay. The corrected replay passes locally in WSL; CI for this path-normalization correction is pending.

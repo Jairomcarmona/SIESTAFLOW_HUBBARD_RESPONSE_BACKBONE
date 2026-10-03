@@ -258,6 +258,7 @@ def _campaign_file_manifest(root: Path) -> dict[str, str]:
             value = json.loads(raw)
         except (UnicodeDecodeError, json.JSONDecodeError):
             normalized = raw.replace(str(root.parent).encode(), b"$CAMPAIGN_ROOT")
+            normalized = normalized.replace(str(ROOT).encode(), b"$REPOSITORY_ROOT")
             normalized = _ATTEMPT_BYTES.sub(b"attempt-NORMALIZED", normalized)
             normalized = _ATTEMPT_GROUP_BYTES.sub(b"ATTEMPT-GROUP", normalized)
             normalized = _ATTEMPT_SUFFIX_BYTES.sub(b"ATTEMPT-SUFFIX", normalized)
@@ -268,6 +269,7 @@ def _campaign_file_manifest(root: Path) -> dict[str, str]:
             removed: dict[str, str] = {}
             comparable = _comparison_view(value, removed, "$")
             comparable = _normalize_campaign_root(comparable, str(root.parent))
+            comparable = _normalize_campaign_root(comparable, str(ROOT))
             normalized = (json.dumps(comparable, sort_keys=True, separators=(",", ":")) + "\n").encode()
         result[relative] = hashlib.sha256(normalized).hexdigest()
     return result
