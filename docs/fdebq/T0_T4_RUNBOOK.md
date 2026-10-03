@@ -8,9 +8,14 @@ supplied evidence. No SIESTA run or prospective validation is included.
 
 Supply a `ScfLadderProtocol` JSON mapping with every field:
 `version`, `enabled`, `levels` (three records with `level_id` and
-`dm_tolerance`), `theta`, and `rho_max`. Tolerances must strictly decrease;
+`dm_tolerance` and `h_tolerance_ev`), `theta`, and `rho_max`. Use version
+`scf-ladder-v2` (or `v2`). Both tolerances must be at least 1e-6 and exact
+multiples of 1e-6, so the six-decimal SIESTA echo can prove them. DM tolerances
+must strictly decrease;
 theta must be positive and rho_max must lie in [0,1). There are no built-in
-scientific values. Omit the policy or set `enabled=false` to keep the ladder
+scientific values. Historical v1 records are `NOT_ESTABLISHED` with
+`SCF_LADDER_PROTOCOL_V1`; `synthetic-v1` remains an algebraic test protocol and
+cannot materialize or validate user-produced ladder evidence. Omit the policy or set `enabled=false` to keep the ladder
 disabled. Explicit enablement and all numerical parameters enter its digest.
 
 Preregister the candidate lattice, estimator family, kappa, tau_U, coverage
@@ -21,34 +26,80 @@ test values, which are not production profiles.
 
 ## Prepare and run the ladder
 
-Use two existing nonzero amplitudes a_s < a_l from the same column and mode.
-All four inputs must have the same reference DM identity. Each JSON
-`LadderRunInput` record contains `site_id`, `mode`, `alpha_ev`, `source_fdf`,
-`parent_dm`, and `assets` (all pseudopotential/basis input files needed by the
-run, explicitly listed). Sources are already materialized production FDFs.
-The backend reuses the authoritative FDF parser to bind the literal DFTU
-label, unique atom and exact signed alpha, with all other shifts zero. BARE
-must pass the existing audited input profile. SCREENED must explicitly declare
-FirstIteration, saved DM, convergence-required and Hamiltonian mixing, with an
-iteration limit different from the BARE one-diagonalization limit. Missing,
-unsupported or conflicting evidence is NOT_ESTABLISHED before materialization;
-SCREENED output convergence is still validated after the user's run. The tool
-does not synthesize DFTU projector records. The parent must be `<SystemLabel>.DM`. Inputs must
-contain `DM.UseSaveDM true`; `File.DM.Init` is rejected.
+First prepare one alpha=0 reference for each of the three levels. These are
+level-specific converged parents, not replicas used to infer a noise floor.
+Each `LadderReferenceInput` contains `level_id`, `source_fdf`, and `assets`
+(all required pseudopotential/basis files, explicitly listed). The source must
+have no DFTU potential shift. The materializer writes `DFTU.PotentialShift false`
+and the declared `SCF.DM.Tolerance` / `SCF.H.Tolerance` values.
 
 ```powershell
-python tools/fdebq_scf_ladder_campaign.py ladder_protocol.json ladder_inputs.json C:/Users/Jairo/work/scf_ladder_user_runs
+python tools/fdebq_scf_ladder_campaign.py references ladder_protocol.json ladder_references.json C:/Users/Jairo/work/scf_ladder_references
 ```
 
-The output must be a new directory outside the checkout. For each of the
-four inputs, the tool resolves includes, preserves the parent DM and assets,
-and materializes the three declared `DM.Tolerance` levels. The receipt binds
-source/effective FDF, materialized FDF, parent DM and protocol hashes. These
-inputs do not enter production automatically. TASK13's complete provenance
-checks remain required for production reuse. Execute each run yourself using
-the same SIESTA build/backend and scientific profile, then archive outputs,
-the receipt, normal-completion/convergence evidence and input hashes.
-There are no alpha=0 replicas or inferred noise floors.
+The tool writes three reference directories and
+`scf_ladder_reference_receipt.json`. Run each reference yourself, with the
+same pinned SIESTA build/backend, producing `siesta.out` and `<SystemLabel>.DM`
+in its own reference directory. For example, in each directory, using WSL:
+
+```bash
+/path/to/pinned/siesta < input.fdf > siesta.out
+```
+
+Reference outputs must have normal completion and positive existing
+`SCF Convergence by ... criterion` evidence, with no explicit failure.
+Every reference and perturbed output must echo exactly the level's DM/H
+values at six decimals and require both DM and H convergence (`T`). A missing
+or mismatched echo gives `SCF_LEVEL_NOT_APPLIED`; inactive criteria give
+`SCF_CRITERIA_NOT_ACTIVE`; missing reference convergence gives
+`LEVEL_REFERENCE_NOT_CONVERGED`. The tool never runs SIESTA.
+
+Then use two existing nonzero amplitudes a_s < a_l from the same column and
+mode. Supply four `LadderRunInput` records **per level**, with identical signed
+grids across levels (twelve per column/mode). Each record contains `site_id`,
+`mode`, `alpha_ev`, `source_fdf`, `parent_dm`, `assets`, and explicit `level_id`.
+`parent_dm` names the DM produced by that level's reference. The tool binds it
+to the reference receipt and captures its bytes and SHA-256 at materialization
+time. Parents within a level are identical; all three levels must have distinct
+parent bytes, or preparation fails with `PARENT_LEVEL_NOT_DISTINCT`.
+
+Sources already encode the exact requested site/mode/alpha. The backend binds
+the literal DFTU label, unique atom and exact signed alpha, with all other shifts
+zero. BARE passes the audited profile and retains `MaxSCFIterations 1`;
+its level differences come from the three different parent DMs (D9), not from
+converging its perturbed population. SCREENED preserves its existing input
+contract and output failure/convergence checks. Inputs require
+`DM.UseSaveDM true`; `File.DM.Init` is rejected.
+
+```powershell
+python tools/fdebq_scf_ladder_campaign.py runs ladder_protocol.json ladder_inputs.json C:/Users/Jairo/work/scf_ladder_user_runs --reference-receipt C:/Users/Jairo/work/scf_ladder_references/scf_ladder_reference_receipt.json
+```
+
+Outputs must be new directories outside the checkout. Includes are resolved;
+all top-level `DM.Tolerance`, `SCF.DM.Tolerance`, and `SCF.H.Tolerance` directives
+are removed and exactly one declared SCF DM and H tolerance is written.
+Noncanonical managed spellings such as `scf_dm_tolerance` are rejected with
+the required canonical spelling. Other criteria and BARE's iteration limit
+are preserved. Receipts record DM/H convergence, EDM/FreeE/Harris declarations
+and `MaxSCFIterations`; an undeclared family is explicitly `null`, never an
+invented SIESTA default. They bind source/effective FDF, materialized FDF,
+level reference FDF/output, parent DM and protocol hashes. The reference DM
+is copied under the run's SystemLabel, with identical bytes. Run each prepared
+input yourself in its directory, producing `siesta.out`. The overwritten run
+DM must never be rehashed as its parent.
+
+Validate these archived outputs before using their printed populations:
+
+```powershell
+python tools/fdebq_validate_t0_t4.py ladder_protocol.json C:/Users/Jairo/work/scf_ladder_user_runs/scf_ladder_receipt.json --validate-ladder --reference-receipt C:/Users/Jairo/work/scf_ladder_references/scf_ladder_reference_receipt.json
+```
+
+Exit 0 establishes the supplied ladder-input/output checks; exit 2 reports
+`NOT_ESTABLISHED` and reason codes. No perturbed BARE convergence is required.
+Archive the receipts, outputs and input/parent hashes. TASK13's complete
+provenance checks remain required for production reuse; these inputs do not
+enter production automatically. No alpha=0 replicas or inferred noise floors
+are introduced.
 
 Parse printed occupations and half widths into three `LadderEvidence`
 records per observed row, with identical column/mode/row keys and endpoint

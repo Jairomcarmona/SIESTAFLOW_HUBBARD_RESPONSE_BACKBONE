@@ -29,6 +29,10 @@ def estimate_ladder(evidence: Sequence[LadderEvidence], protocol: ScfLadderProto
     ratio at intermediate amplitudes. All evidence is retained in the result.
     """
     try:
+        # Preserve the named algebraic test protocol, whose 1e-7 tolerances are
+        # not assertions about SIESTA's six-decimal production echo.
+        if protocol.version != "synthetic-v1":
+            protocol.require_evidence_v2()
         return _estimate_ladder(evidence, protocol)
     except ValueError as exc:
         raise ScfLadderError(f"cannot estimate SCF ladder: {exc}") from exc

@@ -77,7 +77,7 @@ def test_invalid_metrics_nonfinite_policy_and_absent_evidence_fail_closed() -> N
     assert result.status is ValidationStatus.REVIEW
 
 
-def test_materialized_ladder_changes_only_tolerance_and_preserves_parent(tmp_path: Path) -> None:
+def test_materialization_rejects_legacy_v1_protocol(tmp_path: Path) -> None:
     parent = tmp_path / "toy.DM"
     parent.write_bytes(b"same-parent-density-matrix")
     asset = tmp_path / "toy.psml"
@@ -87,17 +87,14 @@ def test_materialized_ladder_changes_only_tolerance_and_preserves_parent(tmp_pat
         fdf = tmp_path / f"source{index}.fdf"
         fdf.write_text(source_text(a), encoding="utf-8")
         inputs.append(LadderRunInput("toy", ResponseMode.SCREENED, a, str(fdf), str(parent), (str(asset),)))
-    receipts = build_ladder_runs(tuple(inputs), policy(), tmp_path / "generated")
-    assert len(receipts) == 12
-    assert len({r.parent_dm_sha256 for r in receipts}) == 1
-    for r in receipts:
-        directory = Path(r.directory)
-        assert (directory / "toy.DM").read_bytes() == parent.read_bytes()
-        assert (directory / "toy.psml").read_bytes() == asset.read_bytes()
-        assert f"DM.Tolerance {r.dm_tolerance!r}" in (directory / "input.fdf").read_text(encoding="utf-8")
-        assert "File.DM.Init" not in (directory / "input.fdf").read_text(encoding="utf-8")
-    with pytest.raises(ScfLadderError):
-        build_ladder_runs(inputs, policy(), tmp_path / "generated")
+    output = tmp_path / "generated"
+    with pytest.raises(ScfLadderError, match="SCF_LADDER_PROTOCOL_V1"):
+        build_ladder_runs(tuple(inputs), policy(), output)
+    assert not output.exists()
+    existing = tmp_path / "existing"
+    existing.mkdir()
+    with pytest.raises(ScfLadderError, match="output must be a new directory"):
+        build_ladder_runs(tuple(inputs), policy(), existing)
     with pytest.raises(ScfLadderError):
         build_ladder_runs(inputs[:2], policy(), tmp_path / "invalid")
     with pytest.raises(ValueError):
@@ -114,3 +111,30 @@ def test_materializer_rejects_missing_parent_assets_and_unsafe_restart(tmp_path:
     with pytest.raises(ScfLadderError, match="File.DM.Init"):
         build_ladder_runs(inputs, policy(), tmp_path / "failed")
     assert not (tmp_path / "failed").exists()
+
+
+def test_materializer_checks_missing_assets_before_rejecting_v1(tmp_path: Path) -> None:
+    parent = tmp_path / "toy.DM"
+    parent.write_bytes(b"parent")
+    missing_asset = tmp_path / "missing.psml"
+    inputs = tuple(
+        LadderRunInput(
+            "toy",
+            ResponseMode.SCREENED,
+            alpha,
+            str(_write_source(tmp_path, index, alpha)),
+            str(parent),
+            (str(missing_asset),),
+        )
+        for index, alpha in enumerate((-0.08, -0.01, 0.01, 0.08))
+    )
+    output = tmp_path / "failed"
+    with pytest.raises(ScfLadderError, match="missing required input asset"):
+        build_ladder_runs(inputs, policy(), output)
+    assert not output.exists()
+
+
+def _write_source(tmp_path: Path, index: int, alpha_ev: float) -> Path:
+    fdf = tmp_path / f"source{index}.fdf"
+    fdf.write_text(source_text(alpha_ev), encoding="utf-8")
+    return fdf

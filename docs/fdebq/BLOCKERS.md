@@ -344,23 +344,9 @@ R4 designó `campaigns/nio_pbe_p5_20260928/` como la única cadena archivada com
 
 20.10 no se implementó: su aceptación requiere retirar el import opcional de `spglib` como parte de 20.5. Como 20.5 está detenido, no se movió el resolver de includes ni se fijó una allowlist de arquitectura dependiente de ese cambio.
 
-## 20.3 — existing-test/specification conflict (uncommitted draft)
+## 20.3 resolved under R5–R7
 
-Auditor verdict remains `RISK_COVERED`; this is not an uncovered scientific risk.
-Command `.venv/Scripts/python.exe -m pytest tests/unit/test_scf_ladder_v2.py tests/unit/test_scf_ladder.py tests/unit/test_scf_ladder_inputs.py tests/unit/test_scf_validation.py -q`
-returned `2 failed, 54 passed, 2 warnings in 7.90s`.
-
-- `tests/unit/test_scf_validation.py::test_materialized_ladder_changes_only_tolerance_and_preserves_parent`
-  requires successful v1 materialization with a shared parent, no H tolerance and `1e-7` DM
-  tolerance; 20.3 requires rejection of v1 production materialization, explicit representable
-  DM/H tolerances and three distinct level parents.
-- `tests/unit/test_scf_validation.py::test_materializer_rejects_missing_parent_assets_and_unsafe_restart`
-  expects `File.DM.Init` before the v1 protocol rejection. Actual error is
-  `NOT_ESTABLISHED: SCF_LADDER_PROTOCOL_V1`.
-
-Neither existing test is authorized for editing by 20.3. No test was edited, no commit was
-made, and implementation stopped. The code draft is saved in `git stash` as `draft blocked task 20.3`; it is not part of the working tree.
-See PHASE2_CLOSE_LOG.md for literal failure IDs and gate outputs.
+The earlier stop on the v1 materialization test is superseded by R7 plus R5's narrowly allowed edit. The test now expects safe, complete `synthetic-v1` inputs to stop with `SCF_LADDER_PROTOCOL_V1`; independent alpha-zero, incomplete-grid, and existing-output checks remain. The unsafe-restart test is unchanged and passes. Auditor verdict `RISK_COVERED`; focused and static gates are recorded in `PHASE2_CLOSE_LOG.md`. The implementation is committed with the 20.3 item.
 
 ## 20.4 — additional existing-test/specification conflict before implementation
 
@@ -386,7 +372,7 @@ La limitación conocida es la enumeración de rotaciones independiente de spglib
 20.8 depends on SCF ladder v2 (20.3) and the planner/coverage update (20.5), both currently stopped. No code, tests, or premise probes were started for 20.8; resume after the upstream blockers are resolved.
 
 
-## Current full-suite delta after R1–R4
+## Historical full-suite delta after R1–R4 (resolved by R6)
 
 The required full suite was rerun with `--continue-on-collection-errors`. It reproduced all five baseline collection errors and all 20 baseline failed IDs, plus the new failure `tests/unit/test_scf_validation.py::test_materializer_rejects_missing_parent_assets_and_unsafe_restart` (expected `File.DM.Init`, received a missing `LatticeConstant` identity-binding error). This is recorded in `PHASE2_CLOSE_LOG.md`; do not treat the branch as fully green.
 

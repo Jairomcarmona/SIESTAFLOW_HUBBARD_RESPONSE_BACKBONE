@@ -497,3 +497,46 @@ Changed `bind_ladder_input` to inspect every include-resolved effective FDF line
 - V6: `V6 GATE OK`.
 
 No pre-existing test assertion was edited. No FDF parser behavior outside the early safety guard changed.
+
+
+### 20.3 / R7 premise checks before resuming the saved draft
+
+| Premise | Result | Command and evidence |
+|---|---|---|
+| R7/P1 | TRUE | `Get-Content tools/fdebq_scf_ladder_campaign.py` around `build_ladder_runs` → current code checks `protocol.enabled`, then validates output/groups, and binds each source before checking assets; no protocol version gate is present in the current checked-in implementation. |
+| R7/P2 | TRUE | `Get-Content tests/unit/test_scf_validation.py` lines 80–104 → `test_materialized_ladder_changes_only_tolerance_and_preserves_parent` calls `build_ladder_runs` with `policy()` and asserts 12 materialized v1 runs and parent DM copies. |
+| R7/P3 | TRUE | `.venv/Scripts/pytest.exe tests/unit/test_scf_validation.py::test_materialized_ladder_changes_only_tolerance_and_preserves_parent tests/unit/test_scf_validation.py::test_materializer_rejects_missing_parent_assets_and_unsafe_restart -q` → both existing tests pass unchanged on the R6 result (`2 passed, 2 warnings`); `policy()` uses protocol version `synthetic-v1`. |
+| R7/P4 | TRUE | Same command → the original unsafe-restart test passes after R6 without edits. Current code's `build_ladder_runs` still has no version rejection and checks per-source/security state before any protocol-version check because such a check is absent. |
+| R7/P5 | TRUE | `git stash show --stat --include-untracked 'stash@{0}'` → saved 20.3 draft contains `scf_ladder_inputs.py`, `tools/fdebq_scf_ladder_campaign.py`, `scf_ladder.py`, `scf_ladder_models.py`, `tools/fdebq_validate_t0_t4.py`, `tests/unit/test_scf_ladder_v2.py`, and `T0_T4_RUNBOOK.md`. |
+
+R7 requires security checks across all entries (including missing assets) before protocol-version rejection. Apply this explicitly while resuming the saved draft; preserve R6's early canonical unsafe-restart check in the rewritten `scf_ladder_inputs.py`. The existing v1 materialization assertion is eligible for a R5 edit; record its old/new assertions and the exact 20.3 clause after the edit is reviewed.
+
+
+### 20.3 R5 authorized test edit — assertion record
+
+Edited only the specifically authorized `tests/unit/test_scf_validation.py::test_materialized_ladder_changes_only_tolerance_and_preserves_parent`.
+
+- Old assertion: using the `synthetic-v1` policy, `build_ladder_runs` succeeds; assert 12 generated runs, one shared parent-DM digest, copies of the DM and pseudopotential, and materialized `DM.Tolerance` values.
+- New assertion: with safe, complete v1 inputs, `build_ladder_runs` raises `ScfLadderError` matching `SCF_LADDER_PROTOCOL_V1`, and creates no output directory.
+- Replacing clause: 20.3 Change 1, “v1 records load as `NOT_ESTABLISHED` (`SCF_LADDER_PROTOCOL_V1`)”; R7 specifies that security preflight occurs first, so this test uses otherwise safe and complete inputs.
+
+`test_materializer_rejects_missing_parent_assets_and_unsafe_restart` remains unedited and passes. Added a distinct v1 test showing that a missing asset is reported before the v1 protocol rejection.
+
+R7 corrections made after auditor review: security preflight in `build_ladder_runs` before `require_evidence_v2`; the current R6 canonical guard is shared with the reference materializer and runs before parsing; v2 H tolerances strictly decrease in the existing DM-level order; T0–T4 validation visits groups in sorted order. The H-order condition is qualitative monotonic hardening from D9/§E.2; it introduces no numeric factor or threshold.
+
+
+### 20.3 implementation and gates after R7
+
+Resumed the saved v2 ladder draft and retained R6's canonical `File.DM.Init` check before parsing in both perturbed-run binding and reference materialization. `build_ladder_runs` now checks effective FDF safety, declared parent identity/path, and required assets for the inputs before `require_evidence_v2`; it also checks request-key and symmetric-grid structure before the protocol gate. A safe complete v1 request therefore reaches `SCF_LADDER_PROTOCOL_V1`, while an unsafe restart or missing asset is reported first. Added tests for the latter orderings. V2 levels now require strictly decreasing H tolerances in the same DM-sorted order, with no invented factor; T0–T4 groups are visited in sorted order.
+
+Auditor: `RISK_COVERED`. Explicit R5 confirmation: `test_materialized_ladder_changes_only_tolerance_and_preserves_parent` was renamed to `test_materialization_rejects_legacy_v1_protocol`; only its v1-production success assertions were replaced. Independent checks for an existing output destination, incomplete symmetric grid, and alpha-zero rejection were retained. `test_materializer_rejects_missing_parent_assets_and_unsafe_restart` remains unchanged. The final reviewed v1 evidence test uses four safe FDFs plus existing parent/assets, so protocol rejection occurs after preflight.
+
+- Focused SCF ladder modules: `61 passed, 2 warnings`.
+- 70 scientific regression tests: `70 passed, 2 warnings`.
+- Ruff: `All checks passed!`.
+- Format: `91 files already formatted`.
+- Configured strict mypy: `Success: no issues found in 91 source files`.
+- Strict mypy on the two touched SCF test modules: `Success: no issues found in 2 source files`.
+- V6: `V6 GATE OK`.
+
+The original D5 estimator body remains byte-for-byte AST-identical to HEAD according to the auditor; parent references are captured/checked by the v2 draft before perturbation materialization. No SIESTA was executed.

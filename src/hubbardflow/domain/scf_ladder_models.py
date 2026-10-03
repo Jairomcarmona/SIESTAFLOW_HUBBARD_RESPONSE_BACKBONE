@@ -7,6 +7,8 @@ import json
 from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import Enum
+from fractions import Fraction
+from itertools import pairwise
 from typing import Self
 
 from .response_budget_models import BoundKind, ElementSeries, ResponseBudgetError, _Record
@@ -39,6 +41,7 @@ class ScfStatus(str, Enum):
     SCF_UNDER_RESOLVED = "SCF_UNDER_RESOLVED"
     NOISE_FLOOR_NOT_ESTABLISHED = "NOISE_FLOOR_NOT_ESTABLISHED"
     DISABLED = "DISABLED"
+    NOT_ESTABLISHED = "NOT_ESTABLISHED"
 
 
 class ScfReason(str, Enum):
@@ -46,19 +49,44 @@ class ScfReason(str, Enum):
     NOISE_FLOOR_NOT_ESTABLISHED = "NOISE_FLOOR_NOT_ESTABLISHED"
     SCF_ENVELOPE_NOT_COVERED = "SCF_ENVELOPE_NOT_COVERED"
     SCF_LADDER_DISABLED = "SCF_LADDER_DISABLED"
+    SCF_LADDER_PROTOCOL_V1 = "SCF_LADDER_PROTOCOL_V1"
+    PARENT_LEVEL_NOT_DISTINCT = "PARENT_LEVEL_NOT_DISTINCT"
+    SCF_LEVEL_NOT_APPLIED = "SCF_LEVEL_NOT_APPLIED"
+    SCF_CRITERIA_NOT_ACTIVE = "SCF_CRITERIA_NOT_ACTIVE"
+    LEVEL_REFERENCE_NOT_CONVERGED = "LEVEL_REFERENCE_NOT_CONVERGED"
 
 
 @dataclass(frozen=True)
 class ScfLevel(_ScfRecord):
     level_id: str
     dm_tolerance: float
+    # None preserves historical algebraic v1 records, never a production H default.
+    h_tolerance_ev: float | None = None
 
     def __post_init__(self) -> None:
         super().__post_init__()
         try:
             require_positive_finite(self.dm_tolerance, "dm_tolerance")
+            if self.h_tolerance_ev is not None:
+                require_positive_finite(self.h_tolerance_ev, "h_tolerance_ev")
         except ValueError as exc:
             raise ScfLadderError(str(exc)) from exc
+
+    @classmethod
+    def from_mapping(cls, payload: Mapping[str, object]) -> Self:
+        historical = dict(payload)
+        if "h_tolerance_ev" not in historical:
+            historical["h_tolerance_ev"] = None
+        return super().from_mapping(historical)
+
+    def require_echo_representable(self) -> None:
+        """The six-decimal SIESTA echo must prove both declared tolerances exactly."""
+        for name, value in (("dm_tolerance", self.dm_tolerance), ("h_tolerance_ev", self.h_tolerance_ev)):
+            if value is None:
+                raise ScfLadderError(f"v2 requires explicit {name}")
+            units = Fraction(str(value)) * 1_000_000
+            if units < 1 or units.denominator != 1:
+                raise ScfLadderError(f"{name} must be >= 1e-6 and an exact multiple of 1e-6")
 
 
 @dataclass(frozen=True)
@@ -88,6 +116,12 @@ class ScfLadderProtocol(_ScfRecord):
             if len({level.dm_tolerance for level in ordered}) != 3:
                 raise ScfLadderError("SCF tolerances must strictly decrease")
             object.__setattr__(self, "levels", ordered)
+            if self.version in {"v2", "scf-ladder-v2"}:
+                for level in ordered:
+                    level.require_echo_representable()
+                h_tolerances = tuple(level.h_tolerance_ev for level in ordered)
+                if any(lo is None or hi is None or lo <= hi for lo, hi in pairwise(h_tolerances)):
+                    raise ScfLadderError("SCF H tolerances must strictly decrease with DM tolerances")
         except ValueError as exc:
             raise ScfLadderError(str(exc)) from exc
 
@@ -96,6 +130,21 @@ class ScfLadderProtocol(_ScfRecord):
         return hashlib.sha256(
             json.dumps(self.to_mapping(), sort_keys=True, separators=(",", ":"), allow_nan=False).encode()
         ).hexdigest()
+
+    @property
+    def status(self) -> ScfStatus:
+        """Historical algebraic ladders cannot establish user-produced SCF evidence."""
+        return ScfStatus.ESTABLISHED if self.version in {"v2", "scf-ladder-v2"} else ScfStatus.NOT_ESTABLISHED
+
+    @property
+    def reason_codes(self) -> tuple[ScfReason, ...]:
+        return () if self.status is ScfStatus.ESTABLISHED else (ScfReason.SCF_LADDER_PROTOCOL_V1,)
+
+    def require_evidence_v2(self) -> None:
+        if self.status is not ScfStatus.ESTABLISHED:
+            raise ScfLadderError("NOT_ESTABLISHED: SCF_LADDER_PROTOCOL_V1")
+        for level in self.levels:
+            level.require_echo_representable()
 
 
 @dataclass(frozen=True)
