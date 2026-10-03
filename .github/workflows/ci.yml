@@ -1,0 +1,30 @@
+name: Full test suite
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install project and pinned quality tools
+        run: python -m pip install -e ".[test]" ruff==0.16.10 mypy==2.4.0
+      - name: Run full test suite
+        run: python -m pytest tests
+      - name: Lint
+        run: ruff check .
+      - name: Check formatting
+        run: ruff format --check .
+      - name: Strict type check
+        run: MYPYPATH=src mypy
+      - name: Check import architecture
+        run: python -m pytest -q tests/unit/test_import_architecture.py
+      - name: Verify frozen scientific baseline
+        run: bash tools/check_v6_integrity.sh

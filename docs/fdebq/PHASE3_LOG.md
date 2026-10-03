@@ -113,3 +113,42 @@ The Part A fixture files and detached campaign remain unmodified during Phase
   because `fcntl` and executable scripts require POSIX.
 - The fixture tree is 30,311,362 bytes including scripts and manifests; the
   compressed stdout and DM payloads are 30.3 MB.
+
+## 3.2 CI and baseline known failures
+
+- Rechecked premises before editing: `backend-contracts.yml` has path filters
+  on both push and pull requests; `pyproject.toml` had no pytest settings;
+  importing `examples/tmo_campaigns/test_order.py` writes an FDF and invokes
+  SIESTA at module scope; and `check_v6_integrity.sh` had no required-tag
+  check. Added a full `ci.yml` workflow with checkout depth 0, Python 3.12,
+  Ruff 0.16.10, mypy 2.4.0, the full test suite, lint/format/type/architecture
+  checks and the V6 gate. `backend-contracts.yml` is unchanged. The V6 script
+  now fails explicitly if `scientific-v6-final` is absent.
+- The required-profile scan (`rg --files -g '*profile*.json'` plus JSON
+  inspection) found empty runtime environments in every tracked execution
+  profile; the production example contains only `<site-defined>` placeholders.
+  The source scan for `os.environ`/`getenv` found the runner mutation and Slurm
+  reads listed in item 3.3, plus `campaign_software_lock.py`'s PYTHONPATH
+  prohibition. `verify_locked_software` has no call sites under `src/` or
+  `tests/`, so that independent validator does not read the runner-mutated
+  environment.
+- The post-3.1 WSL full-suite run (`pytest tests --continue-on-collection-errors
+  -q`) yielded 1,355 passed, 20 skipped, 20 failed, five collection errors and
+  four subtests passed in 594.75 seconds. The 20 failure IDs match the recorded
+  baseline exactly; only the pass count changed by one due to the new replay.
+  The five collection errors were also the same baseline files. Their causes
+  and the individual failed-test causes are captured in
+  `tests/known_failures.txt`: absent archived files, missing `LOCKS.sha256`, or
+  the retired `siestaflow_hubbard` / `lru_core` source trees.
+- Added pytest test discovery rooted at `tests`, dynamic strict xfails only
+  while each named missing path is absent, and `collect_ignore` entries for the
+  five baseline collection errors. If a missing fixture returns, its test runs
+  normally. Added AGENTS.md rule 12 requiring the known-failure list to shrink.
+- The first post-commit acceptance attempt exposed that pytest resolves
+  `collect_ignore` relative to `tests/`; after correcting those five paths,
+  `pytest --collect-only -q tests` completed in Windows and WSL with 1,395
+  collected and no collection errors. The baseline-failure subset then reported
+  18 xfails, 11 passes and 13 skips; extant-fixture tests ran normally.
+- Conservative decision: each xfail is tied to a concrete absent path found in
+  the baseline traceback; collection errors are ignored by exact test-file
+  path because their imports fail before pytest can collect individual tests.

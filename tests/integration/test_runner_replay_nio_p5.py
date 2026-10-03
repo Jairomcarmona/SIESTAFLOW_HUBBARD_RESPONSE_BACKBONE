@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import os
 import re
 import sys
 import time
@@ -33,7 +32,7 @@ _DYNAMIC_INPUT_HASH_ROW = re.compile(rb"(\| (?:execution_profile|lr_config) \| [
 _EVIDENCE_DIGEST_ROW = re.compile(rb"(\| response:[^\n]*\| )[0-9a-f]{64}( \|)")
 
 
-@pytest.mark.skipif(os.name != "posix", reason="campaign replay requires POSIX fcntl and executables")
+@pytest.mark.skipif(sys.platform == "win32", reason="campaign replay requires POSIX fcntl and executables")
 def test_nio_p5_runner_replay_matches_part_a_and_resumes(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
