@@ -1,0 +1,21 @@
+{
+  "records": [
+    {
+      "backend": {
+        "backend_id": "siesta",
+        "executable_sha256": "aaa9a2e45a41b12f3aad52ca4fca7c25b1cc6afd3aff2a0c7fe145b1bd9f18ce",
+        "version": "5.4.2"
+      },
+      "profile": {
+        "metadata": {
+          "source_revision": "e486d12067b96ff688179f0496d0ec21b6fae0ab"
+        },
+        "profile_id": "siesta-5.4.2-potential-shift-hamiltonian-v1",
+        "version": "1"
+      },
+      "reason": "exact local WSL executable registered for controlled full campaign",
+      "state": "compatible"
+    }
+  ],
+  "schema": "backend_compatibility_v1"
+}

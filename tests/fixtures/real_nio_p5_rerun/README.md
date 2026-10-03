@@ -10,8 +10,15 @@ source tree was commit `5a3fe5b3d51da0a229a2d2d8e93e839089edd9cb` (the requested
 
 `lr_u_analysis.v3.json` is the campaign analysis. `response_observation_dataset.json`
 is its embedded verified occupation dataset extracted as a separate artifact.
-The analysis and dataset are byte-bound to the same campaign result; the
-dataset SHA256 is recorded below.
+The analysis and dataset are byte-bound to the same campaign result. The
+analysis SHA256 is `cb9ea223da57e6973baf697b4f26f2e4f458be5c68d0be15015ab8b41ba702a7`;
+the extracted dataset SHA256 is
+`d8e2f3406b6fe71045708a51fbef6c086f31385c0992838640e700433a598ca6`.
+
+The `inputs/` directory preserves the byte-verified reference FDF, source
+configuration, profile, pseudopotentials, backend registry and SIESTA version
+file used by Part A. The original source-configuration hash and route-only
+rewrite are documented in the validation report.
 
 Recomputing the complete analysis JSON from the dataset alone is not supported
 by the runner's current analysis boundary. `analyze_verified_lr` accepts

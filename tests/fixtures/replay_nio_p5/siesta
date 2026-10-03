@@ -1,0 +1,60 @@
+#!/usr/bin/env python3
+"""Emit recorded NiO P5 SIESTA artifacts for the POSIX runner replay."""
+from __future__ import annotations
+
+import hashlib
+import json
+import lzma
+from pathlib import Path
+import sys
+
+
+FIXTURE_ROOT = Path(__file__).resolve().parent
+MANIFEST = json.loads((FIXTURE_ROOT / "manifest.json").read_text(encoding="utf-8"))
+RUNS = {row["fdf_sha256"]: row for row in MANIFEST["runs"]}
+
+
+def _campaign_control() -> Path:
+    for parent in (Path.cwd(), *Path.cwd().parents):
+        control = parent / ".siestaflow"
+        if (control / "attempts").is_dir():
+            return control
+    raise RuntimeError("campaign control directory not found from replay working directory")
+
+
+def main() -> int:
+    input_path = Path.cwd() / "siesta.fdf"
+    fdf_sha256 = hashlib.sha256(input_path.read_bytes()).hexdigest()
+    try:
+        run = RUNS[fdf_sha256]
+    except KeyError as exc:
+        raise RuntimeError(f"no recorded NiO P5 run for materialized FDF {fdf_sha256}") from exc
+
+    control = _campaign_control()
+    stop_marker = control / "replay-stop-issued"
+    if not stop_marker.exists():
+        count_path = control / "replay-run-count"
+        count = int(count_path.read_text(encoding="ascii")) + 1 if count_path.exists() else 1
+        count_path.write_text(str(count), encoding="ascii")
+        if count == 13:
+            stop_marker.write_text("stop after half the response grid\n", encoding="utf-8")
+            (control / "stop-request.json").write_text(
+                json.dumps({"source": "fixture replay"}),
+                encoding="utf-8",
+            )
+
+    dm_bytes = lzma.decompress((FIXTURE_ROOT / run["dm_file"]).read_bytes())
+    if hashlib.sha256(dm_bytes).hexdigest() != run["dm_sha256"]:
+        raise RuntimeError("recorded DM fixture failed its SHA256 check")
+    (Path.cwd() / run["dm_name"]).write_bytes(dm_bytes)
+
+    output_bytes = lzma.decompress((FIXTURE_ROOT / run["out_file"]).read_bytes())
+    if hashlib.sha256(output_bytes).hexdigest() != run["output_sha256"]:
+        raise RuntimeError("recorded SIESTA output fixture failed its SHA256 check")
+    sys.stdout.buffer.write(output_bytes)
+    sys.stdout.buffer.flush()
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

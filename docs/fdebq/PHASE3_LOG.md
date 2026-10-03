@@ -63,3 +63,53 @@ but will not change their assertions or product behavior.
 
 The Part A fixture files and detached campaign remain unmodified during Phase
 3. SIESTA will not be invoked in Part B; the replay uses recorded outputs.
+
+## 3.1 End-to-end replay test
+
+- The premise held: no `CampaignRunner(manifest)` construction existed in
+  tests. The test initializes with `initialize_campaign`, Part A verified
+  NiO inputs, a test-written local WSL profile and a route-rewritten test
+  configuration. Its compatibility registry admits the replay executable by
+  its SHA256 and the SIESTA 5.4.2 scientific profile. It does not bypass
+  admission.
+- Captured files are only materialized input FDFs (used as SHA keys), the
+  corresponding SIESTA stdout, and each run's DM. The reference and 24
+  response run files are xz-compressed in
+  `tests/fixtures/replay_nio_p5/`; compressed stdout+DM payloads total 30.3 MB.
+- The replay script requests stop on its 13th call. The first worker returns
+  `STOPPED` with at least 13 validated nodes; `resume` then validates all 27
+  DAG nodes (reference, 24 responses, alpha diagnostic, matrix analysis).
+- Against Part A, all numerical fields, occupations and U values compare
+  equal after these exact fields/categories are removed:
+
+  | Exact JSON path | Category |
+  |---|---|
+  | `$.campaign.campaign_id` | campaign identity |
+  | `$.campaign.name` | campaign identity |
+  | `$.provenance.campaign_inputs.input_identity` | campaign identity |
+  | `$.provenance.campaign_inputs.declared_inputs.campaign_contract.sha256` | campaign-bound input hash |
+  | `$.provenance.campaign_inputs.declared_inputs.execution_profile.sha256` | profile/path-bound input hash |
+  | `$.provenance.campaign_inputs.declared_inputs.lr_config.sha256` | route/path-bound input hash |
+  | `$.provenance.campaign_inputs.analysis_implementation.package_version` | runtime binding |
+  | `$.provenance.campaign_inputs.siesta_runtime.runtime_executable` | runtime binding |
+  | `$.response_observation_dataset.reference_source.evidence_digest` | runtime evidence digest |
+  | `$.response_observation_dataset.rows[i].sources.{bare,screened}.evidence_digest`, `i = 0…11` | runtime evidence digests, 24 entries |
+
+  Attempt-directory identifiers inside source paths are normalized to
+  `ATTEMPT-GROUP`, `attempt-NORMALIZED`, and `ATTEMPT-SUFFIX`. No DM-derived
+  hashes were removed: Part A and replay DMs match exactly. The standalone
+  comparator also asserts exact equality of every `primary.U_by_site_eV`.
+- The final campaign's persisted files match the frozen 3.1 manifest in
+  `tests/fixtures/replay_nio_p5/campaign_manifest.sha256.json`; 220 files are
+  covered. The manifest canonicalizes attempt IDs, fixed test timestamps,
+  temporary campaign-root strings and runtime/receipt identity metadata so
+  the filesystem-rooted fixture remains reproducible.
+- The campaign-file manifest normalizes only attempt IDs, the temp-root
+  binding, and the runtime-dependent input/evidence hashes embedded in the
+  generated Markdown report. The report's scientific values and source hashes
+  remain covered. The golden was frozen after this normalization; two
+  independent POSIX replay runs matched it, then a third verification run also
+  passed (`1 passed`, 11.32–12.00 seconds). Windows uses the declared skip
+  because `fcntl` and executable scripts require POSIX.
+- The fixture tree is 30,311,362 bytes including scripts and manifests; the
+  compressed stdout and DM payloads are 30.3 MB.
