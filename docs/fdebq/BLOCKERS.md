@@ -402,3 +402,7 @@ R10 leaves only the NiO P5 archive chain in 20.9's compatible golden; CoO, MnO a
 ## Phase 2 close — 20.10 dependency cleared
 
 The 20.5 prerequisite was implemented in `b6a85d1`: optional `spglib` enumeration is absent and the current planner version is `campaign-planner-v2`. Continue with 20.10's premise checks and architecture work.
+
+## TASK 22 — premisa de referencia Git resuelta
+
+La referencia local `codex/hubbardflow-rename` estaba en `241d009b92d39519b9a308284c783add94849625`, así que la premisa sobre ese nombre local era falsa. `git fetch` actualizó `origin/codex/hubbardflow-rename` a `299b8f0db44ba385c36d7b0fcef54639f1bcffb7` (merge del PR #8). La rama `fdebq/r6-task22-i5` se creó desde ese hash remoto exacto; por eso el trabajo no quedó bloqueado. La referencia local preexistente no se movió.

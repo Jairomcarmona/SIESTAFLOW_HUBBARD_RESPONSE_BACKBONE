@@ -805,6 +805,10 @@ class CampaignRunner:
             self._record_receipt(node, receipt, {"kind": "execution_failure", "reason": "no materialized command"})
             return receipt
         record = self._command_record(node, command, receipt)
+        if receipt.state is NodeState.FAILED_EXECUTION:
+            failure = json.loads((command.cwd / "failure.json").read_text(encoding="utf-8"))
+            record["returncode"] = failure["returncode"]
+            record["returncode_meaning"] = failure["returncode_meaning"]
         self._record_receipt(node, receipt, record)
         if receipt.state is NodeState.VALIDATED and node.kind is LRNodeKind.REFERENCE:
             dm_path = command.cwd / record["artifact_spec"]["dm"]
@@ -1788,7 +1792,15 @@ class CampaignRunner:
             if receipt.state is not NodeState.VALIDATED:
                 if getattr(self, "shadow", None) is not None and self.shadow.failed_shadow(self, node):
                     continue
-                heartbeat.finish("FAILED", failed_node=node.node_id, failure_state=receipt.state.value)
+                failure_record = self.store.records.get(node.node_id, {})
+                failure_details = {
+                    name: failure_record[name]
+                    for name in ("returncode", "returncode_meaning")
+                    if name in failure_record
+                }
+                heartbeat.finish(
+                    "FAILED", failed_node=node.node_id, failure_state=receipt.state.value, **failure_details,
+                )
                 return 1
 
 
