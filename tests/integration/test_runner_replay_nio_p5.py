@@ -139,7 +139,33 @@ def test_nio_p5_runner_replay_matches_part_a_and_resumes(
     )
     manifest = Path(initialized["manifest_path"])
 
-    assert run_campaign_worker(manifest, "run") == 0
+    run_exit_code = run_campaign_worker(manifest, "run")
+    if run_exit_code != 0:
+        control = manifest.parent / ".siestaflow"
+        state_path = control / "worker-state.json"
+        worker_state = json.loads(state_path.read_text(encoding="utf-8")) if state_path.is_file() else {}
+        working_directory = Path(str(worker_state.get("active_working_directory", "")))
+        tails = {
+            name: (working_directory / name).read_text(encoding="utf-8", errors="replace").splitlines()[-40:]
+            for name in ("siesta.err", "siesta.out")
+            if (working_directory / name).is_file()
+        }
+        worker_error_path = control / "worker-error.json"
+        worker_error = (
+            json.loads(worker_error_path.read_text(encoding="utf-8")) if worker_error_path.is_file() else None
+        )
+        raise AssertionError(
+            json.dumps(
+                {
+                    "run_exit_code": run_exit_code,
+                    "campaign_status": campaign_status(manifest),
+                    "worker_state": worker_state,
+                    "worker_error": worker_error,
+                    "active_output_tails": tails,
+                },
+                sort_keys=True,
+            )
+        )
     stopped = campaign_status(manifest)
     assert stopped["status"] == "STOPPED"
     assert len(stopped["completed_nodes"]) >= 13
