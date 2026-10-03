@@ -30,6 +30,7 @@ _ATTEMPT_GROUP_BYTES = re.compile(rb"(?<=/attempts/)[0-9a-f]{20}")
 _ATTEMPT_SUFFIX_BYTES = re.compile(rb"(?<=_)[0-9a-f]{12}(?=[/._]|$)")
 _DYNAMIC_INPUT_HASH_ROW = re.compile(rb"(\| (?:execution_profile|lr_config) \| [^|]+ \| )[0-9a-f]{64}( \|)")
 _EVIDENCE_DIGEST_ROW = re.compile(rb"(\| response:[^\n]*\| )[0-9a-f]{64}( \|)")
+_SHA256_TOKEN = re.compile(rb"(?<![0-9a-f])[0-9a-f]{64}(?![0-9a-f])")
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="campaign replay requires POSIX fcntl and executables")
@@ -265,6 +266,9 @@ def _campaign_file_manifest(root: Path) -> dict[str, str]:
             if path.name == "LR_U_REPORT.v3.md":
                 normalized = _DYNAMIC_INPUT_HASH_ROW.sub(rb"\1DYNAMIC_INPUT_HASH\2", normalized)
                 normalized = _EVIDENCE_DIGEST_ROW.sub(rb"\1DYNAMIC_EVIDENCE_DIGEST\2", normalized)
+                # The report repeats hashes for artifacts that are checked as
+                # separate manifest entries; canonicalize their rendered copies.
+                normalized = _SHA256_TOKEN.sub(b"SHA256", normalized)
         else:
             removed: dict[str, str] = {}
             comparable = _comparison_view(value, removed, "$")

@@ -236,4 +236,6 @@ The Part A fixture files and detached campaign remain unmodified during Phase
   1 xfailed), and V6 integrity passed.
 
 
-- CI run 37128408454 confirmed the fixture commands now execute, then exposed checkout-root paths in four golden hashes (execution_profile.json, source_lr_config.json, node-evidence.json, and the rendered report). The replay manifest normalizes the repository root in text and JSON before hashing; the updated golden manifest reflects canonicalized output. The replay passes locally in WSL; CI is pending.
+
+- CI run 37128408454 confirmed the fixture commands now execute, then exposed checkout-root paths in four golden hashes (execution_profile.json, source_lr_config.json, node-evidence.json, and the rendered report). The replay manifest now normalizes the repository root in text and JSON before hashing.
+- CI run 37129336376 confirmed those four hashes now match and narrowed the remaining mismatch to rendered SHA-256 tokens in the Markdown report. The report hash normalization canonicalizes those repeated tokens; each underlying artifact remains checked separately by the manifest. The replay passes locally in WSL; CI is pending.

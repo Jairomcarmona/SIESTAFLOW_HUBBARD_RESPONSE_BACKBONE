@@ -217,7 +217,7 @@
   "pseudopotentials/O.psml": "224ded5c59176d9bcb76d19b7a4a68a48d5dffabf8b262f64d5760250e87c35e",
   "reference.fdf": "b4fb34e642d862be6949a5b2033a60c5b9fcae56119879583bb3eaf237620ee7",
   "resolved_perturbation_plan.json": "27c9ddd79ed99221c18aa845b4a4c959a15a753b2b94952e287630b9cc8d5af5",
-  "results/LR_U_REPORT.v3.md": "aead693a4cef6ca7891bb18a64d96e83c36416ebe49903792e786167e69994a4",
+  "results/LR_U_REPORT.v3.md": "8aa3f5d0e816d81a578f607e61cf11a83da038be9794ecaf35d403e518ed7bd4",
   "results/lr_u_analysis.v3.json": "ef7a590b500719065c4765652484d1a9fa721b9619346c1bf1e331c5aa27a978",
   "software/backend_compatibility.json": "0272e12d9cd0d9f28da846925814156ec2e7f54859550f3a7e641fdf031a8274",
   "software/siesta_version.txt": "bb5a9b03dfaec9953401a7ef8db045149461047c44f15f9c5bf7758900b5f3ee"
