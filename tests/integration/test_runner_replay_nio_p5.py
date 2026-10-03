@@ -97,7 +97,7 @@ def test_nio_p5_runner_replay_matches_part_a_and_resumes(
                 "evidence": "VALIDATED_RUNTIME",
                 "wsl": {
                     "distribution": "Ubuntu",
-                    "python_executable": "/usr/bin/python3",
+                    "python_executable": sys.executable,
                     "workspace_root": str(tmp_path),
                 },
                 "allocation": {
@@ -195,7 +195,7 @@ def _comparison_view(value: Any, removed: dict[str, str], path: str) -> Any:
                 category = "timestamps"
             elif key in {"evidence_digest", "evidence_sha256", "report_sha256"}:
                 category = "runtime binding: evidence digest"
-            elif key in {"runtime_executable", "package_version"}:
+            elif key in {"runtime_executable", "python_executable", "package_version"}:
                 category = "runtime binding"
             elif key == "sha256" and any(
                 field in child_path
