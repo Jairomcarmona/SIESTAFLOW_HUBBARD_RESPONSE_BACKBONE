@@ -328,3 +328,8 @@ La regla nueva de 20.4 exige `MATCH` cuando los bytes canónicos coinciden y la 
 ## Phase 2 close — RISK_UNCOVERED en 20.5
 
 La auditoría científica detuvo 20.5. La nueva aceptación de exactitud discreta contradice `tests/unit/test_symmetry_operations.py::test_f8_records_incommensurate_translation_without_excluding_candidate`, que exige `EXACT_TRANSLATION` para t=1/4 y `InitMesh=(3,3,3)`; el ítem no autoriza editar el test existente. Además, una rotación válida para la celda `((1,0,0),(1,1,0),(0,0,1))` queda fuera de la enumeración interna actual. Una simulación de la API de spglib elevó candidatos 8→10, pero spglib real no está instalado y no se afirma que la haya encontrado. La equivalencia entre rutas no está probada. Se requiere resolver el conflicto de test/aceptación y verificar el alcance de búsqueda antes de implementar. No se modificó código de 20.5.
+
+## Phase 2 close — RISK_UNCOVERED en 20.9
+
+La auditoría científica determinó que usar los FDF de `examples/tmo_campaigns` como golden de las entradas modernas CoO/NiO mezcla campañas físicamente distintas: cambian celda, cantidad/etiqueta de sitios, grid y método de proyectores; la inicialización PBE actual rechaza las plantillas antiguas. Para Cu3N, el archivo de materialización disponible corresponde al antiguo modelo de 4 átomos/Cu1 frente al modelo actual de 32 átomos/24 sitios. En MnO, solo hay FDF materializados de los representantes A/B aunque la entrada de referencia declara 16 sitios. No se generaron ni emparejaron hashes incompatibles y se eliminó el prototipo de generador/prueba. Se necesita una cadena archivada compatible, designada por el autor, o una aclaración explícita que limite la comparación. 20.9 queda detenido como `RISK_UNCOVERED`.
+
