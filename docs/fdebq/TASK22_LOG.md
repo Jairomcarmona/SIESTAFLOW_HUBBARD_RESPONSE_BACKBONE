@@ -47,3 +47,21 @@ Gates dirigidos antes del commit: `python -m pytest tests/unit/test_runtime_adap
 
 
 POSIX específicos de 22.1 en WSL: `PYTHONPATH=src python -m pytest tests/unit/test_runtime_adapters.py -q` → `8 passed` (incluye SIGTERM directo y launcher 143).
+
+## Addendum de gates del commit 22.1 (`c397fb1`)
+
+- 20.9 golden: `4 passed`.
+- Tests de producto/campaña: `109 passed`.
+- 70 regresiones científicas: `70 passed`.
+- Arquitectura: `8 passed`.
+- WSL replay POSIX: `7 passed`.
+- Suite completa: `1370 passed, 27 skipped, 20 xfailed, 4 subtests passed`.
+- `ruff check .`, `ruff format --check .`, `MYPYPATH=src mypy` y V6: todos pasan (`V6 GATE OK`).
+
+## 22.2 — verificación previa
+
+Comando `rg -n 'campaign-planner-v3|def verify_frozen_campaign_plan' src/hubbardflow/execution/campaign_plan.py` confirmó la versión literal `campaign-planner-v3` y la función solicitada. Lectura directa de la función confirmó que `from_mapping` y el recálculo se ejecutaban dentro del `try`, cuyo `except` convertía excepciones en `cannot resume frozen campaign plan: ...`. No se requiere ni se cambia ningún golden.
+
+Edición autorizada añadida: `tests/unit/test_campaign_plan.py::test_resume_reports_explicit_planner_version_change` cambia solo la versión del plan congelado a `campaign-planner-v2` y exige el error literal `PLANNER_VERSION_CHANGED`, ambas versiones y la instrucción de re-inicializar. No se editaron aserciones existentes.
+
+Verificación local del ítem: `python -m pytest tests/unit/test_campaign_plan.py -q` → `28 passed`; `MYPYPATH=src mypy --strict src/hubbardflow/execution/campaign_plan.py` → `Success: no issues found in 1 source file`.

@@ -375,3 +375,23 @@ def test_planned_manifest_cannot_change_targets_or_protocol(tmp_path: Path, fiel
     manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
     with pytest.raises(CampaignV2Error, match="disagree"):
         load_campaign_v2(manifest_path)
+
+
+def test_resume_reports_explicit_planner_version_change(tmp_path: Path) -> None:
+    fdf, raw, _ = inputs(tmp_path)
+    config = normalized(fdf, raw)
+    resolved = resolve_campaign_planning(fdf, config)
+    freeze_campaign_plan(tmp_path, resolved, config)
+    plan_path = tmp_path / "resolved_perturbation_plan.json"
+    plan = json.loads(plan_path.read_text(encoding="utf-8"))
+    plan["planner_version"] = "campaign-planner-v2"
+    plan_path.write_text(json.dumps(plan), encoding="utf-8")
+
+    with pytest.raises(CampaignPlanError) as error:
+        verify_frozen_campaign_plan(tmp_path, config)
+
+    assert str(error.value) == (
+        "PLANNER_VERSION_CHANGED: stored planner version 'campaign-planner-v2', "
+        "current version 'campaign-planner-v3'; re-initialize the campaign; "
+        "frozen plans are not migrated"
+    )

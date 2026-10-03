@@ -41,6 +41,8 @@ from hubbardflow.domain.symmetry_operation_models import (
 )
 from hubbardflow.execution.campaign_coverage_policy import campaign_coverage_policy
 
+CAMPAIGN_PLANNER_VERSION = "campaign-planner-v3"
+
 
 class CampaignPlanError(ValueError):
     """Campaign inputs disagree with the inventory or frozen planning identity."""
@@ -190,7 +192,7 @@ def _resolve_campaign_planning(fdf: Path, config: Mapping[str, object]) -> Campa
         protocol,
         source_fdf_sha256=source_digest,
         alpha_strategy=strategy,
-        planner_version="campaign-planner-v3",
+        planner_version=CAMPAIGN_PLANNER_VERSION,
         backend_identity=f"{config['declared_executable']}:{backend}:{registry}",
         tau_u_ev=None,
         explicit_sites=None
@@ -250,9 +252,21 @@ def freeze_campaign_plan(root: Path, resolved: CampaignPlanning, config: Mapping
 def verify_frozen_campaign_plan(root: Path, config: Mapping[str, object]) -> ResolvedPerturbationPlan:
     """Compare recomputed input, parent-DM, policy and reference identities on resume."""
     try:
-        row = json.loads((root / "resolved_perturbation_plan.json").read_text(encoding="utf-8"))
+        raw_row = json.loads((root / "resolved_perturbation_plan.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        raise CampaignPlanError(f"cannot resume frozen campaign plan: {exc}") from exc
+    if not isinstance(raw_row, dict):
+        raise CampaignPlanError("cannot resume frozen campaign plan: stored plan is not a JSON object")
+    stored_version = raw_row.get("planner_version")
+    if stored_version != CAMPAIGN_PLANNER_VERSION:
+        raise CampaignPlanError(
+            "PLANNER_VERSION_CHANGED: stored planner version "
+            f"{stored_version!r}, current version {CAMPAIGN_PLANNER_VERSION!r}; "
+            "re-initialize the campaign; frozen plans are not migrated"
+        )
+    try:
         lock = json.loads((root / "campaign.lock").read_text(encoding="utf-8"))
-        plan = ResolvedPerturbationPlan.from_mapping(row)
+        plan = ResolvedPerturbationPlan.from_mapping(raw_row)
         current = resolve_campaign_planning(root / "reference.fdf", config)
         if (
             lock["schema"] != "hubbardflow.campaign_plan_lock.v1"
