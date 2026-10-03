@@ -9,6 +9,7 @@ from hashlib import sha256
 from pathlib import Path
 from typing import Any
 
+import numpy as np
 import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
@@ -167,11 +168,22 @@ def test_missing_reference_freezes_explicit_incomplete_diagnostic(tmp_path: Path
         freeze_campaign_plan(tmp_path, resolved, config)
 
 
-def test_new_planner_version_is_v2_and_part_of_plan_digest(tmp_path: Path) -> None:
+def test_new_planner_version_is_v3_and_part_of_plan_digest(tmp_path: Path) -> None:
     fdf, raw, _ = inputs(tmp_path)
     resolved = resolve_campaign_planning(fdf, normalized(fdf, raw))
-    assert resolved.plan.planner_version == "campaign-planner-v2"
+    assert resolved.plan.planner_version == "campaign-planner-v3"
     assert replace(resolved.plan, planner_version="campaign-planner-v1").digest != resolved.plan.digest
+
+
+def test_plan_generation_does_not_call_lapack(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    fdf, raw, _ = inputs(tmp_path)
+
+    def fail_lstsq(*args: object, **kwargs: object) -> object:
+        raise AssertionError("planner must not depend on numpy.linalg.lstsq")
+
+    monkeypatch.setattr(np.linalg, "lstsq", fail_lstsq)
+    resolved = resolve_campaign_planning(fdf, normalized(fdf, raw))
+    assert resolved.plan.planner_version == "campaign-planner-v3"
 
 
 def test_resume_plan_identity_is_portable_between_staging_directories(tmp_path: Path) -> None:

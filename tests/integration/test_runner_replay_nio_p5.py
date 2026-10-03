@@ -23,6 +23,7 @@ REAL_FIXTURE = ROOT / "tests" / "fixtures" / "real_nio_p5_rerun"
 REPLAY_FIXTURE = ROOT / "tests" / "fixtures" / "replay_nio_p5"
 ANALYSIS = "lr_u_analysis.v3.json"
 GOLDEN_MANIFEST = REPLAY_FIXTURE / "campaign_manifest.sha256.json"
+GOLDEN_JSON_SNAPSHOT = REPLAY_FIXTURE / "campaign_json_snapshot.json"
 REPLAY_ANALYSIS = REPLAY_FIXTURE / "replay_analysis.v3.json"
 _ATTEMPT = re.compile(r"attempt-\d+-[0-9a-f]{8}")
 _ATTEMPT_BYTES = re.compile(rb"attempt-\d+-[0-9a-f]{8}")
@@ -68,6 +69,16 @@ def test_analysis_comparator_requires_exact_state_and_decision() -> None:
 def test_analysis_comparator_rejects_missing_nodes_or_rows(actual: Any, expected: Any) -> None:
     with pytest.raises(AssertionError):
         _assert_replay_equivalent(actual, expected)
+
+
+def test_json_manifest_diagnostic_reports_only_first_ten_differences() -> None:
+    actual = {f"row-{index}": index for index in range(12)}
+    expected = {f"row-{index}": -index for index in range(12)}
+
+    differences = _first_json_differences(actual, expected)
+
+    assert len(differences) == 10
+    assert differences[0] == {"path": "$.row-1", "actual": 1, "expected": -1}
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="campaign replay requires POSIX fcntl and executables")
@@ -242,7 +253,24 @@ def test_nio_p5_runner_replay_matches_part_a_and_resumes(
             for path in sorted(set(actual_manifest) | set(expected_manifest))
             if actual_manifest.get(path) != expected_manifest.get(path)
         }
-        raise AssertionError(f"replay campaign manifest differs: {json.dumps(differences, sort_keys=True)}")
+        actual_json = _campaign_json_snapshot(manifest.parent)
+        expected_json = (
+            json.loads(GOLDEN_JSON_SNAPSHOT.read_text(encoding="utf-8"))
+            if GOLDEN_JSON_SNAPSHOT.is_file()
+            else {}
+        )
+        json_differences = {
+            path: _first_json_differences(actual_json.get(path), expected_json.get(path))
+            for path in sorted(differences)
+            if path in actual_json or path in expected_json
+        }
+        raise AssertionError(
+            "replay campaign manifest differs: "
+            + json.dumps(
+                {"files": differences, "json_field_differences_first_10": json_differences},
+                sort_keys=True,
+            )
+        )
 
 
 def _comparison_view(value: Any, removed: dict[str, str], path: str) -> Any:
@@ -408,13 +436,77 @@ def _campaign_file_manifest(root: Path) -> dict[str, str]:
                 # separate manifest entries; canonicalize their rendered copies.
                 normalized = _SHA256_TOKEN.sub(b"SHA256", normalized)
         else:
-            removed: dict[str, str] = {}
-            comparable = _comparison_view(value, removed, "$")
-            comparable = _normalize_campaign_root(comparable, str(root.parent))
-            comparable = _normalize_campaign_root(comparable, str(ROOT))
+            comparable = _normalized_campaign_json(value, root)
             normalized = (json.dumps(comparable, sort_keys=True, separators=(",", ":")) + "\n").encode()
         result[relative] = hashlib.sha256(normalized).hexdigest()
     return result
+
+
+def _normalized_campaign_json(value: Any, root: Path) -> Any:
+    removed: dict[str, str] = {}
+    comparable = _comparison_view(value, removed, "$")
+    comparable = _normalize_campaign_root(comparable, str(root.parent))
+    return _normalize_campaign_root(comparable, str(ROOT))
+
+
+def _campaign_json_snapshot(root: Path) -> dict[str, Any]:
+    result: dict[str, Any] = {}
+    for path in sorted(item for item in root.rglob("*") if item.is_file()):
+        relative = _normalize_attempt_path(path.relative_to(root).as_posix())
+        if relative == "results/lr_u_analysis.v3.json":
+            continue
+        try:
+            value = json.loads(path.read_bytes())
+        except (UnicodeDecodeError, json.JSONDecodeError):
+            continue
+        result[relative] = _normalized_campaign_json(value, root)
+    return result
+
+
+def _first_json_differences(actual: Any, expected: Any, path: str = "$") -> list[dict[str, Any]]:
+    """Return the first ten JSON value differences to diagnose manifest hash changes."""
+    differences: list[dict[str, Any]] = []
+
+    def visit(left: Any, right: Any, current: str) -> None:
+        if len(differences) >= 10:
+            return
+        if isinstance(left, dict) and isinstance(right, dict):
+            for key in sorted(set(left) | set(right), key=str):
+                child = f"{current}.{key}"
+                if key not in left or key not in right:
+                    differences.append(
+                        {
+                            "path": child,
+                            "actual": left.get(key, "<missing>"),
+                            "expected": right.get(key, "<missing>"),
+                        }
+                    )
+                else:
+                    visit(left[key], right[key], child)
+                if len(differences) >= 10:
+                    return
+            return
+        if isinstance(left, list) and isinstance(right, list):
+            for index in range(max(len(left), len(right))):
+                child = f"{current}[{index}]"
+                if index >= len(left) or index >= len(right):
+                    differences.append(
+                        {
+                            "path": child,
+                            "actual": left[index] if index < len(left) else "<missing>",
+                            "expected": right[index] if index < len(right) else "<missing>",
+                        }
+                    )
+                else:
+                    visit(left[index], right[index], child)
+                if len(differences) >= 10:
+                    return
+            return
+        if type(left) is not type(right) or left != right:
+            differences.append({"path": current, "actual": left, "expected": right})
+
+    visit(actual, expected, path)
+    return differences
 
 
 def _normalize_attempt_path(value: str) -> str:

@@ -19,3 +19,8 @@ campaign file after deterministic campaign identity/timestamps and temporary
 workspace/attempt path normalization. The test requests a safe stop on the
 13th invocation, resumes from the real worker, and compares the final files to
 this manifest.
+
+`campaign_json_snapshot.json` stores normalized JSON values alongside the
+hash manifest so a future manifest mismatch can report the first ten changed
+JSON paths with both values. JSON-formatted `campaign.lock` is included even
+though its filename does not end in `.json`.

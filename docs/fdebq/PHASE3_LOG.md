@@ -249,3 +249,27 @@ The Part A fixture files and detached campaign remain unmodified during Phase
 - Replay-test correction: one recursive comparator now checks both Part A and the frozen WSL replay analysis. It compares structure, keys, row/node counts, and all categorical fields exactly; physical floats use `math.isclose(rel_tol=1e-9, abs_tol=1e-12)`, while other floats use `math.isclose(rel_tol=1e-6, abs_tol=1e-12)`. These are platform reproducibility tolerances, not scientific thresholds. Author measurements were 2.6e-11 maximum relative difference in physical results and 1.4e-9 in ill-conditioned diagnostics (including NumPy 2.5). The replay U values are also checked against the replay analysis's own per-site `U_scalar_half_width_by_site_eV`.
 - Added `replay_analysis.v3.json`, a normalized analysis snapshot generated from the POSIX replay in WSL. The golden file manifest omits hashes for the derived analysis JSON and rendered Markdown, requires both campaign outputs to exist and be non-empty, and compares the JSON with the shared numeric comparator. Other JSON files containing floats were inspected: those values are input alpha/policy parameters or execution timestamps, not analysis-derived values, and remain byte-for-byte checked by the manifest.
 - Added comparator unit cases for tolerated and rejected U perturbations, changed state/decision, and missing node/row. The standalone replay test passes in WSL.
+
+- Planner portability correction: `domain/response_protocol.py` no longer
+  calls `numpy.linalg.lstsq` for estimator weights. It computes the symmetric
+  slope functional with exact `Fraction(str(amplitude))` arithmetic, then
+  converts each signed weight once to float; central, Richardson, linear and
+  polynomial estimators share the exact rational functional. Planner identity
+  is now `campaign-planner-v3`, so campaign locks created with the old
+  platform-dependent values are rejected as a different plan. Unit tests
+  compare weights exactly with `estimator_moments`, assert exact
+  antisymmetry, and generate a campaign plan while `numpy.linalg.lstsq` is
+  patched to fail.
+- The WSL replay golden was regenerated after the planner change. Old -> new
+  normalized SHA-256 values: `campaign.lock`
+  `f5fea3f3aa628c462b7373018a41c3cef6306da4dae00d1607c1820663cee4f2` ->
+  `468dfbc57ffb5952a9713dd1a8289e8d3ebd0ca9b1c9ee3b0bb2979ef9c9d892`;
+  `campaign.v2.json`
+  `f0785ff30d3d7598731f02a530974d2ef4fcd77379e933a7daebd199cf9b188d` ->
+  `b018826f0fecffb5355db50eb81f44271ba76b950f3e2a8b072988ea7e3a4367`;
+  `resolved_perturbation_plan.json`
+  `27c9ddd79ed99221c18aa845b4a4c959a15a753b2b94952e287630b9cc8d5af5` ->
+  `3d201d120b6257f41982bded0f5ac3518a4aa4d246e74bbc89a0b925630acd3a`.
+  A frozen normalized JSON snapshot now lets the manifest failure print the
+  first ten differing JSON paths and both values for every differing JSON
+  artifact, including JSON-formatted `campaign.lock`.
