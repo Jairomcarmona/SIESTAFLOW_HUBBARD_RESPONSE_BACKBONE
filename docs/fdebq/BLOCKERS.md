@@ -337,3 +337,7 @@ La auditoría científica determinó que usar los FDF de `examples/tmo_campaigns
 ## Phase 2 close — 20.11 dependency
 
 20.11 no se implementó: su golden exige un plan `TRANSLATION_SHADOWED` y `campaign-planner-v2`, cambio que depende de 20.5. 20.5 está detenido por `RISK_UNCOVERED`; por eso no se fijó un digest ni se cambió la versión.
+
+## Phase 2 close — 20.10 dependency
+
+20.10 no se implementó: su aceptación requiere retirar el import opcional de `spglib` como parte de 20.5. Como 20.5 está detenido, no se movió el resolver de includes ni se fijó una allowlist de arquitectura dependiente de ese cambio.

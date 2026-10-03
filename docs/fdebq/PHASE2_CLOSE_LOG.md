@@ -140,3 +140,7 @@ No compatible complete archived run-FDF chain was established for Cu3N or MnO v3
 ## 20.11 disposition — prerequisite blocked
 
 No premises were evaluated for implementation because its required golden includes the `TRANSLATION_SHADOWED` plan whose semantics/version bump belong to 20.5, stopped as `RISK_UNCOVERED`. D11's no-migration behavior remains recorded; no `campaign-planner-v2` digest or version-change code was introduced.
+
+## 20.10 disposition — prerequisite blocked
+
+No premises were evaluated for implementation because acceptance item 2 requires the optional `spglib` import to be removed by 20.5 and checks updated module layering after that change. The 20.5 audit stopped before implementation; no import resolver was moved and no architecture allowlist/test was authored ahead of that prerequisite.
