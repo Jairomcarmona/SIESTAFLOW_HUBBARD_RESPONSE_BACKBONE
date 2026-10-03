@@ -217,10 +217,14 @@ The Part A fixture files and detached campaign remain unmodified during Phase
   that expands a shadow DAG, then parses hash-bound FDF/output/DM artifacts for
   every expanded site. Existing parser-based Cu1 and occupation-precision
   regressions also exercise the compatibility delegators.
-- The POSIX NIO P5 replay initially exposed that its campaign profile embedded
-  the active test interpreter path. The replay now pins `/usr/bin/python3` in
-  its local-Wsl fixture and updates only the corresponding normalized file
-  manifest entry; the analyzed result remains equal to the Part A fixture.
+- The POSIX NIO P5 replay profile embeds the active test interpreter because
+  the local worker must run in that environment. The replay manifest now
+  normalizes only this runtime-bound path; the analyzed result remains equal
+  to the Part A fixture across test environments.
+- GitHub Actions exposed that the POSIX replay scripts were tracked as
+  non-executable (`100644`) even though the worker launches them directly.
+  The replay now requires executable bits on both fixture commands, and Git
+  tracks them as `100755`; the POSIX replay passes locally after this fix.
 - `campaign_runner.py` decreased from 2,207 lines / 47 methods at `dd394b1` to
   1,892 lines / 49 methods. The two extra methods are the read-only properties;
   moved instance methods remain as compatibility delegators.

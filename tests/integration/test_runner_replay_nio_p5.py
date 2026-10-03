@@ -50,6 +50,8 @@ def test_nio_p5_runner_replay_matches_part_a_and_resumes(
     profile = Siesta542PotentialShiftHamiltonianProfile()
     executable = REPLAY_FIXTURE / "siesta"
     launcher = REPLAY_FIXTURE / "mpirun.openmpi"
+    assert executable.stat().st_mode & 0o111, "replay SIESTA fixture must be executable on POSIX"
+    assert launcher.stat().st_mode & 0o111, "replay MPI launcher fixture must be executable on POSIX"
     registry = tmp_path / "backend_compatibility.json"
     registry.write_text(
         json.dumps(
