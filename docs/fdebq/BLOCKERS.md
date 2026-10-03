@@ -133,7 +133,7 @@ claim, numerical threshold, SIESTA campaign or real-data validation claim.
 
 ## TASK 15 — Automatic species splitting admission
 
-**RESUELTO: D6 software staging/admission; commit pendiente**, on
+**RESUELTO: D6 software staging/admission; commit `f79ef42`**, on
 `fdebq/r2-task15-species-split` based on TASK19. `lr-config.auto_split_species`
 is now wired to campaign initialization and product planning, default false.
 Explicit true stages shared DFTU labels with full basis/projector/PP input
