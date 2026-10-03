@@ -540,3 +540,37 @@ Auditor: `RISK_COVERED`. Explicit R5 confirmation: `test_materialized_ladder_cha
 - V6: `V6 GATE OK`.
 
 The original D5 estimator body remains byte-for-byte AST-identical to HEAD according to the auditor; parent references are captured/checked by the v2 draft before perturbation materialization. No SIESTA was executed.
+
+
+### 20.4 premise checks after R8
+
+| Premise | Result | Command and evidence |
+|---|---|---|
+| 20.4/P1 | TRUE | `.venv/Scripts/python.exe` probe importing `canonical_ion_bytes` plus `Get-Content src/hubbardflow/siesta_backend/semantic_ion_identity.py` → `relabel_ion_bytes` and `canonical_ion_bytes` exist; they normalize only the two audited fields and raise on unknown/ambiguous layouts. |
+| 20.4/P2 | TRUE | `.venv/Scripts/python.exe` read-only byte probe of the two named frozen `.ion` files → each has 8119 lines; the only differing lines are 5 and 79. Frozen files were read only. |
+| 20.4/P3 | TRUE | `rg -n "raw_sha256.*!=|SPECIES_IDENTITY_NOT_ESTABLISHED|generated_split_identity\\.v1" src/hubbardflow/siesta_backend/split_generated_identity.py tools/hubbardflow_verify_split_identity.py` → current receipt version is v1; raw SHA inequality adds `ION_BYTES_DIFFER` and produces `SPECIES_IDENTITY_NOT_ESTABLISHED`; CLI only returns 0 for raw-byte equality. |
+| 20.4/P4 | TRUE | `.venv/Scripts/python.exe` read-only inspection of the named pair → both have `Fe # Symbol`, distinct `FeLR0`/`FeLR1` `# Label` values, and byte-identical pseudopotential header contents (`Fe pb nrl pcec ...`). |
+
+R8 provides additional authorization for the previously conflicting existing receipt fixture. The `MnLR0`/`MnLR1` positive fixture will use `relabel_ion_bytes(_ion("Mn", 25), "Mn", alias)` so its header matches its filename; an explicit raw-identical but wrong-header case must return `MISMATCH`. R2 separately authorizes the FeLR0/FeLR1 real archive test to expect `MATCH`. No implementation had started when these premise checks were recorded.
+
+### 20.4 R5 test edits — assertion record
+
+| Existing test | Old assertion/fixture | New assertion/fixture | Replacing clause |
+|---|---|---|---|
+| `test_exact_receipt_roundtrip_and_cli` | All raw `.ion` files had identical bytes; receipt asserted `EXACT_ION_BYTES_MATCH` and identical raw SHA256 values. | Alias fixtures are generated with `relabel_ion_bytes`; receipt asserts `MATCH`, differing raw hashes, canonical receipt roundtrip, and label-line differences; CLI remains exit 0. | 20.4 verdict rule and R8: positive fixture aliases must have matching SIESTA header labels; raw SHA256 is diagnostic. |
+| `test_real_archive_label_only_difference_is_never_a_positive` (R2) | The prior fixture relabelled `examples/Mn.ion`, then asserted `SPECIES_IDENTITY_NOT_ESTABLISHED` and `ION_BYTES_DIFFER`. | Renamed to `test_real_archive_label_only_difference_matches`; copies frozen FeLR0/FeLR1 into `tmp_path` and asserts `MATCH`, no reasons, canonical hashes equal and raw differing lines `(5, 79)`. | 20.4 acceptance “real pair FeLR0/FeLR1 → MATCH”; explicit R2 authorization. |
+| `test_missing_duplicate_and_mismatch_fail_closed` | The physical-change fixture stored un-relabelled Mn bytes under alias filename and every readable byte mismatch expected `SPECIES_IDENTITY_NOT_ESTABLISHED`. | Physical fixture now starts from a correctly relabelled MnLR0 ion, changes only radial numeric data, expects `MISMATCH` and lists raw changed lines; missing/duplicate cases retain their not-established assertion. | 20.4/R8: impossible alias-header fixtures must be made valid; readable physical differences return `MISMATCH` and list differing lines. |
+| `test_invalid_receipt_cannot_claim_match` | Changing an alias raw SHA256 while retaining its canonical match was asserted invalid. | Renamed to `test_raw_sha256_is_diagnostic_and_does_not_change_verdict`; changing the raw digest field does not change `MATCH`. | 20.4: “Raw sha256 values stay in the receipt as diagnostics”; explicit R8 authorization to adjust raw-SHA assertions. |
+
+Added tests (not edits to existing assertions): raw-identical bytes with an alias-inconsistent header → `MISMATCH`; changed `# Symbol` on the frozen Fe fixture → `MISMATCH` with all differing lines listed; receipt deserialization rejects a `relabel_match` flag with a contradictory canonical digest. Auditor's initial finding was that R2 must use the actual frozen Fe pair and that deserialization must validate canonical hashes for `relabel_match`; both corrections and a regression test are included in the reviewed diff.
+
+### 20.4 auditor and gates
+
+Auditor final verdict: `RISK_COVERED`. It confirmed the real FeLR0/FeLR1 pair gives `MATCH` with raw differing lines `(5, 79)`, deserialization rejects contradictory canonical hashes for a positive flag, and raw SHA changes remain diagnostic. Auditor explicitly confirmed all four existing test edits in the table above meet R5/R2/R8.
+
+- Focused receipt module: `.venv/Scripts/python.exe -m pytest tests/unit/test_split_generated_identity.py -q` → `20 passed, 2 warnings`.
+- 70 scientific regressions: `.venv/Scripts/python.exe -m pytest tests/unit/test_lr_analysis_v2.py tests/unit/test_matrix_lr.py tests/unit/test_quantized_response.py tests/unit/test_u_certification.py -q` → `70 passed, 2 warnings`.
+- Ruff: `.venv/Scripts/ruff.exe check .` → `All checks passed!`.
+- Format: `.venv/Scripts/ruff.exe format --check .` → `91 files already formatted`.
+- Strict mypy: `$env:MYPYPATH='src'; .venv/Scripts/mypy.exe --strict` → `Success: no issues found in 91 source files`; strict check of the touched source and test → `Success: no issues found in 2 source files`.
+- V6: `bash tools/check_v6_integrity.sh` → `V6 GATE OK`.

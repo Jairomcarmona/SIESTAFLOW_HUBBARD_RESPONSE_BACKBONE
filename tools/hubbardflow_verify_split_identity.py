@@ -35,7 +35,7 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 2
     print(json.dumps({**receipt.to_mapping(), "receipt_sha256": receipt.digest}, indent=2, sort_keys=True))
-    return 0 if receipt.status is SplitIdentityStatus.EXACT_ION_BYTES_MATCH else 2
+    return 0 if receipt.status is SplitIdentityStatus.MATCH else 2
 
 
 if __name__ == "__main__":

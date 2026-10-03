@@ -1,8 +1,7 @@
 """Exact file identity receipts for user-run SIESTA alias generation.
 
-This comparison proves only byte identity of the supplied ion files. It cannot
-prove that SIESTA generated them, that SCF converged, or that a campaign is READY.
-Normalized label hashes are diagnostic; only exact raw SHA256 equality passes.
+This comparison proves only fixed-field label identity of the supplied ion files.
+It cannot prove that SIESTA generated them, that SCF converged, or that a campaign is READY.
 """
 
 from __future__ import annotations
@@ -17,7 +16,11 @@ from pathlib import Path
 from typing import cast
 
 from hubbardflow.domain.validation import require_sha256
-from hubbardflow.siesta_backend.semantic_ion_identity import IonIdentityError, canonical_ion_bytes
+from hubbardflow.siesta_backend.semantic_ion_identity import (
+    IonIdentityError,
+    canonical_ion_bytes,
+    relabel_ion_bytes,
+)
 
 
 class SplitIdentityError(ValueError):
@@ -25,7 +28,8 @@ class SplitIdentityError(ValueError):
 
 
 class SplitIdentityStatus(str, Enum):
-    EXACT_ION_BYTES_MATCH = "EXACT_ION_BYTES_MATCH"
+    MATCH = "MATCH"
+    MISMATCH = "MISMATCH"
     SPECIES_IDENTITY_NOT_ESTABLISHED = "SPECIES_IDENTITY_NOT_ESTABLISHED"
 
 
@@ -34,6 +38,7 @@ class SplitIdentityReason(str, Enum):
     ION_DUPLICATE = "ION_DUPLICATE"
     ION_UNREADABLE = "ION_UNREADABLE"
     ION_BYTES_DIFFER = "ION_BYTES_DIFFER"
+    ION_LABEL_MISMATCH = "ION_LABEL_MISMATCH"
 
 
 def _label(value: str) -> None:
@@ -48,6 +53,8 @@ class GeneratedIonDigest:
     diagnostic_canonical_sha256: str | None
     relative_paths: tuple[str, ...]
     reason: SplitIdentityReason | None
+    differing_lines: tuple[int, ...] = ()
+    relabel_match: bool = False
 
     def __post_init__(self) -> None:
         _label(self.label)
@@ -59,6 +66,12 @@ class GeneratedIonDigest:
             raise SplitIdentityError(str(exc)) from exc
         if self.reason is not None and not isinstance(self.reason, SplitIdentityReason):
             raise SplitIdentityError("ion reason must be an enum")
+        if any(not isinstance(line, int) or line < 1 for line in self.differing_lines):
+            raise SplitIdentityError("differing line numbers must be positive integers")
+        if not isinstance(self.relabel_match, bool):
+            raise SplitIdentityError("relabel match flag must be boolean")
+        if tuple(sorted(set(self.differing_lines))) != self.differing_lines:
+            raise SplitIdentityError("differing line numbers must be unique and sorted")
         if any(not isinstance(path, str) or not path for path in self.relative_paths):
             raise SplitIdentityError("ion paths must be nonempty strings")
         if tuple(sorted(set(self.relative_paths))) != self.relative_paths:
@@ -75,12 +88,22 @@ class GeneratedIonDigest:
             "diagnostic_canonical_sha256": self.diagnostic_canonical_sha256,
             "relative_paths": list(self.relative_paths),
             "reason": None if self.reason is None else self.reason.value,
+            "differing_lines": list(self.differing_lines),
+            "relabel_match": self.relabel_match,
         }
 
     @classmethod
     def from_mapping(cls, row: Mapping[str, object]) -> GeneratedIonDigest:
         try:
-            if set(row) != {"label", "raw_sha256", "diagnostic_canonical_sha256", "relative_paths", "reason"}:
+            if set(row) != {
+                "label",
+                "raw_sha256",
+                "diagnostic_canonical_sha256",
+                "relative_paths",
+                "reason",
+                "differing_lines",
+                "relabel_match",
+            }:
                 raise SplitIdentityError("unexpected ion digest fields")
             return cls(
                 cast(str, row["label"]),
@@ -88,6 +111,8 @@ class GeneratedIonDigest:
                 cast(str | None, row["diagnostic_canonical_sha256"]),
                 tuple(cast(Sequence[str], row["relative_paths"])),
                 None if row["reason"] is None else SplitIdentityReason(cast(str, row["reason"])),
+                tuple(cast(Sequence[int], row["differing_lines"])),
+                cast(bool, row["relabel_match"]),
             )
         except (KeyError, TypeError, ValueError) as exc:
             raise SplitIdentityError(f"invalid ion digest mapping: {exc}") from exc
@@ -99,7 +124,7 @@ class GeneratedSplitIdentity:
     aliases: tuple[GeneratedIonDigest, ...]
     status: SplitIdentityStatus
     reasons: tuple[SplitIdentityReason, ...]
-    version: str = "hubbardflow.generated_split_identity.v1"
+    version: str = "hubbardflow.generated_split_identity.v2"
 
     def __post_init__(self) -> None:
         if not isinstance(self.original, GeneratedIonDigest) or not isinstance(self.aliases, tuple):
@@ -108,7 +133,7 @@ class GeneratedSplitIdentity:
             raise SplitIdentityError("alias records must be GeneratedIonDigest values")
         labels = tuple(item.label for item in self.aliases)
         if (
-            self.version != "hubbardflow.generated_split_identity.v1"
+            self.version != "hubbardflow.generated_split_identity.v2"
             or not labels
             or labels != tuple(sorted(set(labels)))
             or self.original.label in labels
@@ -116,20 +141,32 @@ class GeneratedSplitIdentity:
         ):
             raise SplitIdentityError("invalid generated identity version, status or alias labels")
         expected = {item.reason for item in (self.original, *self.aliases) if item.reason is not None}
-        if self.original.raw_sha256 is not None and any(
-            item.raw_sha256 is not None and item.raw_sha256 != self.original.raw_sha256
-            for item in self.aliases
-        ):
-            expected.add(SplitIdentityReason.ION_BYTES_DIFFER)
+        expected.update(item.reason for item in self.aliases if item.reason is not None)
+        for item in self.aliases:
+            if item.relabel_match and (
+                self.original.diagnostic_canonical_sha256 is None
+                or item.diagnostic_canonical_sha256 != self.original.diagnostic_canonical_sha256
+            ):
+                raise SplitIdentityError("relabel match requires equal canonical ion digests")
+            if item.reason is None and self.original.reason is None and not item.relabel_match:
+                if (
+                    self.original.diagnostic_canonical_sha256 is None
+                    or item.diagnostic_canonical_sha256 is None
+                ):
+                    expected.add(SplitIdentityReason.ION_LABEL_MISMATCH)
+                else:
+                    expected.add(SplitIdentityReason.ION_BYTES_DIFFER)
         if self.reasons != tuple(sorted(expected, key=lambda reason: reason.value)):
             raise SplitIdentityError("receipt reasons disagree with file digests")
         status = (
             SplitIdentityStatus.SPECIES_IDENTITY_NOT_ESTABLISHED
+            if any(item.reason is not None for item in (self.original, *self.aliases))
+            else SplitIdentityStatus.MISMATCH
             if expected
-            else SplitIdentityStatus.EXACT_ION_BYTES_MATCH
+            else SplitIdentityStatus.MATCH
         )
         if self.status is not status:
-            raise SplitIdentityError("receipt verdict disagrees with exact raw SHA256 identity")
+            raise SplitIdentityError("receipt verdict disagrees with canonical label identity")
 
     def to_mapping(self) -> dict[str, object]:
         return {
@@ -165,23 +202,32 @@ class GeneratedSplitIdentity:
         ).hexdigest()
 
 
-def _digest(directory: Path, label: str) -> GeneratedIonDigest:
+def _digest(directory: Path, label: str) -> tuple[GeneratedIonDigest, bytes | None]:
     try:
         # Multiple matching files are ambiguous even if their bytes agree.
         files = tuple(sorted(directory.rglob(f"{label}.ion"), key=str)) if directory.is_dir() else ()
         paths = tuple(sorted(path.relative_to(directory).as_posix() for path in files))
         if not files:
-            return GeneratedIonDigest(label, None, None, (), SplitIdentityReason.ION_MISSING)
+            return GeneratedIonDigest(label, None, None, (), SplitIdentityReason.ION_MISSING), None
         if len(files) != 1:
-            return GeneratedIonDigest(label, None, None, paths, SplitIdentityReason.ION_DUPLICATE)
+            return GeneratedIonDigest(label, None, None, paths, SplitIdentityReason.ION_DUPLICATE), None
         data = files[0].read_bytes()
     except OSError:
-        return GeneratedIonDigest(label, None, None, (), SplitIdentityReason.ION_UNREADABLE)
+        return GeneratedIonDigest(label, None, None, (), SplitIdentityReason.ION_UNREADABLE), None
     try:
         canonical = sha256(canonical_ion_bytes(data, label)).hexdigest()
     except IonIdentityError:
         canonical = None
-    return GeneratedIonDigest(label, sha256(data).hexdigest(), canonical, paths, None)
+    return GeneratedIonDigest(label, sha256(data).hexdigest(), canonical, paths, None), data
+
+
+def _different_lines(original: bytes, candidate: bytes) -> tuple[int, ...]:
+    left, right = original.splitlines(keepends=True), candidate.splitlines(keepends=True)
+    return tuple(
+        index + 1
+        for index in range(max(len(left), len(right)))
+        if index >= len(left) or index >= len(right) or left[index] != right[index]
+    )
 
 
 def verify_generated_split_identity(
@@ -202,18 +248,57 @@ def verify_generated_split_identity(
         _label(alias)
     if not aliases or len(set(aliases)) != len(aliases) or original_label in aliases:
         raise SplitIdentityError("supply unique aliases distinct from the original label")
-    original = _digest(run_directory if reference_directory is None else reference_directory, original_label)
-    records = tuple(_digest(run_directory, label) for label in sorted(aliases))
-    reasons = {item.reason for item in (original, *records) if item.reason is not None}
-    if original.raw_sha256 is not None and any(
-        item.raw_sha256 is not None and item.raw_sha256 != original.raw_sha256 for item in records
-    ):
-        reasons.add(SplitIdentityReason.ION_BYTES_DIFFER)
+    original, original_data = _digest(
+        run_directory if reference_directory is None else reference_directory, original_label
+    )
+    alias_rows = tuple(_digest(run_directory, label) for label in sorted(aliases))
+    records_list: list[GeneratedIonDigest] = []
+    reasons: set[SplitIdentityReason] = {
+        item.reason for item in (original, *(row[0] for row in alias_rows)) if item.reason is not None
+    }
+    for record, alias_data in alias_rows:
+        if original_data is None or alias_data is None:
+            records_list.append(record)
+            continue
+        differing_lines = _different_lines(original_data, alias_data)
+        try:
+            canonical_equal = canonical_ion_bytes(original_data, original_label) == canonical_ion_bytes(
+                alias_data, record.label
+            )
+            expected_alias = relabel_ion_bytes(original_data, original_label, record.label)
+            changed_only_at_labels = set(differing_lines).issubset(
+                _different_lines(original_data, expected_alias)
+            )
+        except IonIdentityError:
+            canonical_equal = False
+            changed_only_at_labels = False
+        if record.diagnostic_canonical_sha256 is None or original.diagnostic_canonical_sha256 is None:
+            reasons.add(SplitIdentityReason.ION_LABEL_MISMATCH)
+        elif not canonical_equal or not changed_only_at_labels:
+            reasons.add(SplitIdentityReason.ION_BYTES_DIFFER)
+        records_list.append(
+            GeneratedIonDigest(
+                record.label,
+                record.raw_sha256,
+                record.diagnostic_canonical_sha256,
+                record.relative_paths,
+                record.reason,
+                differing_lines,
+                canonical_equal and changed_only_at_labels,
+            )
+        )
+    records = tuple(records_list)
+    unresolved = any(item.reason is not None for item in (original, *records))
+    status = (
+        SplitIdentityStatus.SPECIES_IDENTITY_NOT_ESTABLISHED
+        if unresolved
+        else SplitIdentityStatus.MISMATCH
+        if reasons
+        else SplitIdentityStatus.MATCH
+    )
     return GeneratedSplitIdentity(
         original,
         records,
-        SplitIdentityStatus.SPECIES_IDENTITY_NOT_ESTABLISHED
-        if reasons
-        else SplitIdentityStatus.EXACT_ION_BYTES_MATCH,
+        status,
         tuple(sorted(reasons, key=lambda reason: reason.value)),
     )

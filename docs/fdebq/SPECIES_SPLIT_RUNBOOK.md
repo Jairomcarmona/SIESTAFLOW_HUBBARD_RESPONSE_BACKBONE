@@ -66,18 +66,17 @@ paths and outside the frozen staging directory.
 
 ## Interpret the receipt
 
-Exit 0 / `EXACT_ION_BYTES_MATCH` means every alias **raw file SHA256** equals
-the original raw file SHA256. Exit 2 / `SPECIES_IDENTITY_NOT_ESTABLISHED`
-records missing, duplicate, unreadable or byte-different ions. Invalid or
-duplicate label arguments also exit 2. The typed receipt serializes all file
-digests, paths, reason codes, version and its canonical receipt digest.
+Exit 0 / `MATCH` means canonical ion bytes are equal after normalizing the two
+audited species label fields, and every raw line difference is confined to
+those fields. Raw SHA256 values remain diagnostic. Exit 2 / `MISMATCH` lists
+the differing raw line numbers for readable files whose physical contents or
+label identity do not satisfy that rule. `SPECIES_IDENTITY_NOT_ESTABLISHED`
+records missing, duplicate or unreadable ions. Invalid or duplicate label
+arguments also exit 2. The typed v2 receipt serializes file digests, paths,
+line differences, reason codes and its canonical receipt digest.
 
-The optional `diagnostic_canonical_sha256` normalizes the two audited species
-label fields. It is diagnostic only and cannot produce a positive verdict.
-Ordinary renamed `.ion` files can therefore have matching canonical hashes
-and different raw hashes: they **fail** exact identity. Do not edit output
-bytes, strip labels or substitute staged copies to force a passing verdict.
-Report the mismatch and its receipt for scientific review.
+Do not alter physical output bytes or substitute staged copies to force a
+passing verdict. Report any mismatch and its receipt for scientific review.
 
 Even exact equality does not prove generation, SCF convergence, reference
 state consistency or production admission. This task has no configuration
