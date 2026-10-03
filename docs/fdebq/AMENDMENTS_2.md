@@ -28,3 +28,26 @@ D7. TASK 18. Impleméntalo extremo a extremo con las banderas apagadas por defec
 D8. TASK 12, 13, 14, 19. Sin cambios de especificación, salvo que ahora sí son implementables una vez D1 y D2 den una `CoverageQualification` completa. TASK 19: si alguna dependencia sigue sin cumplirse, entrega los comandos `plan` y `run`/`submit` hasta donde el contrato permita, con estado NOT_ESTABLISHED explícito, en lugar de omitirlos.
 
 CIERRE: actualiza PHASE2_SUMMARY.md (tabla tarea, rama, commit, pruebas, estado, bloqueos RESUELTOS/ABIERTOS) y responde con esa tabla. No hagas merge a la rama base.
+## Phase 2 close
+
+### §4. Decisiones del autor (D9–D12)
+
+- **D9 (SCF ladder).** Review §E.2 is authoritative over TASK 17.
+  - Levels harden both the DM and the H tolerance, and each level has its own α=0 reference and
+    parent DM.
+  - For BARE, the level difference comes only from the parent DM (`MaxSCFIterations 1`). The D5
+    formulas apply with three parent levels.
+  - This extends §E.2, which describes BARE with two levels as an indicator. The third level gives
+    the contraction check at the cost of two cheap BARE runs per amplitude.
+- **D10 (species identity).** The verdict is width-preserving label normalization plus a diff
+  confined to the label lines, not raw sha256 equality. The real pair FeLR0/FeLR1 is the positive
+  control.
+- **D11 (frozen Phase-2 plans).**
+  - No Phase-2 campaign has run with SIESTA (checked in 0.2.5).
+  - Plans frozen under `campaign-planner-v1` are not migrated: resume fails with
+    `PLANNER_VERSION_CHANGED`, and the user re-initializes.
+  - Plan content must not depend on optional packages.
+- **D12 (product execution).**
+  - A plan with no reduction, a fixed explicit grid and no adaptive policy is executable through
+    the legacy runner. Its scientific content is the legacy V6-validated path.
+  - I.5 and pilot reuse are requirements only for reduced or calibrated plans.
