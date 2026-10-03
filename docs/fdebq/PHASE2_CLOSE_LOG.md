@@ -164,6 +164,21 @@ Final required full-suite command: `.venv/Scripts/pytest.exe tests -q -rfE --con
 - Auditor final verdict: `RISK_COVERED`; confirmed exact and integer-shifted ring4/ring5/ring8/ring10 translations, Cartesian common-unit rational coordinates, default continuum-only rejection, ring8 translation preference, non-polarized epsilon filtering, spglib-independent digest, planner v2, and the sole R5-authorized F8 test edit.
 
 The final focused command `.venv/Scripts/python.exe -m pytest tests/unit/test_fdf_model.py tests/unit/test_symmetry_operations.py tests/unit/test_coverage.py tests/unit/test_coverage_features.py tests/unit/test_campaign_plan.py -q` → `171 passed, 2 warnings in 83.54s`.
+
+### 20.8 premise checks after 20.3, 20.5, and R6–R10
+
+| Premise | Result | Command and evidence |
+|---|---|---|
+| 20.8/P1 | TRUE | Inline venv Python probe created production observations at 0.005, 0.01, 0.02, 0.03, 0.04, 0.08; a valid ladder envelope measured endpoints 0.005 and 0.08; and a failed scale at 0.04. Four amplitudes below the failure remained usable, but `select_column` raised `FdebqRoundsError: cannot select column: SCF envelope L0 measurements must match the production element points`. The failure is below the large envelope endpoint (0.04 < 0.08). |
+| 20.8/P2 | TRUE | Inline venv Python probe: `_next(measured_columns()[0], calibration_protocol())` returned `0.08`; the attached envelope's `covers((0.08,))` returned `False`. Source check `Get-Content src/hubbardflow/domain/fdebq_rounds.py` shows `_next` filters only known/failed/lattice values, not the envelope coverage. |
+| 20.8/P3 | TRUE | `CalibrationProtocol.to_mapping()` has no ladder protocol field. Inline venv Python probe replaced one envelope's `ScfLadderProtocol.theta` while retaining a second envelope with the original protocol; `ColumnEvidence` accepted both (`2` distinct protocol digests). With the same evidence, replacing `scf_level_id` with `L1` or `L2` still produced `QUALIFIED`, so no protocol-consistency or L0 binding is enforced. |
+| 20.8/P4 | TRUE | Inline venv Python probe supplied an arbitrary well-formed SHA256 as `t0_t4_result_sha256` and no ValidationResult object; `decide_round` returned `QUALIFIED` with no reasons. Source lines in `fdebq_rounds.py` only append `VALIDATION_NOT_ESTABLISHED` when the hash is `None`. |
+| 20.8/P5 | TRUE | Inline venv Python probe built `columns(scf=True)[0]`; `ColumnEvidence` accepted nonempty estimates all marked `qualified=True` with zero SCF envelopes. `ColumnEvidence.__post_init__` checks keys but does not bind estimates to a validated envelope. |
+| 20.8/P6 | TRUE | Inline venv Python call `full_budget_box(((-1.0,),), ((0,),))` raises `FdebqRoundsError: full budget box requires same-size square matrices with at least two sites`; `_decide_round` passes a one-site matrix to this guard. |
+
+Existing test sites that use a protocol marker without a `ValidationResult`: `tests/unit/test_fdebq_rounds.py::protocol` constructs the marker used by `decide` and its decision tests; `tests/unit/test_scf_ladder.py::calibration_protocol` inherits that marker for its `decide_round` integration tests. `rg -n "t0_t4_result_sha256" tests/unit` found only the `None` replacement in `test_scf_ladder.py`; no existing test currently passes a ValidationResult because the decision API has no such parameter. Explicit allowed test edits from 20.8 must be recorded if needed after audit.
+
+The read-only premise probes above are complete. No 20.8 source or test implementation has started; independent scientific review is pending before any edit.
 - `campaign_runner.py` is outside pyproject's configured file lists. Per the user's static-check rule, comparison at `84b8eb6` vs working tree: Ruff violations `23 → 23`; Ruff format would-reformat file count `1 → 1`; strict mypy errors `24 → 24`. The current Ruff JSON has no diagnostics on the changed helper lines. No pre-existing violation count increased, and none is on a changed line.
 
 ## Current full-suite comparison after 20.1 and 20.6
@@ -628,3 +643,59 @@ Auditor final verdict: `RISK_COVERED`. It confirmed the real FeLR0/FeLR1 pair gi
 - Format: `.venv/Scripts/ruff.exe format --check .` → `91 files already formatted`.
 - Strict mypy: `$env:MYPYPATH='src'; .venv/Scripts/mypy.exe --strict` → `Success: no issues found in 91 source files`; strict check of the touched source and test → `Success: no issues found in 2 source files`.
 - V6: `bash tools/check_v6_integrity.sh` → `V6 GATE OK`.
+
+
+### 20.8 implementation and R5 fixture inventory
+
+The present-envelope protocol gate requires enabled `v2` / `scf-ladder-v2`, a single protocol digest equal to `CalibrationProtocol.scf_ladder_protocol_sha256`, and its L0 ID equal to `scf_level_id`. Absent envelopes remain missing SCF evidence (`REVIEW`, never `QUALIFIED`) rather than a conflicting protocol; this preserves the existing missing-evidence assertions. `CalibrationProtocol` now contains the ValidationResult object and its expected digest. ValidationProtocol exposes explicit optional theta/rho_max; absent parameters cannot qualify. The result is recomputed from its own protocol/metrics and checked for digest, PASSED and parameter equality. No circular calibration/result scientific digest comparison is introduced.
+
+Selection filters production observations to the intersection of every row envelope in the same column/mode before order, neighbors and truncation; fewer than four scales yields UNRESOLVED. Full envelopes are recomputed, and only L0 points still present in the filtered series must coincide with production. Qualified injected estimates require envelopes plus explicit `scf_kappa`; recomputation compares estimator, row, radius, admissibility and qualification. Diagnostic injected estimates may remain unqualified and cannot enable QUALIFIED. Single-site handling retains the round barrier and returns NOT_ESTABLISHED / SINGLE_SUBSPACE_NOT_SUPPORTED before matrix construction.
+
+R5 inventory (all independent existing `assert` statements are preserved verbatim; changes below are fixture claims):
+
+| Location | Old fixture claim/assertion | New fixture claim/assertion | Replacement clause |
+|---|---|---|---|
+| `test_fdebq_rounds.py::columns` | Direct `ScfCandidateEstimate(..., width, ESTIMATE, True, True)` with no envelope. | Measured enabled v2 envelopes, estimates recomputed by scf_element_report, explicit scf_kappa; original independent assertions unchanged. | 20.8 change 5; explicitly named shared fixture, R5 impossible fixtures. |
+| `test_fdebq_rounds.py::protocol` | Synthetic well-formed SHA marker without ValidationResult or ladder digest. | Real deterministic synthetic ValidationResult with T0/T1/T2 development+holdout/T3 metrics, theta/rho_max, actual digest, and bound v2 ladder digest; validation=False still supplies no result. | 20.8 changes 3–4 and explicit allowance for marker-without-result tests. |
+| `test_column_minimax_differs_from_per_row_diagnostic_and_uses_one_functional` | Arbitrary radii retained qualified=True without matching measured envelope. | Same diagnostic radii and same minimax assertions, qualified=False, no envelope authority claimed. | 20.8 change 5; R5 impossible fixtures. |
+| `test_tie_break_amplitude_then_family_then_full_grid` (both injected estimate comprehensions) | Arbitrary radii/admissibility with qualified=True, no envelopes. | Same radii/admissibility and all tie-break assertions, qualified=False. | 20.8 change 5; R5 impossible fixtures. |
+| `test_candidate_must_be_admissible_in_every_row_and_scf_envelope` | Changed admissible=False while retaining qualified=True for injected row. | Changed diagnostic row also qualified=False; every rejection assertion retained. | 20.8 change 5; R5 impossible fixtures. |
+| `test_no_common_candidate_requests_next_scale_then_not_established` | Injected admissible=False estimates still claim qualified=True. | Same rejected candidate setup, qualified=False; CONTINUE, request identities, exhaustion and max-round assertions retained. | 20.8 change 5; R5 impossible fixtures. |
+| `test_column_influence_uses_absolute_inverse_products_and_next_highest` | Fabricated radii 0.0001 / 0.01 claim qualified=True without measured envelope authority. | Same diagnostic radii, qualified=False and no envelopes; influence formula, CONTINUE and selected site/mode assertions retained. | 20.8 change 5; R5 impossible fixtures. |
+| `test_reciprocity_falsification_caps_review_without_symmetrizing` | Qualified injected width radii with production row changed independently of SCF measurements. | Same width radii as unqualified diagnostics, no envelope authority; REVIEW, BUDGET_FALSIFIED and unsymmetrized slope assertions retained. | 20.8 change 5; R5 impossible fixtures. |
+| `test_scf_ladder.py::measured_columns` | Production integration uses synthetic-v1 ladder. | Same measurements/theta/rho, explicit enabled v2 level H+DM tolerances. Standalone synthetic-v1 algebraic tests remain unchanged; integration assertions remain unchanged. | 20.8 change 3, R5 protocol-v1 fixture replacement. |
+
+Tests inheriting the marker-without-result `protocol` fixture, each now receiving the actual result rather than a fabricated hash: `test_tau_required_protocol_digest_mapping_and_four_scales`; `test_nonfinite_protocol_rejected`; `test_column_minimax_differs_from_per_row_diagnostic_and_uses_one_functional`; `test_tie_break_amplitude_then_family_then_full_grid`; `test_underresolved_scf_estimate_caps_review_even_with_a_radius`; `test_candidate_must_be_admissible_in_every_row_and_scf_envelope`; `test_barrier_shuffled_arrival_waits_then_identical_decision_and_roundtrip`; `test_input_order_invariance`; `test_missing_scf_or_state_never_above_review_and_bad_evidence_fails`; `test_no_common_candidate_requests_next_scale_then_not_established`; `test_monotone_failed_scale_excludes_all_larger_scales`; `test_column_influence_uses_absolute_inverse_products_and_next_highest`; `test_no_condition_number_or_u_stability_inputs_enter_selection`; `test_reciprocity_falsification_caps_review_without_symmetrizing`; `test_cancelling_mixed_scales_are_unresolved_instead_of_qualified`; `test_400_random_ground_truth_cases_per_regime`. In test_scf_ladder: `test_task16_uses_full_model_and_keeps_missing_state_validation_review`; `test_task16_uncovered_tail_returns_review`; `test_underresolved_review_is_unconditional_when_matrix_fails_and_refinement_or_exhaustion`. `test_fdebq_plan.py::test_calibrated_plan_freezes_single_column_functional_and_protocol_at_review` inherits the updated helper without any edit to that file.
+
+Focused implementer command before the final coverage-reason adjustment: `.venv/Scripts/python.exe -m pytest tests/unit/test_fdebq_rounds.py tests/unit/test_scf_ladder.py tests/unit/test_phase2_rounds_hardening.py tests/unit/test_fdebq_plan.py tests/unit/test_scf_validation.py -q` → `64 passed, 2 warnings in 17.52s`. After that adjustment, the same focused set returned `1 failed, 64 passed, 2 warnings in 20.93s`; the sole failure was Hypothesis `test_input_order_invariance` exceeding its existing 200 ms deadline intermittently (321.88 ms first run, 187.73 ms retry). No test deadline or assertion was relaxed. Ruff on the seven draft Python files → `All checks passed!`; strict mypy → `Success: no issues found in 7 source files`; format → `7 files already formatted`; V6 → `V6 GATE OK`. The post-implementation scientific audit then found the risk below, so these draft checks do not authorize a commit. All provisional source/test changes were removed.
+
+### 20.8 scientific audit disposition — RISK_UNCOVERED
+
+Auditor probe command: `.venv/Scripts/python.exe -B -` with the exact script:
+
+```python
+from dataclasses import replace
+from tests.unit.test_fdebq_rounds import columns, protocol
+from hubbardflow.domain.fdebq_rounds import decide_round, seed_requests
+
+cs = columns(scf=True)
+p = protocol(tau=.01)
+req = seed_requests(("s0", "s1"), p)
+
+for title, data in (
+    ("supplied", cs),
+    ("adapter", tuple(replace(c, scf_estimates=()) for c in cs)),
+):
+    q = decide_round(data, p, requested=req, terminal=req).qualification
+    print(title, q.status.value, [r.value for r in q.reasons],
+          q.matrix.half_width_u_ev if q.matrix else None)
+```
+
+Output:
+
+```text
+supplied QUALIFIED [] (0.0066253689633718384, 0.0066253689633718384)
+adapter CONTINUE ['REQUIREMENT_NOT_MET'] (0.018207714201150686, 0.018207714201150686)
+```
+
+Both runs use the same envelopes and production observations; only the presence of estimates recomputed from those envelopes differs. With supplied estimates, `select_column` chooses `CENTRAL(0.04)`; with adapter recomputation it chooses `CENTRAL(0.02)`. The current draft branch `if envelopes and not evidence.scf_estimates` bypasses `scf_element_report` whenever estimates are supplied, so the SCF uncertainty is omitted from order/tail/truncation decisions and added only after candidate choice. This admits a synthetic half-width below `tau=0.01` despite the same evidence failing that tolerance when fully budgeted. Auditor verdict: `RISK_UNCOVERED`; no 20.8 implementation commit. The auditor also confirmed via AST that the old assertion statements in `test_fdebq_rounds.py` and `test_scf_ladder.py` were preserved and explicitly approved the logged R5 fixture changes; that does not clear the scientific blocker. The unfinished, uncommitted implementation and new tests were discarded; only this audit record remains.

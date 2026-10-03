@@ -371,9 +371,11 @@ implementation commit. This records an existing-gate/specification conflict, not
 R9 acepta estas limitaciones conservadoras porque toda reducción futura exige una operación exacta y una sombra obligatoria. R9 exige mantener todas las traslaciones exactas conmensurables; los anillos k/4 y k/8 se verificaron sin spglib. La antigua detención por este contraejemplo queda resuelta; no es `RISK_UNCOVERED`.
 
 
-## 20.8 dependency blocker
+## Phase 2 close — RISK_UNCOVERED en 20.8
 
-20.8 depends on SCF ladder v2 (20.3) and the planner/coverage update (20.5). Both upstream items are now implemented and gated on the working branch; 20.8 may resume in the requested order after the 20.5 commit.
+La auditoría científica posterior encontró que `select_column` puede seleccionar y presupuestar de forma distinta con la misma evidencia cuando `ColumnEvidence` contiene tanto envelopes SCF como estimaciones suministradas. La rama `if envelopes and not evidence.scf_estimates` omite `scf_element_report` si existen estimates; usa entonces el radio de truncamiento/impresión y agrega el radio SCF al final, de modo que las comprobaciones de orden y cola no incorporan el SCF. Con `tau=0.01`, el probe reproducible dio `supplied QUALIFIED [] (0.0066253689633718384, 0.0066253689633718384)` al elegir `CENTRAL(0.04)`, pero `adapter CONTINUE ['REQUIREMENT_NOT_MET'] (0.018207714201150686, 0.018207714201150686)` al quitar estimates y recalcular desde los mismos envelopes/observaciones, eligiendo `CENTRAL(0.02)`. El comando y script exactos están en `PHASE2_CLOSE_LOG.md`.
+
+Por §0 y la instrucción del usuario, 20.8 se detiene como `RISK_UNCOVERED`: no se crea commit. El código y fixtures provisionales se retiraron; se conservan en `PHASE2_CLOSE_LOG.md` las premisas, el inventario R5 y la evidencia de auditoría. Este resultado reemplaza el antiguo bloqueo de dependencia de 20.8.
 
 
 ## Historical full-suite delta after R1–R4 (resolved by R6)
