@@ -24,6 +24,7 @@ from .symmetry_operation_models import (
     IDENTITY,
     ConditionStatus,
     CoveragePolicy,
+    ExactnessClass,
     SymmetryModel,
     SymmetryOperationsError,
     SymmetryReason,
@@ -115,6 +116,8 @@ def qualify_coverage(
         search_reasons = search.reasons
         results = []
         for operation in search.operations:
+            if state.nonpolarized_verified and operation.eps == -1:
+                continue
             try:
                 result = classify(operation, inventory, state.state, policy)
             except SymmetryOperationsError as exc:
@@ -196,9 +199,35 @@ def qualify_coverage(
                 ]
                 if not matching:
                     raise CoverageError("closed group did not provide a representative-to-member operation")
+                matching.sort(
+                    key=lambda operation_index: (
+                        0
+                        if classifications[operation_index].operation.exactness_class
+                        is ExactnessClass.EXACT_TRANSLATION
+                        else 1
+                        if classifications[operation_index].operation.rotation_int == IDENTITY
+                        and classifications[operation_index].operation.eps == 1
+                        else 2
+                        if classifications[operation_index].operation.eps == 1
+                        else 3
+                    )
+                )
                 maps.append((member, matching[0]))
             saving = 2 < len(members)
-            class_reasons = (CoverageReason.SHADOW_PENDING,) if saving else (CoverageReason.NO_SAVING,)
+            continuum_translation = saving and any(
+                classifications[operation_index].operation.rotation_int == IDENTITY
+                and classifications[operation_index].operation.eps == 1
+                and classifications[operation_index].operation.exactness_class
+                is ExactnessClass.EXACT_IN_CONTINUUM_ONLY
+                for _, operation_index in maps
+            )
+            class_reasons = (
+                (CoverageReason.FEATURE_VALIDATION_NOT_ESTABLISHED,)
+                if continuum_translation
+                else (CoverageReason.SHADOW_PENDING,)
+                if saving
+                else (CoverageReason.NO_SAVING,)
+            )
             reasons.update(class_reasons)
             classes.append(
                 CoverageClass(
@@ -206,7 +235,9 @@ def qualify_coverage(
                     representative,
                     shadow,
                     tuple(maps),
-                    CoverageStatus.CANDIDATE_PENDING_SHADOW
+                    CoverageStatus.REJECTED_EXPANDED
+                    if continuum_translation
+                    else CoverageStatus.CANDIDATE_PENDING_SHADOW
                     if saving
                     else CoverageStatus.REJECTED_EXPANDED
                     if shadow

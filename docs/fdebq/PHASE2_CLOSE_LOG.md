@@ -110,6 +110,60 @@ Base: `84b8eb6` (`origin/fdebq/r2-task15-species-split`). Branch: `fdebq/r3-task
 - Scientific regression gate: venv `pytest.exe tests/unit/test_lr_analysis_v2.py tests/unit/test_matrix_lr.py tests/unit/test_quantized_response.py tests/unit/test_u_certification.py -q` → `70 passed`.
 - Configured static files plus the new test: `ruff check . tests/unit/test_campaign_runner_legacy_resume.py` → `All checks passed!`; `ruff format --check . tests/unit/test_campaign_runner_legacy_resume.py` → `86 files already formatted`; `MYPYPATH=src mypy --strict` → `Success: no issues found in 85 source files`; additionally `MYPYPATH=src mypy --strict tests/unit/test_campaign_runner_legacy_resume.py` → `Success: no issues found in 1 source file`.
 - V6: `bash tools/check_v6_integrity.sh` → `V6 GATE OK`.
+
+### 20.5 premise checks under R9, before implementation
+
+| Premise | Result | Command and evidence |
+|---|---|---|
+| 20.5/P1 | TRUE | `rg -n -C 4 "def exactness_class|EXACT_TRANSLATION" src/hubbardflow/domain/symmetry_operation_models.py` → `exactness_class` labels every identity rotation `EXACT_TRANSLATION`, without checking epsilon, atom map or InitMesh. |
+| 20.5/P2 | TRUE | `rg -n -C 2 "F8|exactness_class|translations" src/hubbardflow/domain/symmetry_operations.py src/hubbardflow/domain/coverage.py` → identity translations remain candidates despite F8; F8 ambiguity is specifically omitted in coverage and candidate acceptance. |
+| 20.5/P3 | TRUE | `rg -n -C 2 "EXACT_IN_CONTINUUM_ONLY|noncommensurate|translation" docs/fdebq/HUBBARDFLOW_PERTURBATION_PLANNING_REVIEW.md` → D.3 classes noncommensurate translations continuum-only and requires shadow/V2 validation. |
+| 20.5/P4 | TRUE | `rg -n -C 2 "coordinates_fractional|Fraction\\(str|tau_neq|AtomicCoordinatesFormat|InitMesh" src/hubbardflow/domain/symmetry_operations.py src/hubbardflow/siesta_backend/fdf_model.py` → candidate positions are normalized floats modulo 1; commensurability uses `Fraction(str(t))`; atom matching uses `tau_neq`; parser currently stores numeric coordinates and does not retain source decimal text. |
+| 20.5/P5 | TRUE | `rg -n -C 2 "matching\\[0\\]" src/hubbardflow/domain/coverage.py` → the chosen member mapping is `matching[0]`. |
+| 20.5/P6 | TRUE | `.venv/Scripts/python.exe` probe using `_toy(4, nonpolarized=True)` and `qualify_coverage` with spin flip false/true → both produce 32 ε=−1 operation rows and F7=`AMBIGUOUS`; this confirms current code generates these operations despite a verified non-polarized state. |
+| 20.5/P7 | TRUE | `rg -n -C 2 "spglib" src/hubbardflow/domain/symmetry_operations.py pyproject.toml; .venv/Scripts/python.exe -c "import importlib.util; print(importlib.util.find_spec('spglib') is not None)"` → optional dynamic spglib import exists, dependency is undeclared, and this environment reports `False`. |
+| 20.5/P8 | TRUE | `.venv/Scripts/python.exe` read-only/in-memory NiO P8 probe using archived reference FDF and `coverage=DISABLED` → 16 qualification operations and plan digest `47f5bbb9dde9803fed1d4a5601d3cebd1926990f2ebf3ef3d851bcf7e1925136`. |
+| R9/exact translations | TRUE | `.venv/Scripts/python.exe` with `importlib.import_module` patched to raise `ImportError`, probing `_ring((0.8,)*4)` and `_ring((0.8,)*8)` → all identity, ε=+1 translations are present: k/4 for k=0…3 and k/8 for k=0…7. No exact conmensurable translation was lost in these probes. |
+| §0.2 campaign lock search | TRUE | PowerShell recursive search of `C:\Users\Jairo\work\hubbardflow` and `C:\Users\Jairo\work` for `campaign.lock` and `resolved_perturbation_plan.json`, excluding tests and temporary directories → no paths returned; `SEARCH_COMPLETE`. |
+
+R9 supersedes the previous stop for the omitted near-symmetry candidate shifted by `0.75*tau_neq`: it is not exact and cannot reduce a class; the consequence is conservative loss of an `AMBIGUOUS` expansion trigger. This is recorded as a Phase 3 limitation, not `RISK_UNCOVERED`.
+
+### 20.5 R9 exact-translation stop
+
+Before any code edits, `.venv/Scripts/python.exe` probed `_ring((0.8,)*5)` and `_ring((0.8,)*10)` without spglib, using the valid geometry bands `EquivalenceBands(1e-19, 1e-18)`. The exact rational input positions have translations k/5 and k/10, but candidate enumeration retained only `t=0` in both cases:
+
+```text
+ring 5 found [0.0] expected [0.0, 0.2, 0.4, 0.6, 0.8] missing [0.2, 0.4, 0.6, 0.8]
+ring 10 found [0.0] expected [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9] missing [0.1, ..., 0.9]
+```
+
+This differs from the author’s default-band k/4 and k/8 probe and demonstrates the float candidate search is insufficient under a valid tighter band. The R9 exact-rational implementation and final verification below resolve this stop.
+
+### 20.5 R5 authorized test edit and R9 exact-mapping correction
+
+The sole existing-test assertion edit is `tests/unit/test_symmetry_operations.py::test_f8_records_incommensurate_translation_without_excluding_candidate`:
+
+- Old assertion: the t=1/4 translation with InitMesh (3,3,3) had `EXACT_TRANSLATION`.
+- New assertion: it remains accepted and `INCOMMENSURATE`, but its exactness class is `EXACT_IN_CONTINUUM_ONLY`.
+- Replacing clause: 20.5 Change 1(c), Review D.3/F8 and R5/R9/R3(a): `EXACT_TRANSLATION` requires mesh commensurability; an incommensurate translation remains a candidate and F8 does not exclude it.
+
+Auditor confirmed this is the only existing test function whose assertion changed; all other added tests are new. Exact rows use decimal rational coordinates, normalize both source and target modulo 1, and retain numeric canonical translation ordering. The FDF parser still computes its existing floating coordinates through `_to_fractional`; `bind_symmetry_model` uses the exact token-derived rational projection for the symmetry model when units permit it. No tolerance was added.
+
+New regressions verify every ε=+1 k/n translation for ring4/ring5/ring8/ring10 with strict geometry bands, and again when each input coordinate is shifted by integer lattice vectors. Cartesian coordinates using a common declared unit are checked with a non-dyadic 0.3/3 conversion; mixed units remain without exact rational coordinates. The strict-band omission and periodic-normalization cases are resolved; the accepted near-symmetry omission remains the Phase 3 limitation recorded in BLOCKERS.md.
+
+### 20.5 final R9 verification and gates
+
+Final required full-suite command: `.venv/Scripts/pytest.exe tests -q -rfE --continue-on-collection-errors`, with this checkout's `src` on `PYTHONPATH`.
+
+- Result on the final diff: `20 failed, 1333 passed, 24 skipped, 2 warnings, 5 errors, 4 subtests passed in 331.93s`.
+- Comparison: the 5 collection error IDs and all 20 failing test IDs exactly match the corrected §0.2 `BASELINE_FAILURES`; there are no new failures. The run has 99 more passing tests than the baseline (`1234 → 1333`).
+- 70 scientific regressions: `70 passed, 2 warnings`.
+- `ruff check .`: `All checks passed!`; `ruff format --check .`: `91 files already formatted`.
+- Configured strict mypy: `Success: no issues found in 91 source files`.
+- V6: `V6 GATE OK`.
+- Auditor final verdict: `RISK_COVERED`; confirmed exact and integer-shifted ring4/ring5/ring8/ring10 translations, Cartesian common-unit rational coordinates, default continuum-only rejection, ring8 translation preference, non-polarized epsilon filtering, spglib-independent digest, planner v2, and the sole R5-authorized F8 test edit.
+
+The final focused command `.venv/Scripts/python.exe -m pytest tests/unit/test_fdf_model.py tests/unit/test_symmetry_operations.py tests/unit/test_coverage.py tests/unit/test_coverage_features.py tests/unit/test_campaign_plan.py -q` → `171 passed, 2 warnings in 83.54s`.
 - `campaign_runner.py` is outside pyproject's configured file lists. Per the user's static-check rule, comparison at `84b8eb6` vs working tree: Ruff violations `23 → 23`; Ruff format would-reformat file count `1 → 1`; strict mypy errors `24 → 24`. The current Ruff JSON has no diagnostics on the changed helper lines. No pre-existing violation count increased, and none is on a changed line.
 
 ## Current full-suite comparison after 20.1 and 20.6

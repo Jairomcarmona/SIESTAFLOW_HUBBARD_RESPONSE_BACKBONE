@@ -12,7 +12,9 @@ import re
 from collections.abc import Iterable
 from dataclasses import dataclass
 from enum import Enum
+from fractions import Fraction
 from pathlib import Path
+from typing import cast
 
 from hubbardflow.execution.campaign_v2 import CampaignV2Error, resolve_fdf_includes
 from hubbardflow.siesta_backend.fdf_labels import MANAGED_FDF_LABELS, canonical_fdf_label
@@ -66,6 +68,8 @@ class AtomicSite:
     species_label: str
     coordinates_fractional: tuple[float, float, float]
     source_coordinates: tuple[float, float, float]
+    source_coordinate_tokens: tuple[str, str, str]
+    coordinates_fractional_rational: tuple[str, str, str] | None
     coordinate_format: CoordinateFormat
     trailing_label: str | None
 
@@ -340,6 +344,67 @@ def _to_fractional(
     )
 
 
+def _fraction(value: str) -> Fraction:
+    try:
+        return Fraction(value.replace("D", "E").replace("d", "e"))
+    except (ValueError, ZeroDivisionError) as exc:
+        raise FdfModelError(
+            FdfErrorCode.UNSUPPORTED_SYNTAX, "coordinate token is not an exact decimal"
+        ) from exc
+
+
+def _rational_coordinates(
+    tokens: tuple[str, str, str],
+    fmt: CoordinateFormat,
+    lattice_tokens: tuple[tuple[str, str, str], ...],
+    lattice_constant_token: str,
+    lattice_unit: str,
+) -> tuple[str, str, str] | None:
+    """Derive exact fractional coordinates only when decimal units are compatible."""
+    coordinate = tuple(_fraction(token) for token in tokens)
+    if fmt is CoordinateFormat.FRACTIONAL:
+        return cast(tuple[str, str, str], tuple(str(value) for value in coordinate))
+    if fmt is CoordinateFormat.SCALED_CARTESIAN:
+        cart = coordinate
+    elif (fmt is CoordinateFormat.ANG and lattice_unit in {"ang", "angstrom", "angstroms"}) or (
+        fmt is CoordinateFormat.BOHR and lattice_unit in {"bohr", "bohrs"}
+    ):
+        cart = tuple(value / _fraction(lattice_constant_token) for value in coordinate)
+    else:
+        return None
+
+    rows = tuple(tuple(_fraction(value) for value in row) for row in lattice_tokens)
+    matrix = tuple(tuple(rows[column][row] for column in range(3)) for row in range(3))
+    a, b, c = matrix
+    determinant = (
+        a[0] * (b[1] * c[2] - b[2] * c[1])
+        - a[1] * (b[0] * c[2] - b[2] * c[0])
+        + a[2] * (b[0] * c[1] - b[1] * c[0])
+    )
+    if determinant == 0:
+        raise FdfModelError(FdfErrorCode.UNSUPPORTED_SYNTAX, "lattice vectors are singular")
+    inverse = (
+        (
+            (b[1] * c[2] - b[2] * c[1]) / determinant,
+            (a[2] * c[1] - a[1] * c[2]) / determinant,
+            (a[1] * b[2] - a[2] * b[1]) / determinant,
+        ),
+        (
+            (b[2] * c[0] - b[0] * c[2]) / determinant,
+            (a[0] * c[2] - a[2] * c[0]) / determinant,
+            (a[2] * b[0] - a[0] * b[2]) / determinant,
+        ),
+        (
+            (b[0] * c[1] - b[1] * c[0]) / determinant,
+            (a[1] * c[0] - a[0] * c[1]) / determinant,
+            (a[0] * b[1] - a[1] * b[0]) / determinant,
+        ),
+    )
+    return cast(
+        tuple[str, str, str], tuple(str(sum(inverse[i][j] * cart[j] for j in range(3))) for i in range(3))
+    )
+
+
 def parse_effective_fdf(path: str | Path) -> FdfModel:
     """Parse one effective FDF, recording exact source normalization and digests.
 
@@ -386,6 +451,9 @@ def parse_effective_fdf(path: str | Path) -> FdfModel:
         )
     if lattice_constant <= 0:
         raise FdfModelError(FdfErrorCode.UNSUPPORTED_SYNTAX, "LatticeConstant must be positive")
+    lattice_row_tokens = tuple(
+        tuple(row.split()) for row in blocks.get(canonical_fdf_label("LatticeVectors"), ())
+    )
     lattice_rows = _float_rows(blocks.get(canonical_fdf_label("LatticeVectors"), ()), 3, "LatticeVectors")
     if len(lattice_rows) != 3:
         raise FdfModelError(FdfErrorCode.UNSUPPORTED_SYNTAX, "LatticeVectors must contain exactly three rows")
@@ -458,6 +526,7 @@ def parse_effective_fdf(path: str | Path) -> FdfModel:
             _number(fields[1], "atomic coordinate"),
             _number(fields[2], "atomic coordinate"),
         )
+        source_coordinate_tokens = (fields[0], fields[1], fields[2])
         try:
             species_index = int(fields[3])
         except ValueError as exc:
@@ -469,6 +538,13 @@ def parse_effective_fdf(path: str | Path) -> FdfModel:
                 FdfErrorCode.UNSUPPORTED_SYNTAX, "atomic coordinate references an unknown species index"
             )
         trailing = " ".join(fields[4:]) or comment
+        rational_coordinates = _rational_coordinates(
+            source_coordinate_tokens,
+            fmt,
+            cast(tuple[tuple[str, str, str], ...], lattice_row_tokens),
+            lattice_fields[0],
+            unit,
+        )
         fractional = _to_fractional(source_coord, fmt, lattice_constant, lattice)
         atoms.append(
             AtomicSite(
@@ -477,6 +553,8 @@ def parse_effective_fdf(path: str | Path) -> FdfModel:
                 species_by_index[species_index].label,
                 fractional,
                 source_coord,
+                source_coordinate_tokens,
+                rational_coordinates,
                 fmt,
                 trailing,
             )

@@ -323,9 +323,9 @@ SIESTA campaigns were started.
 
 **Bloqueo inicial resuelto por R1 (`AMENDMENTS_2.md`, commit `e4d9029`).** El autor aclaró que “is read” significa reconocida antes del rechazo. 20.2 se reabre bajo la prueba positiva unmanaged `Long_Output` registrada en `PHASE2_CLOSE_LOG.md`; el auditor científico emitió `RISK_COVERED` sujeto a las condiciones de orden de duplicados, contenido de bloques y censo FDF allí anotadas. La auditoría inicial y su evidencia se conservan como historial, no como bloqueo vigente.
 
-## Phase 2 close — 20.4 existing fixture conflict
+## Phase 2 close — 20.4 existing fixture conflict (resolved by R8)
 
-R2 now explicitly authorizes editing the named real-archive test to expect MATCH. A separate existing test, `tests/unit/test_split_generated_identity.py::test_exact_receipt_roundtrip_and_cli`, still requires MATCH for raw-identical synthetic Mn bytes stored under incompatible MnLR0/MnLR1 labels. Canonicalization rejects both because each file's species header does not match its alias label. The raw equality shortcut would violate 20.4's canonical-equality requirement; R2 did not authorize changing this second fixture/test. 20.4 remains stopped before implementation.
+R8 authorized repairing the alias fixture and asserting `MISMATCH` for raw-identical bytes whose header does not match the alias. The conflict and its resolution are recorded in `PHASE2_CLOSE_LOG.md`; 20.4 was completed and committed as `5ca79ba`.
 
 ## Phase 2 close — RISK_UNCOVERED en 20.5
 
@@ -363,13 +363,17 @@ other fixture/test is not authorized by R2. The item stopped before source/test 
 implementation commit. This records an existing-gate/specification conflict, not a scientific
 `RISK_UNCOVERED` verdict. Exact commands/output are in PHASE2_CLOSE_LOG.md.
 
-## Phase 2 close — R3(b) limitación de Fase 3 y bloqueo activo de 20.5
+## Phase 2 close — limitaciones conocidas de simetría para Fase 3
 
-La limitación conocida es la enumeración de rotaciones independiente de spglib para redes no ortogonales. El bloqueo activo sigue siendo la pérdida de la traslación t=0.25 documentada arriba; no se implementó 20.5.
+- Enumeración de rotaciones independiente de spglib para redes no ortogonales.
+- **Detección de casi-simetrías sin spglib**: una casi-simetría trasladada 0.75·τ puede no ser enumerada por el buscador interno; esto solo elimina un disparador de expansión `AMBIGUOUS`. Debe resolverse antes de habilitar reducciones (TASK 22).
+
+R9 acepta estas limitaciones conservadoras porque toda reducción futura exige una operación exacta y una sombra obligatoria. R9 exige mantener todas las traslaciones exactas conmensurables; los anillos k/4 y k/8 se verificaron sin spglib. La antigua detención por este contraejemplo queda resuelta; no es `RISK_UNCOVERED`.
+
 
 ## 20.8 dependency blocker
 
-20.8 depends on SCF ladder v2 (20.3) and the planner/coverage update (20.5), both currently stopped. No code, tests, or premise probes were started for 20.8; resume after the upstream blockers are resolved.
+20.8 depends on SCF ladder v2 (20.3) and the planner/coverage update (20.5). Both upstream items are now implemented and gated on the working branch; 20.8 may resume in the requested order after the 20.5 commit.
 
 
 ## Historical full-suite delta after R1–R4 (resolved by R6)

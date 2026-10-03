@@ -6,6 +6,7 @@ import ast
 import json
 from collections.abc import Callable
 from dataclasses import replace
+from fractions import Fraction
 from hashlib import sha256
 from pathlib import Path
 from typing import Protocol, cast
@@ -361,7 +362,77 @@ def test_f8_records_incommensurate_translation_without_excluding_candidate() -> 
     result = classify(_translation(model, 1), inventory, state, coverage_policy_v1())
     assert result.accepted
     assert result.commensurability is Commensurability.INCOMMENSURATE
-    assert result.operation.exactness_class is ExactnessClass.EXACT_TRANSLATION
+    assert result.operation.exactness_class is ExactnessClass.EXACT_IN_CONTINUUM_ONLY
+
+
+@pytest.mark.parametrize("count", [4, 5, 8, 10])
+def test_exact_rational_ring_translations_are_enumerated_without_spglib(count: int) -> None:
+    model, _, _ = _ring((0.8,) * count)
+    search = candidate_operations(model, EquivalenceBands(1e-19, 1e-18))
+    translations = {
+        operation.translation_rational[0]
+        for operation in search.operations
+        if operation.rotation_int == IDENTITY
+        and operation.eps == 1
+        and operation.translation_rational is not None
+        and operation.translation_rational[1:] == ("0", "0")
+    }
+    assert translations == {str(Fraction(step, count)) for step in range(count)}
+
+
+@pytest.mark.parametrize("count", [4, 5, 8, 10])
+def test_exact_rational_ring_translations_normalize_integer_cell_shifts(count: int) -> None:
+    model, _, _ = _ring((0.8,) * count)
+    shifted_atoms = tuple(
+        replace(
+            atom,
+            coordinates_fractional=(atom.coordinates_fractional[0] + 1, 1, -1),
+            fractional_coordinates_rational=(
+                str(Fraction(str(atom.coordinates_fractional[0])) + 1),
+                "1",
+                "-1",
+            ),
+        )
+        for atom in model.atoms
+    )
+    shifted_model = replace(model, atoms=shifted_atoms)
+    search = candidate_operations(shifted_model, EquivalenceBands(1e-19, 1e-18))
+    translations = {
+        operation.translation_rational[0]
+        for operation in search.operations
+        if operation.rotation_int == IDENTITY
+        and operation.eps == 1
+        and operation.translation_rational is not None
+        and operation.translation_rational[1:] == ("0", "0")
+    }
+    assert translations == {str(Fraction(step, count)) for step in range(count)}
+
+
+def test_exact_translation_requires_exact_map_and_commensurate_mesh() -> None:
+    model, inventory, state = _ring((0.8,) * 4)
+    half = _translation(model, 2)
+    even = classify(half, inventory, replace(state, mesh_divisions=(4, 4, 4)), coverage_policy_v1())
+    odd = classify(half, inventory, replace(state, mesh_divisions=(3, 3, 3)), coverage_policy_v1())
+    missing = classify(half, inventory, replace(state, mesh_divisions=None), coverage_policy_v1())
+    assert even.operation.exactness_class is ExactnessClass.EXACT_TRANSLATION
+    assert odd.operation.exactness_class is ExactnessClass.EXACT_IN_CONTINUUM_ONLY
+    assert missing.operation.exactness_class is ExactnessClass.EXACT_IN_CONTINUUM_ONLY
+
+    nondecimal = Operation(IDENTITY, (0.3333, 0, 0), 1, (1, 2, 3, 0), (1, 2, 3, 0), model)
+    continuum = classify(
+        nondecimal, inventory, replace(state, mesh_divisions=(3, 3, 3)), coverage_policy_v1()
+    )
+    assert continuum.operation.exactness_class is ExactnessClass.EXACT_IN_CONTINUUM_ONLY
+
+    mixed_atoms = tuple(
+        replace(atom, fractional_coordinates_rational=None, rational_coordinates_available=False)
+        for atom in model.atoms
+    )
+    mixed = replace(model, atoms=mixed_atoms)
+    unavailable = classify(
+        _translation(mixed, 0), inventory, replace(state, mesh_divisions=(4, 4, 4)), coverage_policy_v1()
+    )
+    assert unavailable.operation.exactness_class is ExactnessClass.EXACT_IN_CONTINUUM_ONLY
 
 
 def test_f8_missing_mesh_is_recorded_without_excluding_translation_candidate() -> None:

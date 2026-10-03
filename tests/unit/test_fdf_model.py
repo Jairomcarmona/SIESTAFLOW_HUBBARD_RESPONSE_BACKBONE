@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import re
+from fractions import Fraction
 from pathlib import Path
 
 import pytest
 
+from hubbardflow.domain.symmetry_operation_models import bind_symmetry_model
 from hubbardflow.execution.campaign_v2 import (
     CampaignV2Error,
     resolve_fdf_includes,
@@ -142,6 +144,37 @@ def test_all_supported_coordinate_formats_are_normalized_and_recorded(tmp_path: 
         model = parse_effective_fdf(path)
         assert model.coordinate_format is CoordinateFormat(fmt)
         assert model.atoms[0].coordinates_fractional == pytest.approx(expected)
+
+
+def test_decimal_coordinate_tokens_produce_exact_fractional_coordinates(tmp_path: Path) -> None:
+    cases = [
+        ("Fractional", "0.25 0.5 0.75", "LatticeConstant 2 Ang", ("1/4", "1/2", "3/4")),
+        ("ScaledCartesian", "0.25 0.5 0.75", "LatticeConstant 2 Ang", ("1/4", "1/2", "3/4")),
+        ("Ang", "0.5 1 1.5", "LatticeConstant 2 Ang", ("1/4", "1/2", "3/4")),
+        ("Ang", "0.3 0.6 0.9", "LatticeConstant 3 Ang", ("1/10", "1/5", "3/10")),
+        ("Bohr", "0.5 1 1.5", "LatticeConstant 2 Bohr", ("1/4", "1/2", "3/4")),
+    ]
+    for index, (fmt, coordinates, lattice_constant, expected) in enumerate(cases):
+        path = tmp_path / f"exact-{index}.fdf"
+        text = _fdf(coordinate_format=fmt, coordinates=f"{coordinates} 1").replace(
+            "LatticeConstant 2 Ang", lattice_constant
+        )
+        path.write_text(text, encoding="utf-8")
+        atom = parse_effective_fdf(path).atoms[0]
+        assert atom.source_coordinate_tokens == tuple(coordinates.split())
+        assert atom.coordinates_fractional_rational == expected
+        assert atom.coordinates_fractional == pytest.approx(
+            tuple(float(Fraction(value)) for value in expected)
+        )
+        bound = bind_symmetry_model(parse_effective_fdf(path), {})
+        assert bound.atoms[0].rational_coordinates == tuple(Fraction(value) for value in expected)
+
+    mixed = tmp_path / "mixed-units.fdf"
+    mixed.write_text(
+        _fdf(coordinate_format="Bohr", coordinates="0.944863062706 1.889726125412 2.834589188118 1"),
+        encoding="utf-8",
+    )
+    assert parse_effective_fdf(mixed).atoms[0].coordinates_fractional_rational is None
 
 
 def test_include_effective_digest_and_per_block_digest(tmp_path: Path) -> None:

@@ -7,8 +7,7 @@ propose coverage: they do not authorize omission of a mandatory shadow.
 
 from __future__ import annotations
 
-import importlib
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from fractions import Fraction
 from itertools import permutations, product
 from typing import cast
@@ -44,7 +43,7 @@ class CandidateOperations:
 
 
 def candidate_operations(model: SymmetryModel, geometry_band: EquivalenceBands) -> CandidateOperations:
-    """Search all signed axis permutations plus optional spglib candidates.
+    """Search internal signed-axis candidates and exact decimal translations.
 
     Matching uses the upper fractional band, so near symmetries survive as
     candidates and are subsequently labelled AMBIGUOUS. Multiple matches never
@@ -65,30 +64,52 @@ def candidate_operations(model: SymmetryModel, geometry_band: EquivalenceBands) 
                     )
                     spatial.add((rotation, translation))
     reasons: set[SymmetryReason] = set()
-    try:
-        spglib = importlib.import_module("spglib")
-    except ImportError:
-        reasons.add(SymmetryReason.SPGLIB_NOT_AVAILABLE)
-    else:
-        symmetry = spglib.get_symmetry(
-            (model.lattice_vectors_angstrom, positions, [1] * len(atoms)),
-            symprec=geometry_band.tau_neq
-            * float(np.linalg.svd(model.lattice_vectors_angstrom, compute_uv=False)[-1]),
-        )
-        if symmetry is None:
-            reasons.add(SymmetryReason.SPGLIB_SEARCH_FAILED)
-        else:
-            for raw_rotation, raw_translation in zip(
-                symmetry["rotations"], symmetry["translations"], strict=True
-            ):
-                rotation = tuple(tuple(int(x) for x in row) for row in raw_rotation)
-                if _lattice_compatible(rotation, model):
-                    spatial.add((rotation, cast(Vector, tuple(float(x % 1) for x in raw_translation))))
     correlated = [atom.atom_index for atom in atoms if atom.correlated]
     operations: list[Operation] = []
+    exact_rows: dict[tuple[str, str, str], tuple[Vector, tuple[int, ...]]] = {}
+    if all(atom.rational_coordinates is not None for atom in atoms):
+        coordinates = {atom.atom_index: atom.rational_coordinates for atom in atoms}
+        for anchor_atom in atoms:
+            for target_atom in atoms:
+                translation_rational = tuple(
+                    (target - source) % 1
+                    for source, target in zip(
+                        coordinates[anchor_atom.atom_index] or (),
+                        coordinates[target_atom.atom_index] or (),
+                        strict=True,
+                    )
+                )
+                mapping: list[int] = []
+                for source_atom in atoms:
+                    translated = tuple(
+                        (value + delta) % 1
+                        for value, delta in zip(
+                            coordinates[source_atom.atom_index] or (), translation_rational, strict=True
+                        )
+                    )
+                    matches = [
+                        candidate.atom_index
+                        for candidate in atoms
+                        if tuple(value % 1 for value in coordinates[candidate.atom_index] or ()) == translated
+                    ]
+                    if len(matches) != 1:
+                        mapping = []
+                        break
+                    mapping.append(matches[0])
+                if not mapping or len(set(mapping)) != len(atoms):
+                    continue
+                atom_map = dict(zip((atom.atom_index for atom in atoms), mapping, strict=True))
+                if {atom_map[index] for index in correlated} != set(correlated):
+                    continue
+                rational_key = cast(tuple[str, str, str], tuple(str(value) for value in translation_rational))
+                exact_rows[rational_key] = (
+                    cast(Vector, tuple(float(value) for value in translation_rational)),
+                    tuple(mapping),
+                )
+    exact_mappings = {mapping for _, mapping in exact_rows.values()}
     for rotation, translation in sorted(spatial):
         mapped = positions @ np.asarray(rotation).T + translation
-        mapping = []
+        float_mapping: list[int] = []
         for point in mapped:
             delta = point - positions
             residuals = np.max(np.abs(delta - np.rint(delta)), axis=1)
@@ -97,15 +118,23 @@ def candidate_operations(model: SymmetryModel, geometry_band: EquivalenceBands) 
                 if len(matches) > 1:
                     reasons.add(SymmetryReason.GEOMETRIC_MAPPING_AMBIGUOUS)
                 break
-            mapping.append(atoms[matches[0]].atom_index)
-        if len(mapping) != len(atoms) or len(set(mapping)) != len(atoms):
+            float_mapping.append(atoms[matches[0]].atom_index)
+        if len(float_mapping) != len(atoms) or len(set(float_mapping)) != len(atoms):
             continue
-        atom_map = dict(zip((atom.atom_index for atom in atoms), mapping, strict=True))
+        if rotation == IDENTITY and tuple(float_mapping) in exact_mappings:
+            continue
+        atom_map = dict(zip((atom.atom_index for atom in atoms), float_mapping, strict=True))
         if {atom_map[i] for i in correlated} != set(correlated):
             continue
         corr_map = tuple(correlated.index(atom_map[i]) for i in correlated)
         operations.extend(
-            Operation(rotation, translation, eps, tuple(mapping), corr_map, model) for eps in (1, -1)
+            Operation(rotation, translation, eps, tuple(float_mapping), corr_map, model) for eps in (1, -1)
+        )
+    for rational, (translation, exact_mapping) in sorted(exact_rows.items(), key=lambda row: row[1][0]):
+        atom_map = dict(zip((atom.atom_index for atom in atoms), exact_mapping, strict=True))
+        corr_map = tuple(correlated.index(atom_map[index]) for index in correlated)
+        operations.extend(
+            Operation(IDENTITY, translation, eps, exact_mapping, corr_map, model, rational) for eps in (1, -1)
         )
     return CandidateOperations(tuple(operations), tuple(sorted(reasons, key=lambda reason: reason.value)))
 
@@ -221,6 +250,8 @@ def _classify(
             - np.asarray(atom_by_index[mapping[atom.atom_index]].coordinates_fractional)
         )
         residual = max(residual, float(np.max(np.abs(delta - np.rint(delta)))))
+    if op.rational_mapping_exact:
+        residual = 0.0
     measured("F1", residual, policy.geometry)
     # Unimodularity alone does not make an integer matrix a spatial isometry.
     # Recheck candidates received directly or deserialized, independently of
@@ -383,8 +414,14 @@ def _classify(
         commensurability = (
             Commensurability.COMMENSURATE
             if all(
-                (Fraction(str(t)) * n).denominator == 1
-                for t, n in zip(op.translation_frac, mesh, strict=True)
+                (Fraction(value) * n).denominator == 1
+                for value, n in zip(
+                    op.translation_rational
+                    if op.translation_rational is not None
+                    else tuple(str(t) for t in op.translation_frac),
+                    mesh,
+                    strict=True,
+                )
             )
             else Commensurability.INCOMMENSURATE
         )
@@ -405,6 +442,7 @@ def classify(
 ) -> OperationClassification:
     """Classify a candidate, rejecting invalid numeric evidence with local errors."""
     try:
-        return _classify(op, inventory, state, policy)
+        operation = replace(op, model=replace(op.model, mesh_divisions=state.mesh_divisions))
+        return _classify(operation, inventory, state, policy)
     except ValidationError as exc:
         raise SymmetryOperationsError(str(exc)) from exc

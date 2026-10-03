@@ -190,7 +190,7 @@ def _resolve_campaign_planning(fdf: Path, config: Mapping[str, object]) -> Campa
         protocol,
         source_fdf_sha256=source_digest,
         alpha_strategy=strategy,
-        planner_version="campaign-planner-v1",
+        planner_version="campaign-planner-v2",
         backend_identity=f"{config['declared_executable']}:{backend}:{registry}",
         tau_u_ev=None,
         explicit_sites=None

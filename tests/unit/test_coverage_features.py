@@ -145,6 +145,22 @@ def _resolved(coverage: CoverageQualification) -> ResolvedPerturbationPlan:
     )
 
 
+def test_continuum_only_translation_is_rejected_expanded_in_plan() -> None:
+    inventory, reference, model = _toy(4)
+    reference = replace(reference, state=replace(reference.state, mesh_divisions=None))
+    coverage = qualify_coverage(
+        inventory,
+        reference,
+        model,
+        coverage_policy_v1(),
+        UserCoveragePolicy("synthetic-continuum-v1", True, ()),
+    )
+    assert coverage.classes[0].status is CoverageStatus.REJECTED_EXPANDED
+    resolved = _resolved(coverage)
+    assert resolved.coverage.classes[0].status is CoverageStatus.REJECTED_EXPANDED
+    assert resolved.computed_columns == ("s0", "s1", "s2", "s3")
+
+
 def test_mno_spin_flip_candidate_is_not_automatically_admitted() -> None:
     inventory, reference, model = _toy(16, antiferromagnet=True)
     off = qualify_coverage(

@@ -6,6 +6,7 @@ import json
 from collections.abc import Mapping, Sequence
 from dataclasses import asdict, dataclass
 from enum import Enum
+from fractions import Fraction
 from hashlib import sha256
 from typing import Literal, Protocol, cast
 
@@ -179,18 +180,39 @@ class SymmetryAtom:
     coordinates_fractional: Vector
     identity_digest: str | None
     correlated: bool
+    fractional_coordinates_rational: tuple[str, str, str] | None = None
+    rational_coordinates_available: bool = True
 
     def __post_init__(self) -> None:
         try:
             require_int(self.atom_index, "atom_index", minimum=0)
             if len(self.coordinates_fractional) != 3:
                 raise SymmetryOperationsError("fractional coordinates require three components")
-            for value in self.coordinates_fractional:
-                require_finite(value, "fractional coordinate")
+            for coordinate in self.coordinates_fractional:
+                require_finite(coordinate, "fractional coordinate")
+            if type(self.rational_coordinates_available) is not bool:
+                raise SymmetryOperationsError("rational coordinate availability must be boolean")
+            if self.fractional_coordinates_rational is not None:
+                if len(self.fractional_coordinates_rational) != 3:
+                    raise SymmetryOperationsError("rational fractional coordinates require three components")
+                for rational_coordinate in self.fractional_coordinates_rational:
+                    Fraction(rational_coordinate)
             if self.identity_digest is not None:
                 require_sha256(self.identity_digest, "identity_digest")
         except ValidationError as exc:
             raise SymmetryOperationsError(str(exc)) from exc
+
+    @property
+    def rational_coordinates(self) -> tuple[Fraction, Fraction, Fraction] | None:
+        if not self.rational_coordinates_available:
+            return None
+        if self.fractional_coordinates_rational is None:
+            values = tuple(Fraction(str(value)) for value in self.coordinates_fractional)
+        else:
+            values = tuple(Fraction(value) for value in self.fractional_coordinates_rational)
+            if tuple(float(value) for value in values) != self.coordinates_fractional:
+                return None
+        return cast(tuple[Fraction, Fraction, Fraction], values)
 
 
 @dataclass(frozen=True)
@@ -205,13 +227,19 @@ class SymmetryModel:
     spin_orbit: bool
     spin_independent_perturbation: bool
     scalar_spin_summed_observable: bool
+    mesh_divisions: tuple[int, int, int] | None = None
 
     def __post_init__(self) -> None:
         try:
             require_sha256(self.effective_fdf_sha256, "effective_fdf_sha256")
+            if self.mesh_divisions is not None:
+                if len(self.mesh_divisions) != 3:
+                    raise SymmetryOperationsError("mesh_divisions must have three positive values")
+                for mesh_division in self.mesh_divisions:
+                    require_int(mesh_division, "mesh division", minimum=1)
             for row in self.lattice_vectors_angstrom:
-                for value in row:
-                    require_finite(value, "lattice vector")
+                for lattice_component in row:
+                    require_finite(lattice_component, "lattice vector")
         except ValidationError as exc:
             raise SymmetryOperationsError(str(exc)) from exc
         lattice = np.asarray(self.lattice_vectors_angstrom)
@@ -239,6 +267,8 @@ class _Atom(Protocol):
     def coordinates_fractional(self) -> Vector: ...
     @property
     def species_label(self) -> str: ...
+    @property
+    def coordinates_fractional_rational(self) -> tuple[str, str, str] | None: ...
 
 
 class _Record(Protocol):
@@ -288,7 +318,16 @@ def bind_symmetry_model(model: _Model, identities: Mapping[str, _Identity]) -> S
             else None
         )
         atoms.append(
-            SymmetryAtom(atom.atom_index, atom.coordinates_fractional, digest, atom.species_label in labels)
+            SymmetryAtom(
+                atom.atom_index,
+                cast(Vector, tuple(float(Fraction(value)) for value in atom.coordinates_fractional_rational))
+                if atom.coordinates_fractional_rational is not None
+                else atom.coordinates_fractional,
+                digest,
+                atom.species_label in labels,
+                atom.coordinates_fractional_rational,
+                atom.coordinates_fractional_rational is not None,
+            )
         )
     return SymmetryModel(
         model.effective_fdf_sha256,
@@ -310,6 +349,7 @@ class Operation:
     atom_permutation: tuple[int, ...]
     correlated_permutation: tuple[int, ...]
     model: SymmetryModel
+    translation_rational: tuple[str, str, str] | None = None
 
     def __post_init__(self) -> None:
         if self.eps not in (1, -1) or type(self.eps) is not int:
@@ -324,6 +364,11 @@ class Operation:
                 raise SymmetryOperationsError("translation_frac must have three components")
             for component in self.translation_frac:
                 require_finite(component, "translation_frac")
+            if self.translation_rational is not None:
+                if len(self.translation_rational) != 3:
+                    raise SymmetryOperationsError("rational translation requires three components")
+                for value in self.translation_rational:
+                    Fraction(value)
         except (TypeError, ValidationError) as exc:
             raise SymmetryOperationsError(str(exc)) from exc
         r = self.rotation_int
@@ -346,12 +391,47 @@ class Operation:
             raise SymmetryOperationsError("correlated_permutation must be a bijection")
 
     @property
-    def exactness_class(self) -> ExactnessClass:
-        return (
-            ExactnessClass.EXACT_TRANSLATION
-            if self.rotation_int == IDENTITY
-            else ExactnessClass.EXACT_IN_CONTINUUM_ONLY
+    def rational_mapping_exact(self) -> bool:
+        if self.rotation_int != IDENTITY or any(
+            atom.rational_coordinates is None for atom in self.model.atoms
+        ):
+            return False
+        atoms = {atom.atom_index: atom for atom in self.model.atoms}
+        translation = tuple(
+            Fraction(value)
+            for value in (
+                self.translation_rational
+                if self.translation_rational is not None
+                else tuple(str(value) for value in self.translation_frac)
+            )
         )
+        for source, target_index in zip(self.model.atoms, self.atom_permutation, strict=True):
+            source_coordinates = source.rational_coordinates
+            target = atoms[target_index].rational_coordinates
+            if source_coordinates is None or target is None:
+                return False
+            translated = tuple((source_coordinates[axis] + translation[axis]) % 1 for axis in range(3))
+            if tuple(value % 1 for value in target) != translated:
+                return False
+        return True
+
+    @property
+    def exactness_class(self) -> ExactnessClass:
+        mesh = self.model.mesh_divisions
+        if self.eps != 1 or mesh is None or not self.rational_mapping_exact:
+            return ExactnessClass.EXACT_IN_CONTINUUM_ONLY
+        translation = tuple(
+            Fraction(value)
+            for value in (
+                self.translation_rational
+                if self.translation_rational is not None
+                else tuple(str(value) for value in self.translation_frac)
+            )
+        )
+        for component, size in zip(translation, mesh, strict=True):
+            if (component * size).denominator != 1:
+                return ExactnessClass.EXACT_IN_CONTINUUM_ONLY
+        return ExactnessClass.EXACT_TRANSLATION
 
     def to_mapping(self) -> dict[str, object]:
         return {**asdict(self), "exactness_class": self.exactness_class.value}
@@ -366,6 +446,13 @@ class Operation:
                 cast(Vector, tuple(cast(Sequence[float], item["coordinates_fractional"]))),
                 cast(str | None, item["identity_digest"]),
                 cast(bool, item["correlated"]),
+                None
+                if item.get("fractional_coordinates_rational") is None
+                else cast(
+                    tuple[str, str, str],
+                    tuple(cast(Sequence[str], item["fractional_coordinates_rational"])),
+                ),
+                cast(bool, item.get("rational_coordinates_available", True)),
             )
             for item in cast(Sequence[Mapping[str, object]], model["atoms"])
         )
@@ -378,6 +465,9 @@ class Operation:
             cast(bool, model["spin_orbit"]),
             cast(bool, model["spin_independent_perturbation"]),
             cast(bool, model["scalar_spin_summed_observable"]),
+            None
+            if model.get("mesh_divisions") is None
+            else cast(tuple[int, int, int], tuple(cast(Sequence[int], model["mesh_divisions"]))),
         )
         return cls(
             tuple(tuple(row) for row in cast(Sequence[Sequence[int]], value["rotation_int"])),
@@ -386,4 +476,7 @@ class Operation:
             tuple(cast(Sequence[int], value["atom_permutation"])),
             tuple(cast(Sequence[int], value["correlated_permutation"])),
             snapshot,
+            None
+            if value.get("translation_rational") is None
+            else cast(tuple[str, str, str], tuple(cast(Sequence[str], value["translation_rational"]))),
         )

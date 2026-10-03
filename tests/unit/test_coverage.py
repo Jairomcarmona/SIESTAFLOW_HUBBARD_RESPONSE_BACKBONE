@@ -197,6 +197,33 @@ def test_nonpolarized_translation_toy_does_not_fabricate_moments() -> None:
     assert all(c.conditions[4].status.value == "NOT_APPLICABLE" for c in q.operations)
 
 
+def test_verified_nonpolarized_coverage_omits_spin_flip_candidates_for_either_flag() -> None:
+    inventory, evidence, model = _toy(4, nonpolarized=True)
+    off = qualify_coverage(inventory, evidence, model, coverage_policy_v1(), USER)
+    on = qualify_coverage(
+        inventory, evidence, model, replace(coverage_policy_v1(), allow_spin_flip=True), USER
+    )
+    assert all(result.operation.eps == 1 for result in off.operations)
+    assert all(result.operation.eps == 1 for result in on.operations)
+    assert tuple(item.members for item in off.classes) == tuple(item.members for item in on.classes)
+    assert tuple(item.status for item in off.classes) == tuple(item.status for item in on.classes)
+
+
+@pytest.mark.parametrize("allow_rotations", [False, True])
+def test_continuum_only_translation_is_rejected_for_production_policy(allow_rotations: bool) -> None:
+    inventory, evidence, model = _toy(4)
+    missing_mesh = replace(evidence.state, mesh_divisions=None)
+    evidence = replace(evidence, state=missing_mesh)
+    policy = replace(coverage_policy_v1(), allow_rotations=allow_rotations)
+    q = qualify_coverage(inventory, evidence, model, policy, USER)
+    assert q.classes[0].status is CoverageStatus.REJECTED_EXPANDED
+    assert q.classes[0].reasons == (CoverageReason.FEATURE_VALIDATION_NOT_ESTABLISHED,)
+    assert all(
+        q.operations[operation_id].operation.exactness_class.value == "EXACT_IN_CONTINUUM_ONLY"
+        for _, operation_id in q.classes[0].ops_rep_to_member
+    )
+
+
 @pytest.mark.parametrize(
     "trigger,expected",
     [
