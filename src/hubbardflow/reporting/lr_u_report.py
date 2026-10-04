@@ -31,6 +31,55 @@ def _json_compact(value: Any) -> str:
     return _fmt(value)
 
 
+def _state_gate_section(state_gate: Mapping[str, Any]) -> list[str]:
+    pairs = state_gate.get("pairs")
+    if not isinstance(pairs, list):
+        return []
+    lines = [
+        "",
+        "## I.5 state consistency (diagnostic)",
+        "",
+        "Este diagnóstico no modifica el análisis ni la admisión de la campaña.",
+        "",
+        "| Columna | Modo | Veredicto | α admisibles (eV) | α excluidos (eV) | G4 | Razones |",
+        "|---|---|---|---:|---:|---|---|",
+    ]
+    for pair in pairs:
+        if not isinstance(pair, Mapping):
+            continue
+        g4_outcomes: set[str] = set()
+        amplitudes = pair.get("amplitudes", [])
+        if isinstance(amplitudes, list):
+            for amplitude in amplitudes:
+                if not isinstance(amplitude, Mapping):
+                    continue
+                for sign in ("positive", "negative"):
+                    point = amplitude.get(sign)
+                    checks = point.get("checks", []) if isinstance(point, Mapping) else []
+                    if isinstance(checks, list):
+                        g4_outcomes.update(
+                            str(item.get("outcome"))
+                            for item in checks
+                            if isinstance(item, Mapping) and item.get("check") == "G4"
+                        )
+        reasons = pair.get("reasons", [])
+        reason_text = ", ".join(str(item) for item in reasons) if isinstance(reasons, list) else ""
+        admissible = pair.get("admissible_amplitudes_ev", [])
+        excluded = pair.get("excluded_amplitudes_ev", [])
+        cells = (
+            pair.get("column_id"),
+            pair.get("mode"),
+            pair.get("verdict"),
+            ", ".join(_fmt(value) for value in admissible) if isinstance(admissible, list) else "—",
+            ", ".join(_fmt(value) for value in excluded) if isinstance(excluded, list) else "—",
+            ", ".join(sorted(g4_outcomes)) or "—",
+            reason_text or "—",
+        )
+        lines.append("| " + " | ".join(_cell(value) for value in cells) + " |")
+    lines.extend(["", "G3 suavidad: `NOT_ESTABLISHED: SMOOTHNESS_REQUIRES_SCF_LADDER`.", ""])
+    return lines
+
+
 def _coefficients_with_units(fit: Mapping[str, Any]) -> str:
     coefficients = fit.get("coefficients")
     if not isinstance(coefficients, list):
@@ -119,7 +168,9 @@ def _source_lines(source: Any, alpha: Any, site_id: Any) -> list[str]:
     ]
 
 
-def render_lr_u_report(analysis: Mapping[str, Any]) -> str:
+def render_lr_u_report(
+    analysis: Mapping[str, Any], *, state_gate: Mapping[str, Any] | None = None
+) -> str:
     """Render a deterministic report from analysis JSON; old v2 files remain readable."""
     schema = analysis.get("schema_version")
     if schema == "siestaflow.lr_u_analysis.v3" and analysis.get("occupation_source") != "siesta_occupations_total":
@@ -475,14 +526,21 @@ def render_lr_u_report(analysis: Mapping[str, Any]) -> str:
         "La sensibilidad entre estimadores y ventanas es un diagnóstico y no un intervalo de confianza. " + rounding_footer,
         "",
     ])
+    if state_gate is not None:
+        lines.extend(_state_gate_section(state_gate))
     return "\n".join(lines)
 
 
-def write_lr_u_report(path: str | Path, analysis: Mapping[str, Any]) -> Path:
+def write_lr_u_report(
+    path: str | Path,
+    analysis: Mapping[str, Any],
+    *,
+    state_gate: Mapping[str, Any] | None = None,
+) -> Path:
     """Atomically write the Markdown report; repeated writes are deterministic."""
     destination = Path(path)
     destination.parent.mkdir(parents=True, exist_ok=True)
     temporary = destination.with_suffix(destination.suffix + ".tmp")
-    temporary.write_text(render_lr_u_report(analysis), encoding="utf-8", newline="\n")
+    temporary.write_text(render_lr_u_report(analysis, state_gate=state_gate), encoding="utf-8", newline="\n")
     temporary.replace(destination)
     return destination

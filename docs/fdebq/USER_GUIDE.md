@@ -142,3 +142,46 @@ matrix gates, U, budgets, qualification and the existing downstream
 certification remain `NOT_ASSESSED`. Conditional error-model qualification
 does not confer a certificate. Real runtime validation is performed by the
 user using [T0_T4_RUNBOOK.md](T0_T4_RUNBOOK.md) and the validation gates.
+
+## Long campaigns from WSL
+
+Run long campaigns from WSL with a new product directory and a unique campaign name. Keep the product artifacts and launch log in `product_dir`. For a `local_wsl` execution profile, set `wsl.workspace_root` to a new campaign workspace in the same run directory; the campaign manifest and its results are created there. Set these variables in the launch shell, replacing the example paths with paths valid in that WSL distribution:
+
+```bash
+code=/path/to/frozen/hubbardflow
+py=/path/to/python
+fdf=/path/to/inputs/reference.fdf
+lr_config=/path/to/inputs/lr_config.json
+profile=/path/to/inputs/execution_profile.json
+campaign_name=unique_campaign_name
+product_dir=/path/to/new/product
+campaign_workspace=/path/to/new/campaigns
+campaign_manifest="$campaign_workspace/$campaign_name/campaign.v2.json"
+```
+
+Before launch, confirm that `$profile` has `wsl.workspace_root` set to `$campaign_workspace`. Launch from the Linux shell with `setsid` and `nohup` so the worker is detached from the terminal:
+
+```bash
+setsid nohup env PYTHONPATH="$code/src" "$py" -m hubbardflow.cli run \
+  "$fdf" --lr-config "$lr_config" --profile "$profile" \
+  --name "$campaign_name" --output-dir "$product_dir" \
+  < /dev/null > "$product_dir/run.log" 2>&1 &
+worker_pid=$!
+printf 'worker PID: %s\n' "$worker_pid"
+```
+
+Open a separate WSL shell. Define `campaign_name`, `campaign_workspace`, `code` and `py` there too; shell variables from the launch terminal are not shared. Find the worker by its unique campaign name, then check its durable status:
+
+```bash
+campaign_name=unique_campaign_name
+campaign_workspace=/path/to/new/campaigns
+code=/path/to/frozen/hubbardflow
+py=/path/to/python
+campaign_manifest="$campaign_workspace/$campaign_name/campaign.v2.json"
+pgrep -af "hubbardflow.cli run .*--name $campaign_name"
+PYTHONPATH="$code/src" "$py" -m hubbardflow.cli status "$campaign_manifest"
+```
+
+A completed campaign should have a terminal completed status and its expected result artifacts. A failed node records `failure.json` in that node attempt's working directory (`command.cwd`); inspect it together with `run.log` and the worker state before deciding whether to resume. Do not infer success from the launch shell returning or from a log file existing. Keep one local SIESTA campaign active when the execution profile requires an exclusive local slot.
+
+The product execution boundary may record `ADMISSIBLE_LEGACY_EQUIVALENT` for a fixed-grid run even when broader planning qualification remains `NOT_ESTABLISHED`; the run receipt and report state which admission was used. This is distinct from claiming the broader production qualification is established.
