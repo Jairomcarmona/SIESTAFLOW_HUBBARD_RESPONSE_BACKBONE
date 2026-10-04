@@ -47,7 +47,7 @@ from hubbardflow.execution.generic_executor import (
     NodeReceipt,
     dag_digest,
 )
-from hubbardflow.execution.lr_dag import LRDagNode
+from hubbardflow.execution.lr_dag import LRDagNode, LRNodeKind
 from hubbardflow.execution.observation_assembly import ObservationAssembler
 from hubbardflow.siesta_backend.siesta542_bare_profile import Siesta542PotentialShiftHamiltonianProfile
 from tests.unit.test_coverage import DIGEST, _toy
@@ -114,6 +114,7 @@ def _runner(
     invalid_shadow: bool = False,
     invalid_shadow_once: bool = False,
     complete_synthetic_state: bool = True,
+    rejection_policy: str = "EXPAND",
 ) -> tuple[CampaignRunner, list[str], _Heartbeat]:
     runner = object.__new__(CampaignRunner)
     runner.root = root
@@ -137,7 +138,10 @@ def _runner(
         for i, s in enumerate(plan.inventory.subspaces)
     ]
     runner.alpha_grid = [-0.02, -0.01, 0.01, 0.02]
-    runner.config = {"analysis_policy": {"estimator": "linear"}}
+    runner.config = {
+        "analysis_policy": {"estimator": "linear"},
+        "shadow_rejection_policy": rejection_policy,
+    }
     runner.admitted = cast(
         Any,
         SimpleNamespace(factory=SimpleNamespace(bare_profile=Siesta542PotentialShiftHamiltonianProfile())),
@@ -521,6 +525,99 @@ def test_invalid_shadow_receipt_is_retried_explicitly_and_never_reused(
     assert len(retried) == 1
     assert runner.shadow is not None and len(runner.shadow.expanded) == 4
     assert runner.shadow.failed_runs[0]["receipt"]["state"] == "FAILED_OUTPUT_VALIDATION"
+    assert "reason" not in json.loads((runner.control / "state.json").read_text(encoding="utf-8"))
+
+
+def test_stop_policy_rejects_shadow_without_installing_expansion(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    runner, executed, heartbeat = _runner(
+        tmp_path, monkeypatch, _plan(), invalid_shadow=True, rejection_policy="STOP"
+    )
+    assert runner.advance("run", heartbeat) == 1
+    assert len(executed) == 10  # stops after the first invalid shadow response
+    assert runner.shadow is not None and runner.shadow.expanded == ()
+    assert (
+        json.loads((runner.control / "state.json").read_text(encoding="utf-8"))["reason"] == "SHADOW_REJECTED"
+    )
+    gate = json.loads((runner.results / "i5_state_gate.json").read_text(encoding="utf-8"))
+    assert gate["schema_version"] == "hubbardflow.i5_state_gate.v1"
+    state = json.loads((runner.control / "translation-shadow-state.json").read_text(encoding="utf-8"))
+    assert state["outcomes"][0]["status"] == "REJECTED_EXPANDED"
+
+
+def test_stop_policy_prepare_rejection_runs_once_and_does_not_expand(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    runner, executed, heartbeat = _runner(tmp_path, monkeypatch, _plan(), fail=True, rejection_policy="STOP")
+    assert runner.shadow is not None
+    prepares = 0
+    original_prepare = runner.shadow.prepare
+
+    def counted_prepare(current: CampaignRunner) -> bool:
+        nonlocal prepares
+        prepares += 1
+        return original_prepare(current)
+
+    monkeypatch.setattr(runner.shadow, "prepare", counted_prepare)
+    assert runner.advance("run", heartbeat) == 1
+    assert prepares == 1
+    assert len(executed) == 17
+    assert runner.shadow.expanded == ()
+    assert (
+        json.loads((runner.control / "state.json").read_text(encoding="utf-8"))["reason"] == "SHADOW_REJECTED"
+    )
+
+
+def test_parent_dm_mismatch_stops_before_perturbations_and_match_continues(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    plan = _plan()
+    for matches in (False, True):
+        case_root = tmp_path / ("match" if matches else "mismatch")
+        runner, executed, heartbeat = _runner(case_root, monkeypatch, plan)
+        runner.perturbation_plan = plan
+        original_execute = runner._execute_siesta
+        dm_path = case_root / "parent.DM"
+        dm_path.parent.mkdir(parents=True, exist_ok=True)
+
+        def execute_with_parent_check(
+            node: LRDagNode,
+            current: _Heartbeat,
+            *,
+            current_runner: CampaignRunner = runner,
+            current_dm_path: Path = dm_path,
+            current_matches: bool = matches,
+            current_execute: Any = original_execute,
+        ) -> NodeReceipt:
+            if node.kind is LRNodeKind.REFERENCE:
+                current_dm_path.write_bytes(
+                    b"declared synthetic reference" if current_matches else b"different parent DM"
+                )
+                mismatch = current_runner._parent_dm_reproduction_failure(current_dm_path)
+                if mismatch is not None:
+                    receipt = NodeReceipt(node.node_id, NodeState.FAILED_OUTPUT_VALIDATION, DIGEST)
+                    current_runner._record_receipt(node, receipt, {"kind": "siesta_failure", **mismatch})
+                    return receipt
+            return cast(NodeReceipt, current_execute(node, current))
+
+        monkeypatch.setattr(runner, "_execute_siesta", execute_with_parent_check)
+        result = runner.advance("run", heartbeat)
+        if matches:
+            assert result == 0
+            assert any(node_id != "reference" for node_id in executed)
+        else:
+            assert result == 1
+            assert executed == []
+            record = runner.records["reference"]
+            assert record["reason"] == "PARENT_DM_NOT_REPRODUCED"
+            assert record["expected_parent_dm_sha256"] == plan.reference.parent_dm_sha256
+            assert record["observed_parent_dm_sha256"] != plan.reference.parent_dm_sha256
+            heartbeat_row = json.loads((runner.control / "state.json").read_text(encoding="utf-8"))
+            assert heartbeat_row["reason"] == "PARENT_DM_NOT_REPRODUCED"
 
 
 def test_transient_invalid_shadow_retries_only_invalid_run_then_completes_expansion(

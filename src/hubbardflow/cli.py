@@ -287,6 +287,7 @@ def main(argv: list[str] | None = None) -> int:
                 ("--allow-rotations", args.allow_rotations),
                 ("--output-dir", args.output_dir),
                 ("--override-plan-state", args.override_plan_state),
+                ("--dry-run", True if args.dry_run else None),
             )
             supplied_options = [name for name, value in product_options if value is not None]
             if supplied_options:

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from types import SimpleNamespace
 from typing import Any, cast
 
@@ -169,7 +170,7 @@ def test_each_admission_condition_fails_closed_alone(change: str, reason: Execut
     elif change == "split":
         snapshot = cast(ProductSnapshot, SimpleNamespace(**{**snapshot.__dict__, "split_staging": object()}))
     elif change == "coverage":
-        config["coverage"] = "TRANSLATION_SHADOWED"
+        config["coverage"] = "UNSUPPORTED"
     elif change == "snapshot":
         bad_inventory = SimpleNamespace(**{**snapshot.inventory.__dict__, "digest": "different"})
         snapshot = cast(ProductSnapshot, SimpleNamespace(**{**snapshot.__dict__, "inventory": bad_inventory}))
@@ -185,3 +186,94 @@ def test_override_is_not_an_admission_input() -> None:
     assert blocked.status is ExecutionAdmissionStatus.BLOCKED
     # The policy input deliberately has no override field to grant admission.
     assert not hasattr(blocked, "override_plan_state")
+
+
+def _translation_shadowed_case(tmp_path: Any) -> tuple[ProductSnapshot, dict[str, object]]:
+    snapshot, config = _valid_case()
+    fdf = tmp_path / "source.fdf"
+    fdf.write_text("SystemLabel TS_PARENT\n", encoding="utf-8")
+    site = snapshot.inventory.subspaces[0]
+    plan = cast(Any, snapshot.planning).plan
+    reference = SimpleNamespace(status=SimpleNamespace(value="ADMISSIBLE"), parent_dm_sha256="a" * 64)
+    plan = SimpleNamespace(
+        **{
+            **plan.__dict__,
+            "reference": reference,
+            "reason_codes": (SimpleNamespace(value="SHADOW_PENDING"),),
+            "coverage": SimpleNamespace(classes=(SimpleNamespace(reduced=True, shadow="Co@1:3:2"),)),
+        }
+    )
+    snapshot = cast(
+        ProductSnapshot,
+        SimpleNamespace(
+            **{
+                **snapshot.__dict__,
+                "planning": SimpleNamespace(plan=plan),
+                "frozen_lr_config_json": "{}",
+                "request_json": json.dumps({"fdf": str(fdf)}),
+            }
+        ),
+    )
+    config.update(
+        coverage="TRANSLATION_SHADOWED",
+        reference_dm_name="TS_PARENT.DM",
+        sites=[{"site_id": site.species_label, "atom_index": site.atom_index + 1}],
+    )
+    return snapshot, config
+
+
+def test_complete_translation_shadowed_plan_is_admissible(tmp_path: Any) -> None:
+    snapshot, config = _translation_shadowed_case(tmp_path)
+    admission = execution_admission(snapshot, config)
+    assert admission.status is ExecutionAdmissionStatus.ADMISSIBLE_TRANSLATION_SHADOWED
+    assert admission.reasons == ()
+
+
+@pytest.mark.parametrize(
+    ("change", "reason"),
+    [
+        ("parent_dm", ExecutionAdmissionReason.PARENT_DM_REQUIRED),
+        ("spin_flip", ExecutionAdmissionReason.OPTIONAL_SYMMETRY_ENABLED),
+        ("adaptive", ExecutionAdmissionReason.ADAPTIVE_POLICY_PRESENT),
+        ("plan_reason", ExecutionAdmissionReason.PLAN_REASONS_PRESENT),
+        ("no_reduction", ExecutionAdmissionReason.NO_TRANSLATION_REDUCTION),
+        ("dm_name", ExecutionAdmissionReason.REFERENCE_DM_NAME_MISMATCH),
+    ],
+)
+def test_translation_shadowed_admission_fails_closed(
+    tmp_path: Any, change: str, reason: ExecutionAdmissionReason
+) -> None:
+    snapshot, config = _translation_shadowed_case(tmp_path)
+    if change == "parent_dm":
+        plan = cast(Any, snapshot.planning).plan
+        reference = SimpleNamespace(status=SimpleNamespace(value="ADMISSIBLE"), parent_dm_sha256=None)
+        plan = SimpleNamespace(**{**plan.__dict__, "reference": reference})
+        snapshot = cast(
+            ProductSnapshot, SimpleNamespace(**{**snapshot.__dict__, "planning": SimpleNamespace(plan=plan)})
+        )
+    elif change == "spin_flip":
+        config["allow_spin_flip"] = True
+    elif change == "adaptive":
+        config["adaptive_alpha_policy"] = {"schema": "declared"}
+    elif change == "plan_reason":
+        plan = cast(Any, snapshot.planning).plan
+        plan = SimpleNamespace(**{**plan.__dict__, "reason_codes": (SimpleNamespace(value="OTHER"),)})
+        snapshot = cast(
+            ProductSnapshot, SimpleNamespace(**{**snapshot.__dict__, "planning": SimpleNamespace(plan=plan)})
+        )
+    elif change == "no_reduction":
+        plan = cast(Any, snapshot.planning).plan
+        plan = SimpleNamespace(
+            **{
+                **plan.__dict__,
+                "coverage": SimpleNamespace(classes=(SimpleNamespace(reduced=False, shadow=None),)),
+            }
+        )
+        snapshot = cast(
+            ProductSnapshot, SimpleNamespace(**{**snapshot.__dict__, "planning": SimpleNamespace(plan=plan)})
+        )
+    elif change == "dm_name":
+        config["reference_dm_name"] = "wrong.DM"
+    admission = execution_admission(snapshot, config)
+    assert admission.status is ExecutionAdmissionStatus.BLOCKED
+    assert reason in admission.reasons

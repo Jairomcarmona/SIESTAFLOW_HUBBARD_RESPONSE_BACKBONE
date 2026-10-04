@@ -3,15 +3,18 @@
 from __future__ import annotations
 
 import json
+import os
 from dataclasses import replace
 from hashlib import sha256
 from pathlib import Path
-from typing import Any
+from types import SimpleNamespace
+from typing import Any, cast
 
 import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
+from hubbardflow import product_cli
 from hubbardflow.cli import main
 from hubbardflow.domain.perturbation_plan import PlanStatus
 from hubbardflow.execution.campaign_plan import resolve_campaign_planning
@@ -348,6 +351,7 @@ def test_archived_disabled_grid_plan_and_run_boundary_preserve_digest(
 def test_mno_translation_shadow_product_plan_uses_single_file_species_map(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     source = ROOT / (
         "campaigns/mno_afmii_strict_lr_v3r2/results/response-matrix-foreground-recovery-v4/00_REFERENCE/siesta.fdf"
@@ -369,6 +373,7 @@ def test_mno_translation_shadow_product_plan_uses_single_file_species_map(
         coverage="TRANSLATION_SHADOWED",
         planning_reference_output=str(archived_output),
         planning_reference_dm=str(dm),
+        reference_dm_name="00_REFERENCE.DM",
     )
     config.write_text(json.dumps(raw), encoding="utf-8")
 
@@ -389,6 +394,97 @@ def test_mno_translation_shadow_product_plan_uses_single_file_species_map(
         [f"MnLR{index:02d}" for index in range(1, 16, 2)],
     ]
     assert [item.shadow for item in classes] == ["MnLR02@4:3:2", "MnLR03@5:3:2"]
+    assert json.loads(snapshot.frozen_lr_config_json or "{}")["shadow_rejection_policy"] == "STOP"
+
+    launched: list[str] = []
+
+    def record_launch(*args: Any, **kwargs: Any) -> int:
+        launched.append(kwargs["name"])
+        return 0
+
+    monkeypatch.setattr(
+        "hubbardflow.product_cli._execute_product_campaign",
+        record_launch,
+    )
+    monkeypatch.setattr(
+        cast(Any, product_cli),
+        "os",
+        SimpleNamespace(
+            name="posix",
+            fdopen=os.fdopen,
+            fsync=os.fsync,
+            replace=os.replace,
+        ),
+    )
+    assert (
+        main(
+            [
+                "run",
+                str(fdf),
+                "--lr-config",
+                str(config),
+                "--profile",
+                str(config),
+                "--name",
+                "mno-ts",
+                "--output-dir",
+                str(root),
+            ]
+        )
+        == 0
+    )
+    run_boundary = json.loads(capsys.readouterr().out)
+    assert run_boundary["execution_admission"]["status"] == "ADMISSIBLE_TRANSLATION_SHADOWED"
+    assert not {
+        "SCIENTIFIC_STATE_NOT_ESTABLISHED",
+        "PILOT_REUSE_NOT_ESTABLISHED",
+        "PLAN_NOT_READY",
+    } & set(run_boundary["reason_codes"])
+    assert launched == ["mno-ts"]
+
+
+def test_run_dry_run_requires_profile_but_never_launches(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fdf, config, _, root = product_inputs(tmp_path)
+    calls: list[str] = []
+    monkeypatch.setattr(
+        "hubbardflow.product_cli.initialize_campaign",
+        lambda *args, **kwargs: calls.append("initialize"),
+    )
+    monkeypatch.setattr(
+        "hubbardflow.execution.wsl_campaign_init.initialize_campaign",
+        lambda *args, **kwargs: calls.append("initialize"),
+    )
+    monkeypatch.setattr(
+        "hubbardflow.execution.campaign_runner.run_campaign_worker",
+        lambda *args, **kwargs: calls.append("worker"),
+    )
+    assert (
+        main(
+            [
+                "run",
+                str(fdf),
+                "--dry-run",
+                "--profile",
+                str(config),
+                "--lr-config",
+                str(config),
+                "--coverage",
+                "TRANSLATION_SHADOWED",
+                "--output-dir",
+                str(root),
+            ]
+        )
+        == 0
+    )
+    report = json.loads(capsys.readouterr().out)
+    assert "artifact_directory" in report
+    assert calls == []
+    assert main(["run", str(fdf), "--dry-run", "--output-dir", str(tmp_path / "missing-profile")]) == 2
+    assert "requires --profile" in capsys.readouterr().err
 
 
 def test_v6_destination_is_rejected_without_writing() -> None:

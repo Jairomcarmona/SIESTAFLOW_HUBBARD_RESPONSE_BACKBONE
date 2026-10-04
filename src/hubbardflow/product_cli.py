@@ -82,6 +82,11 @@ def add_product_options(parser: argparse.ArgumentParser) -> None:
         metavar="REASON",
         help="record a deliberate non-READY override; missing production evidence still blocks",
     )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="freeze and report product admission without initializing or executing a campaign",
+    )
 
 
 def add_product_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
@@ -263,18 +268,21 @@ def _execute_product_campaign(
 
 def product_command(args: argparse.Namespace) -> int:
     """Plan or verify the frozen plan before recording a blocked execution request."""
+    dry_run = bool(getattr(args, "dry_run", False))
     if args.command == "run" and getattr(args, "profile", None) is not None:
-        if os.name == "nt":
+        if os.name == "nt" and not dry_run:
             raise ProductError(
                 "product execution requires a Linux shell; run the command inside WSL with the FDF, "
                 "lr-config, profile and output paths available there"
             )
-        if not getattr(args, "name", None):
+        if not dry_run and not getattr(args, "name", None):
             raise ProductError("product execution with --profile requires --name")
+    elif args.command == "run" and dry_run:
+        raise ProductError("run --dry-run requires --profile to evaluate execution admission")
     fdf = Path(args.campaign if args.command == "run" else args.fdf_file)
     root = Path(args.output_dir or (Path.cwd() / ".hubbardflow" / fdf.stem)).resolve()
     protect_product_destination(root)
-    if args.command == "run" and (root / "execution_link.json").exists():
+    if args.command == "run" and not dry_run and (root / "execution_link.json").exists():
         raise ProductError(
             "this product already has an execution link; continue with hubbardflow resume <campaign.v2.json>"
         )
@@ -351,7 +359,12 @@ def product_command(args: argparse.Namespace) -> int:
     if (
         args.command == "run"
         and admission is not None
-        and admission.status is ExecutionAdmissionStatus.ADMISSIBLE_LEGACY_EQUIVALENT
+        and admission.status
+        in {
+            ExecutionAdmissionStatus.ADMISSIBLE_LEGACY_EQUIVALENT,
+            ExecutionAdmissionStatus.ADMISSIBLE_TRANSLATION_SHADOWED,
+        }
+        and not dry_run
     ):
         profile_path = Path(args.profile).resolve(strict=True)
         campaign_root_value = getattr(args, "campaign_root", None)
@@ -363,4 +376,4 @@ def product_command(args: argparse.Namespace) -> int:
             name=args.name,
             campaign_root=campaign_root,
         )
-    return 0 if boundary is None else 3
+    return 0 if boundary is None or dry_run else 3

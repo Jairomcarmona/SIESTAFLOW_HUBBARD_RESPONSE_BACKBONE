@@ -90,3 +90,31 @@ No premise was false.
 - `ruff check .`: passed; `ruff format --check .`: 91 files already formatted; `MYPYPATH=src mypy`: success on 91 files; V6 gate: `V6 GATE OK`.
 - Full suite: 1412 passed, 27 skipped, 20 xfailed, 2 warnings in 338.62s. No test failures.
 - Golden files remained unchanged.
+
+## 23.3 Product TS admission, parent DM, rejection policy, and dry-run
+
+### Premise checks
+
+- Checked the pre-item source at `a54e9bb` with `git show ... | rg`: `execution_admission` exposed only `ADMISSIBLE_LEGACY_EQUIVALENT`, accepted coverage only from `{DISABLED, DIAGNOSTIC}`, and rejected reduced columns; `product_execution_boundary` exempted only the legacy status; `product_command` launched only for that status and required `--name` whenever `--profile` was supplied. All matched the TASK 23.3 premises.
+- Checked `wsl_campaign_init.py` at `a54e9bb` with `git show ... | rg`; both `planning_reference_output` and `planning_reference_dm` were copied into the initialized campaign. `product_cli._verify_campaign_inputs` independently verifies those frozen copies against the source hashes.
+- Checked `campaign_runner.py` and `campaign_shadow.py` at `a54e9bb` with `git show ... | rg`: the runner called `reference_completed` after output validation without comparing the DM digest; failed shadows and rejected barriers called expansion directly. These premises were true.
+- No premise was false. No real SIESTA campaign was run for 23.3. The main session ran the required POSIX MnO TS replay in WSL with fake SIESTA after implementation.
+
+### Changes and focused verification
+
+- Added an independent TS admission status and fail-closed reasons for inventory/reference/parent-DM/plan reasons/reduction/run-grid/site mapping/reference-DM filename, with no identity-only inventory exemption. The boundary and product command now recognize both admissible statuses while preserving the legacy branch. TS products freeze `shadow_rejection_policy: STOP` after CLI coverage merging; explicit `EXPAND` remains available and omitted keys remain absent on non-TS configs.
+- The runner now compares the validated reference DM bytes with the frozen parent digest before `reference_completed`; mismatch records `PARENT_DM_NOT_REPRODUCED` and both digests, then the worker reports that reason and stops before perturbations. Under STOP, rejected shadows persist outcomes and the I.5 mapping, finish `FAILED/SHADOW_REJECTED`, and do not install an expanded DAG. Default runtime policy remains `EXPAND` for existing explicit campaigns.
+- Added `run --dry-run`, which requires a profile, skips the name requirement, computes/freezes/reports admission and boundary, and skips campaign initialization and worker launch. Manifest-target commands reject the flag only when it is enabled.
+- Added/updated authorized tests in product admission, product CLI, campaign config validation, and campaign shadow STOP behavior. No golden or replay fixture changed.
+- Added `tests/integration/test_runner_replay_mno_ts.py` as the item-authorized POSIX integration replay. It adapts the external prototype with `tmp_path`, hashes and registers its fake executable, reuses the planning reference DM bytes, permutes the archived per-atom occupation blocks for shadow columns, and writes identical synthetic insulating band energies on every run. The config carries the declared `magnetic_moment_tolerance_muB: 0.1` I.5 continuity tolerance.
+- WSL MnO TS replay: `PYTHONPATH=src /home/jmc/.cache/hubbardflow-task23-venv/bin/python -m pytest -q --basetemp=/tmp/task23-debug4 tests/integration/test_runner_replay_mno_ts.py` → 1 passed, 2 existing deprecation warnings, 59.41s. The production I.5 gate passed without monkeypatching; 49 fake SIESTA invocations completed, both shadows and `complete_state_gate` were `PROVEN`, reconstructed `chi0_raw`/`chi_raw` matched primary matrices at `atol=1e-12`, and U spread in both translation classes was ≤1e-9 eV.
+- Focused targeted selection: `python -m pytest -q tests/unit/test_product_admission.py tests/unit/test_product_cli.py::test_legacy_run_still_delegates_to_existing_control tests/unit/test_product_cli.py::test_mno_translation_shadow_product_plan_uses_single_file_species_map tests/unit/test_product_cli.py::test_run_dry_run_requires_profile_but_never_launches tests/unit/test_campaign_plan.py::test_shadow_rejection_policy_is_optional_and_validated tests/unit/test_campaign_shadow.py::test_stop_policy_rejects_shadow_without_installing_expansion tests/unit/test_campaign_shadow.py::test_stop_policy_prepare_rejection_runs_once_and_does_not_expand` → 28 passed, 2 pre-existing deprecation warnings.
+
+### Post-commit gates for 23.3
+
+- Focused golden/product/scientific/architecture selection: 240 passed, 2 existing deprecation warnings.
+- WSL replay selection (`test_runner_replay_nio_p5.py` and `test_runner_replay_mno_ts.py`): 8 passed, 2 existing deprecation warnings. MnO TS completed 49 fake SIESTA invocations; the integration assertions confirmed both shadows and the complete I.5 gate were `PROVEN`.
+- `ruff check .` passed; `ruff format --check .` reported 91 files already formatted; `bash tools/check_v6_integrity.sh` printed `V6 GATE OK`.
+- First `MYPYPATH=src mypy --strict` run found six annotation errors in the newly changed TS admission/tests. Fixed the None narrowing and test doubles/casts; rerun passed with `Success: no issues found in 91 source files`.
+- Affected product/shadow tests after the typing fixes: 80 passed, 2 existing deprecation warnings.
+- Full suite on the amended 23.3 code: `python -m pytest tests --continue-on-collection-errors` → 1424 passed, 28 skipped, 20 xfailed, 2 existing deprecation warnings in 374.31s. No new failures or known-failure changes.

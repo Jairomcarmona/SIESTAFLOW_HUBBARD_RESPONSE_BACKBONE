@@ -130,6 +130,17 @@ def test_optional_sites_filled_and_explicit_mapping_validated(tmp_path: Path) ->
         )
 
 
+def test_shadow_rejection_policy_is_optional_and_validated(tmp_path: Path) -> None:
+    fdf, raw, _ = inputs(tmp_path)
+    assert "shadow_rejection_policy" not in normalized(fdf, raw)
+    assert normalized(fdf, {**raw, "shadow_rejection_policy": "STOP"})["shadow_rejection_policy"] == "STOP"
+    assert (
+        normalized(fdf, {**raw, "shadow_rejection_policy": "EXPAND"})["shadow_rejection_policy"] == "EXPAND"
+    )
+    with pytest.raises(CampaignV2Error, match="shadow_rejection_policy must be EXPAND or STOP"):
+        normalized(fdf, {**raw, "shadow_rejection_policy": "IGNORE"})
+
+
 @pytest.mark.parametrize(
     "field,value",
     [

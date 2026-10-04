@@ -133,6 +133,8 @@ def _config(request: ProductRequest) -> dict[str, object] | None:
     ):
         if value is not None:
             raw[field] = value
+    if raw.get("coverage", "DIAGNOSTIC") == "TRANSLATION_SHADOWED":
+        raw.setdefault("shadow_rejection_policy", "STOP")
     return raw
 
 
@@ -413,10 +415,11 @@ def product_execution_boundary(
     I.5 blocks this product route before materialization, local/MPI or SLURM
     launch. The legacy explicit campaign commands retain their existing runner.
     """
-    legacy_admissible = (
-        admission is not None and admission.status is ExecutionAdmissionStatus.ADMISSIBLE_LEGACY_EQUIVALENT
-    )
-    if legacy_admissible:
+    admissible = admission is not None and admission.status in {
+        ExecutionAdmissionStatus.ADMISSIBLE_LEGACY_EQUIVALENT,
+        ExecutionAdmissionStatus.ADMISSIBLE_TRANSLATION_SHADOWED,
+    }
+    if admissible:
         reasons = list(snapshot.reasons)
     else:
         reasons = [ProductReason.SCIENTIFIC_STATE_NOT_ESTABLISHED, ProductReason.PILOT_REUSE_NOT_ESTABLISHED]

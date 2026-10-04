@@ -7,12 +7,14 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import cast
 
+from hubbardflow.domain.perturbation_plan import ResolvedPerturbationPlan
 from hubbardflow.domain.subspace_inventory import InventoryReason, InventoryStatus
 from hubbardflow.execution.product_models import ProductSnapshot
 
 
 class ExecutionAdmissionStatus(str, Enum):
     ADMISSIBLE_LEGACY_EQUIVALENT = "ADMISSIBLE_LEGACY_EQUIVALENT"
+    ADMISSIBLE_TRANSLATION_SHADOWED = "ADMISSIBLE_TRANSLATION_SHADOWED"
     BLOCKED = "BLOCKED"
 
 
@@ -26,6 +28,11 @@ class ExecutionAdmissionReason(str, Enum):
     SPLIT_STAGING_PENDING = "SPLIT_STAGING_PENDING"
     COVERAGE_POLICY_UNSUPPORTED = "COVERAGE_POLICY_UNSUPPORTED"
     SNAPSHOT_INCONSISTENT = "SNAPSHOT_INCONSISTENT"
+    PARENT_DM_REQUIRED = "PARENT_DM_REQUIRED"
+    REFERENCE_NOT_ADMISSIBLE = "REFERENCE_NOT_ADMISSIBLE"
+    PLAN_REASONS_PRESENT = "PLAN_REASONS_PRESENT"
+    NO_TRANSLATION_REDUCTION = "NO_TRANSLATION_REDUCTION"
+    REFERENCE_DM_NAME_MISMATCH = "REFERENCE_DM_NAME_MISMATCH"
 
 
 class ExecutionRequirementStatus(str, Enum):
@@ -65,6 +72,11 @@ def execution_admission(
     """
     reasons: set[ExecutionAdmissionReason] = set()
     plan = None if snapshot.planning is None else snapshot.planning.plan
+    translation_shadowed = (
+        frozen_lr_config is not None and frozen_lr_config.get("coverage") == "TRANSLATION_SHADOWED"
+    )
+    if translation_shadowed and frozen_lr_config is not None:
+        return _translation_shadowed_admission(snapshot, frozen_lr_config, plan)
     if plan is None or frozen_lr_config is None:
         reasons.add(ExecutionAdmissionReason.FROZEN_PLAN_MISSING)
     # Species semantic identity is evidence for symmetry equivalence (F2) only.
@@ -158,3 +170,124 @@ def execution_admission(
         if admissible
         else ExecutionRequirementStatus.REQUIRED_BY_PLAN,
     )
+
+
+def _translation_shadowed_admission(
+    snapshot: ProductSnapshot,
+    config: Mapping[str, object],
+    plan: ResolvedPerturbationPlan | None,
+) -> ExecutionAdmission:
+    """Admit only a frozen, complete, parent-bound translation reduction.
+
+    TS is a separate product route because every omitted column must have a
+    measured shadow and a reproducible parent DM before the runner starts.
+    """
+    reasons: set[ExecutionAdmissionReason] = set()
+    if plan is None or getattr(snapshot, "frozen_lr_config_json", None) is None:
+        reasons.add(ExecutionAdmissionReason.FROZEN_PLAN_MISSING)
+    if snapshot.inventory.status is not InventoryStatus.OK or not snapshot.inventory.subspaces:
+        reasons.add(ExecutionAdmissionReason.INVENTORY_NOT_READY)
+    if snapshot.split_staging is not None:
+        reasons.add(ExecutionAdmissionReason.SPLIT_STAGING_PENDING)
+
+    if config.get("adaptive_alpha_policy") is not None:
+        reasons.add(ExecutionAdmissionReason.ADAPTIVE_POLICY_PRESENT)
+    if config.get("alpha_strategy", "FIXED_PROTOCOL_GRID") not in {
+        "FIXED_PROTOCOL_GRID",
+        "USER_EXPLICIT_GRID",
+    }:
+        reasons.add(ExecutionAdmissionReason.GRID_NOT_EXPLICIT)
+    if any(
+        config.get(flag, False) is not False
+        for flag in ("allow_spin_flip", "allow_rotations", "auto_split_species")
+    ):
+        reasons.add(ExecutionAdmissionReason.OPTIONAL_SYMMETRY_ENABLED)
+
+    grid = config.get("alpha_grid_ev")
+    if not isinstance(grid, list) or not grid:
+        reasons.add(ExecutionAdmissionReason.GRID_NOT_EXPLICIT)
+    if plan is not None:
+        plan_inventory = plan.inventory
+        if snapshot.inventory.digest != plan_inventory.digest or snapshot.status is not plan.status:
+            reasons.add(ExecutionAdmissionReason.SNAPSHOT_INCONSISTENT)
+        reference = getattr(plan, "reference", None)
+        parent_dm_sha256 = getattr(reference, "parent_dm_sha256", None)
+        reference_status = getattr(getattr(reference, "status", None), "value", None)
+        if reference_status != "ADMISSIBLE" or not parent_dm_sha256:
+            reasons.add(ExecutionAdmissionReason.REFERENCE_NOT_ADMISSIBLE)
+        if not parent_dm_sha256:
+            reasons.add(ExecutionAdmissionReason.PARENT_DM_REQUIRED)
+        if not {reason.value for reason in plan.reason_codes} <= {"SHADOW_PENDING"}:
+            reasons.add(ExecutionAdmissionReason.PLAN_REASONS_PRESENT)
+
+        reduced = [group for group in plan.coverage.classes if group.reduced]
+        if not reduced:
+            reasons.add(ExecutionAdmissionReason.NO_TRANSLATION_REDUCTION)
+        if any(group.shadow is None for group in reduced):
+            reasons.add(ExecutionAdmissionReason.NO_TRANSLATION_REDUCTION)
+
+        if not isinstance(grid, list) or not grid:
+            reasons.add(ExecutionAdmissionReason.GRID_NOT_EXPLICIT)
+        else:
+            expected_runs = {
+                (site, mode, float(alpha))
+                for site in plan.computed_columns
+                for mode in ("BARE", "SCREENED")
+                for alpha in grid
+            }
+            actual_runs = {(run.site_id, run.mode.value, run.alpha_ev) for run in plan.run_specs}
+            if actual_runs != expected_runs:
+                reasons.add(ExecutionAdmissionReason.REDUCED_COLUMNS_PRESENT)
+
+        configured_sites = config.get("sites")
+        if not isinstance(configured_sites, list):
+            reasons.add(ExecutionAdmissionReason.GRID_NOT_EXPLICIT)
+        else:
+            declared_sites = {
+                (site.get("site_id"), site.get("atom_index"))
+                for site in configured_sites
+                if isinstance(site, Mapping)
+            }
+            inventory_sites = {(site.species_label, site.atom_index + 1) for site in plan_inventory.subspaces}
+            if declared_sites != inventory_sites:
+                reasons.add(ExecutionAdmissionReason.GRID_NOT_EXPLICIT)
+
+        expected_dm_name = _reference_dm_name(snapshot.request_json)
+        if config.get("reference_dm_name") != expected_dm_name:
+            reasons.add(ExecutionAdmissionReason.REFERENCE_DM_NAME_MISMATCH)
+
+    ordered = tuple(sorted(reasons, key=lambda reason: reason.value))
+    admissible = not ordered
+    return ExecutionAdmission(
+        ExecutionAdmissionStatus.ADMISSIBLE_TRANSLATION_SHADOWED
+        if admissible
+        else ExecutionAdmissionStatus.BLOCKED,
+        ordered,
+        ExecutionRequirementStatus.REQUIRED_BY_PLAN,
+        ExecutionRequirementStatus.REQUIRED_BY_PLAN,
+        ExecutionRequirementStatus.REQUIRED_BY_PLAN,
+    )
+
+
+def _reference_dm_name(request_json: str) -> str:
+    """Resolve the output DM name from the source FDF's SystemLabel."""
+    import json
+    import re
+    from pathlib import Path
+
+    try:
+        request = json.loads(request_json)
+        fdf = Path(request["fdf"])
+        from hubbardflow.execution.campaign_v2 import resolve_fdf_includes
+
+        text, _ = resolve_fdf_includes(fdf)
+    except (OSError, ValueError, TypeError, KeyError):
+        return ""
+    labels = [
+        match.group(1)
+        for line in text.splitlines()
+        if (match := re.match(r"^\s*SystemLabel\s+([^\s#]+)", line, re.IGNORECASE))
+    ]
+    if len(labels) > 1:
+        return ""
+    return f"{labels[0]}.DM" if labels else "siesta.DM"

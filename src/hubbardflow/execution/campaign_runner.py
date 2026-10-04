@@ -769,6 +769,18 @@ class CampaignRunner:
             "reference_dm_sha256": provenance.get("semantic", {}).get("reference_dm_sha256"),
         }
 
+    def _parent_dm_reproduction_failure(self, dm_path: Path) -> dict[str, str | None] | None:
+        """Return the bound digest mismatch before a TS reference can parent runs."""
+        expected_digest = self.perturbation_plan.reference.parent_dm_sha256
+        observed_digest = sha256_file(dm_path)
+        if expected_digest is not None and observed_digest == expected_digest:
+            return None
+        return {
+            "reason": "PARENT_DM_NOT_REPRODUCED",
+            "expected_parent_dm_sha256": expected_digest,
+            "observed_parent_dm_sha256": observed_digest,
+        }
+
     def _execute_siesta(self, node: LRDagNode, heartbeat: _Heartbeat) -> NodeReceipt:
         from hubbardflow.execution.runtime_adapters import LocalSubprocessExecutor, SlurmAllocationExecutor
 
@@ -822,6 +834,23 @@ class CampaignRunner:
                 failed = NodeReceipt(node.node_id, NodeState.FAILED_OUTPUT_VALIDATION, _digest("reference DM missing after validation"))
                 self._record_receipt(node, failed, {"kind": "siesta_failure", "reason": "reference DM missing"})
                 return failed
+            if self.shadow is not None:
+                mismatch = self._parent_dm_reproduction_failure(dm_path)
+                if mismatch is not None:
+                    failed = NodeReceipt(
+                        node.node_id,
+                        NodeState.FAILED_OUTPUT_VALIDATION,
+                        _digest(mismatch),
+                    )
+                    self._record_receipt(
+                        node,
+                        failed,
+                        {
+                            **record,
+                            **mismatch,
+                        },
+                    )
+                    return failed
             self.factory.reference_completed(dm_path, node.scf_level_id or "base")
         return receipt
 
@@ -1828,29 +1857,73 @@ class CampaignRunner:
                 )
                 return 0
             heartbeat.update(active_node=node.node_id, current_node_state="RUNNING")
-            if node.kind in {LRNodeKind.REFERENCE, LRNodeKind.PERTURBATION}:
-                receipt = self._execute_siesta(node, heartbeat)
-            elif node.kind is LRNodeKind.ALPHA_GATE:
-                if getattr(self, "shadow", None) is not None and not self.shadow.prepare(self):
-                    continue
-                receipt = self._execute_gate(node)
-            elif node.kind is LRNodeKind.MATRIX_ANALYSIS:
-                receipt = self._execute_analysis(node)
-            else:  # pragma: no cover - closed enum guard
-                raise ExecutionContractError(f"unsupported DAG node kind {node.kind.value}")
+            try:
+                if node.kind in {LRNodeKind.REFERENCE, LRNodeKind.PERTURBATION}:
+                    receipt = self._execute_siesta(node, heartbeat)
+                elif node.kind is LRNodeKind.ALPHA_GATE:
+                    if getattr(self, "shadow", None) is not None and not self.shadow.prepare(self):
+                        continue
+                    receipt = self._execute_gate(node)
+                elif node.kind is LRNodeKind.MATRIX_ANALYSIS:
+                    receipt = self._execute_analysis(node)
+                else:  # pragma: no cover - closed enum guard
+                    raise ExecutionContractError(f"unsupported DAG node kind {node.kind.value}")
+            except Exception as exc:
+                from hubbardflow.execution.campaign_shadow import ShadowRejected
+
+                if not isinstance(exc, ShadowRejected) or self.shadow is None:
+                    raise
+                self.shadow.persist_rejection(self, exc.outcomes)
+                heartbeat.finish(
+                    "FAILED",
+                    reason="SHADOW_REJECTED",
+                    rejecting_classes=[
+                        {"representative": item.representative, "shadow": item.shadow}
+                        for item in exc.outcomes
+                        if item.status.value == "REJECTED_EXPANDED"
+                    ],
+                    completed_nodes=sorted(self._checkpoint()),
+                )
+                return 1
             completed = sorted(self._checkpoint())
             heartbeat.update(active_node=None, current_node_state=receipt.state.value, completed_nodes=completed)
             if receipt.state is not NodeState.VALIDATED:
-                if getattr(self, "shadow", None) is not None and self.shadow.failed_shadow(self, node):
-                    continue
+                if getattr(self, "shadow", None) is not None:
+                    try:
+                        if self.shadow.failed_shadow(self, node):
+                            continue
+                    except Exception as exc:
+                        from hubbardflow.execution.campaign_shadow import ShadowRejected
+
+                        if not isinstance(exc, ShadowRejected):
+                            raise
+                        self.shadow.persist_rejection(self, exc.outcomes)
+                        heartbeat.finish(
+                            "FAILED",
+                            reason="SHADOW_REJECTED",
+                            rejecting_classes=[
+                                {"representative": item.representative, "shadow": item.shadow}
+                                for item in exc.outcomes
+                                if item.status.value == "REJECTED_EXPANDED"
+                            ],
+                            failed_node=node.node_id,
+                            completed_nodes=completed,
+                        )
+                        return 1
                 failure_record = self.store.records.get(node.node_id, {})
                 failure_details = {
                     name: failure_record[name]
                     for name in ("returncode", "returncode_meaning")
                     if name in failure_record
                 }
+                parent_dm_reason = (
+                    "PARENT_DM_NOT_REPRODUCED"
+                    if self.shadow is not None and failure_record.get("reason") == "PARENT_DM_NOT_REPRODUCED"
+                    else None
+                )
                 heartbeat.finish(
                     "FAILED", failed_node=node.node_id, failure_state=receipt.state.value, **failure_details,
+                    **({"reason": parent_dm_reason} if parent_dm_reason is not None else {}),
                 )
                 return 1
 
