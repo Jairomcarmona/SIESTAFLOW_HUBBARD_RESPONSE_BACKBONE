@@ -101,3 +101,86 @@ def test_verified_observation_dataset_rejects_misordered_site_indices():
             reference_source={},
             response_sources={(0, 0.1): {"bare": {}, "screened": {}}},
         )
+
+
+def test_reference_worker_mode_executes_only_reference_and_stops(tmp_path):
+    from types import SimpleNamespace
+
+    from hubbardflow.execution.dag_contract import NodeState
+    from hubbardflow.execution.generic_executor import NodeReceipt
+    from hubbardflow.execution.lr_dag import LRDagNode
+
+    reference_node = LRDagNode("reference", LRNodeKind.REFERENCE, ())
+    executed = []
+    state = {"receipts": {}}
+
+    class Heartbeat:
+        def __init__(self):
+            self.finished = None
+
+        def update(self, **changes):
+            pass
+
+        def finish(self, status, **changes):
+            self.finished = {"status": status, **changes}
+
+    runner = object.__new__(CampaignRunner)
+    runner.checkpoint_path = tmp_path / "checkpoint.json"
+    runner.executor = SimpleNamespace(runnable=lambda: [reference_node])
+    runner.control = tmp_path
+    runner.store = SimpleNamespace(records={})
+    runner._checkpoint = lambda: state["receipts"]
+    runner._reserve_adaptive_node = lambda _: True
+
+    def execute(node, _heartbeat):
+        executed.append(node.node_id)
+        receipt = NodeReceipt(node.node_id, NodeState.VALIDATED, "a" * 64)
+        state["receipts"] = {node.node_id: receipt}
+        return receipt
+
+    runner._execute_siesta = execute
+    heartbeat = Heartbeat()
+
+    assert runner.advance("reference", heartbeat) == 0
+    assert executed == ["reference"]
+    assert heartbeat.finished == {
+        "status": "STOPPED",
+        "stop_reason": "reference_only",
+        "completed_nodes": ["reference"],
+    }
+
+
+def test_reference_worker_mode_preserves_failed_reference_status(tmp_path):
+    from types import SimpleNamespace
+
+    from hubbardflow.execution.dag_contract import NodeState
+    from hubbardflow.execution.generic_executor import NodeReceipt
+    from hubbardflow.execution.lr_dag import LRDagNode
+
+    reference_node = LRDagNode("reference", LRNodeKind.REFERENCE, ())
+    receipt = NodeReceipt("reference", NodeState.FAILED_EXECUTION, "b" * 64)
+
+    class Heartbeat:
+        def __init__(self):
+            self.finished = None
+
+        def update(self, **changes):
+            pass
+
+        def finish(self, status, **changes):
+            self.finished = {"status": status, **changes}
+
+    runner = object.__new__(CampaignRunner)
+    runner.checkpoint_path = tmp_path / "checkpoint.json"
+    runner.executor = SimpleNamespace(runnable=lambda: [reference_node])
+    runner.control = tmp_path
+    runner.store = SimpleNamespace(records={})
+    runner.shadow = None
+    runner._checkpoint = lambda: {"reference": receipt}
+    runner._reserve_adaptive_node = lambda _: True
+    runner._execute_siesta = lambda _node, _heartbeat: receipt
+    heartbeat = Heartbeat()
+
+    assert runner.advance("reference", heartbeat) == 1
+    assert heartbeat.finished["status"] == "FAILED"
+    assert heartbeat.finished["failed_node"] == "reference"

@@ -563,3 +563,70 @@ def test_report_destination_cannot_overwrite_protocol_source(
     assert "overwrite a declared input" in capsys.readouterr().err
     assert config.read_bytes() == original
     assert not (root / "product_campaign.lock").exists()
+
+
+@pytest.mark.parametrize(
+    "extra,reason",
+    [
+        (["--coverage", "TRANSLATION_SHADOWED"], "does not accept --coverage TRANSLATION_SHADOWED"),
+        (["--reference-output", "foreign.out"], "does not accept --reference-output or --reference-dm"),
+        (["--reference-dm", "foreign.DM"], "does not accept --reference-output or --reference-dm"),
+    ],
+)
+def test_reference_command_refuses_shadowed_and_foreign_reference_inputs(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    extra: list[str],
+    reason: str,
+) -> None:
+    fdf, config, _, root = product_inputs(tmp_path)
+    status = main(
+        [
+            "reference",
+            str(fdf),
+            "--lr-config",
+            str(config),
+            "--profile",
+            str(tmp_path / "unused-profile.json"),
+            "--name",
+            "reference-only",
+            "--output-dir",
+            str(root),
+            *extra,
+        ]
+    )
+    assert status == 2
+    assert reason in capsys.readouterr().err
+    assert not root.exists()
+
+
+def test_reference_rejects_wrong_dm_name_before_initializer_or_worker(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fdf, config, _, root = product_inputs(tmp_path)
+    profile = tmp_path / "profile.json"
+    profile.write_text("{}", encoding="utf-8")
+    monkeypatch.setattr(
+        cast(Any, product_cli),
+        "os",
+        SimpleNamespace(name="posix", fdopen=os.fdopen, fsync=os.fsync, replace=os.replace),
+    )
+    status = main(
+        [
+            "reference",
+            str(fdf),
+            "--lr-config",
+            str(config),
+            "--profile",
+            str(profile),
+            "--name",
+            "reference-only",
+            "--output-dir",
+            str(root),
+        ]
+    )
+    assert status == 2
+    assert "reference.DM" in capsys.readouterr().err
+    assert not (root / "campaign.pointer.json").exists()

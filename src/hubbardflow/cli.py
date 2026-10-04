@@ -298,7 +298,7 @@ def main(argv: list[str] | None = None) -> int:
             audit_fdf(args)
         elif args.command == "init":
             _public_init(args)
-        elif args.command in {"plan", "submit"} or (args.command == "run" and Path(args.campaign).suffix.casefold() == ".fdf"):
+        elif args.command in {"plan", "submit", "reference"} or (args.command == "run" and Path(args.campaign).suffix.casefold() == ".fdf"):
             return product_command(args)
         elif args.command in {"run", "resume", "status", "report", "stop"}:
             result = _public_control(args)

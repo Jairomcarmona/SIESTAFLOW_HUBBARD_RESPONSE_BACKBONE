@@ -1828,6 +1828,10 @@ class CampaignRunner:
         return receipt
 
     def advance(self, mode: str, heartbeat: _Heartbeat) -> int:
+        if mode not in {"run", "resume", "reference"}:
+            raise ExecutionContractError(f"unsupported worker mode: {mode}")
+        if mode == "reference" and self.checkpoint_path.exists() and self._checkpoint():
+            raise ExecutionContractError("reference mode requires a campaign without existing DAG receipts")
         if mode == "run" and self.checkpoint_path.exists():
             existing = self._checkpoint()
             if existing:
@@ -1887,6 +1891,12 @@ class CampaignRunner:
                 return 1
             completed = sorted(self._checkpoint())
             heartbeat.update(active_node=None, current_node_state=receipt.state.value, completed_nodes=completed)
+            if mode == "reference":
+                if node.node_id != "reference":
+                    raise ExecutionContractError("reference mode can execute only the reference node")
+                if receipt.state is NodeState.VALIDATED:
+                    heartbeat.finish("STOPPED", stop_reason="reference_only", completed_nodes=completed)
+                    return 0
             if receipt.state is not NodeState.VALIDATED:
                 if getattr(self, "shadow", None) is not None:
                     try:

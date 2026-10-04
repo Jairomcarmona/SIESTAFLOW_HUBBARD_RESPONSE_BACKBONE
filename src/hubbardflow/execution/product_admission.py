@@ -252,7 +252,7 @@ def _translation_shadowed_admission(
             if declared_sites != inventory_sites:
                 reasons.add(ExecutionAdmissionReason.GRID_NOT_EXPLICIT)
 
-        expected_dm_name = _reference_dm_name(snapshot.request_json)
+        expected_dm_name = reference_dm_name_for_request(snapshot.request_json)
         if config.get("reference_dm_name") != expected_dm_name:
             reasons.add(ExecutionAdmissionReason.REFERENCE_DM_NAME_MISMATCH)
 
@@ -269,8 +269,8 @@ def _translation_shadowed_admission(
     )
 
 
-def _reference_dm_name(request_json: str) -> str:
-    """Resolve the output DM name from the source FDF's SystemLabel."""
+def reference_dm_name_for_request(request_json: str) -> str:
+    """Resolve the only valid reference DM name from a product request's FDF."""
     import json
     import re
     from pathlib import Path

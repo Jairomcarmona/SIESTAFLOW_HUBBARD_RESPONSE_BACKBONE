@@ -118,3 +118,28 @@ No premise was false.
 - First `MYPYPATH=src mypy --strict` run found six annotation errors in the newly changed TS admission/tests. Fixed the None narrowing and test doubles/casts; rerun passed with `Success: no issues found in 91 source files`.
 - Affected product/shadow tests after the typing fixes: 80 passed, 2 existing deprecation warnings.
 - Full suite on the amended 23.3 code: `python -m pytest tests --continue-on-collection-errors` → 1424 passed, 28 skipped, 20 xfailed, 2 existing deprecation warnings in 374.31s. No new failures or known-failure changes.
+
+## 23.4 `hubbardflow reference`
+
+### Premise checks
+
+- `rg -n 'def run_campaign_worker|def advance|mode ==' src/hubbardflow/execution/campaign_runner.py` confirmed that `run_campaign_worker` passes its mode to `advance`, where the prior worker distinguished only `run` and `resume`; premise true.
+- `rg -n 'copy2\(self.layout.reference_fdf|reference_dm_name|stdout_path' src/hubbardflow/siesta_backend/command_factory.py src/hubbardflow/execution/campaign_runner.py` confirmed verbatim reference-FDF copying, `layout.reference_dm_name` for the reference DM, and recorded `stdout_path`; premise true.
+- `rg -n 'reference_dm_name|reference.DM|required DM artifact' src/hubbardflow/execution/campaign_v2.py src/hubbardflow/siesta_backend/output_validator.py` confirmed the `reference.DM` default and post-run required-artifact validation; premise true. The public shared DM-name helper now rejects mismatches before campaign initialization or worker execution.
+- No premise was false. No golden was edited.
+
+### Changes and verification
+
+- Added the `reference` product command. It requires a frozen LR config and profile, admits only `ADMISSIBLE_LEGACY_EQUIVALENT`, initializes a normal direct campaign, executes worker mode `reference`, and archives the validated stdout/DM plus a receipt with the required hashes and provenance. It refuses TS coverage, foreign reference inputs, dry-run and a DM filename inconsistent with the FDF. The shared DM-name helper is used by both TS admission and this command.
+- `CampaignRunner.advance("reference")` stops after a validated reference receipt with `STOPPED/reference_only`; unvalidated reference receipts go through the existing failed-node handling. A synthetic resume remains the ordinary full direct run. Added user-guide examples for `reference` then TS `run`, the meaning of `PARENT_DM_NOT_REPRODUCED`, and when to select `DISABLED`.
+- Added authorized unit tests in `test_campaign_runner_synthetic.py` and `test_product_cli.py`, and the item-authorized POSIX NiO integration `test_product_reference_nio.py`. The first new failure fixture used nonexistent `NodeState.FAILED`, and then omitted `runner.shadow`; both fixture-only issues were corrected to `FAILED_EXECUTION` and `shadow=None`. The final synthetic file result is 5 passed. No existing assertion was weakened.
+- Focused unit selection: `python -m pytest -q tests/unit/test_campaign_runner_synthetic.py tests/unit/test_product_cli.py tests/unit/test_cli_legacy_product_options.py tests/unit/test_product_admission.py` → 73 passed, 2 pre-existing warnings. The added failed-reference test was added afterward and separately passed in the final 5-test synthetic file run.
+- Final POSIX replay in WSL: `PYTHONPATH=src /home/jmc/.cache/hubbardflow-task23-venv/bin/python -m pytest -q --basetemp=/tmp/task23-reference-final tests/integration/test_product_reference_nio.py` → 1 passed, 2 pre-existing deprecation warnings. It verifies exactly one fake SIESTA execution, DM SHA256 `f7fca191f941bbda5ee38eb361096aa8a802dfd410e12aaa680f39f3cf2193ef`, exact fixture stdout bytes, and TS follow-up admission with the same parent DM.
+- `verificador_luna` reviewed the diff twice. The first review identified failed-reference routing; after preserving the usual FAILED path and adding its regression test, the second review approved the diff. `ruff check .`, `ruff format --check .` (91 files), `MYPYPATH=src mypy --strict` (91 source files), and `git diff --check` passed. No test golden changes.
+
+### Post-commit gates for 23.4 (the final amend changes only this log)
+
+- WSL POSIX replays: NiO P5, MnO TS and product reference → 9 passed, 2 existing deprecation warnings.
+- Golden/product/scientific/architecture selection: `test_phase2_golden.py`, product CLI/execution/admission/paths/plan, matrix, quantized response, U certification and architecture → 191 passed, 2 existing warnings.
+- `ruff check .` passed; `ruff format --check .` reported 91 files already formatted; `MYPYPATH=src mypy --strict` succeeded on 91 files; V6 gate printed `V6 GATE OK`.
+- Full suite: `python -m pytest tests --continue-on-collection-errors` → 1430 passed, 29 skipped, 20 xfailed, 2 existing deprecation warnings in 359.29s. No new failures or known-failure changes.
