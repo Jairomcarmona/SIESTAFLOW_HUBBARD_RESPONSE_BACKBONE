@@ -143,3 +143,26 @@ No premise was false.
 - Golden/product/scientific/architecture selection: `test_phase2_golden.py`, product CLI/execution/admission/paths/plan, matrix, quantized response, U certification and architecture → 191 passed, 2 existing warnings.
 - `ruff check .` passed; `ruff format --check .` reported 91 files already formatted; `MYPYPATH=src mypy --strict` succeeded on 91 files; V6 gate printed `V6 GATE OK`.
 - Full suite: `python -m pytest tests --continue-on-collection-errors` → 1430 passed, 29 skipped, 20 xfailed, 2 existing deprecation warnings in 359.29s. No new failures or known-failure changes.
+
+## 23.5 Compact planning report and reason-derived actions
+
+### Premise checks
+
+- `rg -n 'canonical\(snapshot\.planning\.to_mapping\(\)\)|Production requires the complete FDRC I.5 state producer|Pilot reuse awaits' src/hubbardflow/reporting/product_report.py` confirmed the complete planning JSON was embedded and the I.5/pilot statements were unconditional static text; both premises true.
+- `$base = Join-Path $env:TEMP 'task23-235-premise'; python -m pytest -q --basetemp $base tests/unit/test_product_cli.py::test_mno_translation_shadow_product_plan_uses_single_file_species_map` passed against the archived MnO inputs. `Get-Item ...\test_mno_translation_shadow_pr0\product\plan_report.md | Select-Object Length` reported 3,145,305 bytes. The test confirms 16 Mn sites, two translation classes, four computed columns and 48 run specs; no SIESTA was run.
+- `rg -n 'Production requires the complete FDRC I.5 state producer|Pilot reuse awaits|Actions required' tests` found no pre-existing test assertion for the removed static prose, so no old expected strings needed edits.
+- No premise was false. No JSON artifact, frozen plan, or digest changed.
+
+### Changes and verification
+
+- Replaced embedded planning/coverage JSON with translation-class and operation-summary tables (total/accepted counts, exactness-class counts and first failing condition counts). The report links to `resolved_perturbation_plan.json` and `product_plan.json`, displays execution-admission status/reasons from its serialized boundary, and keeps full evidence untouched.
+- Replaced static action prose with steps derived from product, inventory, plan, coverage and admission reason codes. Species-identity guidance names missing/mismatched pseudopotentials, blocks outside the species-neutral allowlist, and enabled `User.Basis` directives as causes to check; the frozen report contract does not retain which specific cause applied. An admissible TS boundary reports that the command is ready with `--profile`.
+- F-condition failures are counted separately from rejected operations whose conditions did not fail, so policy reasons are not mislabeled as failed conditions. Updated only the authorized MnO product-CLI test to compare the complete exactness and first-failure tables with the typed qualification, along with report size, classes, links, admission and fenced-block checks. No prior assertion was weakened and no golden was edited.
+- `python -m pytest -q tests/unit/test_product_cli.py::test_mno_translation_shadow_product_plan_uses_single_file_species_map` → 1 passed, 2 existing warnings. `ruff check` and `ruff format --check` on report/test passed; `MYPYPATH=src mypy --strict src/hubbardflow/reporting/product_report.py` passed; `git diff --check` passed. `verificador_luna` reviewed the diff and approved after these corrections.
+
+### Post-commit gates for 23.5 (the final amend changes only this log)
+
+- WSL POSIX replays: NiO P5, MnO TS and product reference → 9 passed, 2 existing deprecation warnings. The MnO TS replay passed, satisfying the prerequisite for item 23.6.
+- Golden/product/scientific/architecture selection, including product-report atomic tests → 193 passed, 2 existing warnings.
+- `ruff check .` passed; `ruff format --check .` reported 91 files already formatted; `MYPYPATH=src mypy --strict` succeeded on 91 files; V6 gate printed `V6 GATE OK`.
+- Full suite: `python -m pytest tests --continue-on-collection-errors` → 1430 passed, 29 skipped, 20 xfailed, 2 existing deprecation warnings in 351.91s. No new failures or known-failure changes.

@@ -395,6 +395,54 @@ def test_mno_translation_shadow_product_plan_uses_single_file_species_map(
     ]
     assert [item.shadow for item in classes] == ["MnLR02@4:3:2", "MnLR03@5:3:2"]
     assert json.loads(snapshot.frozen_lr_config_json or "{}")["shadow_rejection_policy"] == "STOP"
+    report_path = root / "plan_report.md"
+    report = report_path.read_text(encoding="utf-8")
+    assert report_path.stat().st_size < 200_000
+    assert "MnLR00" in report and "MnLR02@4:3:2" in report and "MnLR03@5:3:2" in report
+    assert "| Representative | Shadow | Members | Status | Reasons |" in report
+    accepted_operations = sum(row.accepted for row in planning.diagnostic_coverage.operations)
+    assert f"Total operations: 128; accepted: {accepted_operations}." in report
+    exactness_counts = {
+        exactness: sum(
+            row.operation.exactness_class.value == exactness
+            for row in planning.diagnostic_coverage.operations
+        )
+        for exactness in sorted(
+            {row.operation.exactness_class.value for row in planning.diagnostic_coverage.operations}
+        )
+    }
+    first_failures: dict[str, int] = {}
+    for operation in planning.diagnostic_coverage.operations:
+        if operation.accepted:
+            continue
+        for condition in operation.conditions:
+            if condition.status.value not in {"EQUAL", "NOT_APPLICABLE"} and not (
+                condition.condition == "F8"
+                and operation.operation.rotation_int == ((1, 0, 0), (0, 1, 0), (0, 0, 1))
+            ):
+                first_failures[condition.condition] = first_failures.get(condition.condition, 0) + 1
+                break
+
+    def table_rows(header: str) -> list[str]:
+        lines = report.splitlines()
+        start = lines.index(header) + 2
+        rows = []
+        for line in lines[start:]:
+            if not line.startswith("|"):
+                break
+            rows.append(line)
+        return rows
+
+    expected_exactness_rows = [f"| {name} | {count} |" for name, count in exactness_counts.items()]
+    assert table_rows("| Exactness class | Count |") == expected_exactness_rows
+    expected_first_failure_rows = [
+        f"| {condition} | {count} |" for condition, count in sorted(first_failures.items())
+    ] or ["| None | 0 |"]
+    assert table_rows("| First failing condition | Count |") == expected_first_failure_rows
+    assert "| Rejected without a failed F-condition | Count |" in report
+    assert "resolved_perturbation_plan.json" in report and "product_plan.json" in report
+    assert all(len(block.encode("utf-8")) < 10_000 for block in report.split("```")[1::2])
+    assert "Production requires the complete FDRC I.5 state producer" not in report
 
     launched: list[str] = []
 
@@ -435,6 +483,9 @@ def test_mno_translation_shadow_product_plan_uses_single_file_species_map(
     )
     run_boundary = json.loads(capsys.readouterr().out)
     assert run_boundary["execution_admission"]["status"] == "ADMISSIBLE_TRANSLATION_SHADOWED"
+    execution_report = (root / "run_report.md").read_text(encoding="utf-8")
+    assert "Status: **ADMISSIBLE_TRANSLATION_SHADOWED**" in execution_report
+    assert "Ready: run with `--profile`" in execution_report
     assert not {
         "SCIENTIFIC_STATE_NOT_ESTABLISHED",
         "PILOT_REUSE_NOT_ESTABLISHED",
