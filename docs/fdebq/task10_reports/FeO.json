@@ -6,8 +6,7 @@
   "reasons": [
     "EVIDENCE_INCOMPLETE",
     "INVENTORY_NOT_ESTABLISHED",
-    "REFERENCE_NOT_ADMISSIBLE",
-    "SPECIES_IDENTITY_NOT_ESTABLISHED"
+    "REFERENCE_NOT_ADMISSIBLE"
   ],
   "reference_admission": {
     "echoed_input_sha256": "56dd4eacce0354dfba9cac612c894813f8f00eddca9039e6fc6ea6f8c59d6bb1",

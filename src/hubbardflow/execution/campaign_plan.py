@@ -41,7 +41,7 @@ from hubbardflow.domain.symmetry_operation_models import (
 )
 from hubbardflow.execution.campaign_coverage_policy import campaign_coverage_policy
 
-CAMPAIGN_PLANNER_VERSION = "campaign-planner-v3"
+CAMPAIGN_PLANNER_VERSION = "campaign-planner-v4"
 
 
 class CampaignPlanError(ValueError):
@@ -120,7 +120,11 @@ def _resolve_campaign_planning(fdf: Path, config: Mapping[str, object]) -> Campa
     model = parse_effective_fdf(fdf)
     pseudo = cast(Mapping[str, str], config["pseudopotentials"])
     dirs = tuple(sorted({Path(p).parent for p in pseudo.values()}, key=str))
-    identities = species_identity(model, dirs)
+    identities = species_identity(
+        model,
+        dirs,
+        pseudopotentials={label: Path(path) for label, path in pseudo.items()},
+    )
     inventory = build_inventory(model, identities)
     inventory_sites(inventory)
     source_digest = sha256(fdf.read_bytes()).hexdigest()

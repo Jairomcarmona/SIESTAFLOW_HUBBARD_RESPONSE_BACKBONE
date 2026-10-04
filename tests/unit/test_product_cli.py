@@ -345,6 +345,52 @@ def test_archived_disabled_grid_plan_and_run_boundary_preserve_digest(
     assert sha256(original.read_bytes()).hexdigest() == before
 
 
+def test_mno_translation_shadow_product_plan_uses_single_file_species_map(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    source = ROOT / (
+        "campaigns/mno_afmii_strict_lr_v3r2/results/response-matrix-foreground-recovery-v4/00_REFERENCE/siesta.fdf"
+    )
+    archived_output = ROOT / (
+        "campaigns/mno_afmii_strict_lr_v3r2/results/response-matrix-foreground-recovery-v4/00_REFERENCE/siesta.out"
+    )
+    fdf, config, raw, root = product_inputs(tmp_path, source.read_text(encoding="utf-8"))
+    manganese_pseudo = ROOT / "campaigns/mno_afmii_strict_lr_v3r2/pseudopotentials/Mn.psml"
+    oxygen_pseudo = ROOT / "campaigns/mno_afmii_strict_lr_v3r2/pseudopotentials/O.psml"
+    raw["pseudopotentials"] = {
+        **{f"MnLR{index:02d}": str(manganese_pseudo) for index in range(16)},
+        "O": str(oxygen_pseudo),
+    }
+    raw["sites"] = normalized(fdf, raw)["sites"]
+    dm = tmp_path / "planning-reference.DM"
+    dm.write_bytes(b"small test parent DM")
+    raw.update(
+        coverage="TRANSLATION_SHADOWED",
+        planning_reference_output=str(archived_output),
+        planning_reference_dm=str(dm),
+    )
+    config.write_text(json.dumps(raw), encoding="utf-8")
+
+    assert main(["plan", str(fdf), "--lr-config", str(config), "--output-dir", str(root)]) == 0
+    capsys.readouterr()
+    snapshot = load_product_snapshot(root)
+    assert snapshot.planning is not None
+    planning = snapshot.planning
+    assert planning.plan.inventory.status.value == "OK"
+    assert len(planning.plan.inventory.subspaces) == 16
+    assert len(planning.plan.computed_columns) == 4
+    assert len(planning.plan.run_specs) == 48
+    assert planning.plan.status is PlanStatus.REVIEW
+    assert [reason.value for reason in planning.plan.reason_codes] == ["SHADOW_PENDING"]
+    classes = planning.diagnostic_coverage.classes
+    assert [[member.split("@", 1)[0] for member in item.members] for item in classes] == [
+        [f"MnLR{index:02d}" for index in range(0, 16, 2)],
+        [f"MnLR{index:02d}" for index in range(1, 16, 2)],
+    ]
+    assert [item.shadow for item in classes] == ["MnLR02@4:3:2", "MnLR03@5:3:2"]
+
+
 def test_v6_destination_is_rejected_without_writing() -> None:
     from hubbardflow.execution.product_plan import protect_product_destination
 

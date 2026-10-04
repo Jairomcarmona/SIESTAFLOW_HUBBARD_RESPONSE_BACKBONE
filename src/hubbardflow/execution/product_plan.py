@@ -154,7 +154,12 @@ def resolve_product_snapshot(request: ProductRequest) -> ProductSnapshot:
     dirs = {Path(d) for d in request.identity_dirs}
     if raw is not None:
         dirs.update(Path(p).parent for p in cast(Mapping[str, str], raw.get("pseudopotentials", {})).values())
-    identities = species_identity(model, tuple(sorted(dirs, key=str)))
+    pseudopotentials = {} if raw is None else cast(Mapping[str, str], raw.get("pseudopotentials", {}))
+    identities = species_identity(
+        model,
+        tuple(sorted(dirs, key=str)),
+        pseudopotentials={label: Path(path) for label, path in pseudopotentials.items()},
+    )
     inventory = build_inventory(model, identities)
     source = sha256(fdf.read_bytes()).hexdigest()
     config_digest = (

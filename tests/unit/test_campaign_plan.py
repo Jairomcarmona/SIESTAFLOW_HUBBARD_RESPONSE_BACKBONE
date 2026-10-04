@@ -168,10 +168,10 @@ def test_missing_reference_freezes_explicit_incomplete_diagnostic(tmp_path: Path
         freeze_campaign_plan(tmp_path, resolved, config)
 
 
-def test_new_planner_version_is_v3_and_part_of_plan_digest(tmp_path: Path) -> None:
+def test_new_planner_version_is_v4_and_part_of_plan_digest(tmp_path: Path) -> None:
     fdf, raw, _ = inputs(tmp_path)
     resolved = resolve_campaign_planning(fdf, normalized(fdf, raw))
-    assert resolved.plan.planner_version == "campaign-planner-v3"
+    assert resolved.plan.planner_version == "campaign-planner-v4"
     assert replace(resolved.plan, planner_version="campaign-planner-v1").digest != resolved.plan.digest
 
 
@@ -183,7 +183,7 @@ def test_plan_generation_does_not_call_lapack(tmp_path: Path, monkeypatch: pytes
 
     monkeypatch.setattr(np.linalg, "lstsq", fail_lstsq)
     resolved = resolve_campaign_planning(fdf, normalized(fdf, raw))
-    assert resolved.plan.planner_version == "campaign-planner-v3"
+    assert resolved.plan.planner_version == "campaign-planner-v4"
 
 
 def test_resume_plan_identity_is_portable_between_staging_directories(tmp_path: Path) -> None:
@@ -392,6 +392,6 @@ def test_resume_reports_explicit_planner_version_change(tmp_path: Path) -> None:
 
     assert str(error.value) == (
         "PLANNER_VERSION_CHANGED: stored planner version 'campaign-planner-v2', "
-        "current version 'campaign-planner-v3'; re-initialize the campaign; "
+        "current version 'campaign-planner-v4'; re-initialize the campaign; "
         "frozen plans are not migrated"
     )

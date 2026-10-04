@@ -288,6 +288,100 @@ def test_species_identity_hashes_files_and_missing_files_fail_closed(tmp_path: P
     assert established.digest != missing.digest
 
 
+def test_species_identity_uses_global_basis_and_authoritative_pseudopotential_map() -> None:
+    path = (
+        ROOT
+        / "campaigns/mno_afmii_strict_lr_v3r2/results/response-matrix-foreground-recovery-v4/00_REFERENCE/siesta.fdf"
+    )
+    model = parse_effective_fdf(path)
+    mn_pseudo = ROOT / "campaigns/mno_afmii_strict_lr_v3r2/pseudopotentials/Mn.psml"
+    oxygen_pseudo = ROOT / "campaigns/mno_afmii_strict_lr_v3r2/pseudopotentials/O.psml"
+    pseudopotentials = {f"MnLR{index:02d}": mn_pseudo for index in range(16)}
+    pseudopotentials["O"] = oxygen_pseudo
+    identities = species_identity(model, (), pseudopotentials=pseudopotentials)
+    assert len(identities) == 17
+    assert all(identity.status is SpeciesIdentityStatus.ESTABLISHED for identity in identities.values())
+    manganese_digests = {identities[f"MnLR{index:02d}"].digest for index in range(16)}
+    assert len(manganese_digests) == 1
+    assert identities["O"].digest not in manganese_digests
+
+
+@pytest.mark.parametrize("extra", ["%block PS.lmax\nCo 2\n%endblock PS.lmax\n", "User.Basis T\n"])
+def test_unknown_basis_controls_fail_closed_for_all_species(tmp_path: Path, extra: str) -> None:
+    fdf_path = tmp_path / "identity.fdf"
+    fdf_path.write_text(_fdf() + extra, encoding="utf-8")
+    model = parse_effective_fdf(fdf_path)
+    (tmp_path / "Co.psml").write_text("pseudo contents", encoding="utf-8")
+    identities = species_identity(model, (tmp_path,))
+    assert all(identity.status is SpeciesIdentityStatus.NOT_ESTABLISHED for identity in identities.values())
+
+
+def test_user_basis_netcdf_and_unrecognized_values_fail_closed(tmp_path: Path) -> None:
+    (tmp_path / "Co.psml").write_text("pseudo contents", encoding="utf-8")
+    for directive in ("User.Basis.NetCDF T", "User.Basis maybe"):
+        fdf_path = tmp_path / "identity.fdf"
+        fdf_path.write_text(_fdf() + f"\n{directive}\n", encoding="utf-8")
+        model = parse_effective_fdf(fdf_path)
+        assert species_identity(model, (tmp_path,))["Co"].status is SpeciesIdentityStatus.NOT_ESTABLISHED
+
+
+def test_pao_basis_identity_retains_header_fields_and_partial_basis_fails_closed(tmp_path: Path) -> None:
+    source = (
+        _fdf().replace("NumberOfAtoms 1", "NumberOfAtoms 2").replace("NumberOfSpecies 1", "NumberOfSpecies 2")
+    )
+    source = source.replace("1 27 Co", "1 27 Co0\n2 27 Co1").replace(
+        "0 0 0 1 # Co label", "0 0 0 1 # Co0 label\n0.5 0 0 2 # Co1 label"
+    )
+    source = source.replace("Co 1\n3 2\n0.2 0.1 0.0\n3.0 0.05 9.0", "Co0 1\n3 2\n0.2 0.1 0.0\n3.0 0.05 9.0")
+    source = source.replace(
+        "%block PAO.Basis\nCo\n", "%block PAO.Basis\nCo0 2 0.0\nn=3 0 2 E 40 5\nCo1 2 0.5\nn=3 0 2 E 40 5\n"
+    )
+    fdf_path = tmp_path / "two-species.fdf"
+    fdf_path.write_text(source, encoding="utf-8")
+    model = parse_effective_fdf(fdf_path)
+    for label in ("Co0", "Co1"):
+        (tmp_path / f"{label}.psml").write_text("same pseudo contents", encoding="utf-8")
+    identities = species_identity(model, (tmp_path,))
+    assert identities["Co0"].pao_basis_sha256 != identities["Co1"].pao_basis_sha256
+
+    partial = source.replace("Co1 2 0.5\nn=3 0 2 E 40 5\n", "")
+    fdf_path.write_text(partial, encoding="utf-8")
+    partial_identities = species_identity(parse_effective_fdf(fdf_path), (tmp_path,))
+    assert partial_identities["Co0"].status is SpeciesIdentityStatus.ESTABLISHED
+    assert partial_identities["Co1"].status is SpeciesIdentityStatus.NOT_ESTABLISHED
+
+
+def test_conflicting_fallback_pseudopotentials_fail_closed_independent_of_directory_order(
+    tmp_path: Path,
+) -> None:
+    fdf_path = tmp_path / "identity.fdf"
+    fdf_path.write_text(_fdf(), encoding="utf-8")
+    model = parse_effective_fdf(fdf_path)
+    first, second = tmp_path / "first", tmp_path / "second"
+    first.mkdir()
+    second.mkdir()
+    (first / "Co.psml").write_bytes(b"first")
+    (second / "Co.psml").write_bytes(b"second")
+    forward = species_identity(model, (first, second))["Co"]
+    reverse = species_identity(model, (second, first))["Co"]
+    assert forward == reverse
+    assert forward.status is SpeciesIdentityStatus.NOT_ESTABLISHED
+
+
+def test_missing_explicit_pseudopotential_map_does_not_use_directory_fallback(tmp_path: Path) -> None:
+    fdf_path = tmp_path / "identity.fdf"
+    fdf_path.write_text(_fdf(), encoding="utf-8")
+    model = parse_effective_fdf(fdf_path)
+    (tmp_path / "Co.psml").write_bytes(b"fallback must not be used")
+    identity = species_identity(
+        model,
+        (tmp_path,),
+        pseudopotentials={"Co": tmp_path / "missing.psml"},
+    )["Co"]
+    assert identity.pseudopotential_sha256 is None
+    assert identity.status is SpeciesIdentityStatus.NOT_ESTABLISHED
+
+
 def test_unknown_coordinate_format_rejected(tmp_path: Path) -> None:
     path = tmp_path / "unsupported-coordinate.fdf"
     path.write_text(_fdf(coordinate_format="ZMatrix"), encoding="utf-8")

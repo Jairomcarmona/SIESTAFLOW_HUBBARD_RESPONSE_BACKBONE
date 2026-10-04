@@ -9,7 +9,7 @@ from __future__ import annotations
 import hashlib
 import math
 import re
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from enum import Enum
 from fractions import Fraction
@@ -684,7 +684,7 @@ def parse_effective_fdf(path: str | Path) -> FdfModel:
         if first in species_labels:
             if current_label is not None:
                 basis_rows.append((current_label, tuple(current_basis)))
-            current_label, current_basis = first, []
+            current_label, current_basis = first, row.split()[1:]
         elif current_label is None:
             raise FdfModelError(
                 FdfErrorCode.UNSUPPORTED_SYNTAX,
@@ -722,28 +722,50 @@ def parse_effective_fdf(path: str | Path) -> FdfModel:
     )
 
 
-def species_identity(model: FdfModel, search_dirs: Iterable[str | Path]) -> dict[str, SpeciesIdentity]:
+def species_identity(
+    model: FdfModel,
+    search_dirs: Iterable[str | Path],
+    pseudopotentials: Mapping[str, Path] | None = None,
+) -> dict[str, SpeciesIdentity]:
     """Hash label-specific pseudopotential, basis and optional generated ion.
 
     A missing pseudopotential keeps the identity digest explicit but marks it
     not established, so a caller cannot use absence as evidence of equivalence.
     """
-    directories = tuple(Path(directory) for directory in search_dirs)
+    directories = tuple(sorted((Path(directory) for directory in search_dirs), key=str))
+    explicit_pseudopotentials = {} if pseudopotentials is None else pseudopotentials
     basis_by_label = dict(model.pao_basis_blocks)
+    blocks = _blocks(model.effective_text)
+    species_neutral_blocks = {
+        canonical_fdf_label(name)
+        for name in (
+            "ChemicalSpeciesLabel",
+            "AtomicCoordinatesAndAtomicSpecies",
+            "LatticeVectors",
+            "LatticeParameters",
+            "kgrid_Monkhorst_Pack",
+            "DM.InitSpin",
+            "DFTU.Proj",
+            "PAO.Basis",
+            "BandLines",
+            "BandPoints",
+        )
+    }
+    global_basis = set(blocks) <= species_neutral_blocks and all(
+        _basis_flag_is_disabled(_one(model.effective_text, directive))
+        for directive in ("User.Basis", "User.Basis.NetCDF")
+    )
+    has_any_basis = bool(basis_by_label)
     result: dict[str, SpeciesIdentity] = {}
     for species in sorted(model.chemical_species_labels, key=lambda value: value.label):
-        pseudo: Path | None = None
-        for suffix in (".psml", ".psf", ".vps"):
-            pseudo = next(
-                (
-                    directory / f"{species.label}{suffix}"
-                    for directory in directories
-                    if (directory / f"{species.label}{suffix}").is_file()
-                ),
-                None,
+        if species.label in explicit_pseudopotentials:
+            mapped_path = Path(explicit_pseudopotentials[species.label])
+            pseudo = mapped_path if mapped_path.is_file() else None
+        else:
+            pseudo = _unique_matching_file(
+                directories,
+                tuple(f"{species.label}{suffix}" for suffix in (".psml", ".psf", ".vps")),
             )
-            if pseudo is not None:
-                break
         ion = next(
             (
                 directory / f"{species.label}.ion"
@@ -773,7 +795,23 @@ def species_identity(model: FdfModel, search_dirs: Iterable[str | Path]) -> dict
             ion_digest,
             _sha256_text(identity_payload),
             SpeciesIdentityStatus.ESTABLISHED
-            if pseudo_digest is not None and basis_digest is not None
+            if pseudo_digest is not None and global_basis and (has_basis or not has_any_basis)
             else SpeciesIdentityStatus.NOT_ESTABLISHED,
         )
     return result
+
+
+def _basis_flag_is_disabled(value: str | None) -> bool:
+    """Fail closed unless a user-supplied basis switch is explicitly false."""
+    return value is None or value.casefold() in {"false", "f"}
+
+
+def _unique_matching_file(directories: tuple[Path, ...], names: tuple[str, ...]) -> Path | None:
+    """Resolve a fallback file deterministically and reject conflicting copies."""
+    for name in names:
+        candidates = [directory / name for directory in directories if (directory / name).is_file()]
+        if not candidates:
+            continue
+        digests = {hashlib.sha256(path.read_bytes()).hexdigest() for path in candidates}
+        return candidates[0] if len(digests) == 1 else None
+    return None
