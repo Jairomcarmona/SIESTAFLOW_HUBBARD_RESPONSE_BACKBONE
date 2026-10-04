@@ -26,6 +26,7 @@ from hubbardflow.domain.symmetry_reduction import ResponseMode
 from hubbardflow.execution.campaign_shadow_inputs import build_shadow_dag, observation_series
 from hubbardflow.execution.generic_executor import ExecutionContractError, GenericDagExecutor
 from hubbardflow.execution.lr_dag import LRDagNode
+from hubbardflow.execution.state_gate_step import shadow_state_gate_passed, state_gate_mapping
 
 if TYPE_CHECKING:
     from hubbardflow.execution.campaign_runner import CampaignRunner
@@ -187,7 +188,7 @@ class CampaignShadow:
         state_valid = (
             bool(observations)
             and parent_valid
-            and self._complete_state_gate()
+            and self._complete_state_gate(runner)
             and states is not None
             and set(states) == {float(o.alpha) for o in observations}
             and all(s == "reference_branch" for s in states.values())
@@ -209,15 +210,28 @@ class CampaignShadow:
             for o in outcomes
         )
 
-    def _complete_state_gate(self) -> bool:
-        """Fail closed until occupation-subspace, gap and smoothness gates exist.
-
-        The runtime provides SCF validation and moment continuity only. FDRC
-        I.5 also requires occupation spectra/occupied subspaces, gap or Fermi
-        evidence and smoothness. There is no production opt-in bypass. Tests
-        may inject their complete synthetic state oracle at this boundary.
-        """
-        return False
+    def _complete_state_gate(self, runner: CampaignRunner) -> bool:
+        """Require measured I.5 point evidence for representatives and shadows."""
+        try:
+            computed = set(self.plan.computed_columns) | set(self.expanded)
+            computed_indices = tuple(
+                i for i, subspace in enumerate(self.plan.inventory.subspaces) if subspace.site_id in computed
+            )
+            mapping = state_gate_mapping(
+                dag=runner.dag,
+                specs=runner.specs,
+                records=runner.records,
+                checkpoint=runner.checkpoint(),
+                sites=runner.sites,
+                alpha_grid_ev=list(runner.alpha_grid),
+                bare_profile=runner.admitted.factory.bare_profile,
+                covered=runner.adaptive_policy is None,
+                site_indices=computed_indices,
+            )
+            site_ids = [str(runner.sites[i]["site_id"]) for i in computed_indices]
+            return shadow_state_gate_passed(mapping, site_ids)
+        except Exception:  # noqa: BLE001 - qualification must fail closed on malformed evidence.
+            return False
 
     def prepare(self, runner: CampaignRunner) -> bool:
         """Return True only when the current shadow barrier can be checkpointed."""
@@ -286,7 +300,7 @@ class CampaignShadow:
             "reconstructed_raw_matrices": None if matrices is None else matrices.to_mapping(),
             "failed_runs": self.failed_runs,
             "complete_state_gate": CoverageStatus.PROVEN.value
-            if self._complete_state_gate()
+            if self._complete_state_gate(runner)
             else CoverageStatus.NOT_ESTABLISHED.value,
             "reconstruction_maps": [
                 {"destination": site, "representative": group.representative, "operation_id": op_id}

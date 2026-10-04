@@ -219,7 +219,7 @@ def _runner(
         # All synthetic orbital/gap/state curves are prescribed constant with
         # a unique branch. This oracle is injected only in tests; the runtime
         # has no parameter or flag permitting an incomplete I.5 gate to pass.
-        monkeypatch.setattr(runner.shadow, "_complete_state_gate", lambda: True)
+        monkeypatch.setattr(runner.shadow, "_complete_state_gate", lambda *_: True)
     return runner, executed, heartbeat
 
 

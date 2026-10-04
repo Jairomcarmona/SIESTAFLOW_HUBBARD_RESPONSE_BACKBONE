@@ -1746,7 +1746,19 @@ class CampaignRunner:
                 sites=self.sites,
                 alpha_grid_ev=alpha_grid,
                 bare_profile=self.admitted.factory.bare_profile,
-                covered=not adaptive and self.shadow is None,
+                covered=not adaptive,
+                **(
+                    {
+                        "site_indices": tuple(
+                            i
+                            for i, subspace in enumerate(self.shadow.plan.inventory.subspaces)
+                            if subspace.site_id
+                            in (set(self.shadow.plan.computed_columns) | set(self.shadow.expanded))
+                        )
+                    }
+                    if self.shadow is not None
+                    else {}
+                ),
             )
         except Exception:
             state_gate = failed_state_gate_mapping(self.sites, StateGateReason.INVALID_STATE_EVIDENCE)

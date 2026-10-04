@@ -55,4 +55,38 @@ No premise was false.
 - NiO P5 replay in WSL after the authorized golden update: 7 passed, 2 existing deprecation warnings.
 - Coverage and 20.9 golden tests: 52 passed, 2 warnings.
 - Legacy resume plus campaign planning tests: 29 passed, 2 warnings.
-- `verificador_luna` approved the final scope, including the tested conservative conflict handling; `auditor_cientifico` found no scientific blocker. Post-commit gates will be recorded after the 23.1 commit.
+- `verificador_luna` approved the final scope, including the tested conservative conflict handling; `auditor_cientifico` found no scientific blocker.
+
+### Post-commit gates for 23.1 (`7bf8ac6`)
+
+- WSL NiO P5 replay: 7 passed; golden 20.9: 4 passed; product group: 112 passed; scientific regressions: 70 passed; architecture: 8 passed.
+- `ruff check .`: passed; `ruff format --check .`: 91 files already formatted; `MYPYPATH=src mypy`: success on 91 files; V6 gate: `V6 GATE OK`.
+- Full suite: 1404 passed, 27 skipped, 20 xfailed, 4 subtests passed, 2 warnings.
+- No post-commit failures or additional edits were needed.
+
+## 23.2 I.5 shadow state gate
+
+### Premise checks
+
+- `rg -n "def _complete_state_gate|_complete_state_gate\\(|state_gate_mapping\\(" src/hubbardflow tests/unit/test_campaign_shadow.py` confirmed that the production gate returned `False`, `_outcomes` and `analysis_data` called it without a runner, and the synthetic test oracle was `lambda: True`.
+- `rg -n "covered=not adaptive|def state_gate_mapping|class StateGateReason" src/hubbardflow` confirmed that the direct-analysis caller excluded TS (`covered=False`), the mapping had no column-index filter, and the reason enum had no reconstructed-column code.
+- Independent `auditor_cientifico` read-only checks on archived MnO A/B × both modes × all six signed α found 4/4 PASS verdicts; point checks were G1 PASS=24, G2 PASS=768, G3a PASS=768, G4 NOT_AVAILABLE=24. This confirms that D14b must block the archived points absent `.EIG` for a production shadow proof.
+- The same audit checked real NiO fixtures with and without `.EIG`: with `.EIG`, all four pairs and their point checks pass; without it, all four diagnostic verdicts still PASS while G4 is NOT_AVAILABLE=24. `tests/fixtures/replay_nio_p5/replay_i5_state_gate.json` has the latter structure. A 16-column replay mapping also confirmed that unfiltered reconstructed columns appear as failures due to absent validated nodes.
+- The auditor verified index correspondence at `campaign_runner.py` by mapping `plan.inventory.subspaces` to runner sites by index, while plan `site_id` and runner labels intentionally differ. No premise was false. The existing `_response_node` alpha locator tolerance (`1e-14`) was noted as pre-existing and outside this item.
+
+### Conservative decisions and edits
+
+- Keep `site_indices=None` behavior unchanged. With a filter, mark excluded columns as `NOT_ESTABLISHED/RECONSTRUCTED_FROM_REPRESENTATIVE` without evaluating their nodes.
+- The shadow gate requires both modes for every computed/expanded runner label, verdict `PASS`, at least one amplitude and both signed point records, and rejects point checks `FAIL`, `NOT_AVAILABLE`, or `NOT_ESTABLISHED`. `NOT_DEFINED` and `NOT_APPLICABLE` remain allowed. Reject malformed and duplicate pairs. Exclude the separate G3 smoothness result as D14b directs.
+- 23.2 test edits: added `tests/unit/test_shadow_state_gate.py` for synthetic all-pass, G4 unavailable, failure, missing pair, allowed NOT_DEFINED, duplicates, real NiO `.EIG` fixtures passing the gate, actual NiO replay golden rejection, and reconstructed index filtering; adapted only the authorized R5 oracle signature in `test_campaign_shadow.py` from `lambda: True` to `lambda *_: True`. No golden files changed.
+- Production changes are limited to `state_gate_results.py`, `state_gate_step.py`, `campaign_shadow.py`, and `campaign_runner.py`: wire index filtering into the TS diagnostic, compute the gate from current runner evidence, and expose its result in `translation_shadow.complete_state_gate`.
+- Focused checks: `python -m pytest -q tests/unit/test_shadow_state_gate.py tests/unit/test_campaign_shadow.py` → 30 passed, 2 pre-existing deprecation warnings; `ruff check` on the new test and state-gate modules passed; `ruff format --check` on the five non-legacy touched Python files passed; `MYPYPATH=src mypy --strict` on `state_gate_results.py`, `state_gate_step.py`, and `campaign_shadow.py` passed; `git diff --check` passed.
+- POSIX replay in WSL: `PYTHONPATH=src python3 -m pytest -q tests/integration/test_runner_replay_nio_p5.py` → 7 passed, 2 pre-existing deprecation warnings. Its manifest/golden remained unchanged.
+- `verificador_luna` reviewed the diff twice. The first pass requested the explicit real NiO `.EIG` satisfiability case; that test was added and passed. The second pass approved the scope and found no functional blocker. The full legacy `campaign_runner.py` has existing Ruff formatting and strict-mypy findings outside this item’s hunk; no broad formatting/type edits were made.
+
+### Post-commit gates for 23.2 (`36b7796`)
+
+- WSL NiO replay: 7 passed; 20.9 golden: 4 passed; product group: 112 passed; scientific gates (`test_matrix_lr.py`, `test_quantized_response.py`, `test_u_certification.py`): 54 passed; architecture: 8 passed.
+- `ruff check .`: passed; `ruff format --check .`: 91 files already formatted; `MYPYPATH=src mypy`: success on 91 files; V6 gate: `V6 GATE OK`.
+- Full suite: 1412 passed, 27 skipped, 20 xfailed, 2 warnings in 338.62s. No test failures.
+- Golden files remained unchanged.
