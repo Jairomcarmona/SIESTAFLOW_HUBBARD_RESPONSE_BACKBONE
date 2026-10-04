@@ -110,3 +110,30 @@ G4 usa el E_F del encabezado del `.EIG` de cada corrida, no el E_F de stdout. Ca
 - El E_F de stdout se usa solo como chequeo de consistencia. Si `|E_F_stdout − E_F_EIG| > (semiancho de stdout) + q(E_F_EIG)/2`, la evidencia del punto es inconsistente y G4 queda `NOT_ESTABLISHED`, con razón `EIG_STDOUT_FERMI_MISMATCH`.
 - La prueba del nivel `−0.450851396E+01` frente al E_F `−0.450851397E+01` debe producir `BAND_COUNT_AMBIGUOUS`.
 - La salida real `bare_p0p04` pasa el chequeo: diferencia de Fermi `3e−8 eV`, dentro de `5e−7 + 5e−9 eV`.
+
+## TASK 23
+
+### D14a. Species identity without explicit `PAO.Basis`
+
+In one FDF, every species without a `PAO.Basis` record gets its basis from the global `PAO.*` directives, which are shared by construction. Such a species is `ESTABLISHED` when its pseudopotential bytes are known and the FDF has no block outside an audited species-neutral list and no user-supplied basis (`User.Basis`). Any other block makes every species `NOT_ESTABLISHED` (fail closed): HubbardFlow cannot tell whether an unknown block is species-scoped. The explicit lr-config pseudopotential map is the identity source when present; directory search by `<label>.psml` remains the fallback.
+
+### D14b. The shadow state gate is I.5
+
+`CampaignShadow._complete_state_gate` is True iff, for every computed column (representatives, shadows, expanded columns) and both modes, the I.5 verdict is `PASS` and no check in any point has outcome `FAIL`, `NOT_AVAILABLE` or `NOT_ESTABLISHED`. `NOT_DEFINED` and `NOT_APPLICABLE` are allowed. G3 smoothness stays `NOT_ESTABLISHED` (D13a) and does not block: smoothness concerns the estimator, which is the same for direct and reduced campaigns. The shadow comparison is the direct empirical test of translation equivalence. Unlike the diagnostic verdict, G4 `NOT_AVAILABLE` (missing `.EIG`) blocks here.
+
+### D14c. The parent DM must reproduce bit for bit
+
+The TS plan binds the planning reference DM. The campaign reruns the reference with the same machinery. If its DM bytes differ, the campaign stops at once with `PARENT_DM_NOT_REPRODUCED`. It never silently expands to all columns. For the same reason, a product TS campaign stops with `SHADOW_REJECTED` instead of expanding (23.3). Evidence: the NiO reference DM `f7fca191…` appears identically in two independent campaigns on the user's laptop: `campaigns/nio_pbe_adaptive_20260928` and the product campaign `nio_p5_product_2` recorded in `tests/fixtures/real_nio_p5_rerun`.
+
+### D14d. The planning reference comes from `hubbardflow reference`
+
+It runs only the reference node of an ordinary direct campaign. There is no pilot reuse and no adoption of foreign outputs. The reference campaign can later be resumed as a full direct campaign.
+
+### D14e. Deferred
+
+The following wait for TASK 24:
+
+- near-symmetry refinement for relaxed or non-rational coordinates (they stay `ALL_SUBSPACES`, which is safe);
+- I.5 for non-polarized outputs (the parser fails on them today; see 23.7);
+- rotations and spin flip;
+- an automatic one-command `run` that chains `reference`.
