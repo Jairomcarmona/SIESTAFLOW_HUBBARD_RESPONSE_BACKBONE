@@ -80,6 +80,19 @@ def _state_gate_section(state_gate: Mapping[str, Any]) -> list[str]:
     return lines
 
 
+def reference_reproduction_report_lines(evidence: Mapping[str, Any]) -> list[str]:
+    """Render recorded D16 evidence for completed and rejected TS references."""
+    return [
+        "", "## Reference reproduction (D16)", "",
+        f"- Criterion: `{_cell(evidence.get('criterion'))}`; equivalent: `{_cell(evidence.get('equivalent'))}`.",
+        f"- Planning parent DM SHA-256: `{_cell(evidence.get('planning_parent_dm_sha256'))}`.",
+        f"- Campaign parent DM SHA-256: `{_cell(evidence.get('campaign_parent_dm_sha256'))}`.",
+        f"- Reason: `{_cell(evidence.get('reason'))}`; {_cell(evidence.get('detail'))}.",
+        f"- Maximum occupation difference (e): {_fmt(evidence.get('max_occupation_difference_e'))}; comparison quanta (e): {_json_compact(evidence.get('occupation_comparison_quanta_e'))}.",
+        f"- Fermi difference (eV): {_fmt(evidence.get('max_fermi_difference_ev'))}; comparison quantum (eV): {_fmt(evidence.get('fermi_comparison_quantum_ev'))}.",
+    ]
+
+
 def _coefficients_with_units(fit: Mapping[str, Any]) -> str:
     coefficients = fit.get("coefficients")
     if not isinstance(coefficients, list):
@@ -528,6 +541,9 @@ def render_lr_u_report(
     ])
     if state_gate is not None:
         lines.extend(_state_gate_section(state_gate))
+    reproduction = dataset.get("reference_reproduction")
+    if isinstance(reproduction, Mapping):
+        lines.extend(reference_reproduction_report_lines(reproduction))
     return "\n".join(lines)
 
 

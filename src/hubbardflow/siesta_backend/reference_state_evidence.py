@@ -69,6 +69,16 @@ def _completion(text: str) -> bool:
     )
 
 
+def require_converged_reference_output(text: str) -> None:
+    """Require successful SCF and normal termination before comparing printed states."""
+    if not _completion(text):
+        raise ReferenceStateEvidenceError("NORMAL_COMPLETION_MISSING")
+    if _FAILURE.search(text) or not re.search(
+        r"^\s*SCF Convergence by .*criterion\s*$", text, re.IGNORECASE | re.MULTILINE
+    ):
+        raise ReferenceStateEvidenceError("SCF_NOT_CONVERGED")
+
+
 def _half_width(token: str) -> float:
     normalized = token.replace("D", "E").replace("d", "e")
     mantissa, marker, exponent = normalized.lower().partition("e")

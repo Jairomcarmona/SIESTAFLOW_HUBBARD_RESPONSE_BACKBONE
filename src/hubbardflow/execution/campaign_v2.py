@@ -19,6 +19,7 @@ from .execution_profile import ExecutionProfile, ProfileValidationError
 from .campaign_plan import CampaignCoverage, CampaignPlanError, inventory_sites
 from .campaign_coverage_policy import CampaignCoveragePolicyError, campaign_coverage_policy
 from ..domain.perturbation_plan import AlphaStrategy, ResolvedPerturbationPlan
+from ..domain.reference_reproduction import ParentReproduction
 from ..domain.subspace_inventory import CorrelatedSubspaceInventory
 
 
@@ -235,6 +236,10 @@ def validate_lr_config(payload: Mapping[str, Any], fdf_species: Mapping[str, int
     except (ValueError, TypeError) as exc:
         raise CampaignV2Error("unsupported coverage or alpha_strategy") from exc
     shadow_rejection_policy = payload.get("shadow_rejection_policy")
+    try:
+        parent_reproduction = ParentReproduction(payload.get("parent_reproduction", "PRINT_EQUIVALENT"))
+    except (ValueError, TypeError) as exc:
+        raise CampaignV2Error("parent_reproduction must be PRINT_EQUIVALENT or BITWISE") from exc
     if "shadow_rejection_policy" in payload and (
         not isinstance(shadow_rejection_policy, str)
         or shadow_rejection_policy not in {"EXPAND", "STOP"}
@@ -392,6 +397,8 @@ def validate_lr_config(payload: Mapping[str, Any], fdf_species: Mapping[str, int
     }
     if shadow_rejection_policy is not None:
         normalized["shadow_rejection_policy"] = shadow_rejection_policy
+    if coverage is CampaignCoverage.TRANSLATION_SHADOWED or "parent_reproduction" in payload:
+        normalized["parent_reproduction"] = parent_reproduction.value
     return normalized
 
 

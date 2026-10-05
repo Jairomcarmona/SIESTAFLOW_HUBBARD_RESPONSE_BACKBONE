@@ -22,7 +22,11 @@ FDF = ARCHIVE / "00_REFERENCE/siesta.fdf"
 
 
 @pytest.mark.skipif(os.name == "nt", reason="POSIX campaign replay requires fcntl and executable fixtures")
-def test_mno_translation_shadowed_replay_proves_shadows_and_reconstructs(tmp_path: Path) -> None:
+@pytest.mark.parametrize("reference_dm_varies", [False, True])
+def test_mno_translation_shadowed_replay_proves_shadows_and_reconstructs(
+    tmp_path: Path,
+    reference_dm_varies: bool,
+) -> None:
     """Exercise the real gate and shadow DAG against archived MnO response outputs."""
     dm_bytes = b"synthetic replay parent DM\n"
     planning_dm = tmp_path / "reference.DM"
@@ -42,6 +46,7 @@ def test_mno_translation_shadowed_replay_proves_shadows_and_reconstructs(tmp_pat
                 "dm": str(planning_dm),
                 "calls": str(call_log),
                 "fdf": str(FDF),
+                "reference_dm_varies": reference_dm_varies,
             }
         ),
         encoding="utf-8",
@@ -152,6 +157,19 @@ def test_mno_translation_shadowed_replay_proves_shadows_and_reconstructs(tmp_pat
 
     analysis = json.loads((manifest.parent / "results/lr_u_analysis.v3.json").read_text(encoding="utf-8"))
     dataset = analysis["response_observation_dataset"]
+    evidence = json.loads((manifest.parent / ".siestaflow/node-evidence.json").read_text(encoding="utf-8"))
+    reproduction = evidence["nodes"]["reference"]["reference_reproduction"]
+    assert reproduction["criterion"] == "PRINT_EQUIVALENT"
+    assert reproduction["equivalent"] is True
+    assert reproduction == dataset["reference_reproduction"]
+    assert reproduction["planning_parent_dm_sha256"] == hashlib.sha256(dm_bytes).hexdigest()
+    assert (
+        reproduction["planning_parent_dm_sha256"] != reproduction["campaign_parent_dm_sha256"]
+    ) is reference_dm_varies
+    report = (manifest.parent / "results/LR_U_REPORT.v3.md").read_text(encoding="utf-8")
+    assert reproduction["planning_parent_dm_sha256"] in report
+    assert reproduction["campaign_parent_dm_sha256"] in report
+    assert dataset["reference_source"]["dm_sha256"] == reproduction["campaign_parent_dm_sha256"]
     shadow = dataset["translation_shadow"]
     assert len(shadow["outcomes"]) == 2
     assert all(outcome["status"] == "PROVEN" for outcome in shadow["outcomes"])
@@ -180,7 +198,9 @@ fdf = (cwd / "siesta.fdf").read_text()
 label = re.search(r"(?im)^\s*SystemLabel\s+(\S+)", fdf).group(1)
 with Path(settings["calls"]).open("a") as stream: stream.write(label + "\n")
 if label == "00_REFERENCE":
-    (cwd / "00_REFERENCE.DM").write_bytes(Path(settings["dm"]).read_bytes())
+    dm = Path(settings["dm"]).read_bytes()
+    if settings.get("reference_dm_varies"): dm += str(cwd).encode()
+    (cwd / "00_REFERENCE.DM").write_bytes(dm)
     text = (archive / "00_REFERENCE/siesta.out").read_text()
 else:
     match = re.fullmatch(r"lr_s(\d{3})_([mp])0p(\d+)_(bare|screened)", label)

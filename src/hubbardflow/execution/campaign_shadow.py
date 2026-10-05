@@ -237,7 +237,12 @@ class CampaignShadow:
         ],
     ) -> tuple[ShadowOutcome, ...]:
         observations, states, _, widths, reference_widths = data
-        parent_valid = all(o.parent_dm_sha256 == self.plan.reference.parent_dm_sha256 for o in observations)
+        campaign_parent_digest = (
+            runner.records.get("reference", {}).get("provenance", {}).get("artifacts", {}).get("dm")
+        )
+        parent_valid = bool(campaign_parent_digest) and all(
+            o.parent_dm_sha256 == campaign_parent_digest for o in observations
+        )
         state_valid = (
             bool(observations)
             and parent_valid
@@ -355,6 +360,9 @@ class CampaignShadow:
                 for site, op_id in group.ops_rep_to_member
             ],
         }
+        reproduction = runner.records.get("reference", {}).get("reference_reproduction")
+        if reproduction is not None:
+            dataset["reference_reproduction"] = reproduction
         if not any(o.status is CoverageStatus.PROVEN for o in outcomes):
             return (*data, dataset)
         reconstructed = []

@@ -123,6 +123,25 @@ def test_optional_sites_filled_and_explicit_mapping_validated(tmp_path: Path) ->
     assert result["coverage"] == "DIAGNOSTIC"
     assert result["auto_split_species"] is False
     assert normalized(fdf, {**raw, "sites": result["sites"]}) == result
+
+
+def test_parent_reproduction_default_and_explicit_mode_enter_ts_config_digest(tmp_path: Path) -> None:
+    from hubbardflow.execution.campaign_plan import planning_config_digest
+
+    fdf, raw, _ = inputs(tmp_path)
+    raw["coverage"] = "TRANSLATION_SHADOWED"
+    default = normalized(fdf, raw)
+    assert default["parent_reproduction"] == "PRINT_EQUIVALENT"
+    bitwise = normalized(fdf, {**raw, "parent_reproduction": "BITWISE"})
+    assert bitwise["parent_reproduction"] == "BITWISE"
+    assert planning_config_digest(default) != planning_config_digest(bitwise)
+
+
+@pytest.mark.parametrize("mode", [None, True, 2, "print_equivalent", "IGNORE"])
+def test_parent_reproduction_rejects_unknown_mode(tmp_path: Path, mode: object) -> None:
+    fdf, raw, _ = inputs(tmp_path)
+    with pytest.raises(CampaignV2Error, match="parent_reproduction"):
+        normalized(fdf, {**raw, "parent_reproduction": mode})
     with pytest.raises(CampaignV2Error, match="atom_index/species mismatch"):
         inv = campaign_inventory(fdf, (tmp_path,))
         validate_lr_config(

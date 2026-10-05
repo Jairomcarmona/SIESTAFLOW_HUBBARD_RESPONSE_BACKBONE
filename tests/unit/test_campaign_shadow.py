@@ -49,6 +49,7 @@ from hubbardflow.execution.generic_executor import (
 )
 from hubbardflow.execution.lr_dag import LRDagNode, LRNodeKind
 from hubbardflow.execution.observation_assembly import ObservationAssembler
+from hubbardflow.siesta_backend.output_validator import SiestaArtifactSpec
 from hubbardflow.siesta_backend.siesta542_bare_profile import Siesta542PotentialShiftHamiltonianProfile
 from tests.unit.test_coverage import DIGEST, _toy
 
@@ -177,7 +178,11 @@ def _runner(
         ):
             state = NodeState.FAILED_OUTPUT_VALIDATION
         receipt = NodeReceipt(node.node_id, state, DIGEST)
-        runner._record_receipt(node, receipt, {"kind": "synthetic-siesta"})
+        runner._record_receipt(
+            node,
+            receipt,
+            {"kind": "synthetic-siesta", "provenance": {"artifacts": {"dm": DIGEST}}},
+        )
         if stop_after is not None and len(executed) == stop_after:
             (runner.control / "stop-request.json").write_text("{}", encoding="utf-8")
         return receipt
@@ -580,6 +585,7 @@ def test_parent_dm_mismatch_stops_before_perturbations_and_match_continues(
         case_root = tmp_path / ("match" if matches else "mismatch")
         runner, executed, heartbeat = _runner(case_root, monkeypatch, plan)
         runner.perturbation_plan = plan
+        runner.config["parent_reproduction"] = "BITWISE"
         original_execute = runner._execute_siesta
         dm_path = case_root / "parent.DM"
         dm_path.parent.mkdir(parents=True, exist_ok=True)
@@ -597,10 +603,22 @@ def test_parent_dm_mismatch_stops_before_perturbations_and_match_continues(
                 current_dm_path.write_bytes(
                     b"declared synthetic reference" if current_matches else b"different parent DM"
                 )
-                mismatch = current_runner._parent_dm_reproduction_failure(current_dm_path)
-                if mismatch is not None:
+                reproduction = current_runner._reference_reproduction_evidence(
+                    current_dm_path, current_dm_path.parent / "siesta.out"
+                )
+                if not reproduction.equivalent:
                     receipt = NodeReceipt(node.node_id, NodeState.FAILED_OUTPUT_VALIDATION, DIGEST)
-                    current_runner._record_receipt(node, receipt, {"kind": "siesta_failure", **mismatch})
+                    current_runner._record_receipt(
+                        node,
+                        receipt,
+                        {
+                            "kind": "siesta_failure",
+                            "reason": reproduction.reason.value,
+                            "expected_parent_dm_sha256": reproduction.planning_parent_dm_sha256,
+                            "observed_parent_dm_sha256": reproduction.campaign_parent_dm_sha256,
+                            "reference_reproduction": reproduction.to_mapping(),
+                        },
+                    )
                     return receipt
             return cast(NodeReceipt, current_execute(node, current))
 
@@ -618,6 +636,114 @@ def test_parent_dm_mismatch_stops_before_perturbations_and_match_continues(
             assert record["observed_parent_dm_sha256"] != plan.reference.parent_dm_sha256
             heartbeat_row = json.loads((runner.control / "state.json").read_text(encoding="utf-8"))
             assert heartbeat_row["reason"] == "PARENT_DM_NOT_REPRODUCED"
+
+
+def test_shadow_parent_identity_uses_campaign_dm_and_rejects_another_file(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    plan = _plan()
+    runner, _, _ = _runner(tmp_path, monkeypatch, plan)
+    assert runner.shadow is not None
+    runner.records["reference"] = {"provenance": {"artifacts": {"dm": DIGEST}}}
+    observations, widths = _observations(plan, {0, 1})
+    data: tuple[
+        list[ResponseObservation],
+        dict[float, str] | None,
+        dict[str, Any],
+        dict[tuple[int, float, str], list[float]],
+        list[float] | None,
+    ] = (observations, {a: "reference_branch" for a in runner.alpha_grid}, {}, widths, [5e-8] * 4)
+    assert all(item.status is CoverageStatus.PROVEN for item in runner.shadow._outcomes(runner, data))
+    runner.records["reference"]["provenance"]["artifacts"]["dm"] = "f" * 64
+    assert all(
+        item.status is CoverageStatus.REJECTED_EXPANDED for item in runner.shadow._outcomes(runner, data)
+    )
+
+
+@pytest.mark.parametrize("validator_state", [NodeState.VALIDATED, NodeState.FAILED_OUTPUT_VALIDATION])
+def test_unparseable_reference_records_both_digests_and_stops_before_children(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    validator_state: NodeState,
+) -> None:
+    """Exercise the real runner gate with a receipt-only adapter; no subprocess runs."""
+    runner, _, heartbeat = _runner(tmp_path, monkeypatch, _plan(), rejection_policy="STOP")
+    runner.perturbation_plan = _plan()
+    planning_output = tmp_path / "planning.out"
+    output_path = tmp_path / "observed.out"
+    planning_output.write_text("unsupported reference", encoding="utf-8")
+    output_path.write_text("unsupported reference", encoding="utf-8")
+    dm_path = tmp_path / "observed.DM"
+    dm_path.write_bytes(b"different recalculated reference DM")
+    runner.config.update(
+        {"planning_reference_output": str(planning_output), "parent_reproduction": "PRINT_EQUIVALENT"}
+    )
+    command = SimpleNamespace(
+        cwd=tmp_path,
+        argv=(),
+        stdin_path=tmp_path / "input.fdf",
+        stdout_path=output_path,
+        stderr_path=None,
+    )
+    parented: list[Path] = []
+    runner.factory = cast(
+        Any,
+        SimpleNamespace(
+            command_for=lambda _: command,
+            prepare=lambda _: None,
+            reference_completed=lambda path, _: parented.append(path),
+        ),
+    )
+    runner.admitted = cast(
+        Any,
+        SimpleNamespace(
+            factory=SimpleNamespace(
+                artifacts={
+                    "reference": SiestaArtifactSpec("input.fdf", "observed.out", "observed.DM", "fake")
+                }
+            ),
+            validator=SimpleNamespace(last_provenance={}),
+        ),
+    )
+    runner.profile = cast(Any, SimpleNamespace(target="local_wsl"))
+    runner.environment = {}
+    runner.resource_lock_path = tmp_path / "resource.lock"
+    calls: list[str] = []
+
+    class ReceiptOnlyAdapter:
+        def __init__(self, factory: Any, validator: Any, env: Any) -> None:
+            self.factory = factory
+
+        def execute(self, node: LRDagNode) -> NodeReceipt:
+            calls.append(node.node_id)
+            self.factory.command_for(node)
+            return NodeReceipt(node.node_id, validator_state, DIGEST)
+
+    monkeypatch.setattr("hubbardflow.execution.runtime_adapters.LocalSubprocessExecutor", ReceiptOnlyAdapter)
+    monkeypatch.setattr(
+        "hubbardflow.execution.campaign_runner.fcntl",
+        SimpleNamespace(
+            LOCK_EX=1,
+            LOCK_UN=2,
+            flock=lambda *_: None,
+        ),
+    )
+    monkeypatch.setattr(
+        runner, "_execute_siesta", lambda node, current: CampaignRunner._execute_siesta(runner, node, current)
+    )
+    assert runner.advance("run", heartbeat) == 1
+    assert calls == ["reference"]
+    assert parented == []
+    assert runner.shadow is not None and runner.shadow.expanded == ()
+    record = runner.records["reference"]
+    evidence = record["reference_reproduction"]
+    assert evidence["planning_parent_dm_sha256"] == runner.perturbation_plan.reference.parent_dm_sha256
+    assert evidence["campaign_parent_dm_sha256"] == sha256(dm_path.read_bytes()).hexdigest()
+    assert record["reason"] == "PARENT_STATE_NOT_EQUIVALENT"
+    status = json.loads((runner.control / "state.json").read_text(encoding="utf-8"))
+    assert status["reason"] == "PARENT_STATE_NOT_EQUIVALENT"
+    assert status["parent_reproduction_detail"] == evidence["detail"]
 
 
 def test_transient_invalid_shadow_retries_only_invalid_run_then_completes_expansion(
