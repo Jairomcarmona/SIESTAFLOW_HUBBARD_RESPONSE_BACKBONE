@@ -230,15 +230,18 @@ def _resolve(
                     column = replace(original, site_id=site)
                     # Shadows inherit the representative's complete ColumnPlan.
                     columns[(site, mode)] = column
+                    evidence_sha256 = (
+                        calibration_qualification.evidence_sha256
+                        if calibrated and calibration_qualification is not None
+                        else None
+                    )
                     calibration.append(
                         ColumnCalibration(
                             alpha_strategy,
                             column,
                             CalibrationQualification(
                                 CalibrationStatus.REVIEW if calibrated else CalibrationStatus.NOT_ASSESSED,
-                                (calibration_qualification.evidence_sha256,)
-                                if calibrated and calibration_qualification is not None
-                                else (),
+                                (evidence_sha256,) if evidence_sha256 is not None else (),
                                 calibration_qualification if calibrated else None,
                                 calibration_protocol if calibrated else None,
                             ),

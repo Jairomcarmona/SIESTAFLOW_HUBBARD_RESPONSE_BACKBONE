@@ -124,7 +124,7 @@ def test_run_specs_and_reconstruction_must_be_complete() -> None:
 
 @pytest.mark.parametrize("field", ["source_fdf_sha256", "effective_fdf_sha256"])
 @pytest.mark.parametrize("value", [None, "", "malformed"])
-def test_plan_file_hash_metadata_is_optional_warning(field, value):
+def test_plan_file_hash_metadata_is_optional_warning(field: str, value: str | None) -> None:
     original = plan()
     mapping = json.loads(json.dumps(original.to_mapping()))
     if value is None:

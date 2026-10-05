@@ -252,7 +252,12 @@ def test_missing_parent_dm_digest_is_not_an_admission_blocker(tmp_path: Any) -> 
             "reference": SimpleNamespace(**{**vars(plan.reference), "parent_dm_sha256": None}),
         }
     )
-    snapshot.planning = SimpleNamespace(**{**vars(snapshot.planning), "plan": plan})
+    snapshot = cast(
+        ProductSnapshot,
+        SimpleNamespace(
+            **{**vars(snapshot), "planning": SimpleNamespace(**{**vars(snapshot.planning), "plan": plan})}
+        ),
+    )
     admission = execution_admission(snapshot, config)
     assert admission.status is ExecutionAdmissionStatus.ADMISSIBLE_TRANSLATION_SHADOWED
     assert admission.reasons == ()
@@ -301,7 +306,7 @@ def test_translation_shadowed_admission_fails_closed(
 
 
 @pytest.mark.parametrize("digest", [None, "", "malformed", "c" * 64])
-def test_inventory_digest_discrepancies_only_warn(digest):
+def test_inventory_digest_discrepancies_only_warn(digest: str | None) -> None:
     snapshot, config = _valid_case()
     changed = SimpleNamespace(**{**snapshot.inventory.__dict__, "digest": digest})
     snapshot = cast(ProductSnapshot, SimpleNamespace(**{**snapshot.__dict__, "inventory": changed}))

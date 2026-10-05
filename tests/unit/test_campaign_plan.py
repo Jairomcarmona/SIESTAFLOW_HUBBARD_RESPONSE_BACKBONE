@@ -429,7 +429,9 @@ def test_resume_reports_explicit_planner_version_change(tmp_path: Path) -> None:
 
 
 @pytest.mark.parametrize("digest", [None, "", "malformed", "f" * 64])
-def test_campaign_artifact_hash_warnings_preserve_real_file_checks(tmp_path: Path, digest):
+def test_campaign_artifact_hash_warnings_preserve_real_file_checks(
+    tmp_path: Path, digest: str | None
+) -> None:
     from hubbardflow.execution.campaign_v2 import CampaignV2Error
 
     artifact = tmp_path / "reference.fdf"
