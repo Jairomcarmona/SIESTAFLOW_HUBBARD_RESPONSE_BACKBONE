@@ -264,12 +264,21 @@ def test_cli_sensitivity_tolerance_is_frozen_and_validated_as_effective_config(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     fdf, config, _, root = product_inputs(tmp_path)
-    assert main(
-        [
-            "plan", str(fdf), "--lr-config", str(config), "--output-dir", str(root),
-            "--sensitivity-tolerance-ev", "0.025",
-        ]
-    ) == 0
+    assert (
+        main(
+            [
+                "plan",
+                str(fdf),
+                "--lr-config",
+                str(config),
+                "--output-dir",
+                str(root),
+                "--sensitivity-tolerance-ev",
+                "0.025",
+            ]
+        )
+        == 0
+    )
     capsys.readouterr()
     snapshot = load_product_snapshot(root)
     assert snapshot.frozen_lr_config_json is not None
@@ -278,12 +287,21 @@ def test_cli_sensitivity_tolerance_is_frozen_and_validated_as_effective_config(
     assert effective["sensitivity_tolerance_provided_via"] == "cli"
 
     invalid_root = tmp_path / "invalid-product"
-    assert main(
-        [
-            "plan", str(fdf), "--lr-config", str(config), "--output-dir", str(invalid_root),
-            "--sensitivity-tolerance-ev", "nan",
-        ]
-    ) == 2
+    assert (
+        main(
+            [
+                "plan",
+                str(fdf),
+                "--lr-config",
+                str(config),
+                "--output-dir",
+                str(invalid_root),
+                "--sensitivity-tolerance-ev",
+                "nan",
+            ]
+        )
+        == 2
+    )
     assert "finite and nonnegative" in capsys.readouterr().err
 
 

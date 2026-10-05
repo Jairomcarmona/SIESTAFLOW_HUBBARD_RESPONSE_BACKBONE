@@ -61,7 +61,8 @@ def _write_report_atomically(path: Path, text: str) -> None:
 def add_product_options(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--lr-config", help="versioned LR protocol JSON; no alpha grid is invented")
     parser.add_argument(
-        "--sensitivity-tolerance-ev", type=float,
+        "--sensitivity-tolerance-ev",
+        type=float,
         help="explicit nonnegative absolute sensitivity tolerance in eV; frozen into the effective lr-config",
     )
     parser.add_argument("--reference-output", help="single unperturbed reference SIESTA output")

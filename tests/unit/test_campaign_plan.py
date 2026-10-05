@@ -130,10 +130,13 @@ def test_optional_sites_filled_and_explicit_mapping_validated(tmp_path: Path) ->
 def test_lr_config_sensitivity_tolerance_rejects_invalid_values(tmp_path: Path, value: object) -> None:
     fdf, raw, _ = inputs(tmp_path)
     with pytest.raises(CampaignV2Error, match="sensitivity_tolerance_eV"):
-        normalized(fdf, {
-            **raw,
-            "analysis_policy": {"sensitivity_tolerance_eV": value},
-        })
+        normalized(
+            fdf,
+            {
+                **raw,
+                "analysis_policy": {"sensitivity_tolerance_eV": value},
+            },
+        )
 
 
 def test_parent_reproduction_default_and_explicit_mode_enter_ts_config_digest(tmp_path: Path) -> None:
