@@ -260,6 +260,33 @@ def test_plan_exact_domain_status_and_frozen_provenance(
     assert row["planning"]["diagnostic_coverage"]["policy"]["allow_rotations"] is False
 
 
+def test_cli_sensitivity_tolerance_is_frozen_and_validated_as_effective_config(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    fdf, config, _, root = product_inputs(tmp_path)
+    assert main(
+        [
+            "plan", str(fdf), "--lr-config", str(config), "--output-dir", str(root),
+            "--sensitivity-tolerance-ev", "0.025",
+        ]
+    ) == 0
+    capsys.readouterr()
+    snapshot = load_product_snapshot(root)
+    assert snapshot.frozen_lr_config_json is not None
+    effective = json.loads(snapshot.frozen_lr_config_json)["analysis_policy"]
+    assert effective["sensitivity_tolerance_eV"] == 0.025
+    assert effective["sensitivity_tolerance_provided_via"] == "cli"
+
+    invalid_root = tmp_path / "invalid-product"
+    assert main(
+        [
+            "plan", str(fdf), "--lr-config", str(config), "--output-dir", str(invalid_root),
+            "--sensitivity-tolerance-ev", "nan",
+        ]
+    ) == 2
+    assert "finite and nonnegative" in capsys.readouterr().err
+
+
 def test_bare_fdf_retains_diagnostic_without_inventing_grid(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:

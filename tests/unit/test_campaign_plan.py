@@ -126,6 +126,16 @@ def test_optional_sites_filled_and_explicit_mapping_validated(tmp_path: Path) ->
     assert normalized(fdf, {**raw, "sites": result["sites"]}) == result
 
 
+@pytest.mark.parametrize("value", [True, -0.1, float("nan"), float("inf"), "0.1"])
+def test_lr_config_sensitivity_tolerance_rejects_invalid_values(tmp_path: Path, value: object) -> None:
+    fdf, raw, _ = inputs(tmp_path)
+    with pytest.raises(CampaignV2Error, match="sensitivity_tolerance_eV"):
+        normalized(fdf, {
+            **raw,
+            "analysis_policy": {"sensitivity_tolerance_eV": value},
+        })
+
+
 def test_parent_reproduction_default_and_explicit_mode_enter_ts_config_digest(tmp_path: Path) -> None:
     from hubbardflow.execution.campaign_plan import planning_config_digest
 

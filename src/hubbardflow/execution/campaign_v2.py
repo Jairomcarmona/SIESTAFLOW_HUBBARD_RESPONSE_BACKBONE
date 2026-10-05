@@ -340,6 +340,21 @@ def validate_lr_config(payload: Mapping[str, Any], fdf_species: Mapping[str, int
         or float(precision_tolerance) <= 0.0
     ):
         raise CampaignV2Error("analysis_policy.u_precision_tolerance_eV must be finite and positive when supplied")
+    sensitivity_tolerance = analysis.get("sensitivity_tolerance_eV")
+    if sensitivity_tolerance is not None and (
+        isinstance(sensitivity_tolerance, bool)
+        or not isinstance(sensitivity_tolerance, (int, float))
+        or not math.isfinite(float(sensitivity_tolerance))
+        or float(sensitivity_tolerance) < 0.0
+    ):
+        raise CampaignV2Error(
+            "analysis_policy.sensitivity_tolerance_eV must be finite and nonnegative when supplied"
+        )
+    sensitivity_source = analysis.get("sensitivity_tolerance_provided_via", "config")
+    if sensitivity_source not in {"config", "cli"}:
+        raise CampaignV2Error(
+            "analysis_policy.sensitivity_tolerance_provided_via must be config or cli"
+        )
     occupation_precision_requirement = analysis.get("occupation_precision_requirement")
     if occupation_precision_requirement not in {None, "f20.12"}:
         raise CampaignV2Error(

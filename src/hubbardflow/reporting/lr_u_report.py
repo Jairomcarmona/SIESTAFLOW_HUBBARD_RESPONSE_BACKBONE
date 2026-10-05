@@ -443,6 +443,7 @@ def render_lr_u_report(
         f"- Diferencia máxima de U entre modelos/ventanas informada: {_fmt(sensitivity.get('max_abs_u_difference_eV'))} eV.",
         f"- Evaluación frente al umbral: `{_cell(sensitivity.get('assessment', 'UNASSESSED'))}`; métricas requeridas completas: {_fmt(sensitivity.get('required_metrics_complete'))}.",
         f"- Umbral configurado para sensibilidad: {_fmt(sensitivity.get('threshold_eV'))} eV.",
+        f"- Estado de sensibilidad: `{_cell(sensitivity.get('state', 'UNASSESSED'))}`; declarado por: `{_cell(sensitivity.get('declared_by', 'no declarado'))}`; vía: `{_cell(sensitivity.get('provided_via', '—'))}`.",
         f"- Precisión numérica total: `{_cell(precision_status)}`; tolerancia predeclarada de U: {_fmt(precision_tolerance)} eV.",
         f"- Intervalo total de U por sitio: `{_cell(total_interval.get('status', 'NOT_RECORDED'))}`; causa: `{_cell(total_interval.get('reason', 'no se registró intervalo total'))}`.",
         f"- Redondeo determinista solamente: {_fmt(rounding_bound)} eV; comparación aislada con la tolerancia: `{rounding_comparison}`. Este resultado de redondeo por sí solo no acepta precisión total ni física.",
