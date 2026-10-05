@@ -137,3 +137,7 @@ The following wait for TASK 24:
 - I.5 for non-polarized outputs (the parser fails on them today; see 23.7);
 - rotations and spin flip;
 - an automatic one-command `run` that chains `reference`.
+
+### D16. Parent reference equivalence at print precision
+
+D16 substitutes for D14c; the other D14 decisions remain in force. A TS campaign reference must be state-equivalent at print precision to the planning reference. Record both DM digests and the equivalence result.

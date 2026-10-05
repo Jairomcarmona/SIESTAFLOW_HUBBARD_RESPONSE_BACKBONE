@@ -269,6 +269,8 @@ def initialize_campaign(
                 target = _copy(source, root, rel)
                 all_inputs[rel] = target
                 lr_config[field] = str(target)
+        if "parent_reproduction" in normalized:
+            lr_config["parent_reproduction"] = normalized["parent_reproduction"]
         normalized = validate_lr_config(lr_config, fdf_species, projector_sites, atom_count, inventory=inventory)
         planning = resolve_campaign_planning(reference_path, normalized)
         resolved_plan = planning.plan

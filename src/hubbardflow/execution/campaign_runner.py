@@ -32,6 +32,7 @@ from hubbardflow.domain.response_grid_reproducibility import (
 )
 from hubbardflow.domain.lr_campaign_contract import LinearResponseBareCampaignContract
 from hubbardflow.domain.matrix_lr import ResponseObservation
+from hubbardflow.domain.reference_reproduction import ParentReproduction, ReferenceReproduction
 from hubbardflow.domain.state_gate_results import StateGateReason
 from hubbardflow.domain.symmetry_reduction import PerturbationSpec, ResponseMode
 from hubbardflow.execution.campaign_v2 import (
@@ -53,6 +54,7 @@ from hubbardflow.execution.dag_contract import NodeState
 from hubbardflow.execution.execution_profile import ExecutionProfile
 from hubbardflow.execution.observation_assembly import ObservationAssembler
 from hubbardflow.execution.response_grid_context import response_grid_source_campaign_context
+from hubbardflow.execution.reference_reproduction_step import check_reference_reproduction
 from hubbardflow.execution.state_gate_step import (
     failed_state_gate_mapping,
     state_gate_mapping,
@@ -65,7 +67,9 @@ from hubbardflow.execution.generic_executor import (
 from hubbardflow.execution.lr_dag import (
     LRDag, LRDagNode, LRNodeKind, build_adaptive_campaign_dag,
 )
-from hubbardflow.reporting.lr_u_report import render_lr_u_report, write_lr_u_report
+from hubbardflow.reporting.lr_u_report import (
+    reference_reproduction_report_lines, render_lr_u_report, write_lr_u_report,
+)
 from hubbardflow.siesta_backend.backend_admission_plugin import admit_siesta542_from_campaign_contract
 from hubbardflow.siesta_backend.command_factory import SiestaCampaignLayout
 from hubbardflow.siesta_backend.event_parser import parse_hubbard_population_events
@@ -769,17 +773,19 @@ class CampaignRunner:
             "reference_dm_sha256": provenance.get("semantic", {}).get("reference_dm_sha256"),
         }
 
-    def _parent_dm_reproduction_failure(self, dm_path: Path) -> dict[str, str | None] | None:
-        """Return the bound digest mismatch before a TS reference can parent runs."""
-        expected_digest = self.perturbation_plan.reference.parent_dm_sha256
-        observed_digest = sha256_file(dm_path)
-        if expected_digest is not None and observed_digest == expected_digest:
-            return None
-        return {
-            "reason": "PARENT_DM_NOT_REPRODUCED",
-            "expected_parent_dm_sha256": expected_digest,
-            "observed_parent_dm_sha256": observed_digest,
-        }
+    def _reference_reproduction_evidence(self, dm_path: Path, output_path: Path) -> ReferenceReproduction:
+        """Delegate the D16 comparison while preserving both parent file identities."""
+        return check_reference_reproduction(
+            Path(str(self.config.get("planning_reference_output", ""))),
+            output_path,
+            self.perturbation_plan.reference.parent_dm_sha256,
+            dm_path,
+            ParentReproduction(self.config.get("parent_reproduction", "PRINT_EQUIVALENT")),
+            tuple(
+                (space.atom_index + 1, 2 * space.dftu_record.l + 1)
+                for space in self.perturbation_plan.inventory.subspaces
+            ),
+        )
 
     def _execute_siesta(self, node: LRDagNode, heartbeat: _Heartbeat) -> NodeReceipt:
         from hubbardflow.execution.runtime_adapters import LocalSubprocessExecutor, SlurmAllocationExecutor
@@ -828,30 +834,38 @@ class CampaignRunner:
             record["returncode"] = failure["returncode"]
             record["returncode_meaning"] = failure["returncode_meaning"]
         self._record_receipt(node, receipt, record)
-        if receipt.state is NodeState.VALIDATED and node.kind is LRNodeKind.REFERENCE:
+        if node.kind is LRNodeKind.REFERENCE and (
+            receipt.state is NodeState.VALIDATED
+            or (self.shadow is not None and receipt.state is NodeState.FAILED_OUTPUT_VALIDATION)
+        ):
             dm_path = command.cwd / record["artifact_spec"]["dm"]
             if not dm_path.is_file():
                 failed = NodeReceipt(node.node_id, NodeState.FAILED_OUTPUT_VALIDATION, _digest("reference DM missing after validation"))
                 self._record_receipt(node, failed, {"kind": "siesta_failure", "reason": "reference DM missing"})
                 return failed
             if self.shadow is not None:
-                mismatch = self._parent_dm_reproduction_failure(dm_path)
-                if mismatch is not None:
+                reproduction = self._reference_reproduction_evidence(dm_path, Path(command.stdout_path))
+                record["reference_reproduction"] = reproduction.to_mapping()
+                record["expected_parent_dm_sha256"] = reproduction.planning_parent_dm_sha256
+                record["observed_parent_dm_sha256"] = reproduction.campaign_parent_dm_sha256
+                self._record_receipt(node, receipt, record)
+                if not reproduction.equivalent:
                     failed = NodeReceipt(
                         node.node_id,
                         NodeState.FAILED_OUTPUT_VALIDATION,
-                        _digest(mismatch),
+                        _digest(reproduction.to_mapping()),
                     )
                     self._record_receipt(
                         node,
                         failed,
                         {
                             **record,
-                            **mismatch,
+                            "reason": reproduction.reason.value,
                         },
                     )
                     return failed
-            self.factory.reference_completed(dm_path, node.scf_level_id or "base")
+            if receipt.state is NodeState.VALIDATED:
+                self.factory.reference_completed(dm_path, node.scf_level_id or "base")
         return receipt
 
     def _execute_gate(self, node: LRDagNode) -> NodeReceipt:
@@ -1927,13 +1941,18 @@ class CampaignRunner:
                     if name in failure_record
                 }
                 parent_dm_reason = (
-                    "PARENT_DM_NOT_REPRODUCED"
-                    if self.shadow is not None and failure_record.get("reason") == "PARENT_DM_NOT_REPRODUCED"
+                    failure_record.get("reason")
+                    if self.shadow is not None and failure_record.get("reason") in {
+                        "PARENT_DM_NOT_REPRODUCED", "PARENT_STATE_NOT_EQUIVALENT",
+                    }
                     else None
                 )
                 heartbeat.finish(
                     "FAILED", failed_node=node.node_id, failure_state=receipt.state.value, **failure_details,
-                    **({"reason": parent_dm_reason} if parent_dm_reason is not None else {}),
+                    **({
+                        "reason": parent_dm_reason,
+                        "parent_reproduction_detail": failure_record.get("reference_reproduction", {}).get("detail"),
+                    } if parent_dm_reason is not None else {}),
                 )
                 return 1
 
@@ -2020,6 +2039,13 @@ def render_campaign_report(manifest_path: str | Path) -> str:
         f"- Nodo activo: {status.get('active_node') or '—'}",
         "- Análisis U: todavía no hay JSON v2; report se actualizará al terminar MATRIX_ANALYSIS.",
     ]
+    try:
+        records = json.loads((root / ".siestaflow" / "node-evidence.json").read_text(encoding="utf-8"))
+        reproduction = records.get("nodes", {}).get("reference", {}).get("reference_reproduction")
+        if isinstance(reproduction, Mapping):
+            lines.extend(reference_reproduction_report_lines(reproduction))
+    except (OSError, json.JSONDecodeError):
+        pass
     if isinstance(adaptive, Mapping):
         rounds = adaptive.get("rounds", [])
         current = rounds[-1] if isinstance(rounds, list) and rounds else {}

@@ -49,13 +49,9 @@ does not block: smoothness concerns the estimator, which is the same for direct 
 campaigns. The shadow comparison is the direct empirical test of translation equivalence.
 Note: unlike the diagnostic verdict, G4 `NOT_AVAILABLE` (missing `.EIG`) blocks here.
 
-**D14c. The parent DM must reproduce bit for bit.** The TS plan binds the planning reference DM.
-The campaign reruns the reference with the same machinery. If its DM bytes differ, the campaign
-stops at once with `PARENT_DM_NOT_REPRODUCED`. It never silently expands to all columns. For
-the same reason, a product TS campaign stops with `SHADOW_REJECTED` instead of expanding (23.3). Evidence:
-the NiO reference DM `f7fca191…` appears identically in two independent campaigns on the user's
-laptop: `campaigns/nio_pbe_adaptive_20260928` and the product campaign `nio_p5_product_2` recorded
-in `tests/fixtures/real_nio_p5_rerun`.
+**D14c. Superseded by D16.** D16 in `AMENDMENTS_2.md` replaces the bitwise parent-DM reproduction
+rule with state equivalence at print precision. The other D14 decisions remain in force. TS still
+stops on a rejected reference and never silently expands to all columns.
 
 **D14d. The planning reference comes from `hubbardflow reference`.** It runs only the reference
 node of an ordinary direct campaign. There is no pilot reuse and no adoption of foreign outputs.
@@ -309,13 +305,20 @@ is a stop.
 2. **Boundary.** `product_execution_boundary` treats this admission like the legacy one: no
    `SCIENTIFIC_STATE_NOT_ESTABLISHED`, `PILOT_REUSE_NOT_ESTABLISHED` or `PLAN_NOT_READY`.
    `product_command` executes on either admissible status.
-3. **Runner.** In a TS campaign, right after the reference node validates and before
-   `reference_completed`, compare `sha256(dm)` with `plan.reference.parent_dm_sha256`. On mismatch:
-   - the receipt is `FAILED_OUTPUT_VALIDATION`;
-   - the record has `reason: "PARENT_DM_NOT_REPRODUCED"` plus both digests;
-   - the heartbeat finishes `FAILED` with that reason, visible in `hubbardflow status`;
-   - no perturbation runs.
-4. **Stop instead of expanding (D14c).**
+3. **Runner (D16).** Before `reference_completed`, the campaign compares its reference output to
+   the planning reference at print precision: both must converge and terminate normally, and each
+   printed occupation-matrix element and stdout Fermi value must agree within the sum of the two
+   print half-widths. Atom/projector identities must match. Unparseable evidence fails closed as
+   `PARENT_STATE_NOT_EQUIVALENT`, with the failing identity/value, difference and quantum where
+   available. The node evidence and report retain the planning and campaign DM digests plus the
+   criterion, result, maximum differences and comparison quanta. The planning digest is provenance;
+   observations must match the campaign reference DM digest exactly.
+   - The lr-config key `parent_reproduction` accepts `PRINT_EQUIVALENT` (default for TS, as above)
+     or `BITWISE` (the prior exact-DM-hash comparison, with reason `PARENT_DM_NOT_REPRODUCED`).
+     The selected value is included in the frozen planning config digest.
+   - A failed comparison records `PARENT_STATE_NOT_EQUIVALENT` for `PRINT_EQUIVALENT` or
+     `PARENT_DM_NOT_REPRODUCED` for `BITWISE`, then stops before any perturbation node.
+4. **Stop instead of expanding (D14c/D16).**
    - **The key.** Add an optional lr-config key `shadow_rejection_policy` ∈ {`EXPAND`, `STOP`}.
      `validate_lr_config` validates it and copies it into its output **only when the input sets
      it**. An absent key means `EXPAND`. Configs without the key keep byte-identical planning
@@ -354,8 +357,10 @@ is a stop.
 - NiO P5 `DISABLED` → still `ADMISSIBLE_LEGACY_EQUIVALENT`.
 - The boundary for TS has none of the three blocking reasons.
 - `product_command` launches the worker for TS (monkeypatched worker, as existing product tests do).
-- A synthetic TS runner whose reference writes a DM different from the plan's stops with
-  `PARENT_DM_NOT_REPRODUCED`, with zero perturbation nodes executed. An equal DM proceeds.
+- A synthetic TS runner whose reference writes different DM bytes but equivalent printed state
+  completes; its two DM digests are recorded and shadows remain proven. A state difference of at
+  least two print quanta or unparseable output stops with `PARENT_STATE_NOT_EQUIVALENT` before any
+  perturbation. `BITWISE` preserves the old unequal-DM rejection.
 - Under `STOP`, a rejected shadow finishes `FAILED`/`SHADOW_REJECTED` with no further node
   executed. `prepare` is called exactly once, and `results/i5_state_gate.json` exists. Under
   `EXPAND`, the existing expansion tests pass unchanged.
@@ -391,7 +396,11 @@ is a stop.
   - the class-member U spread ≤ 1e-9 eV.
 
   Variants:
-  - a fake whose reference DM differs gives `PARENT_DM_NOT_REPRODUCED` after one execution;
+  - a fake whose reference DM bytes differ but whose printed state is equivalent still completes
+    with distinct planning/campaign digests recorded;
+  - a fake whose reference state differs by at least two print quanta, or cannot be parsed, gives
+    `PARENT_STATE_NOT_EQUIVALENT` before any perturbation;
+  - `parent_reproduction: BITWISE` preserves `PARENT_DM_NOT_REPRODUCED` for a different DM;
   - a fake that serves the shadow column unpermuted gives `SHADOW_REJECTED` with no execution after
     the barrier;
   - a fake without `.EIG` gives `SHADOW_REJECTED` through the D14b gate;
@@ -431,7 +440,8 @@ is a stop.
    - It prints the follow-up `run` command.
    - Default output dir: `.hubbardflow/<FDF stem>-reference`.
 3. **USER_GUIDE.** Add a section "Translation-shadowed runs" covering the two commands, what
-   `PARENT_DM_NOT_REPRODUCED` means, and when to use `DISABLED` instead.
+   `PARENT_STATE_NOT_EQUIVALENT` means, the `parent_reproduction` modes, and when to use
+   `DISABLED` instead.
 
 **Tests**
 - `advance("reference")` executes only the reference node (synthetic runner).
@@ -534,14 +544,14 @@ Start only after the 23.3 MnO TS replay test passes.
    Anything else is a product defect: **stop and report**.
 4. **Run.** `run --coverage TRANSLATION_SHADOWED … --name mno_ts --output-dir <work>/ts`, launched
    with `setsid nohup`, about 1.5 h. Monitor with `status <campaign>/campaign.v2.json`.
-   - If the worker finishes `FAILED`, for example with `PARENT_DM_NOT_REPRODUCED` or
+   - If the worker finishes `FAILED`, for example with `PARENT_STATE_NOT_EQUIVALENT` or
      `SHADOW_REJECTED`, nothing expands (23.3). Report:
      - the failure record;
      - `<campaign>/.siestaflow/translation-shadow-state.json` with every comparison;
-     - `results/i5_state_gate.json` (absent for `PARENT_DM_NOT_REPRODUCED`).
+     - `results/i5_state_gate.json` (absent when the reference is rejected before the state gate).
    - If the failure is a defect in our code, apply rule 8. Otherwise stop.
 5. **Gates.** Write `docs/fdebq/TASK23_MNO_TS.md` with gates a–e, then the verdict.
-   - **a)** The TS campaign reference DM equals step 2's: no `PARENT_DM_NOT_REPRODUCED`.
+   - **a)** State equivalence at print precision between the planning reference and the campaign reference; DM digests are informational.
    - **b)** Both shadow outcomes are `PROVEN`/`WITHIN_PRINT_BOUNDS`. Report, per class and mode:
      - max |direct − reconstructed| / (sum of print bounds);
      - the SCF iteration count of each representative run and each shadow run.

@@ -135,6 +135,7 @@ def _config(request: ProductRequest) -> dict[str, object] | None:
             raw[field] = value
     if raw.get("coverage", "DIAGNOSTIC") == "TRANSLATION_SHADOWED":
         raw.setdefault("shadow_rejection_policy", "STOP")
+        raw.setdefault("parent_reproduction", "PRINT_EQUIVALENT")
     return raw
 
 
