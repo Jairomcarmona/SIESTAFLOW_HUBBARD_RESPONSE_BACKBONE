@@ -193,6 +193,59 @@ def test_product_direct_grid_links_legacy_campaign_without_running_siesta(
     assert not any(tmp_path.rglob("*.out"))
 
 
+def test_single_manganese_pseudopotential_map_matches_staged_inventory_digest(tmp_path: Path) -> None:
+    source = Path(__file__).resolve().parents[2] / (
+        "campaigns/mno_afmii_strict_lr_v3r2/results/response-matrix-foreground-recovery-v4/00_REFERENCE/siesta.fdf"
+    )
+    fdf, raw_config, profile = inputs(tmp_path / "inputs", source.read_text(encoding="utf-8"))
+    executable = tmp_path / "siesta"
+    executable.write_bytes(b"test backend identity; never executed")
+    _profile_with_test_backend(profile, executable)
+    _bind_test_backend(Path(raw_config["compatibility_registry"]), executable)
+    root = Path(__file__).resolve().parents[2]
+    manganese_pseudo = root / "campaigns/mno_afmii_strict_lr_v3r2/pseudopotentials/Mn.psml"
+    oxygen_pseudo = root / "campaigns/mno_afmii_strict_lr_v3r2/pseudopotentials/O.psml"
+    raw_config["coverage"] = "DISABLED"
+    raw_config["pseudopotentials"] = {
+        **{f"MnLR{index:02d}": str(manganese_pseudo) for index in range(16)},
+        "O": str(oxygen_pseudo),
+    }
+    raw_config["sites"] = normalized(fdf, raw_config)["sites"]
+    config_path = fdf.parent / "lr.json"
+    config_path.write_text(json.dumps(raw_config), encoding="utf-8")
+    request = ProductRequest(
+        str(fdf.resolve()),
+        str(config_path.resolve()),
+        None,
+        None,
+        CampaignCoverage.DISABLED,
+        None,
+        (str(fdf.parent.resolve()),),
+        None,
+        None,
+    )
+    snapshot = resolve_product_snapshot(request)
+    product_root = tmp_path / "product"
+    freeze_product_snapshot(product_root, snapshot)
+    initialized = initialize_campaign(
+        fdf_path=str(fdf),
+        lr_config_path=str(config_path),
+        profile_path=str(profile),
+        name="mno-identity-map",
+        campaign_root=str(tmp_path / "campaigns"),
+    )
+    campaign_root = Path(str(initialized["manifest_path"])).parent
+    from hubbardflow.execution.campaign_plan import campaign_inventory
+
+    staged_inventory = campaign_inventory(
+        campaign_root / "reference.fdf", (campaign_root / "pseudopotentials",)
+    )
+    frozen_plan = json.loads((campaign_root / "resolved_perturbation_plan.json").read_text(encoding="utf-8"))
+    assert snapshot.planning is not None
+    assert snapshot.planning.plan.inventory.digest == staged_inventory.digest
+    assert frozen_plan["inventory"]["digest"] == staged_inventory.digest
+
+
 def test_local_wsl_product_campaign_uses_workspace_and_pointer(tmp_path: Path, monkeypatch: Any) -> None:
     executable = tmp_path / "siesta"
     executable.write_bytes(b"test backend identity; never executed")

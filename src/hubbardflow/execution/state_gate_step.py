@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import re
-from collections.abc import Mapping, Sequence
+from collections.abc import Collection, Mapping, Sequence
 from pathlib import Path
 from typing import Any, cast
 
@@ -114,6 +114,7 @@ def state_gate_mapping(
     alpha_grid_ev: Sequence[float],
     bare_profile: Any,
     covered: bool,
+    site_indices: Collection[int] | None = None,
 ) -> dict[str, object]:
     """Return one deterministic state-gate diagnostic for all column/mode pairs."""
     pairs: list[StateGateResult] = []
@@ -136,6 +137,15 @@ def state_gate_mapping(
         column_id = str(site["site_id"])
         for mode in (ResponseMode.BARE, ResponseMode.SCREENED):
             result_mode = StateGateMode(mode.value)
+            if site_indices is not None and site_index not in site_indices:
+                pairs.append(
+                    _not_established(
+                        column_id,
+                        result_mode,
+                        StateGateReason.RECONSTRUCTED_FROM_REPRESENTATIVE,
+                    )
+                )
+                continue
             if not covered:
                 pairs.append(_not_established(column_id, result_mode, StateGateReason.PATH_NOT_COVERED))
                 continue
@@ -173,6 +183,54 @@ def state_gate_mapping(
         "policy_id": _POLICY_ID,
         "pairs": [result.to_mapping() for result in pairs],
     }
+
+
+def shadow_state_gate_passed(mapping: Mapping[str, object], site_ids: Collection[str]) -> bool:
+    """Require complete pointwise I.5 evidence for every directly computed shadow column.
+
+    The shadow comparison validates translation equivalence, so its gate requires
+    measured point evidence including available band-gap evidence. The separate
+    G3 smoothness diagnostic is deliberately excluded because it is not pointwise.
+    """
+    try:
+        raw_pairs = mapping["pairs"]
+        if not isinstance(raw_pairs, list) or not site_ids or len(set(site_ids)) != len(site_ids):
+            return False
+        indexed: dict[tuple[str, StateGateMode], StateGateResult] = {}
+        for raw in raw_pairs:
+            result = StateGateResult.from_mapping(raw)
+            key = (result.column_id, result.mode)
+            if key in indexed:
+                return False
+            indexed[key] = result
+        for site_id in site_ids:
+            for mode in StateGateMode:
+                pair_result = indexed.get((site_id, mode))
+                if (
+                    pair_result is None
+                    or pair_result.verdict is not StateGateVerdict.PASS
+                    or not pair_result.amplitudes
+                ):
+                    return False
+                for amplitude in pair_result.amplitudes:
+                    for point in (amplitude.positive, amplitude.negative):
+                        if (
+                            point is None
+                            or not point.checks
+                            or any(
+                                check.outcome
+                                in {
+                                    CheckOutcome.FAIL,
+                                    CheckOutcome.NOT_AVAILABLE,
+                                    CheckOutcome.NOT_ESTABLISHED,
+                                }
+                                for check in point.checks
+                            )
+                        ):
+                            return False
+        return True
+    except (KeyError, TypeError, ValueError):
+        return False
 
 
 def failed_state_gate_mapping(

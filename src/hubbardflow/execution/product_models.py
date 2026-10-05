@@ -50,6 +50,7 @@ class ProductReason(str, Enum):
 class ProductCommand(str, Enum):
     PLAN = "plan"
     RUN = "run"
+    REFERENCE = "reference"
     SUBMIT = "submit"
 
 

@@ -123,6 +123,36 @@ the fixed explicit path. `TRANSLATION_SHADOWED` records representatives,
 mandatory shadows and reconstruction maps; the runtime I.5 gate still limits
 production admission. Diagnostic candidates never grant `PROVEN` by themselves.
 
+### Translation-shadowed runs
+
+Create a validated reference state first. The command runs only the unperturbed
+reference node and saves its output and DM under `planning_reference/`:
+
+```bash
+hubbardflow reference system.fdf --lr-config lr_config.json \
+  --profile execution_profile.json --name system-reference
+```
+
+Use the printed follow-up command to start the response campaign. It supplies
+the archived reference files and opts into the qualified reduction:
+
+```bash
+hubbardflow run system.fdf --lr-config lr_config.json \
+  --profile execution_profile.json --name system-ts \
+  --reference-output .hubbardflow/system-reference/planning_reference/reference.out \
+  --reference-dm .hubbardflow/system-reference/planning_reference/system.DM \
+  --coverage TRANSLATION_SHADOWED
+```
+
+The DM filename must match the FDF `SystemLabel` output name. A
+`PARENT_DM_NOT_REPRODUCED` result means the representative did not reproduce
+the archived reference DM within the recorded evidence; the reduction cannot
+continue from that parent and the affected class falls back to explicit
+perturbations. Choose `DISABLED` when you want every site column explicitly
+perturbed or when translation-based reduction is not qualified for the input.
+Replace `system.DM` in the example with the exact `<SystemLabel>.DM` filename
+written by the reference command.
+
 Spin flip and rotations default to false. Opt-ins `--allow-spin-flip` and
 `--allow-rotations` are recorded in the coverage policy and plan digest.
 They retain the qualification limits in [VALIDATION_GATES.md](VALIDATION_GATES.md).

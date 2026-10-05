@@ -663,16 +663,25 @@ def test_duplicates_and_incomplete_channel_matrices_fail_closed() -> None:
         )
 
 
-def test_archived_fdf_geometry_binding_includes_ligands_and_missing_identity_stays_explicit() -> None:
+def test_archived_fdf_geometry_binding_includes_ligands_and_missing_identity_stays_explicit(
+    tmp_path: Path,
+) -> None:
     path = ROOT / "examples/tmo_campaigns/CoO_ref.fdf"
     source = parse_effective_fdf(path)
     model = bind_symmetry_model(source, species_identity(source, (path.parent,)))
     assert len(model.atoms) == source.number_of_atoms
     assert any(not atom.correlated for atom in model.atoms)
     assert model.effective_fdf_sha256 == source.effective_fdf_sha256
-    assert any(atom.identity_digest is None for atom in model.atoms)
+    assert all(atom.identity_digest is not None for atom in model.atoms)
     candidates = candidate_operations(model, coverage_policy_v1().geometry)
     assert all(len(op.atom_permutation) == source.number_of_atoms for op in candidates.operations)
+
+    (tmp_path / "Co.psml").write_bytes((path.parent / "Co.psml").read_bytes())
+    missing_oxygen = bind_symmetry_model(source, species_identity(source, (tmp_path,)))
+    oxygen_indices = {atom.atom_index for atom in source.atoms if atom.species_label == "O"}
+    oxygen_atoms = [atom for atom in missing_oxygen.atoms if atom.atom_index in oxygen_indices]
+    assert oxygen_atoms
+    assert all(atom.identity_digest is None for atom in oxygen_atoms)
 
 
 class _RingChi(Protocol):

@@ -133,6 +133,8 @@ def _config(request: ProductRequest) -> dict[str, object] | None:
     ):
         if value is not None:
             raw[field] = value
+    if raw.get("coverage", "DIAGNOSTIC") == "TRANSLATION_SHADOWED":
+        raw.setdefault("shadow_rejection_policy", "STOP")
     return raw
 
 
@@ -154,7 +156,12 @@ def resolve_product_snapshot(request: ProductRequest) -> ProductSnapshot:
     dirs = {Path(d) for d in request.identity_dirs}
     if raw is not None:
         dirs.update(Path(p).parent for p in cast(Mapping[str, str], raw.get("pseudopotentials", {})).values())
-    identities = species_identity(model, tuple(sorted(dirs, key=str)))
+    pseudopotentials = {} if raw is None else cast(Mapping[str, str], raw.get("pseudopotentials", {}))
+    identities = species_identity(
+        model,
+        tuple(sorted(dirs, key=str)),
+        pseudopotentials={label: Path(path) for label, path in pseudopotentials.items()},
+    )
     inventory = build_inventory(model, identities)
     source = sha256(fdf.read_bytes()).hexdigest()
     config_digest = (
@@ -408,10 +415,11 @@ def product_execution_boundary(
     I.5 blocks this product route before materialization, local/MPI or SLURM
     launch. The legacy explicit campaign commands retain their existing runner.
     """
-    legacy_admissible = (
-        admission is not None and admission.status is ExecutionAdmissionStatus.ADMISSIBLE_LEGACY_EQUIVALENT
-    )
-    if legacy_admissible:
+    admissible = admission is not None and admission.status in {
+        ExecutionAdmissionStatus.ADMISSIBLE_LEGACY_EQUIVALENT,
+        ExecutionAdmissionStatus.ADMISSIBLE_TRANSLATION_SHADOWED,
+    }
+    if admissible:
         reasons = list(snapshot.reasons)
     else:
         reasons = [ProductReason.SCIENTIFIC_STATE_NOT_ESTABLISHED, ProductReason.PILOT_REUSE_NOT_ESTABLISHED]

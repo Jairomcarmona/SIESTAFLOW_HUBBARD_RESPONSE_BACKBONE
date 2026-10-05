@@ -22,13 +22,28 @@ from hubbardflow.domain.response_shadow import (
     reconstruct_responses,
     response_budgets,
 )
+from hubbardflow.domain.state_gate_results import StateGateReason
 from hubbardflow.domain.symmetry_reduction import ResponseMode
 from hubbardflow.execution.campaign_shadow_inputs import build_shadow_dag, observation_series
 from hubbardflow.execution.generic_executor import ExecutionContractError, GenericDagExecutor
 from hubbardflow.execution.lr_dag import LRDagNode
+from hubbardflow.execution.state_gate_step import (
+    failed_state_gate_mapping,
+    shadow_state_gate_passed,
+    state_gate_mapping,
+    write_state_gate_file,
+)
 
 if TYPE_CHECKING:
     from hubbardflow.execution.campaign_runner import CampaignRunner
+
+
+class ShadowRejected(RuntimeError):
+    """A STOP-policy shadow failure that must finish the worker without expansion."""
+
+    def __init__(self, outcomes: Sequence[ShadowOutcome]):
+        self.outcomes = tuple(outcomes)
+        super().__init__("translation shadow rejected under STOP policy")
 
 
 class CampaignShadow:
@@ -140,7 +155,46 @@ class CampaignShadow:
         runner.executor.checkpoint.save(receipts)
         runner.records.pop(node.node_id, None)
         runner.save_records()
+        if self._rejection_policy(runner) == "STOP":
+            raise ShadowRejected((outcome,))
         return self._expand(runner, (outcome,))
+
+    @staticmethod
+    def _rejection_policy(runner: CampaignRunner) -> str:
+        value = runner.config.get("shadow_rejection_policy", "EXPAND")
+        return value if isinstance(value, str) and value in {"EXPAND", "STOP"} else "EXPAND"
+
+    def _reject_or_expand(self, runner: CampaignRunner, outcomes: Sequence[ShadowOutcome]) -> bool:
+        rejected = any(item.status is CoverageStatus.REJECTED_EXPANDED for item in outcomes)
+        if rejected and self._rejection_policy(runner) == "STOP":
+            raise ShadowRejected(outcomes)
+        return self._expand(runner, outcomes)
+
+    def _state_gate_evidence(self, runner: CampaignRunner) -> dict[str, object]:
+        computed = set(self.plan.computed_columns) | set(self.expanded)
+        computed_indices = tuple(
+            i for i, subspace in enumerate(self.plan.inventory.subspaces) if subspace.site_id in computed
+        )
+        try:
+            return state_gate_mapping(
+                dag=runner.dag,
+                specs=runner.specs,
+                records=runner.records,
+                checkpoint=runner.checkpoint(),
+                sites=runner.sites,
+                alpha_grid_ev=list(runner.alpha_grid),
+                bare_profile=runner.admitted.factory.bare_profile,
+                covered=runner.adaptive_policy is None,
+                site_indices=computed_indices,
+            )
+        except Exception:  # noqa: BLE001 - malformed evidence is persisted as an explicit failure.
+            return failed_state_gate_mapping(runner.sites, StateGateReason.INVALID_STATE_EVIDENCE)
+
+    def persist_rejection(self, runner: CampaignRunner, outcomes: Sequence[ShadowOutcome]) -> None:
+        """Persist a STOP decision and its exact I.5 evidence without changing the DAG."""
+        self._persist(outcomes)
+        state_gate_path = runner.root / "results" / "i5_state_gate.json"
+        write_state_gate_file(state_gate_path, self._state_gate_evidence(runner))
 
     def _data(
         self, runner: CampaignRunner
@@ -187,7 +241,7 @@ class CampaignShadow:
         state_valid = (
             bool(observations)
             and parent_valid
-            and self._complete_state_gate()
+            and self._complete_state_gate(runner)
             and states is not None
             and set(states) == {float(o.alpha) for o in observations}
             and all(s == "reference_branch" for s in states.values())
@@ -209,21 +263,24 @@ class CampaignShadow:
             for o in outcomes
         )
 
-    def _complete_state_gate(self) -> bool:
-        """Fail closed until occupation-subspace, gap and smoothness gates exist.
-
-        The runtime provides SCF validation and moment continuity only. FDRC
-        I.5 also requires occupation spectra/occupied subspaces, gap or Fermi
-        evidence and smoothness. There is no production opt-in bypass. Tests
-        may inject their complete synthetic state oracle at this boundary.
-        """
-        return False
+    def _complete_state_gate(self, runner: CampaignRunner) -> bool:
+        """Require measured I.5 point evidence for representatives and shadows."""
+        try:
+            mapping = self._state_gate_evidence(runner)
+            computed = set(self.plan.computed_columns) | set(self.expanded)
+            computed_indices = tuple(
+                i for i, subspace in enumerate(self.plan.inventory.subspaces) if subspace.site_id in computed
+            )
+            site_ids = [str(runner.sites[i]["site_id"]) for i in computed_indices]
+            return shadow_state_gate_passed(mapping, site_ids)
+        except Exception:  # noqa: BLE001 - qualification must fail closed on malformed evidence.
+            return False
 
     def prepare(self, runner: CampaignRunner) -> bool:
         """Return True only when the current shadow barrier can be checkpointed."""
         data = self._data(runner)
         outcomes = self._outcomes(runner, data)
-        return not self._expand(runner, outcomes)
+        return not self._reject_or_expand(runner, outcomes)
 
     def replay_barrier(self, runner: CampaignRunner) -> None:
         """Resume grants no shadow status from JSON; recompute derived evidence."""
@@ -246,7 +303,7 @@ class CampaignShadow:
         data = self._data(runner)
         observations, states, magnetic, widths, reference_widths = data
         outcomes = self._outcomes(runner, data)
-        if self._expand(runner, outcomes):
+        if self._reject_or_expand(runner, outcomes):
             raise ExecutionContractError(
                 "shadow evidence changed; explicit expansion must finish before analysis"
             )
@@ -286,7 +343,7 @@ class CampaignShadow:
             "reconstructed_raw_matrices": None if matrices is None else matrices.to_mapping(),
             "failed_runs": self.failed_runs,
             "complete_state_gate": CoverageStatus.PROVEN.value
-            if self._complete_state_gate()
+            if self._complete_state_gate(runner)
             else CoverageStatus.NOT_ESTABLISHED.value,
             "reconstruction_maps": [
                 {"destination": site, "representative": group.representative, "operation_id": op_id}

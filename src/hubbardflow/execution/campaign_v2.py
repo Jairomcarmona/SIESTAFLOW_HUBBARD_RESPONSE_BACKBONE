@@ -234,6 +234,12 @@ def validate_lr_config(payload: Mapping[str, Any], fdf_species: Mapping[str, int
         alpha_strategy = AlphaStrategy("CALIBRATED_GRID" if raw_alpha_strategy == "CALIBRATED" else raw_alpha_strategy)
     except (ValueError, TypeError) as exc:
         raise CampaignV2Error("unsupported coverage or alpha_strategy") from exc
+    shadow_rejection_policy = payload.get("shadow_rejection_policy")
+    if "shadow_rejection_policy" in payload and (
+        not isinstance(shadow_rejection_policy, str)
+        or shadow_rejection_policy not in {"EXPAND", "STOP"}
+    ):
+        raise CampaignV2Error("shadow_rejection_policy must be EXPAND or STOP when supplied")
     if alpha_strategy is AlphaStrategy.CALIBRATED_GRID:
         from ..domain.fdebq_models import CalibrationProtocol
         raw_calibration = payload.get("calibration_protocol")
@@ -358,7 +364,7 @@ def validate_lr_config(payload: Mapping[str, Any], fdf_species: Mapping[str, int
         ))
     except ScientificProfileError as exc:
         raise CampaignV2Error(str(exc)) from exc
-    return {
+    normalized = {
         "functional": xc_profile.xc_functional,
         "xc_profile": xc_profile.to_mapping(),
         "sites": normalized_sites,
@@ -384,6 +390,9 @@ def validate_lr_config(payload: Mapping[str, Any], fdf_species: Mapping[str, int
         "observables": payload.get("observables", []),
         "magnetic_moment_tolerance_muB": magnetic_tolerance,
     }
+    if shadow_rejection_policy is not None:
+        normalized["shadow_rejection_policy"] = shadow_rejection_policy
+    return normalized
 
 
 def load_campaign_v2(path: str | Path) -> dict[str, Any]:
