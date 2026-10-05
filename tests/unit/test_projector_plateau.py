@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from typing import cast
 
 import pytest
 
@@ -262,7 +263,8 @@ def test_projector_curve_canonicalizes_points_independent_of_input_order() -> No
     curve = _m1_curve()
     reversed_curve = ProjectorCurve(tuple(reversed(curve.points)))
     mapping = curve.to_mapping()
-    mapping["points"] = list(reversed(mapping["points"]))
+    points = cast(list[dict[str, object]], mapping["points"])
+    mapping["points"] = list(reversed(points))
     reversed_mapping_curve = ProjectorCurve.from_mapping(mapping)
 
     assert reversed_curve == curve
@@ -273,7 +275,8 @@ def test_projector_curve_canonicalizes_points_independent_of_input_order() -> No
 def test_projector_curve_recomputes_serialized_slope_instead_of_exact_comparing() -> None:
     curve = _m1_curve()
     mapping = curve.to_mapping()
-    mapping["segments"][0]["slope_ev_per_parameter"] = -24.35
+    segments = cast(list[dict[str, object]], mapping["segments"])
+    segments[0]["slope_ev_per_parameter"] = -24.35
 
     restored = ProjectorCurve.from_mapping(mapping)
 
