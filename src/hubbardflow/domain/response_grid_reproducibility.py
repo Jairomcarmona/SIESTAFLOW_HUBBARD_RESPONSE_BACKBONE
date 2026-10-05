@@ -122,7 +122,9 @@ def _digest(value: Any, label: str, warnings: list[str] | None = None) -> str:
     if not isinstance(value, str) or _HASH.fullmatch(value) is None:
         if warnings is None:
             raise ResponseGridCalibrationError(f"{label} must be a lowercase SHA-256")
-        warnings.append(f"{'ARTIFACT_DIGEST_ABSENT' if value is None or value == '' else 'ARTIFACT_DIGEST_MALFORMED'}:{label}")
+        warnings.append(
+            f"{'ARTIFACT_DIGEST_ABSENT' if value is None or value == '' else 'ARTIFACT_DIGEST_MALFORMED'}:{label}"
+        )
         return ""
     return value
 
@@ -201,11 +203,7 @@ def _validate_reference_execution(
     node_id = reference.get("node_id")
     node = nodes.get(node_id) if isinstance(node_id, str) else None
     evidence_digest = reference.get("evidence_digest")
-    if (
-        not isinstance(node, Mapping)
-        or node.get("state") != "VALIDATED"
-        or node.get("kind") != "siesta"
-    ):
+    if not isinstance(node, Mapping) or node.get("state") != "VALIDATED" or node.get("kind") != "siesta":
         raise ResponseGridCalibrationError(
             "reference source is not linked to a validated SIESTA node receipt"
         )
@@ -555,9 +553,7 @@ def validate_response_grid_calibration(
             or dataset["analysis_path"] != receipt["analysis_path"]
             or dataset["node_evidence_path"] != receipt["node_evidence_path"]
         ):
-            raise ResponseGridCalibrationError(
-                "replica dataset identifiers differ from its receipt"
-            )
+            raise ResponseGridCalibrationError("replica dataset identifiers differ from its receipt")
         for field_name, expected_value in (
             ("reference_dm_sha256", dm_hash),
             ("campaign_context_sha256", context_hash),
@@ -769,10 +765,7 @@ def validate_response_grid_calibration(
             if not isinstance(node_record, dict):
                 raise ResponseGridCalibrationError("node-evidence entry is malformed")
             evidence_digest = _digest(cell["evidence_digest"], "node evidence digest", traceability_warnings)
-            if (
-                node_record.get("state") != "VALIDATED"
-                or node_record.get("kind") != "siesta"
-            ):
+            if node_record.get("state") != "VALIDATED" or node_record.get("kind") != "siesta":
                 raise ResponseGridCalibrationError(
                     "measurement does not match a validated SIESTA node receipt"
                 )
@@ -807,10 +800,7 @@ def validate_response_grid_calibration(
             command = node_record.get("command")
             artifact_spec = node_record.get("artifact_spec")
             artifact_hashes = provenance.get("artifacts") if isinstance(provenance, Mapping) else None
-            if (
-                not isinstance(command, Mapping)
-                or not isinstance(artifact_spec, Mapping)
-            ):
+            if not isinstance(command, Mapping) or not isinstance(artifact_spec, Mapping):
                 raise ResponseGridCalibrationError(
                     "node receipt lacks command, artifact specification, or hashes"
                 )
@@ -874,7 +864,9 @@ def validate_response_grid_calibration(
                     artifact_hashes.get(artifact_name), f"node {artifact_name} SHA-256", traceability_warnings
                 )
                 if sha256(path.read_bytes()).hexdigest() != declared_hash:
-                    traceability_warnings.append(f"NODE_ARTIFACT_DIGEST_MISMATCH:{replica_id}:{node_id}:{artifact_name}")
+                    traceability_warnings.append(
+                        f"NODE_ARTIFACT_DIGEST_MISMATCH:{replica_id}:{node_id}:{artifact_name}"
+                    )
                 if artifact_name == "fdf" and declared_hash != cell["fdf_sha256"]:
                     traceability_warnings.append(f"MEASUREMENT_DIGEST_MISMATCH:{replica_id}:{node_id}:fdf")
                 if artifact_name == "output" and declared_hash != cell["out_sha256"]:

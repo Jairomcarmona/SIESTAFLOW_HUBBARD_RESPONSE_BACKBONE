@@ -418,6 +418,7 @@ def test_400_random_ground_truth_cases_per_regime(regime: str) -> None:
 @pytest.mark.parametrize("digest", [None, "", "malformed"])
 def test_round_evidence_digest_is_optional_without_changing_qualification(digest):
     from hubbardflow.domain.fdebq_models import CalibrationQualification
+
     original = decide(columns(scf=True), protocol()).qualification
     raw = original.to_mapping()
     if digest is None:

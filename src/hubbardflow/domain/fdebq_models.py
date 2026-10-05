@@ -294,7 +294,11 @@ class CalibrationQualification(_RoundRecord):
         recorded = raw.pop("evidence_sha256", None)
         raw.pop("traceability_warnings", None)
         result = super().from_mapping({**raw, "evidence_sha256": None})
-        object.__setattr__(result, "evidence_sha256", recorded if isinstance(recorded, str) or recorded is None else repr(recorded))
+        object.__setattr__(
+            result,
+            "evidence_sha256",
+            recorded if isinstance(recorded, str) or recorded is None else repr(recorded),
+        )
         return result
 
     @property
@@ -312,7 +316,11 @@ class CalibrationQualification(_RoundRecord):
         recorded = self.evidence_sha256
         object.__setattr__(self, "evidence_sha256", None)
         super().__post_init__()
-        object.__setattr__(self, "evidence_sha256", recorded if isinstance(recorded, str) or recorded is None else repr(recorded))
+        object.__setattr__(
+            self,
+            "evidence_sha256",
+            recorded if isinstance(recorded, str) or recorded is None else repr(recorded),
+        )
         try:
             require_sha256(self.protocol_sha256, "protocol_sha256")
         except ValueError as exc:
