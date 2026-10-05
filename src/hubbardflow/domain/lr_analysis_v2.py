@@ -1074,6 +1074,10 @@ def analyze_verified_lr(
         "screened_out_sha256": sorted({item.screened_out_sha256 for item in observations if item.screened_out_sha256}),
         "projector_fingerprints": sorted({digest for item in observations for digest in item.projector_fingerprints.values() if digest}),
     }
+    estimator_policy = asdict(policy)
+    # Declaration channel is report provenance, not estimator identity. Keeping
+    # it out of this mapping preserves replay comparisons across config/CLI use.
+    estimator_policy.pop("sensitivity_tolerance_provided_via", None)
     result = {
         "schema_version": (
             "siestaflow.lr_u_analysis.v3"
@@ -1089,7 +1093,7 @@ def analyze_verified_lr(
         "analysis_alpha_grid_eV": alphas,
         "analysis_active_window_eV": active_window_ev,
         "full_grid_diagnostic": full_grid_diagnostic,
-        "estimator_policy": asdict(policy),
+        "estimator_policy": estimator_policy,
         "selected_estimator": {"method": selected_method, "degree": policy.polynomial_degree if selected_method == "polynomial" else 1},
         "primary": primary_summary,
         "same_grid_linear": linear_summary,
