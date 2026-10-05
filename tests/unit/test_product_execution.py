@@ -327,7 +327,7 @@ def test_local_wsl_product_campaign_uses_workspace_and_pointer(tmp_path: Path, m
 
 
 @pytest.mark.parametrize("changed_input", ["fdf", "pseudopotential"])
-def test_source_change_after_admission_stops_before_worker(
+def test_source_comment_or_whitespace_change_records_warning_and_runs_frozen_protocol(
     tmp_path: Path, monkeypatch: Any, changed_input: str
 ) -> None:
     executable = tmp_path / "siesta"
@@ -359,6 +359,9 @@ def test_source_change_after_admission_stops_before_worker(
     product_root = tmp_path / "product"
     freeze_product_snapshot(product_root, snapshot)
     frozen_snapshot = load_product_snapshot(product_root)
+    assert frozen_snapshot.planning is not None
+    assert frozen_snapshot.frozen_lr_config_json is not None
+    expected_runs = [run.to_mapping() for run in frozen_snapshot.planning.plan.run_specs]
 
     if changed_input == "fdf":
         fdf.write_bytes(fdf.read_bytes() + b"\n# changed after product admission\n")
@@ -373,7 +376,7 @@ def test_source_change_after_admission_stops_before_worker(
         return 0
 
     monkeypatch.setattr("hubbardflow.execution.campaign_runner.run_campaign_worker", fake_worker)
-    with pytest.raises(ProductError, match="campaign input hash disagrees with frozen source evidence"):
+    assert (
         _execute_product_campaign(
             product_root,
             frozen_snapshot,
@@ -381,6 +384,26 @@ def test_source_change_after_admission_stops_before_worker(
             name="changed-input-run",
             campaign_root=tmp_path / "product-campaigns",
         )
-    assert worker_calls == []
-    assert not (product_root / "execution_link.json").exists()
-    assert list((tmp_path / "product-campaigns").rglob("campaign.v2.json"))
+        == 0
+    )
+    assert len(worker_calls) == 1 and worker_calls[0][1] == "run"
+    campaign = load_campaign_v2(Path(worker_calls[0][0]))
+    assert _run_specs(campaign) == expected_runs
+    campaign_root = Path(str(campaign["_campaign_root"]))
+    assert (campaign_root / "provenance/source_lr_config.json").read_bytes() == (
+        frozen_snapshot.frozen_lr_config_json + "\n"
+    ).encode()
+    link = json.loads((product_root / "execution_link.json").read_text(encoding="utf-8"))
+    warnings = link["input_traceability_warnings"]
+    changed_path = (
+        "provenance/source_reference.fdf"
+        if changed_input == "fdf"
+        else f"pseudopotentials/{next(iter(raw_config['pseudopotentials']))}.psml"
+    )
+    assert any(
+        warning["field"] == f"product_sources.{changed_path}.sha256"
+        and warning["reason"] == "ARTIFACT_DIGEST_MISMATCH"
+        for warning in warnings
+    )
+    retained = json.loads((campaign_root / "product-input-traceability.json").read_text(encoding="utf-8"))
+    assert retained["warnings"] == warnings

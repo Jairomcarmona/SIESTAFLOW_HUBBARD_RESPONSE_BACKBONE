@@ -69,11 +69,30 @@ def test_campaign_file_helpers_build_and_verify_receipt_bound_data(tmp_path: Pat
         occupation_source="siesta_occupations_total",
     )
     assert dataset["status"] == "AVAILABLE"
+    assert "traceability_warnings" not in dataset
     assert dataset["rows"][0]["observed_sites"][0]["occupation_half_widths_electron"] == {
         "reference": 0.0005,
         "bare": 0.001,
         "screened": 0.002,
     }
+
+
+@pytest.mark.parametrize(
+    "warnings", [None, [], [{"reason_code": "PARENT_DM_DIGEST_MISMATCH", "detail": "reference parent"}]]
+)
+def test_verified_dataset_omits_empty_traceability_but_preserves_real_warning(
+    warnings: list[dict[str, str]] | None,
+) -> None:
+    dataset = build_verified_dataset(
+        [],
+        [],
+        reference_source={},
+        response_sources={},
+        traceability_warnings=warnings,
+    )
+    assert ("traceability_warnings" in dataset) is bool(warnings)
+    if warnings:
+        assert dataset["traceability_warnings"] == warnings
 
 
 def test_verify_record_artifacts_warns_on_changed_output(tmp_path: Path) -> None:

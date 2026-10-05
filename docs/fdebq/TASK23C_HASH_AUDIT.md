@@ -8,7 +8,9 @@ inclusivo, exceso físico con motivo propio, declaración inferior al radio de
 impresión combinado con advertencia, serialización/reporte, `RECORD_ONLY`, DM
 de bytes distintos y referencia MnO archivada. El replay MnO declara factor
 `1.0` exclusivamente en su config de fixture; no se agregó default productivo.
-No se cambió ningún golden ni se ejecutó SIESTA real.
+La incorporación inicial no cambió goldens ni ejecutó SIESTA real. La corrección
+posterior de CI actualiza únicamente los dos goldens de procedencia detallados
+en la sección R5 siguiente.
 
 Salidas literales finales de esta pasada (PYTHONPATH=src):
 
@@ -85,6 +87,93 @@ git -c core.whitespace=cr-at-eol diff --check
 ```
 
 El último comando termina sin salida; no se modificó golden.
+
+## Corrección de CI y golden R5 de procedencia
+
+La autorización del orquestador limita esta actualización a los efectos nuevos
+de trazabilidad de 23c. Los serializers de dataset verificado y receipts omiten
+`traceability_warnings` cuando está vacío y conservan toda advertencia real.
+Ninguna aserción del replay se relajó y no se cambiaron sus resultados físicos,
+el golden de análisis, el golden de I.5 ni el checkpoint normalizado. Se cambian
+sólo los siguientes goldens:
+
+| Archivo | SHA256 anterior | SHA256 nuevo |
+|---|---|---|
+| `tests/fixtures/replay_nio_p5/campaign_json_snapshot.json` | `5fa071aef8590afb309a2e1c1ddadcc5a53fafbd2656f08aba24860e5501a758` | `95940b5f8932e4816e6357bd0d82af9bdff50e6a81c007592a93e283dc966545` |
+| `tests/fixtures/replay_nio_p5/campaign_manifest.sha256.json` | `af86fdfa99c330548b9729ccc4f7533f60f594068dbd0dcd61c17e9906e55cbf` | `9fb5894ff3a1c8534b09f6c44663506a737dbc706a4c9fdc4e8ed16049eb9374` |
+
+El diff JSON exacto tiene **8 rutas** del snapshot y **3 entradas** derivadas
+del manifest. El generador externo comprueba una allowlist de esas rutas y
+rechaza cualquier cambio ajeno antes de escribir:
+
+| Ruta del snapshot | Antes → después |
+|---|---|
+| `campaign.lock.coverage_qualification.traceability_warnings` | Ausente → dos `ARTIFACT_DIGEST_ABSENT` para `reference.echoed_input_sha256` y `reference.parent_dm_sha256`, con recorded/observed null. |
+| `campaign.lock.plan_digest` | `184359604f69ab92d9e39d2d7f23eefe0d4656657386d8a83ccf4a502d3b271d` → `ac361235e8776bdec3e2a74a9ad56b0287a3ba373be3f87df1affe6601eb6a17`. |
+| `campaign.v2.json.input_files[1].sha256` (`campaign.lock`) | `d86108fbcf1d6e5d3206b98b512209e7c300368469c9fcbf750bb123d7588951` → `8f3638ecf293b2022a6924fced7b3bf89e802e02098be562d3f61b7860024754`. |
+| `campaign.v2.json.input_files[10].sha256` (`resolved_perturbation_plan.json`) | `5814e24672c352e79a4f0808249cf1aa7e3a0072326ad77ee27817ee241458bb` → `80250feb2f911d017ef3177efe6939686c1f3a8fcac4294db63712605b544ff3`. |
+| `campaign.v2.json.resolved_perturbation_plan_digest` | `184359604f69ab92d9e39d2d7f23eefe0d4656657386d8a83ccf4a502d3b271d` → `ac361235e8776bdec3e2a74a9ad56b0287a3ba373be3f87df1affe6601eb6a17`. |
+| `resolved_perturbation_plan.json.coverage.traceability_warnings` | Ausente → las dos advertencias de reference anteriores. |
+| `resolved_perturbation_plan.json.reason_codes` | `[DISABLED_OR_FIXED, PARENT_DM_NOT_ESTABLISHED, REFERENCE_NOT_ADMISSIBLE]` → `[DISABLED_OR_FIXED, REFERENCE_NOT_ADMISSIBLE]`. Sólo se retira el motivo de digest ausente; la ausencia de evidencia física sigue registrada. |
+| `resolved_perturbation_plan.json.traceability_warnings` | Ausente → cuatro `ARTIFACT_DIGEST_ABSENT` para `echoed_input_sha256`, `parent_dm_sha256`, `reference.echoed_input_sha256` y `reference.parent_dm_sha256`, todos con recorded/observed null. |
+
+Entradas normalizadas del manifest:
+
+| Entrada | Hash anterior → nuevo |
+|---|---|
+| `campaign.lock` | `d86108fbcf1d6e5d3206b98b512209e7c300368469c9fcbf750bb123d7588951` → `8f3638ecf293b2022a6924fced7b3bf89e802e02098be562d3f61b7860024754` |
+| `campaign.v2.json` | `561fb80c765aaa58c2c938710688b853ca2f5a091d824f6697f9c06020265f08` → `3edfba852e4fb1119611891d83ae9b5112c0b34277d6caf6e5b750f62edef194` |
+| `resolved_perturbation_plan.json` | `96ed7660e4f951114e8b9dcd292ea822e10619dd962d2ad257e5ae5fa3893726` → `61ade263afb04e93cd32e15bcd746f0c18b35c9be98818694b0209f2bd38368c` |
+
+Adaptaciones de pruebas autorizadas por el cambio de criterio:
+
+- `test_campaign_production` y `test_matrix_lr`: un digest DM declarado distinto
+  exige warning `PARENT_DM_DIGEST_MISMATCH`, bytes copiados exactos y digest
+  observado, reemplazando el veto por SHA.
+- `test_product_execution`: comentario FDF/espacio psml sólo cambian bytes;
+  el worker simulado prosigue, las run-specs y la copia del config congelado se
+  mantienen exactas y la advertencia aparece en link/archivo persistido.
+- `test_symmetry_operations`: el cambio aislado de `input_fdf_sha256` se separa
+  de los negativos físicos. La clasificación conserva la simetría y
+  `CoverageQualification` retiene `ARTIFACT_DIGEST_MISMATCH` con ambos digests.
+  Este SHA de FDF es clase (a), exclusivamente procedencia. Los
+  `identity_digest` por especie/subespacio siguen clase (b): identifican el
+  pseudopotencial/basis/radiales que exige F2, y las pruebas de basis/ligando/
+  entornos diferentes continúan rechazando `ConditionStatus.DIFFERENT` en F2.
+- Nuevas regresiones demuestran omisión de warnings vacíos y persistencia de
+  warnings reales tanto en dataset como checkpoint. Otra prueba elimina un DM
+  de planificación real: el archivo staged o source ausente falla por
+  `FileNotFoundError`; con archivo legible y sólo digest ausente produce warning.
+  La eliminación de `PARENT_DM_NOT_ESTABLISHED` nunca elimina esa lectura real
+  obligatoria ni el requisito de DM generado por el validador del nodo.
+
+Salidas finales de esta corrección:
+
+```text
+python -m pytest -q tests/unit/test_campaign_production.py tests/unit/test_matrix_lr.py tests/unit/test_product_execution.py tests/unit/test_symmetry_operations.py tests/unit/test_observation_assembly.py
+217 passed, 2 warnings in 25.84s
+python -m pytest -q tests/unit/test_generic_executor.py tests/unit/test_observation_assembly.py tests/unit/test_product_admission.py tests/unit/test_import_architecture.py
+45 passed, 2 warnings in 1.46s
+python -m pytest -q tests/unit/test_product_cli.py -k missing_real_planning_reference_dm
+1 passed, 55 deselected, 2 warnings in 1.48s
+wsl.exe bash -lc 'cd /mnt/c/Users/Jairo/work/hf_task23c && PYTHONPATH=src python3 -m pytest -q tests/integration/test_runner_replay_nio_p5.py'
+7 passed, 2 warnings in 11.82s
+ruff check <campaign_files/generic_executor y pruebas afectadas de producto/simetría/assembly/CLI>
+All checks passed!
+ruff format --check <los siete archivos de código/pruebas de la corrección>
+7 files already formatted
+mypy --strict --follow-imports=silent <los seis archivos de código/pruebas tipados de la corrección>
+Success: no issues found in 6 source files
+bash tools/check_v6_integrity.sh
+V6 GATE OK
+git -c core.whitespace=cr-at-eol diff --check
+```
+
+El último comando termina sin salida. Ruff `--select F` sobre los dos módulos
+de pruebas históricas `test_campaign_production.py`/`test_matrix_lr.py` informa
+10 hallazgos previos: imports unused (`tempfile`, `assign_afm_ordering`, cuatro
+tipos matrix LR) y cuatro imports redefinidos de production_benchmarks. No se
+modificaron ni se suprimieron esos hallazgos ajenos.
 
 ## Regla de decisión
 

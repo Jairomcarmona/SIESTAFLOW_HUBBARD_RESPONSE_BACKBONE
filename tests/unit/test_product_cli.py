@@ -183,6 +183,27 @@ def test_unchanged_product_copies_have_no_digest_warnings(tmp_path: Path) -> Non
     assert product_cli._verify_campaign_inputs(campaign, snapshot, profile, frozen_config) == ()
 
 
+def test_missing_real_planning_reference_dm_cannot_be_hidden_by_missing_digest(tmp_path: Path) -> None:
+    campaign, snapshot, profile, frozen_config = _staged_product_inputs(tmp_path)
+    source = tmp_path / "planning-reference.DM"
+    source.write_bytes(b"parent DM source bytes")
+    frozen_config["planning_reference_dm"] = str(source)
+    staged = Path(str(campaign["_campaign_root"])) / "planning/planning_reference_dm"
+    with pytest.raises(FileNotFoundError):
+        product_cli._verify_campaign_inputs(campaign, snapshot, profile, frozen_config)
+    staged.parent.mkdir()
+    staged.write_bytes(source.read_bytes())
+    warnings = product_cli._verify_campaign_inputs(campaign, snapshot, profile, frozen_config)
+    assert any(
+        warning.field == "product_sources.planning/planning_reference_dm.sha256"
+        and warning.reason.value == "ARTIFACT_DIGEST_ABSENT"
+        for warning in warnings
+    )
+    source.unlink()
+    with pytest.raises(FileNotFoundError):
+        product_cli._verify_campaign_inputs(campaign, snapshot, profile, frozen_config)
+
+
 @pytest.mark.parametrize(
     "relative",
     [

@@ -107,7 +107,11 @@ class JsonDagCheckpoint:
                     "node_id": receipt.node_id,
                     "state": receipt.state.value,
                     "evidence_digest": receipt.evidence_digest,
-                    "traceability_warnings": [w.to_mapping() for w in receipt.traceability_warnings],
+                    **(
+                        {"traceability_warnings": [w.to_mapping() for w in receipt.traceability_warnings]}
+                        if receipt.traceability_warnings
+                        else {}
+                    ),
                 }
                 for _, receipt in sorted(receipts.items())
             ],

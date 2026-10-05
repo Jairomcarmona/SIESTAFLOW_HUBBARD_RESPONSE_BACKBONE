@@ -786,3 +786,25 @@ Moved the include expansion algorithm unchanged into `siesta_backend/fdf_include
 - `ruff check .` → `All checks passed!`; `ruff format --check .` → `91 files already formatted`; configured `mypy --strict` → `Success: no issues found in 91 source files`.
 - `campaign_v2.py` outside the configured static set: Ruff before/after remains 2/2 (I001 line 2 and UP035 line 11, both untouched); strict mypy before/after remains 0/0. No whole-file formatting was run.
 - `git diff --check` → clean; V6 → `V6 GATE OK`. No SIESTA run.
+
+## TASK 23c — registro R5 de las aserciones de procedencia
+
+Estas ediciones sustituyen exclusivamente veredictos por SHA256 crudo, conforme
+al TASK 23c §1 (identidad/trazabilidad: advertencia y registro), D16.1 §2(a),
+§2(d) del encargo del autor (digests nunca deciden y siempre se registran),
+[AMENDMENTS_2.md, D16.1](AMENDMENTS_2.md#d161-physical-parent-comparison-with-independent-fermi-policy)
+y la regla R5. La auditoría científica final confirmó estas ediciones antes del
+commit; los invariantes físicos y los archivos requeridos permanecen verificados.
+
+| Prueba existente / caso | Aserción anterior | Aserción nueva | Cláusula y justificación R5 |
+|---|---|---|---|
+| `test_campaign_production.py`, DM padre con digest distinto | `prepare_canonical_dm` lanza `RuntimeError` por mismatch. | Emite `RuntimeWarning` con `PARENT_DM_DIGEST_MISMATCH`; copia exactamente los bytes reales y devuelve su digest observado. | TASK 23c §1 y D16.1 §2(a),(d): SHA de archivo es procedencia, no veto. R5 autoriza reemplazar precisamente el veredicto por SHA crudo. |
+| `test_matrix_lr.py`, DM padre con digest distinto | `prepare_canonical_dm` lanza `RuntimeError` con `Parent DM identity mismatch`. | Advertencia `PARENT_DM_DIGEST_MISMATCH`, bytes copiados idénticos al padre y digest observado distinto del declarado erróneo. | TASK 23c §1 y D16.1 §2(a),(d); misma sustitución R5 de identidad por SHA por trazabilidad registrada. No se cambia la respuesta numérica. |
+| `test_product_execution.py`, comentario FDF / whitespace de pseudopotencial | `ProductError` por hash de fuente; ninguna llamada al worker ni execution link. | Worker ejecuta una vez el protocolo congelado, conserva `run_specs` y config congelada, y registra `ARTIFACT_DIGEST_MISMATCH` tanto en el execution link como en el artefacto de trazabilidad. | TASK 23c §1 y D16.1 §2(a),(d): una diferencia de bytes inocua no prueba una diferencia física. R5 reemplaza solo el veto por SHA; se añaden comprobaciones de protocolo y registro. |
+| `test_symmetry_operations.py`, solo `input_fdf_sha256` cambiado | Caso negativo `digest` rechazaba la clasificación física. | Caso positivo acepta la traslación y conserva `DigestWarningReason.MISMATCH` para `reference.input_fdf_sha256` en `CoverageQualification` y su serialización. | TASK 23c §1: FDF SHA es clase (a), solo trazabilidad. R5 sustituye ese único negativo por SHA; `identity_digest` canónico de especie sigue siendo el invariante físico F2 de la revisión §F, y los negativos de especie/base/entorno permanecen. |
+
+El resumen exacto R5 de los dos goldens NiO P5 (ocho rutas JSON y tres hashes
+derivados, sin cambios físicos) está en
+[TASK23C_HASH_AUDIT.md, Corrección de CI y golden R5 de procedencia](TASK23C_HASH_AUDIT.md#corrección-de-ci-y-golden-r5-de-procedencia).
+La ausencia del archivo DM real sigue fallando; únicamente la ausencia de su
+digest deja de producir `PARENT_DM_NOT_ESTABLISHED`.

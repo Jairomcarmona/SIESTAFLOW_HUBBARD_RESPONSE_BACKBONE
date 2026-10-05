@@ -129,14 +129,13 @@ def build_verified_dataset(
             }
         )
     rows.sort(key=lambda item: (item["perturbed_site_index"], item["alpha_eV"]))
-    return {
+    dataset: dict[str, Any] = {
         "schema_version": (
             "siestaflow.lr_u_verified_dataset.v2"
             if occupation_source == "siesta_occupations_total"
             else "siestaflow.lr_u_verified_dataset.v1"
         ),
         "occupation_source": occupation_source,
-        "traceability_warnings": traceability_warnings or [],
         "status": "AVAILABLE",
         "units": {"alpha": "eV", "occupations": "electron"},
         "site_index_map": site_index_map,
@@ -145,6 +144,9 @@ def build_verified_dataset(
         "reference_source": dict(reference_source),
         "rows": rows,
     }
+    if traceability_warnings:
+        dataset["traceability_warnings"] = traceability_warnings
+    return dataset
 
 
 def source_record(
@@ -180,7 +182,11 @@ def verify_record_artifacts(record: Mapping[str, Any], node_id: str) -> dict[str
     command = record.get("command")
     spec = record.get("artifact_spec")
     provenance = record.get("provenance")
-    if not isinstance(command, Mapping) or not isinstance(spec, Mapping) or not isinstance(provenance, Mapping):
+    if (
+        not isinstance(command, Mapping)
+        or not isinstance(spec, Mapping)
+        or not isinstance(provenance, Mapping)
+    ):
         raise ValueError(f"{node_id} has no complete validator provenance record")  # noqa: TRY004
     declared = provenance.get("artifacts")
     if not isinstance(declared, Mapping):
@@ -191,7 +197,7 @@ def verify_record_artifacts(record: Mapping[str, Any], node_id: str) -> dict[str
         "output": Path(str(command.get("stdout_path", ""))),
         "dm": cwd / str(spec.get("dm", "")),
     }
-    actual: dict[str, str] = {}
+    actual: dict[str, Any] = {}
     hash_warnings: list[str] = []
     for label, path in paths.items():
         if not path.is_file():
