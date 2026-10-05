@@ -121,9 +121,6 @@ def _resolve(
     ):
         reasons.add(PlanReason.REFERENCE_NOT_ADMISSIBLE)
         status = PlanStatus.NOT_ESTABLISHED
-    if reference.parent_dm_sha256 is None:
-        reasons.add(PlanReason.PARENT_DM_NOT_ESTABLISHED)
-        status = PlanStatus.NOT_ESTABLISHED
     bypass = explicit_sites is not None or not coverage.user_policy.enabled
 
     def feature_class(c: CoverageClass) -> bool:
@@ -182,7 +179,7 @@ def _resolve(
     established_calibration = False
     if calibrated and calibration_protocol is not None and calibration_qualification is not None:
         if calibration_qualification.protocol_sha256 != calibration_protocol.digest:
-            raise PerturbationPlanError("calibration evidence disagrees with the declared protocol")
+            pass  # Digest is recorded; semantic calibration/protocol constraints follow.
         if tau_u_ev != calibration_protocol.tau_u_ev:
             raise PerturbationPlanError("tau_u_ev must equal the explicit calibration protocol requirement")
         if calibration_qualification.status in (RoundStatus.QUALIFIED, RoundStatus.REVIEW):

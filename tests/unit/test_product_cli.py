@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 from dataclasses import replace
 from hashlib import sha256
 from pathlib import Path
@@ -19,7 +20,7 @@ from hubbardflow.cli import main
 from hubbardflow.domain.perturbation_plan import PlanStatus
 from hubbardflow.execution.campaign_plan import resolve_campaign_planning
 from hubbardflow.execution.product_models import ProductBoundary, ProductError, ProductSnapshot
-from hubbardflow.execution.product_plan import load_product_snapshot
+from hubbardflow.execution.product_plan import ProductRequest, load_product_snapshot, resolve_product_snapshot
 from tests.unit.test_campaign_plan import ROOT, inputs, normalized
 from tests.unit.test_coverage import _toy
 from tests.unit.test_fdf_model import _fdf
@@ -30,6 +31,180 @@ def product_inputs(tmp_path: Path, text: str | None = None) -> tuple[Path, Path,
     config = fdf.parent / "lr.json"
     config.write_text(json.dumps(raw), encoding="utf-8")
     return fdf, config, raw, tmp_path / "product"
+
+
+def test_fermi_cli_tolerance_overrides_config_and_is_frozen(tmp_path: Path) -> None:
+    fdf, config, raw, root = product_inputs(tmp_path)
+    raw["tol_Fermi_eV"] = 0.003
+    config.write_text(json.dumps(raw), encoding="utf-8")
+    assert (
+        main(
+            [
+                "plan",
+                str(fdf),
+                "--lr-config",
+                str(config),
+                "--output-dir",
+                str(root),
+                "--tol-fermi-ev",
+                "0.002",
+            ]
+        )
+        == 0
+    )
+    snapshot = load_product_snapshot(root)
+    frozen = json.loads(snapshot.frozen_lr_config_json or "{}")
+    assert frozen["tol_Fermi_eV"] == 0.002
+    assert frozen["tol_Fermi_eV_source"] == "cli"
+    request = json.loads(snapshot.request_json)
+    assert request["tol_fermi_ev"] == 0.002
+
+
+@pytest.mark.parametrize("value", ["-1", "nan", "inf"])
+def test_fermi_cli_tolerance_rejects_invalid_values(tmp_path: Path, value: str) -> None:
+    fdf, config, _, root = product_inputs(tmp_path)
+    assert (
+        main(
+            ["plan", str(fdf), "--lr-config", str(config), "--output-dir", str(root), "--tol-fermi-ev", value]
+        )
+        == 2
+    )
+
+
+def test_fermi_cli_tolerance_requires_fdf_and_frozen_lr_config(tmp_path: Path) -> None:
+    fdf, _, _, root = product_inputs(tmp_path)
+    assert main(["plan", str(fdf), "--output-dir", str(root), "--tol-fermi-ev", "0.002"]) == 2
+    assert main(["run", str(tmp_path / "campaign.v2.json"), "--tol-fermi-ev", "0.002"]) == 2
+
+
+def _staged_product_inputs(
+    tmp_path: Path,
+) -> tuple[dict[str, object], ProductSnapshot, Path, dict[str, object]]:
+    fdf, config, raw, _ = product_inputs(tmp_path)
+    snapshot = resolve_product_snapshot(
+        ProductRequest(
+            str(fdf.resolve()),
+            str(config.resolve()),
+            None,
+            None,
+            None,
+            None,
+            (str(fdf.parent.resolve()),),
+            None,
+            None,
+        )
+    )
+    frozen_config = json.loads(snapshot.frozen_lr_config_json or "{}")
+    profile = fdf.parent / "profile.json"
+    campaign_root = tmp_path / "staged-campaign"
+    sources = {
+        "provenance/source_reference.fdf": fdf,
+        "execution_profile.json": profile,
+        "software/backend_compatibility.json": Path(raw["compatibility_registry"]),
+        "software/siesta_version.txt": Path(raw["version_text_source"]),
+        **{f"pseudopotentials/{label}.psml": Path(path) for label, path in raw["pseudopotentials"].items()},
+    }
+    for relative, source in sources.items():
+        target = campaign_root / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(source, target)
+    frozen_path = campaign_root / "provenance/source_lr_config.json"
+    frozen_path.write_bytes(((snapshot.frozen_lr_config_json or "{}") + "\n").encode())
+    paths = sorted((*sources, "provenance/source_lr_config.json"))
+    campaign: dict[str, object] = {
+        "_campaign_root": str(campaign_root),
+        "input_files": [
+            {"path": relative, "sha256": sha256((campaign_root / relative).read_bytes()).hexdigest()}
+            for relative in paths
+        ],
+    }
+    return campaign, snapshot, profile, frozen_config
+
+
+@pytest.mark.parametrize("metadata", ["mismatched", "absent", "malformed"])
+def test_product_campaign_digest_metadata_only_warns_and_is_persisted(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    metadata: str,
+) -> None:
+    campaign, snapshot, profile, frozen_config = _staged_product_inputs(tmp_path)
+    digest = {"mismatched": "f" * 64, "absent": None, "malformed": "not-a-digest"}[metadata]
+    entries = cast(list[dict[str, object]], campaign["input_files"])
+    for entry in entries:
+        if metadata == "absent":
+            entry.pop("sha256")
+        else:
+            entry["sha256"] = digest
+    source_hashes = json.loads(snapshot.input_sha256_json)
+    snapshot = replace(
+        snapshot,
+        input_sha256_json=json.dumps(
+            {} if metadata == "absent" else {path: digest for path in source_hashes}
+        ),
+    )
+    if metadata == "absent":
+        monkeypatch.setattr(ProductSnapshot, "frozen_lr_config_sha256", property(lambda self: None))
+    warnings = product_cli._verify_campaign_inputs(campaign, snapshot, profile, frozen_config)
+    expected_reason = {
+        "mismatched": "ARTIFACT_DIGEST_MISMATCH",
+        "absent": "ARTIFACT_DIGEST_ABSENT",
+        "malformed": "ARTIFACT_DIGEST_MALFORMED",
+    }[metadata]
+    assert {warning.reason.value for warning in warnings} == {expected_reason}
+    fields = {warning.field for warning in warnings}
+    assert "input_files.provenance/source_reference.fdf.sha256" in fields
+    assert "product_sources.provenance/source_reference.fdf.sha256" in fields
+    if metadata == "absent":
+        assert "product_sources.provenance/source_lr_config.json.sha256" in fields
+    retained = [warning.to_mapping() for warning in warnings]
+    assert campaign["_product_input_traceability_warnings"] == retained
+    record = json.loads(
+        (Path(str(campaign["_campaign_root"])) / "product-input-traceability.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert record["warnings"] == retained
+
+
+def test_changed_copy_bytes_warn_without_asserting_physical_difference(tmp_path: Path) -> None:
+    campaign, snapshot, profile, frozen_config = _staged_product_inputs(tmp_path)
+    path = Path(str(campaign["_campaign_root"])) / "provenance/source_reference.fdf"
+    path.write_bytes(path.read_bytes() + b"\n# harmless trailing comment\n")
+    warnings = product_cli._verify_campaign_inputs(campaign, snapshot, profile, frozen_config)
+    assert {warning.reason.value for warning in warnings} == {"ARTIFACT_DIGEST_MISMATCH"}
+    assert {warning.field for warning in warnings} == {
+        "input_files.provenance/source_reference.fdf.sha256",
+        "product_sources.provenance/source_reference.fdf.sha256",
+    }
+
+
+def test_unchanged_product_copies_have_no_digest_warnings(tmp_path: Path) -> None:
+    campaign, snapshot, profile, frozen_config = _staged_product_inputs(tmp_path)
+    assert product_cli._verify_campaign_inputs(campaign, snapshot, profile, frozen_config) == ()
+
+
+@pytest.mark.parametrize(
+    "relative",
+    [
+        "provenance/source_reference.fdf",
+        "provenance/source_lr_config.json",
+        "execution_profile.json",
+        "software/backend_compatibility.json",
+    ],
+)
+@pytest.mark.parametrize("unusable", ["missing", "directory"])
+def test_required_real_input_remains_mandatory_independent_of_hashes(
+    tmp_path: Path,
+    relative: str,
+    unusable: str,
+) -> None:
+    campaign, snapshot, profile, frozen_config = _staged_product_inputs(tmp_path)
+    target = Path(str(campaign["_campaign_root"])) / relative
+    target.unlink()
+    if unusable == "directory":
+        target.mkdir()
+    with pytest.raises(OSError):
+        product_cli._verify_campaign_inputs(campaign, snapshot, profile, frozen_config)
 
 
 @pytest.fixture(autouse=True)

@@ -49,9 +49,15 @@ does not block: smoothness concerns the estimator, which is the same for direct 
 campaigns. The shadow comparison is the direct empirical test of translation equivalence.
 Note: unlike the diagnostic verdict, G4 `NOT_AVAILABLE` (missing `.EIG`) blocks here.
 
-**D14c. Superseded by D16.** D16 in `AMENDMENTS_2.md` replaces the bitwise parent-DM reproduction
-rule with state equivalence at print precision. The other D14 decisions remain in force. TS still
-stops on a rejected reference and never silently expands to all columns.
+**D14c. Superseded by D16 and the current D16.1 instruction.** Parent-state
+comparison is physical; DM and file digests are recorded as traceability only.
+Occupation elements use their individual summed print half-widths and the
+explicit SCF-derived tolerance described in 23.3 below. A measured physical
+state difference invalidates the affected parent's reduction and schedules
+only its affected classes directly. Incomplete global atom/projector identity
+requires direct calculation of all reduced classes using that parent. Shadow
+rejection still follows the declared STOP/EXPAND policy; reference digest
+changes never reject or expand a reduction.
 
 **D14d. The planning reference comes from `hubbardflow reference`.** It runs only the reference
 node of an ordinary direct campaign. There is no pilot reuse and no adoption of foreign outputs.
@@ -285,7 +291,7 @@ is a stop.
    - inventory `OK` (no identity-only exemption on this route);
    - no split staging, no adaptive policy, strategy fixed or user-explicit grid;
    - spin flip, rotations and auto-split all false;
-   - plan reference `ADMISSIBLE` with a parent DM digest;
+   - plan reference `ADMISSIBLE`; the parent DM digest is traceability metadata;
    - `plan.reason_codes ⊆ {SHADOW_PENDING}`;
    - at least one reduced class, every reduced class with a shadow;
    - run specs = computed columns × {BARE, SCREENED} × grid;
@@ -305,20 +311,50 @@ is a stop.
 2. **Boundary.** `product_execution_boundary` treats this admission like the legacy one: no
    `SCIENTIFIC_STATE_NOT_ESTABLISHED`, `PILOT_REUSE_NOT_ESTABLISHED` or `PLAN_NOT_READY`.
    `product_command` executes on either admissible status.
-3. **Runner (D16).** Before `reference_completed`, the campaign compares its reference output to
-   the planning reference at print precision: both must converge and terminate normally, and each
-   printed occupation-matrix element and stdout Fermi value must agree within the sum of the two
-   print half-widths. Atom/projector identities must match. Unparseable evidence fails closed as
-   `PARENT_STATE_NOT_EQUIVALENT`, with the failing identity/value, difference and quantum where
-   available. The node evidence and report retain the planning and campaign DM digests plus the
-   criterion, result, maximum differences and comparison quanta. The planning digest is provenance;
-   observations must match the campaign reference DM digest exactly.
-   - The lr-config key `parent_reproduction` accepts `PRINT_EQUIVALENT` (default for TS, as above)
-     or `BITWISE` (the prior exact-DM-hash comparison, with reason `PARENT_DM_NOT_REPRODUCED`).
-     The selected value is included in the frozen planning config digest.
-   - A failed comparison records `PARENT_STATE_NOT_EQUIVALENT` for `PRINT_EQUIVALENT` or
-     `PARENT_DM_NOT_REPRODUCED` for `BITWISE`, then stops before any perturbation node.
-4. **Stop instead of expanding (D14c/D16).**
+3. **Runner (D16.1).** Before `reference_completed`, compare the final converged
+   planning and campaign reference state. Both outputs must converge and terminate
+   normally to establish equivalence, and complete atom/projector identities must
+   agree. Every corresponding occupation element uses
+   `tol_e = max(print_half_width_planning_e + print_half_width_campaign_e,
+   parent_reproduction_factor * SCF.DM.Tolerance)`.
+   The printing radius is calculated separately from the two lexical tokens of
+   that element, never from a global maximum. `parent_reproduction_factor` must
+   be explicitly declared, recorded in the frozen policy and has no implicit
+   numerical value. `SCF.DM.Tolerance` is read from the reference FDF.
+   - `parent_reproduction` accepts `PRINT_EQUIVALENT` (default) or `RECORD_ONLY`.
+     No bitwise reproduction mode or DM-hash rejection exists. The default
+     cannot establish physical equivalence when the factor/tolerance is missing;
+     it records `EQUIVALENCE_NOT_ASSESSED` without blocking response execution.
+   - `RECORD_ONLY` never grants equivalence. It still records and rejects a real
+     assessed occupation difference outside the effective tolerance, or incomplete
+     atom/projector identity. It cannot suppress a physical failure.
+   - A measured occupation difference records `PARENT_STATE_NOT_EQUIVALENT` with
+     atom, spin, element, difference and effective tolerance. All affected atom
+     indices are persisted; every affected class of this parent runs directly.
+     Incomplete identity records `PARENT_IDENTITY_NOT_ESTABLISHED` and schedules
+     all reduced classes using that parent directly. Unparseable output records
+     `EQUIVALENCE_NOT_ASSESSED`; digest agreement never replaces missing evidence.
+   - The node evidence and report retain both planning/campaign DM digests,
+     criterion, reason, maximum differences, per-element effective tolerances,
+     SCF.DM.Tolerance and factor. Campaign response nodes use that campaign's own
+     reference DM. Parent DM digest consistency is recorded as a warning only.
+   - **Separate dimensional policy for Fermi (D16.1).** `tol_Fermi_eV` is an
+     optional nonnegative finite energy tolerance declared in lr-config, with no
+     default. Product CLI `--tol-fermi-ev` overrides config and freezes source
+     `cli`; config declarations freeze source `config`. SCF.DM.Tolerance never
+     applies to Fermi. With a declaration compare the absolute energy difference
+     against `max(tol_Fermi_eV, half_width_planning_eV + half_width_campaign_eV)`.
+     Independent print half-widths add conservatively; a declaration below this
+     combined radius emits `FERMI_TOLERANCE_BELOW_PRINT_HALF_WIDTH` and uses the
+     combined radius. Both the declared and effective values remain recorded.
+     Without a declaration Fermi is `RECORDED_NOT_ASSESSED` and cannot alter the
+     parent verdict. `occupation_equivalence` is `EQUIVALENT`, `NOT_EQUIVALENT`
+     or `NOT_ASSESSED`; `fermi_equivalence` is `EQUIVALENT`, `NOT_EQUIVALENT` or
+     `RECORDED_NOT_ASSESSED`. Occupations decide the global verdict except that
+     a declared Fermi tolerance exceeded produces `PARENT_FERMI_NOT_EQUIVALENT`
+     and direct computation of the classes using that parent. `RECORD_ONLY`
+     never grants equivalence, retaining rejection of assessed physical failures.
+4. **Stop instead of expanding on shadow rejection (D14 policy).**
    - **The key.** Add an optional lr-config key `shadow_rejection_policy` ∈ {`EXPAND`, `STOP`}.
      `validate_lr_config` validates it and copies it into its output **only when the input sets
      it**. An absent key means `EXPAND`. Configs without the key keep byte-identical planning
@@ -357,10 +393,15 @@ is a stop.
 - NiO P5 `DISABLED` → still `ADMISSIBLE_LEGACY_EQUIVALENT`.
 - The boundary for TS has none of the three blocking reasons.
 - `product_command` launches the worker for TS (monkeypatched worker, as existing product tests do).
-- A synthetic TS runner whose reference writes different DM bytes but equivalent printed state
-  completes; its two DM digests are recorded and shadows remain proven. A state difference of at
-  least two print quanta or unparseable output stops with `PARENT_STATE_NOT_EQUIVALENT` before any
-  perturbation. `BITWISE` preserves the old unequal-DM rejection.
+- A synthetic TS runner whose reference writes different DM bytes and has no assessed physical
+  difference completes; both digests are recorded and never decide. Noise below the effective
+  occupation tolerance does not reject. A real occupation difference outside tolerance records
+  `PARENT_STATE_NOT_EQUIVALENT` and schedules all affected classes directly, in both reproduction
+  modes. Incomplete identity uses `PARENT_IDENTITY_NOT_ESTABLISHED`; unparseable or missing
+  occupation tolerance evidence is explicitly `EQUIVALENCE_NOT_ASSESSED`. Fermi without an
+  energy declaration records `RECORDED_NOT_ASSESSED` and does not change the occupation verdict.
+  Declared Fermi tolerances exercise inclusive pass, own reason code on failure, and the
+  warning plus effective summed print radius when the declaration is too small.
 - Under `STOP`, a rejected shadow finishes `FAILED`/`SHADOW_REJECTED` with no further node
   executed. `prepare` is called exactly once, and `results/i5_state_gate.json` exists. Under
   `EXPAND`, the existing expansion tests pass unchanged.
@@ -396,11 +437,13 @@ is a stop.
   - the class-member U spread ≤ 1e-9 eV.
 
   Variants:
-  - a fake whose reference DM bytes differ but whose printed state is equivalent still completes
+  - a fake whose reference DM bytes differ without an assessed physical difference still completes
     with distinct planning/campaign digests recorded;
-  - a fake whose reference state differs by at least two print quanta, or cannot be parsed, gives
-    `PARENT_STATE_NOT_EQUIVALENT` before any perturbation;
-  - `parent_reproduction: BITWISE` preserves `PARENT_DM_NOT_REPRODUCED` for a different DM;
+  - a fake whose reference occupation state differs outside the effective tolerance gives
+    `PARENT_STATE_NOT_EQUIVALENT` and directs every affected class to explicit computation;
+  - both `PRINT_EQUIVALENT` and `RECORD_ONLY` retain rejection of physical differences and
+    incomplete identities; missing SCF tolerance/factor or unparseable evidence is explicitly
+    unassessed. Fermi uses only its own declared eV tolerance or remains record-only;
   - a fake that serves the shadow column unpermuted gives `SHADOW_REJECTED` with no execution after
     the barrier;
   - a fake without `.EIG` gives `SHADOW_REJECTED` through the D14b gate;
@@ -551,7 +594,13 @@ Start only after the 23.3 MnO TS replay test passes.
      - `results/i5_state_gate.json` (absent when the reference is rejected before the state gate).
    - If the failure is a defect in our code, apply rule 8. Otherwise stop.
 5. **Gates.** Write `docs/fdebq/TASK23_MNO_TS.md` with gates a–e, then the verdict.
-   - **a)** State equivalence at print precision between the planning reference and the campaign reference; DM digests are informational.
+   - **a)** Physical state equivalence between the planning and campaign reference: per-element
+     occupation tolerance is the maximum of summed print half-widths and the explicitly declared
+     factor times FDF SCF.DM.Tolerance. Both DM digests are informational. Missing tolerance/factor
+     is `EQUIVALENCE_NOT_ASSESSED`. Fermi has its separate assessment: without `tol_Fermi_eV`
+     it is recorded without deciding this gate; with a declaration it must agree within the
+     maximum of that energy tolerance and the summed print half-widths. The report presents
+     both occupation and Fermi states explicitly, both digests, differences and used tolerances.
    - **b)** Both shadow outcomes are `PROVEN`/`WITHIN_PRINT_BOUNDS`. Report, per class and mode:
      - max |direct − reconstructed| / (sum of print bounds);
      - the SCF iteration count of each representative run and each shadow run.

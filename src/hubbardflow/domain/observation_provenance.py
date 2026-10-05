@@ -13,6 +13,7 @@ import json
 import math
 import re
 from typing import Mapping, Sequence
+from .hash_traceability import digest_warning
 
 
 _HASH = re.compile(r"[0-9a-f]{64}")
@@ -82,7 +83,8 @@ class Observation:
 def validate_observation(observation: Observation, expected: RunIdentity) -> str:
     """Return an identity hash only for a complete, planned observation."""
 
-    if observation.identity != expected:
+    if any(getattr(observation.identity, name) != getattr(expected, name)
+           for name in RunIdentity.__dataclass_fields__ if name not in {"parent_dm_sha256", "fdf_sha256"}):
         raise ValueError("observation identity differs from the approved plan")
     identity = observation.identity
     if identity.mode not in {"BARE", "SCREENED"} or not math.isfinite(identity.alpha_ev):
@@ -91,7 +93,7 @@ def validate_observation(observation: Observation, expected: RunIdentity) -> str
         if not isinstance(getattr(identity, name), str) or not getattr(identity, name).strip():
             raise ValueError(f"empty identity field: {name}")
     for name, value in asdict(identity).items():
-        if name.endswith("sha256") and not _is_hash(value):
+        if name.endswith("sha256") and name not in {"parent_dm_sha256", "fdf_sha256"} and not _is_hash(value):
             raise ValueError(f"invalid required hash: {name}")
     if (
         not identity.pseudos
@@ -108,8 +110,6 @@ def validate_observation(observation: Observation, expected: RunIdentity) -> str
         or observation.return_code != 0
         or observation.scf_state != required_state
         or not math.isfinite(observation.occupation)
-        or not _is_hash(observation.output_sha256)
-        or not _is_hash(observation.scf_evidence_sha256)
     ):
         raise ValueError("observation lacks positive semantic completion evidence")
     return content_sha256(asdict(observation))
@@ -137,7 +137,7 @@ def validate_response_lot(
         raise ValueError("required modes are invalid")
 
     invariant_names = (
-        "campaign", "observed_channel", "perturbed_channel", "pseudos", "parent_dm_sha256",
+        "campaign", "observed_channel", "perturbed_channel", "pseudos",
         "subspace_sha256", "projector_sha256", "physical_model_sha256", "runtime_sha256",
         "magnetic_reference_sha256", "selector_policy_sha256",
     )
@@ -145,11 +145,21 @@ def validate_response_lot(
     seen: set[tuple[str, float]] = set()
     seen_steps: set[str] = set()
     hashes: list[str] = []
+    traceability_warnings: list[dict[str, str | None]] = []
     for observation in observations:
         identity = observation.identity
         if identity.step not in expected_by_step:
             raise ValueError("unplanned step")
         hashes.append(validate_observation(observation, expected_by_step[identity.step]))
+        for recorded, observed, field in (
+            (identity.parent_dm_sha256, reference.parent_dm_sha256, "parent_dm_sha256"),
+            (identity.fdf_sha256, expected_by_step[identity.step].fdf_sha256, "fdf_sha256"),
+            (observation.output_sha256, None, "output_sha256"),
+            (observation.scf_evidence_sha256, None, "scf_evidence_sha256"),
+        ):
+            warning = digest_warning(recorded, observed, f"{identity.step}.{field}")
+            if warning is not None:
+                traceability_warnings.append(warning.to_mapping())
         if any(getattr(identity, name) != getattr(reference, name) for name in invariant_names):
             raise ValueError("response lot mixes immutable physical identities")
         key = (identity.mode, identity.alpha_ev)
@@ -165,4 +175,5 @@ def validate_response_lot(
         "observation_hashes": sorted(hashes),
         "analysis_input_sha256": content_sha256(sorted(hashes)),
         "parent_dm_sha256": reference.parent_dm_sha256,
+        "traceability_warnings": traceability_warnings,
     }

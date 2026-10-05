@@ -10,6 +10,7 @@ from hashlib import sha256
 from pathlib import Path
 from shutil import copy2
 from typing import List
+import warnings
 
 from hubbardflow.domain.interfaces import BaseBackendAdapter
 
@@ -23,7 +24,7 @@ def prepare_canonical_dm(
     child_dm_path: str,
     reference_sha256: str,
 ) -> str:
-    """Copy a declared parent DM and verify its bytes.
+    """Copy a declared parent DM and record discrepancies in its provenance digest.
 
     This is an integrity helper only. It does not authorize a calculation or
     create a scientific receipt.
@@ -32,7 +33,8 @@ def prepare_canonical_dm(
     copy2(source, destination)
     digest = sha256(destination.read_bytes()).hexdigest()
     if digest != reference_sha256:
-        raise RuntimeError("Parent DM identity mismatch after copy")
+        warnings.warn("PARENT_DM_DIGEST_MISMATCH: declared parent DM digest differs after copy",
+                      RuntimeWarning, stacklevel=2)
     return digest
 
 

@@ -5,15 +5,18 @@ injected local or scheduler adapter returns validated scientific evidence.
 The adapter owns command execution; this core owns dependencies, immutable
 campaign identity and restart safety.
 """
+
 from __future__ import annotations
 
+import json
 from dataclasses import asdict, dataclass
 from hashlib import sha256
-import json
 from pathlib import Path
 from typing import Protocol
 
-from .dag_contract import NodeState, TERMINAL_FAILURES, may_start
+from hubbardflow.domain.hash_traceability import DigestWarning, digest_warning
+
+from .dag_contract import TERMINAL_FAILURES, NodeState, may_start
 from .lr_dag import LRDag, LRDagNode
 
 
@@ -25,11 +28,16 @@ class ExecutionContractError(RuntimeError):
 class NodeReceipt:
     node_id: str
     state: NodeState
-    evidence_digest: str
+    evidence_digest: str | None
 
     def validate(self) -> None:
-        if not self.node_id or not self.evidence_digest or not isinstance(self.state, NodeState):
+        if not self.node_id or not isinstance(self.state, NodeState):
             raise ExecutionContractError("invalid node receipt")
+
+    @property
+    def traceability_warnings(self) -> tuple[DigestWarning, ...]:
+        warning = digest_warning(self.evidence_digest, None, f"{self.node_id}.evidence_digest")
+        return () if warning is None else (warning,)
 
 
 class NodeExecutor(Protocol):
@@ -41,15 +49,22 @@ class NodeExecutor(Protocol):
 def dag_digest(dag: LRDag) -> str:
     """Stable identity that makes checkpoints incompatible after plan changes."""
     payload = [
-        ({
-            "node_id": node.node_id,
-            "kind": node.kind.value,
-            "dependencies": node.dependencies,
-            "perturbation": asdict(node.perturbation) if node.perturbation else None,
-        } | ({
-            "scf_level_id": node.scf_level_id,
-            "parent_dm_node_id": node.parent_dm_node_id,
-        } if node.scf_level_id is not None or node.parent_dm_node_id is not None else {}))
+        (
+            {
+                "node_id": node.node_id,
+                "kind": node.kind.value,
+                "dependencies": node.dependencies,
+                "perturbation": asdict(node.perturbation) if node.perturbation else None,
+            }
+            | (
+                {
+                    "scf_level_id": node.scf_level_id,
+                    "parent_dm_node_id": node.parent_dm_node_id,
+                }
+                if node.scf_level_id is not None or node.parent_dm_node_id is not None
+                else {}
+            )
+        )
         for node in dag.nodes
     ]
     encoded = json.dumps(payload, sort_keys=True, separators=(",", ":"), default=str).encode()
@@ -73,7 +88,7 @@ class JsonDagCheckpoint:
         receipts = {}
         for item in raw.get("receipts", []):
             try:
-                receipt = NodeReceipt(item["node_id"], NodeState(item["state"]), item["evidence_digest"])
+                receipt = NodeReceipt(item["node_id"], NodeState(item["state"]), item.get("evidence_digest"))
                 receipt.validate()
             except (KeyError, ValueError) as exc:
                 raise ExecutionContractError("malformed checkpoint receipt") from exc
@@ -88,8 +103,12 @@ class JsonDagCheckpoint:
             "version": self.VERSION,
             "campaign_digest": self.campaign_digest,
             "receipts": [
-                {"node_id": receipt.node_id, "state": receipt.state.value,
-                 "evidence_digest": receipt.evidence_digest}
+                {
+                    "node_id": receipt.node_id,
+                    "state": receipt.state.value,
+                    "evidence_digest": receipt.evidence_digest,
+                    "traceability_warnings": [w.to_mapping() for w in receipt.traceability_warnings],
+                }
                 for _, receipt in sorted(receipts.items())
             ],
         }

@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 from hubbardflow.domain.reference_reproduction import (
+    OccupationEquivalence,
     ParentReproduction,
     ReferenceReproduction,
     ReproductionReason,
+    ToleranceSource,
     compare_reference_states,
 )
 from hubbardflow.siesta_backend.event_parser import parse_hubbard_population_events
@@ -14,32 +16,29 @@ from hubbardflow.siesta_backend.reference_state_evidence import require_converge
 from hubbardflow.siesta_backend.siesta542_screened_selection import select_converged_screened_event
 
 
+class ReferenceIdentityMismatch(ValueError):
+    """Parsed atom/projector inventory is incomplete or inconsistent."""
+
+
 def reference_reproduction_evidence(
     planning_output: str,
     campaign_output: str,
-    planning_dm_sha256: str,
-    campaign_dm_sha256: str,
+    planning_dm_sha256: str | None,
+    campaign_dm_sha256: str | None,
     criterion: ParentReproduction,
     expected_projectors: tuple[tuple[int, int], ...] | None = None,
+    scf_dm_tolerance: float | None = None,
+    tolerance_factor: float | None = None,
+    tol_fermi_ev: float | None = None,
+    fermi_tolerance_source: ToleranceSource | None = None,
 ) -> ReferenceReproduction:
-    """Use final populations and stdout Fermi at their measured print precision.
+    """Use final populations and stdout Fermi; DM digests are provenance only.
 
-    BITWISE retains the legacy file comparison. PRINT_EQUIVALENT never accepts
-    matching digests in lieu of complete, parseable, converged state evidence.
+    Missing or malformed state evidence is recorded as not assessed. Matching
+    digests never substitute for parsed, converged physical state evidence.
     Current point-state parsing supports collinear d projectors only; unsupported
     output remains an explicit rejection instead of an inferred equivalence.
     """
-    if criterion is ParentReproduction.BITWISE:
-        match = planning_dm_sha256 == campaign_dm_sha256
-        return ReferenceReproduction(
-            criterion,
-            ReproductionReason.EQUIVALENT if match else ReproductionReason.PARENT_DM_NOT_REPRODUCED,
-            planning_dm_sha256,
-            campaign_dm_sha256,
-            "parent DM bytes reproduce exactly"
-            if match
-            else "planning and campaign parent DM digests differ",
-        )
     side = "planning"
     try:
         states = []
@@ -56,7 +55,7 @@ def reference_reproduction_evidence(
             if expected_projectors is not None:
                 observed = tuple(sorted((atom.atom_index, len(atom.raw_matrix_up)) for atom in event.atoms))
                 if observed != tuple(sorted(expected_projectors)):
-                    raise ValueError(
+                    raise ReferenceIdentityMismatch(
                         f"atom/projector inventory incomplete: expected={expected_projectors}, observed={observed}"
                     )
             identities.append(
@@ -64,15 +63,39 @@ def reference_reproduction_evidence(
             )
             states.append(build_point_state(event, output))
         if identities[0] != identities[1]:
-            raise ValueError(
+            raise ReferenceIdentityMismatch(
                 f"atom/projector identities differ: planning={identities[0]}, campaign={identities[1]}"
             )
-        return compare_reference_states(states[0], states[1], planning_dm_sha256, campaign_dm_sha256)
-    except Exception as exc:  # noqa: BLE001 - unsupported or malformed state evidence must fail closed.
+        return compare_reference_states(
+            states[0],
+            states[1],
+            planning_dm_sha256,
+            campaign_dm_sha256,
+            scf_dm_tolerance,
+            tolerance_factor,
+            criterion,
+            tol_fermi_ev,
+            fermi_tolerance_source,
+        )
+    except ReferenceIdentityMismatch as exc:
         return ReferenceReproduction(
             criterion,
-            ReproductionReason.PARENT_STATE_NOT_EQUIVALENT,
+            ReproductionReason.PARENT_IDENTITY_NOT_ESTABLISHED,
+            planning_dm_sha256,
+            campaign_dm_sha256,
+            str(exc),
+            all_reduced_classes_affected=True,
+            occupation_equivalence=OccupationEquivalence.NOT_EQUIVALENT,
+            declared_fermi_tolerance_ev=tol_fermi_ev,
+            fermi_tolerance_source=fermi_tolerance_source,
+        )
+    except Exception as exc:  # noqa: BLE001 - unsupported or malformed state evidence remains unassessed.
+        return ReferenceReproduction(
+            criterion,
+            ReproductionReason.EQUIVALENCE_NOT_ASSESSED,
             planning_dm_sha256,
             campaign_dm_sha256,
             f"{side} reference state unparseable or invalid: {type(exc).__name__}: {exc}",
+            declared_fermi_tolerance_ev=tol_fermi_ev,
+            fermi_tolerance_source=fermi_tolerance_source,
         )

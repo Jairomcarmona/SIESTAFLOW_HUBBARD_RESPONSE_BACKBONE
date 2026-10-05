@@ -13,6 +13,7 @@ from enum import Enum
 from hashlib import sha256
 from typing import cast
 
+from .hash_traceability import DigestWarning, compare_traceable_mappings, digest_warning
 from .state_evidence import (
     EvidenceStatus,
     MomentEvidence,
@@ -30,7 +31,7 @@ from .symmetry_operation_models import (
     SymmetryReason,
 )
 from .symmetry_operations import ConditionResult, OperationClassification
-from .validation import ValidationError, require_int, require_sha256
+from .validation import ValidationError, require_int
 
 
 class CoverageError(ValueError):
@@ -110,18 +111,6 @@ class CoverageReferenceEvidence:
     parent_dm_sha256: str | None
 
     def __post_init__(self) -> None:
-        try:
-            for name, digest in (
-                ("input_file_sha256", self.input_file_sha256),
-                ("input_fdf_sha256", self.state.input_fdf_sha256),
-                ("siesta_output_sha256", self.state.siesta_output_sha256),
-            ):
-                require_sha256(digest, name)
-            for optional_digest in (self.echoed_input_sha256, self.parent_dm_sha256):
-                if optional_digest is not None:
-                    require_sha256(optional_digest, "reference identity")
-        except ValidationError as exc:
-            raise CoverageError(str(exc)) from exc
         if any(
             type(flag) is not bool
             for flag in (self.input_output_consistent, self.nonpolarized_verified, self.perturbation_detected)
@@ -156,8 +145,8 @@ class CoverageReferenceEvidence:
         mesh = raw["mesh_divisions"]
         kmesh = raw["k_mesh"]
         state = ReferenceStateEvidence(
-            cast(str, raw["input_fdf_sha256"]),
-            cast(str, raw["siesta_output_sha256"]),
+            cast(str, raw.get("input_fdf_sha256")),
+            cast(str, raw.get("siesta_output_sha256")),
             cast(bool, raw["normal_completion_verified"]),
             cast(bool, raw["scf_converged"]),
             tuple(
@@ -182,13 +171,13 @@ class CoverageReferenceEvidence:
         )
         return cls(
             state,
-            cast(str, value["input_file_sha256"]),
-            cast(str | None, value["echoed_input_sha256"]),
+            cast(str, value.get("input_file_sha256")),
+            cast(str | None, value.get("echoed_input_sha256")),
             cast(bool, value["input_output_consistent"]),
             cast(bool, value["nonpolarized_verified"]),
             cast(bool, value["perturbation_detected"]),
             EvidenceStatus(cast(str, value["status"])),
-            cast(str | None, value["parent_dm_sha256"]),
+            cast(str | None, value.get("parent_dm_sha256")),
         )
 
 
@@ -291,8 +280,6 @@ class CoverageQualification:
 
     def __post_init__(self) -> None:
         try:
-            require_sha256(self.inventory_digest, "inventory_digest")
-            require_sha256(self.effective_fdf_sha256, "effective_fdf_sha256")
             require_int(self.would_reduce_to, "would_reduce_to", minimum=0)
         except ValidationError as exc:
             raise CoverageError(str(exc)) from exc
@@ -309,6 +296,23 @@ class CoverageQualification:
                     raise CoverageError(f"reconstruction for {site} must name an accepted operation")
 
     @property
+    def traceability_warnings(self) -> tuple[DigestWarning, ...]:
+        metadata = {
+            "inventory_digest": self.inventory_digest,
+            "effective_fdf_sha256": self.effective_fdf_sha256,
+            "reference": self.reference.to_mapping(),
+        }
+        warnings = list(compare_traceable_mappings(metadata, metadata).warnings)
+        warning = digest_warning(
+            self.reference.state.input_fdf_sha256, self.effective_fdf_sha256, "reference.input_fdf_sha256"
+        )
+        if warning is not None:
+            warnings.append(warning)
+        return tuple(
+            sorted(set(warnings), key=lambda x: (x.field, x.reason.value, x.recorded or "", x.observed or ""))
+        )
+
+    @property
     def computed_columns(self) -> tuple[str, ...]:
         return tuple(
             site
@@ -317,7 +321,7 @@ class CoverageQualification:
         )
 
     def to_mapping(self) -> dict[str, object]:
-        return {
+        result: dict[str, object] = {
             "schema": "hubbardflow.coverage_qualification.v1",
             "inventory_digest": self.inventory_digest,
             "effective_fdf_sha256": self.effective_fdf_sha256,
@@ -332,6 +336,9 @@ class CoverageQualification:
             "would_reduce_to": self.would_reduce_to,
             "species_identity_digests": self.species_identity_digests,
         }
+        if self.traceability_warnings:
+            result["traceability_warnings"] = [w.to_mapping() for w in self.traceability_warnings]
+        return result
 
     @property
     def digest(self) -> str:
@@ -348,11 +355,9 @@ class CoverageQualification:
             raise CoverageError("unsupported coverage schema")
         try:
             json.dumps(value, allow_nan=False)
-            require_sha256(value["inventory_digest"], "inventory_digest")
-            require_sha256(value["effective_fdf_sha256"], "effective_fdf_sha256")
             return cls(
-                cast(str, value["inventory_digest"]),
-                cast(str, value["effective_fdf_sha256"]),
+                cast(str, value.get("inventory_digest")),
+                cast(str, value.get("effective_fdf_sha256")),
                 CoverageReferenceEvidence.from_mapping(cast(Mapping[str, object], value["reference"])),
                 CoveragePolicy.from_mapping(cast(Mapping[str, object], value["policy"])),
                 UserCoveragePolicy.from_mapping(cast(Mapping[str, object], value["user_policy"])),

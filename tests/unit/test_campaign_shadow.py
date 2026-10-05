@@ -7,6 +7,7 @@ the real CampaignRunner dispatch, barrier and analysis execute unchanged.
 from __future__ import annotations
 
 import json
+from collections import defaultdict
 from dataclasses import replace
 from fractions import Fraction
 from hashlib import sha256
@@ -576,7 +577,7 @@ def test_stop_policy_prepare_rejection_runs_once_and_does_not_expand(
     )
 
 
-def test_parent_dm_mismatch_stops_before_perturbations_and_match_continues(
+def test_parent_dm_digest_never_stops_perturbations(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -585,7 +586,7 @@ def test_parent_dm_mismatch_stops_before_perturbations_and_match_continues(
         case_root = tmp_path / ("match" if matches else "mismatch")
         runner, executed, heartbeat = _runner(case_root, monkeypatch, plan)
         runner.perturbation_plan = plan
-        runner.config["parent_reproduction"] = "BITWISE"
+        runner.config["parent_reproduction"] = "PRINT_EQUIVALENT"
         original_execute = runner._execute_siesta
         dm_path = case_root / "parent.DM"
         dm_path.parent.mkdir(parents=True, exist_ok=True)
@@ -606,7 +607,7 @@ def test_parent_dm_mismatch_stops_before_perturbations_and_match_continues(
                 reproduction = current_runner._reference_reproduction_evidence(
                     current_dm_path, current_dm_path.parent / "siesta.out"
                 )
-                if not reproduction.equivalent:
+                if reproduction.rejects_reduction:
                     receipt = NodeReceipt(node.node_id, NodeState.FAILED_OUTPUT_VALIDATION, DIGEST)
                     current_runner._record_receipt(
                         node,
@@ -624,21 +625,11 @@ def test_parent_dm_mismatch_stops_before_perturbations_and_match_continues(
 
         monkeypatch.setattr(runner, "_execute_siesta", execute_with_parent_check)
         result = runner.advance("run", heartbeat)
-        if matches:
-            assert result == 0
-            assert any(node_id != "reference" for node_id in executed)
-        else:
-            assert result == 1
-            assert executed == []
-            record = runner.records["reference"]
-            assert record["reason"] == "PARENT_DM_NOT_REPRODUCED"
-            assert record["expected_parent_dm_sha256"] == plan.reference.parent_dm_sha256
-            assert record["observed_parent_dm_sha256"] != plan.reference.parent_dm_sha256
-            heartbeat_row = json.loads((runner.control / "state.json").read_text(encoding="utf-8"))
-            assert heartbeat_row["reason"] == "PARENT_DM_NOT_REPRODUCED"
+        assert result == 0
+        assert any(node_id != "reference" for node_id in executed)
 
 
-def test_shadow_parent_identity_uses_campaign_dm_and_rejects_another_file(
+def test_shadow_parent_digest_mismatch_is_traceability_warning_only(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -656,13 +647,14 @@ def test_shadow_parent_identity_uses_campaign_dm_and_rejects_another_file(
     ] = (observations, {a: "reference_branch" for a in runner.alpha_grid}, {}, widths, [5e-8] * 4)
     assert all(item.status is CoverageStatus.PROVEN for item in runner.shadow._outcomes(runner, data))
     runner.records["reference"]["provenance"]["artifacts"]["dm"] = "f" * 64
-    assert all(
-        item.status is CoverageStatus.REJECTED_EXPANDED for item in runner.shadow._outcomes(runner, data)
-    )
+    assert all(item.status is CoverageStatus.PROVEN for item in runner.shadow._outcomes(runner, data))
+    warnings = runner.shadow._parent_dm_digest_warnings(runner, observations)
+    assert warnings
+    assert {row["reason_code"] for row in warnings} == {"PARENT_DM_DIGEST_MISMATCH"}
 
 
 @pytest.mark.parametrize("validator_state", [NodeState.VALIDATED, NodeState.FAILED_OUTPUT_VALIDATION])
-def test_unparseable_reference_records_both_digests_and_stops_before_children(
+def test_unparseable_reference_records_digests_without_hash_rejection(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
     validator_state: NodeState,
@@ -699,9 +691,9 @@ def test_unparseable_reference_records_both_digests_and_stops_before_children(
         Any,
         SimpleNamespace(
             factory=SimpleNamespace(
-                artifacts={
-                    "reference": SiestaArtifactSpec("input.fdf", "observed.out", "observed.DM", "fake")
-                }
+                artifacts=defaultdict(
+                    lambda: SiestaArtifactSpec("input.fdf", "observed.out", "observed.DM", "fake")
+                )
             ),
             validator=SimpleNamespace(last_provenance={}),
         ),
@@ -732,18 +724,18 @@ def test_unparseable_reference_records_both_digests_and_stops_before_children(
     monkeypatch.setattr(
         runner, "_execute_siesta", lambda node, current: CampaignRunner._execute_siesta(runner, node, current)
     )
-    assert runner.advance("run", heartbeat) == 1
-    assert calls == ["reference"]
-    assert parented == []
+    result = runner.advance("run", heartbeat)
+    assert result == (0 if validator_state is NodeState.VALIDATED else 1)
+    assert calls[0] == "reference"
+    assert parented == ([dm_path] if validator_state is NodeState.VALIDATED else [])
     assert runner.shadow is not None and runner.shadow.expanded == ()
     record = runner.records["reference"]
     evidence = record["reference_reproduction"]
     assert evidence["planning_parent_dm_sha256"] == runner.perturbation_plan.reference.parent_dm_sha256
     assert evidence["campaign_parent_dm_sha256"] == sha256(dm_path.read_bytes()).hexdigest()
-    assert record["reason"] == "PARENT_STATE_NOT_EQUIVALENT"
-    status = json.loads((runner.control / "state.json").read_text(encoding="utf-8"))
-    assert status["reason"] == "PARENT_STATE_NOT_EQUIVALENT"
-    assert status["parent_reproduction_detail"] == evidence["detail"]
+    assert evidence["reason"] == "EQUIVALENCE_NOT_ASSESSED"
+    if validator_state is NodeState.VALIDATED:
+        assert len(calls) > 1
 
 
 def test_transient_invalid_shadow_retries_only_invalid_run_then_completes_expansion(
@@ -828,12 +820,13 @@ def test_print_bound_covers_known_linear_truth_with_declared_point_errors(
     assert abs(budget.estimate_e_per_ev + 2) <= budget.print_bound_e_per_ev
 
 
-def test_wrong_parent_dm_cannot_authorize_even_a_complete_synthetic_state(
+def test_wrong_parent_dm_digest_does_not_veto_complete_synthetic_state(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     runner, _, _ = _runner(tmp_path, monkeypatch, _plan())
     assert runner.shadow is not None
+    runner.records["reference"] = {"provenance": {"artifacts": {"dm": "f" * 64}}}
     observations, widths = _observations(runner.shadow.plan, {0, 1})
     data: tuple[
         list[ResponseObservation],
@@ -849,8 +842,7 @@ def test_wrong_parent_dm_cannot_authorize_even_a_complete_synthetic_state(
         [5e-8] * 4,
     )
     outcome = runner.shadow._outcomes(runner, data)[0]
-    assert outcome.status is CoverageStatus.REJECTED_EXPANDED
-    assert outcome.reason is ShadowReason.SCIENTIFIC_STATE_NOT_ESTABLISHED
+    assert outcome.status is CoverageStatus.PROVEN
 
 
 def test_missing_widths_state_or_parent_evidence_expands_without_thresholds() -> None:
@@ -909,3 +901,67 @@ def test_resume_rejects_nonfinite_values_inside_preserved_failure_records(tmp_pa
     )
     with pytest.raises(ExecutionContractError, match="JSON compliant"):
         CampaignShadow(plan, tmp_path, DIGEST)
+
+
+@pytest.mark.parametrize("failure_kind", ["occupation", "identity", "fermi"])
+def test_reference_difference_expands_every_affected_class_using_typed_indices(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    failure_kind: str,
+) -> None:
+    from hubbardflow.domain.reference_reproduction import (
+        ParentReproduction,
+        ReferenceReproduction,
+        ReproductionReason,
+    )
+
+    original = _plan(12)
+    prototype = _plan().coverage.classes[0]
+    assert prototype.reduced
+    classes = tuple(
+        replace(
+            prototype,
+            members=tuple(f"s{i}" for i in range(start, start + 4)),
+            representative=f"s{start}",
+            shadow=f"s{start + 1}",
+            ops_rep_to_member=(),
+        )
+        for start in (0, 4, 8)
+    )
+    # Exercise fallback localization independently of translation discovery.
+    # The existing end-to-end tests verify install builds direct response DAGs.
+    plan = cast(
+        Any,
+        SimpleNamespace(
+            inventory=original.inventory, coverage=SimpleNamespace(classes=classes), digest=original.digest
+        ),
+    )
+    shadow = CampaignShadow(plan, tmp_path, DIGEST)
+    runner = cast(Any, SimpleNamespace(shadow=shadow))
+    installed = []
+    monkeypatch.setattr(shadow, "install", lambda current: installed.append(current))
+    evidence = ReferenceReproduction(
+        ParentReproduction.PRINT_EQUIVALENT,
+        {
+            "occupation": ReproductionReason.PARENT_STATE_NOT_EQUIVALENT,
+            "identity": ReproductionReason.PARENT_IDENTITY_NOT_ESTABLISHED,
+            "fermi": ReproductionReason.PARENT_FERMI_NOT_EQUIVALENT,
+        }[failure_kind],
+        DIGEST,
+        "f" * 64,
+        "atom 1 is the first detail only",
+        affected_atom_indices=(1, 5) if failure_kind != "fermi" else (),
+        all_reduced_classes_affected=failure_kind != "occupation",
+    )
+    runner.shadow.expand_for_reference_difference(runner, evidence.to_mapping())
+    expected = tuple(f"s{i}" for i in range(8 if failure_kind == "occupation" else 12))
+    assert runner.shadow.expanded == expected
+    assert installed == [runner]
+    stored = json.loads(runner.shadow.path.read_text(encoding="utf-8"))
+    assert tuple(stored["expanded"]) == expected
+    assert {item["representative"] for item in stored["outcomes"]} == (
+        {"s0", "s4"} if failure_kind == "occupation" else {"s0", "s4", "s8"}
+    )
+    assert {item["reason"] for item in stored["outcomes"]} == {
+        "REFERENCE_FERMI_NOT_EQUIVALENT" if failure_kind == "fermi" else "REFERENCE_STATE_NOT_EQUIVALENT"
+    }

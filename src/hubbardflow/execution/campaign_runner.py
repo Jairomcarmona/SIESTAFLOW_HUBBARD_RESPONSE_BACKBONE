@@ -8,7 +8,9 @@ try:
 except ImportError:  # Windows clients may import analysis/report helpers only.
     fcntl = None  # type: ignore[assignment]
 import json
+import math
 import os
+import re
 from importlib.metadata import PackageNotFoundError, version as installed_package_version
 from pathlib import Path
 import shutil
@@ -32,7 +34,7 @@ from hubbardflow.domain.response_grid_reproducibility import (
 )
 from hubbardflow.domain.lr_campaign_contract import LinearResponseBareCampaignContract
 from hubbardflow.domain.matrix_lr import ResponseObservation
-from hubbardflow.domain.reference_reproduction import ParentReproduction, ReferenceReproduction
+from hubbardflow.domain.reference_reproduction import ParentReproduction, ReferenceReproduction, ToleranceSource
 from hubbardflow.domain.state_gate_results import StateGateReason
 from hubbardflow.domain.symmetry_reduction import PerturbationSpec, ResponseMode
 from hubbardflow.execution.campaign_v2 import (
@@ -246,10 +248,10 @@ class CampaignRunner:
 
     def __init__(self, manifest_path: str | Path):
         self.campaign = load_campaign_v2(manifest_path)
-        verify_campaign_inventory(self.campaign)
+        input_hash_warnings = verify_campaign_inventory(self.campaign)
         self.root = Path(self.campaign["_campaign_root"])
         self._input_sha256_by_path = {
-            str(item["path"]): str(item["sha256"])
+            str(item["path"]): str(item.get("sha256"))
             for item in self.campaign["input_files"]
         }
         self.control = self.root / ".siestaflow"
@@ -342,6 +344,10 @@ class CampaignRunner:
         self.store = CampaignStore(self.records_path, lambda: self.executor.checkpoint)
         self.observations = ObservationAssembler()
         self.records = self._load_records()
+        startup_warnings = [*self.campaign.get("_input_traceability_warnings", []), *input_hash_warnings]
+        if startup_warnings:
+            self.records.setdefault("traceability_warnings", []).extend(startup_warnings)
+            self._save_records()
         self.reference_fdf = fdf_path
         self.reference_dm_name = self.config["reference_dm_name"]
         static_artifacts = {f"{label}.psml": Path(path) for label, path in self.config["pseudopotentials"].items()}
@@ -699,9 +705,11 @@ class CampaignRunner:
                     fresh = self.admitted.validator.validate(
                         node, command, CompletedProcess(command.argv, 0, "", ""),
                     )
-                    if fresh.state is not NodeState.VALIDATED or fresh.evidence_digest != receipt.evidence_digest:
+                    if fresh.state is not NodeState.VALIDATED:
                         invalid.add(node.node_id)
                         continue
+                    if fresh.evidence_digest != receipt.evidence_digest:
+                        record.setdefault("traceability_warnings", []).append("NODE_EVIDENCE_DIGEST_MISMATCH")
                     if node.kind is LRNodeKind.REFERENCE:
                         dm = command.cwd / spec.dm
                         if not dm.is_file():
@@ -712,11 +720,16 @@ class CampaignRunner:
                     invalid.add(node.node_id)
             else:
                 evidence_path = Path(record.get("evidence_path", ""))
-                if (record.get("evidence_digest") != receipt.evidence_digest
-                        or not evidence_path.is_file()
-                        or sha256_file(evidence_path) != record.get("evidence_sha256")
-                        or record.get("evidence_sha256") != receipt.evidence_digest):
+                if not evidence_path.is_file():
                     invalid.add(node.node_id)
+                else:
+                    warnings = record.setdefault("traceability_warnings", [])
+                    if record.get("evidence_digest") != receipt.evidence_digest:
+                        warnings.append("NODE_EVIDENCE_DIGEST_MISMATCH")
+                    if sha256_file(evidence_path) != record.get("evidence_sha256"):
+                        warnings.append("EVIDENCE_FILE_DIGEST_MISMATCH")
+                    if record.get("evidence_sha256") != receipt.evidence_digest:
+                        warnings.append("RECEIPT_EVIDENCE_DIGEST_MISMATCH")
         if invalid:
             invalid = self._descendants(invalid)
             self._rollback_adaptive_after_invalidation(invalid)
@@ -726,6 +739,8 @@ class CampaignRunner:
             self.executor.checkpoint.save(receipts)
             self._save_records()
             self._archive_unvalidated_attempts(invalid)
+        # Revalidation can add traceability warnings without invalidating a node.
+        self._save_records()
         self._archive_orphaned_attempts(receipts)
 
         if self.adaptive_policy is not None:
@@ -775,6 +790,21 @@ class CampaignRunner:
 
     def _reference_reproduction_evidence(self, dm_path: Path, output_path: Path) -> ReferenceReproduction:
         """Delegate the D16 comparison while preserving both parent file identities."""
+        scf_tolerance = None
+        try:
+            reference_fdf = getattr(self, "reference_fdf", None)
+            fdf_text = reference_fdf.read_text(encoding="utf-8", errors="replace")
+            values = [
+                match.group(1)
+                for line in fdf_text.splitlines()
+                if (match := re.match(r"^\s*SCF\.DM\.Tolerance\s+([^\s#]+)", line, re.IGNORECASE))
+            ]
+            if len(values) == 1:
+                candidate = float(values[0].replace("D", "E").replace("d", "e"))
+                if math.isfinite(candidate) and candidate > 0:
+                    scf_tolerance = candidate
+        except (AttributeError, OSError, ValueError):
+            scf_tolerance = None
         return check_reference_reproduction(
             Path(str(self.config.get("planning_reference_output", ""))),
             output_path,
@@ -785,6 +815,11 @@ class CampaignRunner:
                 (space.atom_index + 1, 2 * space.dftu_record.l + 1)
                 for space in self.perturbation_plan.inventory.subspaces
             ),
+            scf_tolerance,
+            self.config.get("parent_reproduction_factor"),
+            self.config.get("tol_Fermi_eV"),
+            None if self.config.get("tol_Fermi_eV") is None
+            else ToleranceSource(self.config.get("tol_Fermi_eV_source", "config")),
         )
 
     def _execute_siesta(self, node: LRDagNode, heartbeat: _Heartbeat) -> NodeReceipt:
@@ -849,21 +884,16 @@ class CampaignRunner:
                 record["expected_parent_dm_sha256"] = reproduction.planning_parent_dm_sha256
                 record["observed_parent_dm_sha256"] = reproduction.campaign_parent_dm_sha256
                 self._record_receipt(node, receipt, record)
-                if not reproduction.equivalent:
-                    failed = NodeReceipt(
-                        node.node_id,
-                        NodeState.FAILED_OUTPUT_VALIDATION,
-                        _digest(reproduction.to_mapping()),
-                    )
-                    self._record_receipt(
-                        node,
-                        failed,
-                        {
-                            **record,
-                            "reason": reproduction.reason.value,
-                        },
-                    )
-                    return failed
+                if reproduction.rejects_reduction:
+                    self.shadow.expand_for_reference_difference(self, reproduction.to_mapping())
+                    record["parent_reduction_fallback"] = {
+                        "reason": reproduction.reason.value,
+                        "detail": reproduction.detail,
+                    }
+                    self._record_receipt(node, receipt, record)
+                if reproduction.reason.value == "EQUIVALENCE_NOT_ASSESSED":
+                    record["traceability_warnings"] = ["PARENT_STATE_EQUIVALENCE_NOT_ASSESSED"]
+                    self._record_receipt(node, receipt, record)
             if receipt.state is NodeState.VALIDATED:
                 self.factory.reference_completed(dm_path, node.scf_level_id or "base")
         return receipt
@@ -1570,29 +1600,35 @@ class CampaignRunner:
         receipts = self._checkpoint()
         nodes: dict[str, str] = {}
         attempts: set[str] = set()
+        traceability_warnings: list[str] = []
 
         def bind_source(source: Any, label: str, *, expected_mode: str | None = None) -> None:
             if not isinstance(source, Mapping) or source.get("state") != NodeState.VALIDATED.value:
                 raise ValueError(f"{label} dataset source lacks a validated execution receipt")
             node_id, digest = source.get("node_id"), source.get("evidence_digest")
-            if not isinstance(node_id, str) or not node_id or not isinstance(digest, str):
-                raise ValueError(f"{label} dataset source lacks node identity/digest")
+            if not isinstance(node_id, str) or not node_id:
+                raise ValueError(f"{label} dataset source lacks node identity")
+            from hubbardflow.domain.hash_traceability import digest_warning
+            warning = digest_warning(digest, None, f"{label}.evidence_digest")
+            if warning is not None:
+                traceability_warnings.append(f"{warning.reason.value}:{warning.field}")
             if expected_mode is not None and source.get("mode") != expected_mode:
                 raise ValueError(f"{label} dataset mode differs from the selected analysis grid")
             record = self.records.get(node_id)
             receipt = receipts.get(node_id)
             if (not isinstance(record, Mapping) or record.get("state") != NodeState.VALIDATED.value
-                    or record.get("kind") != "siesta" or record.get("evidence_digest") != digest
-                    or receipt is None or receipt.state is not NodeState.VALIDATED
-                    or receipt.evidence_digest != digest):
+                    or record.get("kind") != "siesta" or receipt is None
+                    or receipt.state is not NodeState.VALIDATED):
                 raise ValueError(f"{label} source is not bound to the validated campaign node receipt")
+            if record.get("evidence_digest") != digest or receipt.evidence_digest != digest:
+                traceability_warnings.append(f"NODE_EVIDENCE_DIGEST_MISMATCH:{node_id}")
             if str(record.get("scf_level_id", "base")) != scf_level_id:
                 raise ValueError(f"{label} source belongs to another SCF level")
             actual = self._verify_record_artifacts(record, node_id)
             for key, source_key in (("fdf", "fdf"), ("output", "out"), ("dm", "dm")):
                 declared_hash = source.get(f"{source_key}_sha256")
                 if declared_hash != actual[key]:
-                    raise ValueError(f"{label} {key} hash differs from its validated node receipt")
+                    traceability_warnings.append(f"SOURCE_ARTIFACT_DIGEST_MISMATCH:{node_id}:{key}")
                 raw_path = source.get(f"{source_key}_path")
                 if not isinstance(raw_path, str):
                     raise ValueError(f"{label} {key} path is missing from the verified dataset")
@@ -1654,7 +1690,11 @@ class CampaignRunner:
                 bind_source(source, f"response {coordinate}/{mode}", expected_mode=mode)
         if observed_coordinates != expected_coordinates:
             raise ValueError("verified response dataset does not cover this analysis grid and SCF level")
-        return {"source_root": str(root), "execution_attempt_ids": sorted(attempts)}
+        return {
+            "source_root": str(root),
+            "execution_attempt_ids": sorted(attempts),
+            "traceability_warnings": sorted(set(traceability_warnings)),
+        }
 
     @staticmethod
     def _node_round_index(node_id: str) -> int | None:
@@ -1940,19 +1980,8 @@ class CampaignRunner:
                     for name in ("returncode", "returncode_meaning")
                     if name in failure_record
                 }
-                parent_dm_reason = (
-                    failure_record.get("reason")
-                    if self.shadow is not None and failure_record.get("reason") in {
-                        "PARENT_DM_NOT_REPRODUCED", "PARENT_STATE_NOT_EQUIVALENT",
-                    }
-                    else None
-                )
                 heartbeat.finish(
                     "FAILED", failed_node=node.node_id, failure_state=receipt.state.value, **failure_details,
-                    **({
-                        "reason": parent_dm_reason,
-                        "parent_reproduction_detail": failure_record.get("reference_reproduction", {}).get("detail"),
-                    } if parent_dm_reason is not None else {}),
                 )
                 return 1
 
@@ -2041,6 +2070,8 @@ def render_campaign_report(manifest_path: str | Path) -> str:
     ]
     try:
         records = json.loads((root / ".siestaflow" / "node-evidence.json").read_text(encoding="utf-8"))
+        for warning in records.get("traceability_warnings", []):
+            lines.append(f"- Advertencia de trazabilidad: {json.dumps(warning, sort_keys=True)}")
         reproduction = records.get("nodes", {}).get("reference", {}).get("reference_reproduction")
         if isinstance(reproduction, Mapping):
             lines.extend(reference_reproduction_report_lines(reproduction))

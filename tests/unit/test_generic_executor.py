@@ -49,3 +49,16 @@ def test_executor_refuses_resume_against_a_different_scientific_dag(tmp_path: Pa
     other = GenericDagExecutor(build_initial_lr_dag(other_plan), state)
     with pytest.raises(ExecutionContractError, match="different scientific DAG"):
         other.runnable()
+
+
+@pytest.mark.parametrize("digest", [None, "", "malformed"])
+def test_checkpoint_evidence_digest_is_metadata_not_node_validation(tmp_path: Path, digest):
+    from hubbardflow.execution.generic_executor import JsonDagCheckpoint
+    receipt = NodeReceipt("reference", NodeState.VALIDATED, digest)
+    receipt.validate()
+    assert receipt.traceability_warnings
+    checkpoint = JsonDagCheckpoint(tmp_path / "metadata.json", "operational-dag")
+    checkpoint.save({receipt.node_id: receipt})
+    assert checkpoint.load()[receipt.node_id] == receipt
+    with pytest.raises(ExecutionContractError):
+        NodeReceipt("", NodeState.VALIDATED, digest).validate()

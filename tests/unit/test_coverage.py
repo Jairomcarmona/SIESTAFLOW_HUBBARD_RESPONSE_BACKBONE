@@ -267,9 +267,17 @@ def test_h_fallbacks_fail_closed(trigger: str, expected: CoverageReason) -> None
             ),
         )
     q = qualify_coverage(inventory, evidence, model, coverage_policy_v1(), user)
-    assert q.strategy is CoverageStrategy.ALL_SUBSPACES
-    assert expected in q.reasons
-    assert q.computed_columns == ("s0", "s1", "s2", "s3")
+    if trigger == "binding":
+        original_inventory, original_evidence, original_model = _toy(4)
+        original = qualify_coverage(original_inventory, original_evidence, original_model, coverage_policy_v1(), user)
+        assert q.strategy is original.strategy
+        assert q.classes == original.classes
+        assert CoverageReason.EVIDENCE_BINDING_MISMATCH not in q.reasons
+        assert any(w.field == "reference.input_fdf_sha256" for w in q.traceability_warnings)
+    else:
+        assert q.strategy is CoverageStrategy.ALL_SUBSPACES
+        assert expected in q.reasons
+    assert q.computed_columns == (original.computed_columns if trigger == "binding" else ("s0", "s1", "s2", "s3"))
 
 
 def test_nonclosed_candidate_group_is_dropped_whole(monkeypatch: pytest.MonkeyPatch) -> None:

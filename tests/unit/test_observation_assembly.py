@@ -44,6 +44,7 @@ def test_campaign_file_helpers_build_and_verify_receipt_bound_data(tmp_path: Pat
         "fdf": sha256(fdf.read_bytes()).hexdigest(),
         "output": sha256(output.read_bytes()).hexdigest(),
         "dm": sha256(dm.read_bytes()).hexdigest(),
+        "hash_warnings": [],
     }
     assert source_record(tmp_path, receipt.node_id, record, receipt, mode="BARE")["out_path"] == "siesta.out"
 
@@ -75,7 +76,7 @@ def test_campaign_file_helpers_build_and_verify_receipt_bound_data(tmp_path: Pat
     }
 
 
-def test_verify_record_artifacts_rejects_changed_output(tmp_path: Path) -> None:
+def test_verify_record_artifacts_warns_on_changed_output(tmp_path: Path) -> None:
     fdf = tmp_path / "input.fdf"
     output = tmp_path / "siesta.out"
     dm = tmp_path / "run.DM"
@@ -94,5 +95,5 @@ def test_verify_record_artifacts_rejects_changed_output(tmp_path: Path) -> None:
         },
     }
     output.write_text("changed\n", encoding="utf-8")
-    with pytest.raises(ValueError, match="changed after output validation"):
-        verify_record_artifacts(record, "response:s0")
+    verified = verify_record_artifacts(record, "response:s0")
+    assert "ARTIFACT_DIGEST_MISMATCH:response:s0:output" in verified["hash_warnings"]

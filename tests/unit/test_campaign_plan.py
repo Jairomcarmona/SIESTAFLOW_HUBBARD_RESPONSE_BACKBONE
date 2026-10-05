@@ -21,6 +21,7 @@ from hubbardflow.execution.campaign_plan import (
     CampaignPlanError,
     campaign_inventory,
     freeze_campaign_plan,
+    planning_config_digest,
     resolve_campaign_planning,
     verify_frozen_campaign_plan,
 )
@@ -132,9 +133,9 @@ def test_parent_reproduction_default_and_explicit_mode_enter_ts_config_digest(tm
     raw["coverage"] = "TRANSLATION_SHADOWED"
     default = normalized(fdf, raw)
     assert default["parent_reproduction"] == "PRINT_EQUIVALENT"
-    bitwise = normalized(fdf, {**raw, "parent_reproduction": "BITWISE"})
-    assert bitwise["parent_reproduction"] == "BITWISE"
-    assert planning_config_digest(default) != planning_config_digest(bitwise)
+    record_only = normalized(fdf, {**raw, "parent_reproduction": "RECORD_ONLY"})
+    assert record_only["parent_reproduction"] == "RECORD_ONLY"
+    assert planning_config_digest(default) != planning_config_digest(record_only)
 
 
 @pytest.mark.parametrize("mode", [None, True, 2, "print_equivalent", "IGNORE"])
@@ -425,3 +426,35 @@ def test_resume_reports_explicit_planner_version_change(tmp_path: Path) -> None:
         "current version 'campaign-planner-v4'; re-initialize the campaign; "
         "frozen plans are not migrated"
     )
+
+
+@pytest.mark.parametrize("digest", [None, "", "malformed", "f" * 64])
+def test_campaign_artifact_hash_warnings_preserve_real_file_checks(tmp_path: Path, digest):
+    from hubbardflow.execution.campaign_v2 import CampaignV2Error
+
+    artifact = tmp_path / "reference.fdf"
+    artifact.write_text("SystemLabel synthetic\n", encoding="utf-8")
+    campaign = {"_campaign_root": str(tmp_path), "input_files": [{"path": "reference.fdf", "sha256": digest}]}
+    warnings = verify_campaign_inventory(campaign)
+    assert len(warnings) == 1
+    assert warnings[0]["field"] == "input_files.reference.fdf.sha256"
+    artifact.unlink()
+    with pytest.raises((FileNotFoundError, CampaignV2Error)):
+        verify_campaign_inventory(campaign)
+
+
+@pytest.mark.parametrize("value", [True, -1.0, float("nan"), float("inf"), "0.1"])
+def test_fermi_tolerance_config_rejects_invalid_values(tmp_path: Path, value: object) -> None:
+    fdf, raw, _ = inputs(tmp_path)
+    with pytest.raises(CampaignV2Error, match="tol_Fermi_eV"):
+        normalized(fdf, {**raw, "tol_Fermi_eV": value})
+
+
+def test_fermi_tolerance_is_optional_and_enters_frozen_config(tmp_path: Path) -> None:
+    fdf, raw, _ = inputs(tmp_path)
+    absent = normalized(fdf, raw)
+    assert "tol_Fermi_eV" not in absent
+    configured = normalized(fdf, {**raw, "tol_Fermi_eV": 0.002})
+    assert configured["tol_Fermi_eV"] == 0.002
+    assert configured["tol_Fermi_eV_source"] == "config"
+    assert planning_config_digest(absent) != planning_config_digest(configured)

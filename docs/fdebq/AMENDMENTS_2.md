@@ -141,3 +141,28 @@ The following wait for TASK 24:
 ### D16. Parent reference equivalence at print precision
 
 D16 substitutes for D14c; the other D14 decisions remain in force. A TS campaign reference must be state-equivalent at print precision to the planning reference. Record both DM digests and the equivalence result.
+
+### D16.1. Physical parent comparison with independent Fermi policy
+
+DM and artifact digests are traceability only: record discrepancies as warnings,
+never decide parent acceptance or translation reduction from them. `BITWISE`
+is removed. Occupation matrices of the last converged population event use a
+per-element tolerance `max(sum of both print half-widths, f * SCF.DM.Tolerance)`.
+The factor `f` is explicitly declared as `parent_reproduction_factor`; neither
+it nor a missing FDF tolerance is inferred. Missing occupation tolerance evidence
+is `EQUIVALENCE_NOT_ASSESSED` without a hash veto. A real occupation difference
+or incomplete atom/projector identity invalidates only the affected reduction
+using that parent and schedules direct columns, with the physical reason recorded.
+
+Fermi energy never inherits SCF.DM.Tolerance. Optional declared `tol_Fermi_eV`
+has no default; product CLI `--tol-fermi-ev` overrides lr-config and freezes the
+source. If declared, use `max(tol_Fermi_eV, sum of both Fermi print half-widths)`
+and warn `FERMI_TOLERANCE_BELOW_PRINT_HALF_WIDTH` when the declaration is smaller.
+An excess uses the distinct reason `PARENT_FERMI_NOT_EQUIVALENT`. If undeclared,
+Fermi only records its difference in eV and print half-widths; it cannot change
+the occupation verdict. Always record both DM digests, maximum occupation
+difference, Fermi difference, declared/effective tolerances, sources and warnings.
+Report `occupation_equivalence` (`EQUIVALENT`, `NOT_EQUIVALENT`, `NOT_ASSESSED`)
+separately from `fermi_equivalence` (`EQUIVALENT`, `NOT_EQUIVALENT`,
+`RECORDED_NOT_ASSESSED`). `RECORD_ONLY` never grants equivalence and preserves
+assessed physical and identity rejections.

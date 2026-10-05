@@ -181,8 +181,6 @@ class ObservationAssembler:
             record = records.get(node_id)
             if receipt is None or receipt.state is not NodeState.VALIDATED or not isinstance(record, dict):
                 raise ValueError(f"validated receipt/evidence missing for {node_id}")
-            if record.get("evidence_digest") != receipt.evidence_digest:
-                raise ValueError(f"receipt/evidence digest mismatch for {node_id}")
             indexed[(spec.site_index, float(spec.alpha_ev), spec.mode.value)] = (node, record)
 
         observations: list[ResponseObservation] = []
@@ -222,9 +220,6 @@ class ObservationAssembler:
                 screened_output = Path(screened_record["command"]["stdout_path"])
                 bare_hashes = verify_record_artifacts(bare_record, bare_node.node_id)
                 screened_hashes = verify_record_artifacts(screened_record, screened_node.node_id)
-                for node_id, record in ((bare_node.node_id, bare_record), (screened_node.node_id, screened_record)):
-                    if record.get("reference_dm_sha256") != reference_dm_hash:
-                        raise ValueError(f"{node_id} parent DM does not match the validated reference DM")
                 bare_text = bare_output.read_text(encoding="utf-8", errors="replace")
                 bare_event = admitted.factory.bare_profile.select_response(bare_text).response_event
                 screened_text = screened_output.read_text(encoding="utf-8", errors="replace")
@@ -316,6 +311,13 @@ class ObservationAssembler:
             root, reference_id, reference_record, reference_receipt, mode="REFERENCE_SCREENED"
         )
         sources_by_perturbation: dict[tuple[int, float], dict[str, Mapping[str, Any]]] = {}
+        traceability_warnings: list[dict[str, str]] = []
+        for observation in observations:
+            if observation.parent_dm_sha256 != reference_source.get("dm_sha256"):
+                traceability_warnings.append({
+                    "reason_code": "PARENT_DM_DIGEST_MISMATCH",
+                    "detail": f"column={observation.perturbation_site},alpha={observation.alpha}",
+                })
         for node_id, spec in specs.items():
             node = next(node for node in dag.nodes if node.node_id == node_id)
             if (node.scf_level_id or "base") != scf_level_id:
@@ -326,11 +328,23 @@ class ObservationAssembler:
             record = records.get(node_id)
             if receipt is None or not isinstance(record, Mapping):
                 raise ValueError(f"validated source evidence is unavailable for {node_id}")
+            if record.get("evidence_digest") != receipt.evidence_digest:
+                traceability_warnings.append({"reason_code": "NODE_EVIDENCE_DIGEST_MISMATCH", "detail": node_id})
+            artifact_warnings = verify_record_artifacts(record, node_id).get("hash_warnings", [])
+            traceability_warnings.extend(
+                {"reason_code": item.split(":", 1)[0], "detail": item}
+                for item in artifact_warnings
+            )
+            if record.get("reference_dm_sha256") != reference_source.get("dm_sha256"):
+                traceability_warnings.append({
+                    "reason_code": "PARENT_DM_IDENTITY_MISMATCH",
+                    "detail": node_id,
+                })
             key = (int(spec.site_index), float(spec.alpha_ev))
             sources_by_perturbation.setdefault(key, {})[spec.mode.value.casefold()] = source_record(
                 root, node_id, record, receipt, mode=spec.mode.value
             )
-        return build_verified_dataset(
+        dataset = build_verified_dataset(
             observations,
             sites,
             reference_source=reference_source,
@@ -338,4 +352,6 @@ class ObservationAssembler:
             trace_half_widths_electron=trace_half_widths_electron,
             reference_trace_half_widths_electron=reference_trace_half_widths_electron,
             occupation_source=occupation_source,
+            traceability_warnings=traceability_warnings,
         )
+        return dataset

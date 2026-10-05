@@ -16,6 +16,7 @@ from typing import cast
 from .coverage_models import CoverageQualification, CoverageReferenceEvidence, CoverageStatus
 from .fdebq_models import CalibrationProtocol
 from .fdebq_models import CalibrationQualification as RoundQualification
+from .hash_traceability import DigestWarning, compare_traceable_mappings, digest_warning
 from .perturbation_plan_evidence import (
     PerturbationPlanError,
     freeze_inventory,
@@ -27,7 +28,7 @@ from .response_protocol import ColumnPlan, EstimatorKind, EstimatorSpec, Resolve
 from .state_evidence import EvidenceStatus
 from .subspace_inventory import CorrelatedSubspaceInventory, InventoryStatus
 from .symmetry_reduction import ResponseMode
-from .validation import require_fdf_representable_ev, require_int, require_positive_finite, require_sha256
+from .validation import require_fdf_representable_ev, require_int, require_positive_finite
 
 SCHEMA = "hubbardflow.resolved_perturbation_plan.v1"
 ReferenceEvidence = CoverageReferenceEvidence
@@ -82,9 +83,7 @@ class CalibrationQualification:
     def __post_init__(self) -> None:
         if not isinstance(self.status, CalibrationStatus):
             raise PerturbationPlanError("calibration status must be a CalibrationStatus")
-        for digest in self.evidence_sha256:
-            require_sha256(digest, "calibration evidence")
-        object.__setattr__(self, "evidence_sha256", tuple(sorted(set(self.evidence_sha256))))
+        object.__setattr__(self, "evidence_sha256", tuple(sorted(set(self.evidence_sha256), key=repr)))
         if (self.round_qualification is None) != (self.round_protocol is None):
             raise PerturbationPlanError("calibrated evidence and protocol must be supplied together")
         if (
@@ -92,7 +91,7 @@ class CalibrationQualification:
             and self.round_protocol is not None
             and self.round_qualification.protocol_sha256 != self.round_protocol.digest
         ):
-            raise PerturbationPlanError("calibrated qualification protocol digest disagrees")
+            pass  # Warning is recorded by the surrounding resolved plan.
 
     def to_mapping(self) -> dict[str, object]:
         result: dict[str, object] = {"status": self.status.value, "evidence_sha256": self.evidence_sha256}
@@ -105,7 +104,7 @@ class CalibrationQualification:
     def from_mapping(cls, row: Mapping[str, object]) -> CalibrationQualification:
         return cls(
             CalibrationStatus(cast(str, row["status"])),
-            tuple(cast(Sequence[str], row["evidence_sha256"])),
+            tuple(cast(Sequence[str], row.get("evidence_sha256", ()))),
             RoundQualification.from_mapping(cast(Mapping[str, object], row["round_qualification"]))
             if "round_qualification" in row
             else None,
@@ -236,8 +235,6 @@ class ResolvedPerturbationPlan:
             raise PerturbationPlanError(f"schema must be {SCHEMA}")
         if not isinstance(self.egg_box_quantification, EggBoxQuantification):
             raise PerturbationPlanError("egg_box_quantification must be an EggBoxQuantification")
-        for digest in (self.source_fdf_sha256, self.effective_fdf_sha256):
-            require_sha256(digest, "FDF identity")
         for name in ("protocol_version", "planner_version", "backend_identity"):
             identifier(getattr(self, name), name)
         if self.tau_u_ev is not None:
@@ -254,17 +251,10 @@ class ResolvedPerturbationPlan:
         object.__setattr__(self, "reference", ReferenceEvidence.from_mapping(self.reference.to_mapping()))
         sites = tuple(s.site_id for s in inv.subspaces)
         index = {s: i for i, s in enumerate(sites)}
-        if not (
-            inv.effective_fdf_sha256
-            == self.coverage.effective_fdf_sha256
-            == self.reference.state.input_fdf_sha256
-            == self.effective_fdf_sha256
-        ):
-            raise PerturbationPlanError("effective FDF evidence binding mismatch")
-        if self.coverage.inventory_digest != inv.digest or self.coverage.reference != self.reference:
-            raise PerturbationPlanError("coverage evidence binding mismatch")
-        if self.source_fdf_sha256 != self.reference.input_file_sha256:
-            raise PerturbationPlanError("source FDF evidence binding mismatch")
+        if not compare_traceable_mappings(
+            self.coverage.reference.to_mapping(), self.reference.to_mapping()
+        ).equivalent:
+            raise PerturbationPlanError("coverage physical reference evidence mismatch")
         if {s for c in self.coverage.classes for s in c.members} != set(sites):
             raise PerturbationPlanError("coverage must partition the inventory")
         if len(set(self.computed_columns)) != len(self.computed_columns) or not set(
@@ -342,7 +332,6 @@ class ResolvedPerturbationPlan:
             inv.status is not InventoryStatus.OK
             or not sites
             or self.reference.status is not EvidenceStatus.ADMISSIBLE
-            or self.reference.parent_dm_sha256 is None
             or not self.reference.input_output_consistent
             or self.reference.perturbation_detected
             or not self.reference.state.normal_completion_verified
@@ -354,8 +343,65 @@ class ResolvedPerturbationPlan:
             )
         ):
             raise PerturbationPlanError(
-                "READY requires resolved inventory, admissible reference, parent DM and proven omissions"
+                "READY requires resolved inventory, admissible reference and proven omissions"
             )
+
+    @property
+    def traceability_warnings(self) -> tuple[DigestWarning, ...]:
+        metadata = {
+            "source_fdf_sha256": self.source_fdf_sha256,
+            "effective_fdf_sha256": self.effective_fdf_sha256,
+            "reference": self.reference.to_mapping(),
+        }
+        warnings = list(compare_traceable_mappings(metadata, metadata).warnings)
+        warnings.extend(self.coverage.traceability_warnings)
+        for c in self.calibration:
+            for i, digest in enumerate(c.qualification.evidence_sha256):
+                warning = digest_warning(
+                    digest, None, f"calibration.{c.column_plan.site_id}.evidence_sha256[{i}]"
+                )
+                if warning is not None:
+                    warnings.append(warning)
+        pairs = (
+            (self.coverage.inventory_digest, self.inventory.digest, "coverage.inventory_digest"),
+            (self.coverage.effective_fdf_sha256, self.effective_fdf_sha256, "coverage.effective_fdf_sha256"),
+            (self.reference.state.input_fdf_sha256, self.effective_fdf_sha256, "reference.input_fdf_sha256"),
+            (
+                self.inventory.effective_fdf_sha256,
+                self.effective_fdf_sha256,
+                "inventory.effective_fdf_sha256",
+            ),
+            (self.reference.input_file_sha256, self.source_fdf_sha256, "reference.input_file_sha256"),
+        )
+        for c in self.calibration:
+            q = c.qualification
+            if q.round_qualification is not None and q.round_protocol is not None:
+                evidence_warning = digest_warning(
+                    q.round_qualification.evidence_sha256,
+                    None,
+                    f"calibration.{c.column_plan.site_id}.round_evidence_sha256",
+                )
+                if evidence_warning is not None:
+                    warnings.append(evidence_warning)
+                warning = digest_warning(
+                    q.round_qualification.protocol_sha256,
+                    q.round_protocol.digest,
+                    f"calibration.{c.column_plan.site_id}.protocol_sha256",
+                )
+                if warning is not None:
+                    warnings.append(warning)
+        for recorded, observed, field in pairs:
+            warning = digest_warning(recorded, observed, field)
+            if warning is not None:
+                warnings.append(warning)
+        warnings.extend(
+            compare_traceable_mappings(
+                self.coverage.reference.to_mapping(), self.reference.to_mapping()
+            ).warnings
+        )
+        return tuple(
+            sorted(set(warnings), key=lambda x: (x.field, x.reason.value, x.recorded or "", x.observed or ""))
+        )
 
     @property
     def bands(self) -> dict[str, object]:
@@ -370,7 +416,7 @@ class ResolvedPerturbationPlan:
         ).hexdigest()
 
     def to_mapping(self) -> dict[str, object]:
-        return {
+        result: dict[str, object] = {
             "schema": self.schema,
             "source_fdf_sha256": self.source_fdf_sha256,
             "effective_fdf_sha256": self.effective_fdf_sha256,
@@ -391,6 +437,9 @@ class ResolvedPerturbationPlan:
             "reason_codes": [r.value for r in self.reason_codes],
             "egg_box_quantification": self.egg_box_quantification.value,
         }
+        if self.traceability_warnings:
+            result["traceability_warnings"] = [w.to_mapping() for w in self.traceability_warnings]
+        return result
 
     @property
     def digest(self) -> str:
@@ -410,8 +459,8 @@ class ResolvedPerturbationPlan:
             )
             result = cls(
                 cast(str, row["schema"]),
-                cast(str, row["source_fdf_sha256"]),
-                cast(str, row["effective_fdf_sha256"]),
+                cast(str, row.get("source_fdf_sha256")),
+                cast(str, row.get("effective_fdf_sha256")),
                 inventory_from_mapping(cast(Mapping[str, object], row["inventory"])),
                 ReferenceEvidence.from_mapping(cast(Mapping[str, object], row["reference"])),
                 CoverageQualification.from_mapping(cast(Mapping[str, object], row["coverage"])),
@@ -437,9 +486,7 @@ class ResolvedPerturbationPlan:
             # their new digest intentionally invalidates an old campaign lock.
             canonical_row = dict(row)
             canonical_row.setdefault("egg_box_quantification", "NOT_QUANTIFIED")
-            if json.dumps(result.to_mapping(), sort_keys=True, allow_nan=False) != json.dumps(
-                canonical_row, sort_keys=True, allow_nan=False
-            ):
+            if not compare_traceable_mappings(result.to_mapping(), canonical_row).equivalent:
                 raise PerturbationPlanError(
                     "serialized fields, bands or estimator weights disagree with the resolved evidence"
                 )

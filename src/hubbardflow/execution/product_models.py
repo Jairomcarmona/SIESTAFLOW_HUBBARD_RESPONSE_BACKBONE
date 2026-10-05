@@ -14,6 +14,7 @@ from hashlib import sha256
 from typing import TYPE_CHECKING, cast
 
 from hubbardflow.domain.coverage_models import CoverageQualification
+from hubbardflow.domain.hash_traceability import DigestWarning, compare_traceable_mappings, digest_warning
 from hubbardflow.domain.perturbation_plan import PlanStatus
 from hubbardflow.domain.perturbation_plan_evidence import (
     freeze_inventory,
@@ -113,18 +114,14 @@ class ProductSnapshot:
                 "diagnostic_coverage",
                 CoverageQualification.from_mapping(self.diagnostic_coverage.to_mapping()),
             )
-        require_sha256(self.source_fdf_sha256, "source FDF")
-        if self.config_digest is not None:
-            require_sha256(self.config_digest, "planning config")
         if self.frozen_lr_config_json is not None:
             object.__setattr__(
                 self, "frozen_lr_config_json", canonical(json_object(self.frozen_lr_config_json))
             )
         input_hashes = json_object(self.input_sha256_json)
-        for path, digest in input_hashes.items():
-            if not isinstance(path, str) or not isinstance(digest, str):
-                raise ProductError("input SHA256 map must contain string paths and digests")
-            require_sha256(digest, f"input {path}")
+        for path in input_hashes:
+            if not isinstance(path, str):
+                raise ProductError("input SHA256 map must contain string paths")
         object.__setattr__(self, "input_sha256_json", canonical(input_hashes))
         if not isinstance(self.status, PlanStatus) or any(
             not isinstance(r, ProductReason) for r in self.reasons
@@ -133,11 +130,42 @@ class ProductSnapshot:
         object.__setattr__(self, "reasons", tuple(sorted(set(self.reasons), key=lambda r: r.value)))
         if self.planning is not None and (
             self.status is not self.planning.plan.status
-            or self.inventory.digest != self.planning.plan.inventory.digest
-            or self.source_fdf_sha256 != self.planning.plan.source_fdf_sha256
-            or self.diagnostic_coverage != self.planning.diagnostic_coverage
+            or not compare_traceable_mappings(
+                inventory_mapping(self.inventory), inventory_mapping(self.planning.plan.inventory)
+            ).equivalent
+            or (self.diagnostic_coverage is None) != (self.planning.diagnostic_coverage is None)
+            or (
+                self.diagnostic_coverage is not None
+                and self.planning.diagnostic_coverage is not None
+                and not compare_traceable_mappings(
+                    self.diagnostic_coverage.to_mapping(), self.planning.diagnostic_coverage.to_mapping()
+                ).equivalent
+            )
         ):
             raise ProductError("product snapshot disagrees with the resolved plan")
+
+    @property
+    def traceability_warnings(self) -> tuple[DigestWarning, ...]:
+        metadata = {"source_fdf_sha256": self.source_fdf_sha256, "config_digest": self.config_digest}
+        warnings = list(compare_traceable_mappings(metadata, metadata).warnings)
+        for path, digest in json_object(self.input_sha256_json).items():
+            warning = digest_warning(digest, None, f"input_sha256.{path}")
+            if warning is not None:
+                warnings.append(warning)
+        if self.planning is not None:
+            warnings.extend(
+                compare_traceable_mappings(
+                    inventory_mapping(self.inventory), inventory_mapping(self.planning.plan.inventory)
+                ).warnings
+            )
+            warning = digest_warning(
+                self.source_fdf_sha256, self.planning.plan.source_fdf_sha256, "source_fdf_sha256"
+            )
+            if warning is not None:
+                warnings.append(warning)
+        return tuple(
+            sorted(set(warnings), key=lambda x: (x.field, x.reason.value, x.recorded or "", x.observed or ""))
+        )
 
     def to_mapping(self) -> dict[str, object]:
         result: dict[str, object] = {
@@ -161,6 +189,8 @@ class ProductSnapshot:
             result["frozen_lr_config"] = json_object(self.frozen_lr_config_json)
             result["frozen_lr_config_sha256"] = self.frozen_lr_config_sha256
         result["input_sha256"] = json_object(self.input_sha256_json)
+        if self.traceability_warnings:
+            result["traceability_warnings"] = [w.to_mapping() for w in self.traceability_warnings]
         return result
 
     @classmethod
@@ -174,8 +204,8 @@ class ProductSnapshot:
             canonical(row["request"]),
             inventory_from_mapping(cast(Mapping[str, object], row["inventory"])),
             None if raw is None else CampaignPlanning.from_mapping(cast(Mapping[str, object], raw)),
-            cast(str | None, row["planning_config_digest"]),
-            cast(str, row["source_fdf_sha256"]),
+            cast(str | None, row.get("planning_config_digest")),
+            cast(str, row.get("source_fdf_sha256")),
             PlanStatus(cast(str, row["status"])),
             tuple(ProductReason(r) for r in cast(list[str], row["reason_codes"])),
             cast(str, row["detail"]),
@@ -189,7 +219,15 @@ class ProductSnapshot:
             canonical(row.get("input_sha256", {})),
         )
         if row.get("frozen_lr_config_sha256") != snapshot.frozen_lr_config_sha256:
-            raise ProductError("frozen lr-config digest disagrees with its stored bytes")
+            warning = digest_warning(
+                row.get("frozen_lr_config_sha256"),
+                snapshot.frozen_lr_config_sha256,
+                "frozen_lr_config_sha256",
+            )
+            if warning is not None:
+                object.__setattr__(
+                    snapshot, "detail", snapshot.detail + "\n" + canonical(warning.to_mapping())
+                )
         return snapshot
 
     @property

@@ -90,6 +90,12 @@ def reference_reproduction_report_lines(evidence: Mapping[str, Any]) -> list[str
         f"- Reason: `{_cell(evidence.get('reason'))}`; {_cell(evidence.get('detail'))}.",
         f"- Maximum occupation difference (e): {_fmt(evidence.get('max_occupation_difference_e'))}; comparison quanta (e): {_json_compact(evidence.get('occupation_comparison_quanta_e'))}.",
         f"- Fermi difference (eV): {_fmt(evidence.get('max_fermi_difference_ev'))}; comparison quantum (eV): {_fmt(evidence.get('fermi_comparison_quantum_ev'))}.",
+        f"- Occupation tolerances used (e): {_json_compact(evidence.get('occupation_tolerances_e'))}; maximum (e): {_fmt(evidence.get('occupation_tolerance_e'))}.",
+        f"- Declared SCF.DM.Tolerance: {_fmt(evidence.get('scf_dm_tolerance'))}; policy factor: {_fmt(evidence.get('tolerance_factor'))}.",
+        f"- Occupation assessment: `{_cell(evidence.get('occupation_equivalence', 'NOT_ASSESSED'))}`.",
+        f"- Fermi assessment: {_cell(evidence.get('fermi_equivalence', 'RECORDED_NOT_ASSESSED'))}; tolerance used (eV): {_fmt(evidence.get('fermi_tolerance_ev'))}; declared (eV): {_fmt(evidence.get('declared_fermi_tolerance_ev'))}; source: {_cell(evidence.get('fermi_tolerance_source'))}.",
+        f"- Fermi print half-widths (eV): {_json_compact(evidence.get('fermi_print_half_widths_ev'))}; warnings: {_json_compact(evidence.get('warnings', []))}.",
+        f"- Affected atom indices: {_json_compact(evidence.get('affected_atom_indices'))}; all reduced classes affected: {_fmt(evidence.get('all_reduced_classes_affected'))}.",
     ]
 
 

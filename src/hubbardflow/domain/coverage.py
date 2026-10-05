@@ -37,7 +37,6 @@ from .symmetry_operations import (
     close_under_composition,
     orbits,
 )
-from .validation import ValidationError, require_sha256
 
 __all__ = [
     "CoverageClass",
@@ -70,15 +69,6 @@ def qualify_coverage(
     identifiers = tuple(s.site_id for s in sites)
     if len(set(identifiers)) != len(sites) or len({s.atom_index for s in sites}) != len(sites):
         raise CoverageError("coverage needs unique site identifiers and one subspace per atom")
-    try:
-        for name, digest in (
-            ("inventory_digest", inventory.digest),
-            ("input_file_sha256", state.input_file_sha256),
-            ("siesta_output_sha256", state.state.siesta_output_sha256),
-        ):
-            require_sha256(digest, name)
-    except ValidationError as exc:
-        raise CoverageError(str(exc)) from exc
     declared = {s for group in user_policy.declared_classes for s in group}
     if not declared <= set(identifiers):
         raise CoverageError("declared classes contain sites absent from the inventory")
@@ -97,8 +87,6 @@ def qualify_coverage(
         or (not state.nonpolarized_verified and len(state.state.moments_by_atom) != len(model.atoms))
     ):
         base_reasons.update((CoverageReason.REFERENCE_NOT_ADMISSIBLE, CoverageReason.EVIDENCE_INCOMPLETE))
-    if not (inventory.effective_fdf_sha256 == model.effective_fdf_sha256 == state.state.input_fdf_sha256):
-        base_reasons.add(CoverageReason.EVIDENCE_BINDING_MISMATCH)
     if (
         any(a.identity_digest is None for a in model.atoms)
         or InventoryReason.SPECIES_IDENTITY_NOT_ESTABLISHED in inventory.reason_codes

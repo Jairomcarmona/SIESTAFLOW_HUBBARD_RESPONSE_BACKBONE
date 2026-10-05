@@ -90,3 +90,36 @@ def test_runtime_identity_uses_only_receipted_active_grid_and_scf_level(tmp_path
     assert set(identity["execution_attempt_ids"]) == {
         "attempt-123456-aaaaaaaa", "attempt-123456-bbbbbbbb", "attempt-123456-cccccccc",
     }
+
+
+def test_revalidation_persists_hash_warnings_without_any_invalidation(tmp_path: Path) -> None:
+    import json
+    from hubbardflow.execution.lr_dag import LRDag, LRDagNode, LRNodeKind
+
+    evidence_path = tmp_path / "analysis.json"
+    evidence_path.write_text("{}", encoding="utf-8")
+    runner = CampaignRunner.__new__(CampaignRunner)
+    runner.control = tmp_path / ".siestaflow"
+    runner.campaign = {"campaign_id": "synthetic", "input_identity": "a" * 64}
+    runner.adaptive_policy_digest = None
+    runner.adaptive_policy = None
+    runner.shadow = None
+    runner.dag = LRDag((LRDagNode("matrix-analysis", LRNodeKind.MATRIX_ANALYSIS, ()),), False)
+    receipts = {"matrix-analysis": NodeReceipt("matrix-analysis", NodeState.VALIDATED, "a" * 64)}
+    runner.executor = SimpleNamespace(checkpoint=_Checkpoint(receipts))
+    runner.records = {
+        "matrix-analysis": {
+            "evidence_path": str(evidence_path),
+            "evidence_digest": "b" * 64,
+            "evidence_sha256": "c" * 64,
+        }
+    }
+    runner.store = CampaignStore(tmp_path / "node-evidence.json", lambda: runner.executor.checkpoint)
+    runner._revalidate_reuse()
+    restored = json.loads(runner.store.records_path.read_text(encoding="utf-8"))
+    assert restored["nodes"]["matrix-analysis"]["traceability_warnings"] == [
+        "NODE_EVIDENCE_DIGEST_MISMATCH",
+        "EVIDENCE_FILE_DIGEST_MISMATCH",
+        "RECEIPT_EVIDENCE_DIGEST_MISMATCH",
+    ]
+    assert runner.checkpoint() == receipts

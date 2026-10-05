@@ -2,19 +2,20 @@
 
 These tests deliberately mutate synthetic evidence.  They are not SIESTA
 evidence and must never be used as a physical result.  Their purpose is to
-prove that a certificate cannot remain PASS after its provenance or semantic
-trace has been tampered with.
+prove that provenance changes are recorded while semantic trace violations
+still invalidate evidence.
 """
 
-from hashlib import sha256
 import json
+from hashlib import sha256
 from pathlib import Path
 
 import pytest
 
+from hubbardflow.domain.hash_traceability import DigestWarningReason
 from hubbardflow.siesta_backend.bare_semantics_evidence import (
-    BareTraceExpectation,
     BareSemanticEvidenceError,
+    BareTraceExpectation,
     verify_bare_semantics_evidence,
 )
 
@@ -45,12 +46,16 @@ def _fixture(tmp_path: Path):
         "hxc_rebuild_after_selected_population": "TRACE Hxc rebuilt",
     }
     trace.write_text(
-        "\n".join(markers[name] for name in (
-            "reference_dm_loaded",
-            "selected_population",
-            "perturbation_applied",
-            "hxc_rebuild_after_selected_population",
-        )) + "\n",
+        "\n".join(
+            markers[name]
+            for name in (
+                "reference_dm_loaded",
+                "selected_population",
+                "perturbation_applied",
+                "hxc_rebuild_after_selected_population",
+            )
+        )
+        + "\n",
         encoding="utf-8",
     )
     payload = {
@@ -78,9 +83,7 @@ def _fixture(tmp_path: Path):
         "trace": trace,
         "sidecar": sidecar,
         "payload": payload,
-        "trusted_expectation": BareTraceExpectation(
-            "audited-diagnostic-revision", dict(markers)
-        ),
+        "trusted_expectation": BareTraceExpectation("audited-diagnostic-revision", dict(markers)),
     }
 
 
@@ -111,8 +114,7 @@ def _rewrite_sidecar(fixture, mutate):
         (
             "duplicate_marker",
             lambda f: f["trace"].write_text(
-                f["trace"].read_text(encoding="utf-8")
-                + "TRACE population selected\n",
+                f["trace"].read_text(encoding="utf-8") + "TRACE population selected\n",
                 encoding="utf-8",
             ),
         ),
@@ -126,12 +128,8 @@ def _rewrite_sidecar(fixture, mutate):
         (
             "out_of_order",
             lambda f: f["trace"].write_text(
-                "\n".join((
-                    "TRACE DM accepted",
-                    "TRACE Hxc rebuilt",
-                    "TRACE perturbation Hamiltonian built",
-                    "TRACE population selected",
-                )) + "\n",
+                "TRACE DM accepted\nTRACE Hxc rebuilt\n"
+                "TRACE perturbation Hamiltonian built\nTRACE population selected\n",
                 encoding="utf-8",
             ),
         ),
@@ -147,21 +145,35 @@ def test_trace_event_integrity_never_passes(tmp_path: Path, name, mutate):
 
 
 @pytest.mark.parametrize("artifact", ["executable", "dm", "fdf", "output"])
-def test_provenance_artifact_mutation_never_passes(tmp_path: Path, artifact):
+def test_provenance_artifact_mutation_warns_and_preserves_semantic_checks(tmp_path: Path, artifact):
     fixture = _fixture(tmp_path)
     fixture[artifact].write_bytes(fixture[artifact].read_bytes() + b"tampered")
-    with pytest.raises(BareSemanticEvidenceError, match="sha256"):
-        _verify(fixture)
+    result = _verify(fixture)
+    expected = {
+        "executable": "executable_sha256",
+        "dm": "reference_dm_sha256",
+        "fdf": "input_fdf_sha256",
+        "output": "output_sha256",
+    }[artifact]
+    assert len(result.traceability_warnings) == 1
+    warning = result.traceability_warnings[0]
+    assert warning.field == expected
+    assert warning.reason is DigestWarningReason.MISMATCH
+    assert warning.observed == _digest(fixture[artifact])
 
 
-def test_trace_hash_mutation_never_passes(tmp_path: Path):
+def test_trace_hash_mutation_warns_when_semantic_trace_is_intact(tmp_path: Path):
     fixture = _fixture(tmp_path)
     fixture["trace"].write_text(
         fixture["trace"].read_text(encoding="utf-8") + "unbound text\n",
         encoding="utf-8",
     )
-    with pytest.raises(BareSemanticEvidenceError, match="trace_sha256"):
-        _verify(fixture)
+    result = _verify(fixture)
+    assert len(result.traceability_warnings) == 1
+    warning = result.traceability_warnings[0]
+    assert warning.field == "trace_sha256"
+    assert warning.reason is DigestWarningReason.MISMATCH
+    assert warning.observed == _digest(fixture["trace"])
 
 
 def test_abnormal_output_never_passes_even_if_hash_is_rebound(tmp_path: Path):
@@ -215,3 +227,22 @@ def test_partial_sidecar_schema_never_passes(tmp_path: Path):
     _rewrite_sidecar(fixture, lambda p: p.pop("trace_markers"))
     with pytest.raises(BareSemanticEvidenceError, match="schema"):
         _verify(fixture)
+
+
+@pytest.mark.parametrize(
+    "field", ["executable_sha256", "reference_dm_sha256", "input_fdf_sha256", "output_sha256", "trace_sha256"]
+)
+@pytest.mark.parametrize("value", [None, "", "malformed"])
+def test_absent_or_malformed_hash_metadata_warns(tmp_path: Path, field, value):
+    fixture = _fixture(tmp_path)
+    if value is None:
+        _rewrite_sidecar(fixture, lambda p: p.pop(field))
+    else:
+        _rewrite_sidecar(fixture, lambda p: p.update({field: value}))
+    result = _verify(fixture)
+    assert len(result.traceability_warnings) == 1
+    warning = result.traceability_warnings[0]
+    assert warning.field == field
+    assert warning.reason is (
+        DigestWarningReason.MALFORMED if value == "malformed" else DigestWarningReason.ABSENT
+    )

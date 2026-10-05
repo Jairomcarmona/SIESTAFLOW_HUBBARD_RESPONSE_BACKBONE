@@ -82,8 +82,15 @@ def test_tampered_serialized_provenance_rejected(field: str) -> None:
         mapping["calibration"][0][field][0][1] += 1
     else:
         mapping[field] = "0" * 64
-    with pytest.raises(PerturbationPlanError):
-        ResolvedPerturbationPlan.from_mapping(mapping)
+    if field in {"source_fdf_sha256", "effective_fdf_sha256", "inventory"}:
+        restored = ResolvedPerturbationPlan.from_mapping(mapping)
+        assert restored.status is plan().status
+        assert restored.traceability_warnings
+        assert restored.run_specs == plan().run_specs
+        assert restored.reconstruction_maps == plan().reconstruction_maps
+    else:
+        with pytest.raises(PerturbationPlanError):
+            ResolvedPerturbationPlan.from_mapping(mapping)
 
 
 @given(st.sampled_from((float("nan"), float("inf"), -float("inf"))))
@@ -113,3 +120,20 @@ def test_run_specs_and_reconstruction_must_be_complete() -> None:
     mapping["unknown"] = True
     with pytest.raises(PerturbationPlanError):
         ResolvedPerturbationPlan.from_mapping(mapping)
+
+
+@pytest.mark.parametrize("field", ["source_fdf_sha256", "effective_fdf_sha256"])
+@pytest.mark.parametrize("value", [None, "", "malformed"])
+def test_plan_file_hash_metadata_is_optional_warning(field, value):
+    original = plan()
+    mapping = json.loads(json.dumps(original.to_mapping()))
+    if value is None:
+        mapping.pop(field)
+    else:
+        mapping[field] = value
+    restored = ResolvedPerturbationPlan.from_mapping(mapping)
+    assert restored.status is original.status
+    assert restored.run_specs == original.run_specs
+    assert restored.reconstruction_maps == original.reconstruction_maps
+    assert restored.traceability_warnings
+    assert "traceability_warnings" in restored.to_mapping()

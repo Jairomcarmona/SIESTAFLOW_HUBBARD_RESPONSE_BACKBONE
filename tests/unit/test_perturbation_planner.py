@@ -165,7 +165,11 @@ def test_missing_reference_evidence_never_promotes_ready(cause: str) -> None:
         backend_identity="declared",
         tau_u_ev=None,
     )
-    assert resolved.status is PlanStatus.NOT_ESTABLISHED
+    if cause == "parent":
+        assert resolved.status is PlanStatus.READY
+        assert any(w.field.endswith("parent_dm_sha256") for w in resolved.traceability_warnings)
+    else:
+        assert resolved.status is PlanStatus.NOT_ESTABLISHED
     assert len(resolved.run_specs) == 32
 
 
