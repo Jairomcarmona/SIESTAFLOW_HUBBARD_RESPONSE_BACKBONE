@@ -10,8 +10,8 @@ from typing import Any, cast
 import pytest
 
 from hubbardflow.domain.perturbation_plan import AlphaStrategy, PlanStatus
-from hubbardflow.domain.subspace_inventory import CorrelatedSubspace, InventoryReason, InventoryStatus
 from hubbardflow.domain.perturbation_plan_evidence import ProjectorEvidence
+from hubbardflow.domain.subspace_inventory import CorrelatedSubspace, InventoryReason, InventoryStatus
 from hubbardflow.execution.product_admission import (
     ExecutionAdmissionReason,
     ExecutionAdmissionStatus,
@@ -24,8 +24,13 @@ from hubbardflow.execution.product_models import ProductSnapshot
 def _valid_case() -> tuple[ProductSnapshot, dict[str, object]]:
     projector = ProjectorEvidence("Co", "1", 3, 2, 0.0, 0.0, 3.0, 1.0, (), "Co 1 3 2 0 0 3 1")
     subspace = CorrelatedSubspace("Co@0:3:2", 0, "Co", 27, projector, "a" * 64)
-    inventory = SimpleNamespace(status=InventoryStatus.OK, subspaces=(subspace,), digest="a" * 64,
-                                effective_fdf_sha256="b" * 64, reason_codes=())
+    inventory = SimpleNamespace(
+        status=InventoryStatus.OK,
+        subspaces=(subspace,),
+        digest="a" * 64,
+        effective_fdf_sha256="b" * 64,
+        reason_codes=(),
+    )
     run_specs = tuple(
         SimpleNamespace(site_id=subspace.site_id, mode=SimpleNamespace(value=mode), alpha_ev=alpha)
         for mode in ("BARE", "SCREENED")
@@ -176,8 +181,12 @@ def test_each_admission_condition_fails_closed_alone(change: str, reason: Execut
     elif change == "coverage":
         config["coverage"] = "UNSUPPORTED"
     elif change == "snapshot":
-        bad_inventory = SimpleNamespace(**{**snapshot.inventory.__dict__,
-            "subspaces": (replace(snapshot.inventory.subspaces[0], atomic_number=28),)})
+        bad_inventory = SimpleNamespace(
+            **{
+                **snapshot.inventory.__dict__,
+                "subspaces": (replace(snapshot.inventory.subspaces[0], atomic_number=28),),
+            }
+        )
         snapshot = cast(ProductSnapshot, SimpleNamespace(**{**snapshot.__dict__, "inventory": bad_inventory}))
     result = execution_admission(snapshot, config)
     assert result.status is ExecutionAdmissionStatus.BLOCKED
