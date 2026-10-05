@@ -8,6 +8,7 @@ import math
 import re
 import sys
 import time
+from fractions import Fraction
 from pathlib import Path
 from typing import Any
 
@@ -58,6 +59,17 @@ def test_analysis_comparator_requires_exact_state_and_decision() -> None:
         _assert_replay_equivalent({"state": "VALIDATED"}, {"state": "FAILED"})
     with pytest.raises(AssertionError, match="decision"):
         _assert_replay_equivalent({"decision": "ACCEPT"}, {"decision": "REJECT"})
+
+
+def test_analysis_comparator_compares_serialized_contraction_as_numeric_diagnostic() -> None:
+    expected = {"verified_contraction_exact": "1/1000"}
+    actual = {"verified_contraction_exact": "1000000000000001/1000000000000000000"}
+    _assert_replay_equivalent(actual, expected)
+    with pytest.raises(AssertionError):
+        _assert_replay_equivalent({"verified_contraction_exact": "1/100"}, expected)
+    with pytest.raises(AssertionError):
+        _assert_replay_equivalent({"other": actual["verified_contraction_exact"]},
+                                  {"other": expected["verified_contraction_exact"]})
 
 
 @pytest.mark.parametrize(
@@ -231,7 +243,7 @@ def test_nio_p5_runner_replay_matches_part_a_and_resumes(
     actual_analysis = json.loads((manifest.parent / "results" / ANALYSIS).read_text(encoding="utf-8"))
     part_a_analysis = json.loads((REAL_FIXTURE / ANALYSIS).read_text(encoding="utf-8"))
     removed: dict[str, str] = {}
-    actual_view = _comparison_view(actual_analysis, removed, "$")
+    actual_view = _comparison_view(_part_a_rounding_compatibility_view(actual_analysis), removed, "$")
     expected_view = _comparison_view(part_a_analysis, removed, "$")
     _assert_replay_equivalent(actual_view, expected_view)
     _assert_part_a_u_within_rounding_bound(actual_analysis, part_a_analysis)
@@ -357,6 +369,28 @@ def _comparison_view(value: Any, removed: dict[str, str], path: str) -> Any:
     return value
 
 
+def _part_a_rounding_compatibility_view(analysis: dict[str, Any]) -> dict[str, Any]:
+    """Compare the full frozen Part A report using its original rounding fields.
+
+    TASK 24a changes only the primary print-bound propagation. The archived
+    artifact remains immutable; its exact original norm bound is still emitted
+    in the compatibility subtree. All chi/U, occupation, state and decision
+    fields retain the existing complete comparison. The new output is checked
+    separately against the complete replay golden and truth-coverage tests.
+    """
+    compatible = json.loads(json.dumps(analysis))
+    for section in (compatible["primary"], compatible["same_grid_linear"], *compatible["window_results"]):
+        rounding = section.get("rounding_bound")
+        if isinstance(rounding, dict) and "legacy_uniform_norm_bound" in rounding:
+            section["rounding_bound"] = rounding["legacy_uniform_norm_bound"]
+    rounding = compatible["printing_rounding_bounds"]
+    if "legacy_uniform_norm_bound" in rounding:
+        legacy = rounding["legacy_uniform_norm_bound"]
+        compatible["printing_rounding_bounds"] = legacy
+        compatible["printing_rounding_bound_eV"] = legacy["maximum_U_scalar_half_width_eV"]
+    return compatible
+
+
 def _assert_replay_equivalent(actual: Any, expected: Any, path: str = "$") -> None:
     """Compare exact structure and categorical fields with platform-safe float tolerances.
 
@@ -365,6 +399,13 @@ def _assert_replay_equivalent(actual: Any, expected: Any, path: str = "$") -> No
     a maximum relative difference of 2.6e-11 in physical results and 1.4e-9 in
     ill-conditioned diagnostics across environments including NumPy 2.5.
     """
+    if path.endswith(".verified_contraction_exact") and isinstance(actual, str) and isinstance(expected, str):
+        # Runtime validates q<1 with Fraction. R includes a BLAS inverse, so
+        # its exact residual's lexical encoding can vary in last bits across
+        # platforms. Compare this new numeric diagnostic with the existing
+        # numeric tolerances; state/reason and all other strings stay exact.
+        _assert_replay_equivalent(float(Fraction(actual)), float(Fraction(expected)), path)
+        return
     if type(actual) is not type(expected):
         raise AssertionError(f"{path}: type differs ({type(actual).__name__} != {type(expected).__name__})")
     if isinstance(actual, dict):
