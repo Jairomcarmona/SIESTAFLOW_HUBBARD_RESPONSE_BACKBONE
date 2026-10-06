@@ -70,6 +70,38 @@ def test_analysis_comparator_compares_serialized_contraction_as_numeric_diagnost
     with pytest.raises(AssertionError):
         _assert_replay_equivalent({"other": actual["verified_contraction_exact"]},
                                   {"other": expected["verified_contraction_exact"]})
+def test_analysis_comparator_derives_and_checks_sensitivity_state() -> None:
+    removed: dict[str, str] = {}
+    archived = _comparison_view(
+        {"sensitivity_summary": {"assessment": "MEASURED_EXCEEDS_TOLERANCE"}},
+        removed,
+        "$",
+    )
+    current = _comparison_view(
+        {
+            "sensitivity_summary": {
+                "assessment": "MEASURED_EXCEEDS_TOLERANCE",
+                "state": "SENSITIVE",
+                "declared_by": "config",
+                "provided_via": "cli",
+            }
+        },
+        {},
+        "$",
+    )
+    _assert_replay_equivalent(current, archived)
+
+    with pytest.raises(AssertionError, match="state disagrees with assessment"):
+        _comparison_view(
+            {
+                "sensitivity_summary": {
+                    "assessment": "MEASURED_EXCEEDS_TOLERANCE",
+                    "state": "UNASSESSED",
+                }
+            },
+            {},
+            "$",
+        )
 
 
 @pytest.mark.parametrize(
@@ -254,7 +286,8 @@ def test_nio_p5_runner_replay_matches_part_a_and_resumes(
     assert report_path.is_file() and report_path.stat().st_size > 0
     replay_golden = json.loads(REPLAY_ANALYSIS.read_text(encoding="utf-8"))
     replay_view = _analysis_comparison_view(actual_analysis, manifest.parent.parent.parent)
-    _assert_replay_equivalent(replay_view, replay_golden)
+    replay_golden_view = _analysis_comparison_view(replay_golden, manifest.parent.parent.parent)
+    _assert_replay_equivalent(replay_view, replay_golden_view)
 
     state_gate_path = manifest.parent / "results" / "i5_state_gate.json"
     assert state_gate_path.is_file()
@@ -316,8 +349,33 @@ def test_nio_p5_runner_replay_matches_part_a_and_resumes(
 def _comparison_view(value: Any, removed: dict[str, str], path: str) -> Any:
     if isinstance(value, dict):
         result: dict[str, Any] = {}
+        if path.endswith(".sensitivity_summary"):
+            state_by_assessment = {
+                "UNASSESSED_TOLERANCE_MISSING": "UNASSESSED",
+                "UNASSESSED_REQUIRED_METRIC_UNAVAILABLE": "UNASSESSED",
+                "NOT_ASSESSED": "UNASSESSED",
+                "MEASURED_EXCEEDS_TOLERANCE": "SENSITIVE",
+                "WITHIN_TOLERANCE_EVIDENCE_INCOMPLETE": "WITHIN_TOLERANCE_EVIDENCE_INCOMPLETE",
+                "WITHIN_TOLERANCE": "NUMERICAL_CANDIDATE",
+            }
+            assessment = value.get("assessment")
+            if assessment not in state_by_assessment:
+                raise AssertionError(f"{path}: unknown sensitivity assessment {assessment!r}")
+            derived_state = state_by_assessment[assessment]
+            recorded_state = value.get("state", derived_state)
+            if recorded_state != derived_state:
+                raise AssertionError(
+                    f"{path}.state disagrees with assessment: {recorded_state!r} != {derived_state!r}"
+                )
+            result["state"] = recorded_state
         for key, child in value.items():
             child_path = f"{path}.{key}"
+            if path.endswith(".sensitivity_summary") and key in {"declared_by", "provided_via"}:
+                # TASK 24b adds config provenance absent from the archived Part A result.
+                removed[child_path] = "TASK 24b sensitivity-report metadata"
+                continue
+            if path.endswith(".sensitivity_summary") and key == "state":
+                continue
             if key == "input_files" and isinstance(child, list):
                 dynamic_input_paths = {
                     "backend_contract.json",

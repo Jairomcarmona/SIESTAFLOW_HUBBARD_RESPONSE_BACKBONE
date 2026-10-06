@@ -7,6 +7,7 @@ NOT_ESTABLISHED even when a static plan is READY or an override is recorded.
 
 from __future__ import annotations
 
+import math
 from collections.abc import Mapping, Sequence
 from dataclasses import asdict, dataclass, replace
 from hashlib import sha256
@@ -60,6 +61,7 @@ class ProductRequest:
     allow_spin_flip: bool | None
     allow_rotations: bool | None
     tol_fermi_ev: float | None = None
+    sensitivity_tolerance_eV: float | None = None
 
     def __post_init__(self) -> None:
         for value in (
@@ -85,6 +87,13 @@ class ProductRequest:
                 require_nonnegative_finite(self.tol_fermi_ev, "tol_Fermi_eV")
             except ValueError as exc:
                 raise ProductError(str(exc)) from exc
+        if self.sensitivity_tolerance_eV is not None and (
+            isinstance(self.sensitivity_tolerance_eV, bool)
+            or not isinstance(self.sensitivity_tolerance_eV, (int, float))
+            or not math.isfinite(float(self.sensitivity_tolerance_eV))
+            or self.sensitivity_tolerance_eV < 0.0
+        ):
+            raise ProductError("sensitivity tolerance must be finite and nonnegative")
 
     def to_mapping(self) -> dict[str, object]:
         return asdict(self)
@@ -102,6 +111,7 @@ class ProductRequest:
             cast(bool | None, row["allow_spin_flip"]),
             cast(bool | None, row["allow_rotations"]),
             cast(float | None, row.get("tol_fermi_ev")),
+            cast(float | None, row.get("sensitivity_tolerance_eV")),
         )
 
 
@@ -143,6 +153,14 @@ def _config(request: ProductRequest) -> dict[str, object] | None:
     ):
         if value is not None:
             raw[field] = value
+    if request.sensitivity_tolerance_eV is not None:
+        analysis = raw.get("analysis_policy", {})
+        if not isinstance(analysis, dict):
+            raise ProductError("analysis_policy must be an object")
+        analysis = dict(analysis)
+        analysis["sensitivity_tolerance_eV"] = request.sensitivity_tolerance_eV
+        analysis["sensitivity_tolerance_provided_via"] = "cli"
+        raw["analysis_policy"] = analysis
     if raw.get("coverage", "DIAGNOSTIC") == "TRANSLATION_SHADOWED":
         raw.setdefault("shadow_rejection_policy", "STOP")
         raw.setdefault("parent_reproduction", "PRINT_EQUIVALENT")

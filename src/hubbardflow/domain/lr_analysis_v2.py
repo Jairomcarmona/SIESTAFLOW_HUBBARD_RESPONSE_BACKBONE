@@ -44,6 +44,7 @@ class LRAnalysisPolicy:
     minimum_residual_dof: int = 1
     matrix_for_inversion: Literal["raw", "symmetrized"] = "raw"
     sensitivity_tolerance_eV: float | None = None
+    sensitivity_tolerance_provided_via: Literal["config", "cli"] = "config"
     u_precision_tolerance_eV: float | None = None
     occupation_precision_requirement: Literal["f20.12"] | None = None
 
@@ -78,9 +79,14 @@ class LRAnalysisPolicy:
         if self.matrix_for_inversion not in {"raw", "symmetrized"}:
             raise LRAnalysisError("matrix_for_inversion must be raw or symmetrized")
         if self.sensitivity_tolerance_eV is not None and (
-            not math.isfinite(self.sensitivity_tolerance_eV) or self.sensitivity_tolerance_eV < 0
+            isinstance(self.sensitivity_tolerance_eV, bool)
+            or not isinstance(self.sensitivity_tolerance_eV, (int, float))
+            or not math.isfinite(float(self.sensitivity_tolerance_eV))
+            or self.sensitivity_tolerance_eV < 0
         ):
             raise LRAnalysisError("sensitivity_tolerance_eV must be finite and nonnegative")
+        if self.sensitivity_tolerance_provided_via not in {"config", "cli"}:
+            raise LRAnalysisError("sensitivity_tolerance_provided_via must be config or cli")
         if self.u_precision_tolerance_eV is not None and (
             not math.isfinite(self.u_precision_tolerance_eV) or self.u_precision_tolerance_eV <= 0
         ):
@@ -905,6 +911,7 @@ def analyze_verified_lr(
     )
 
     reasons: list[str] = []
+    sensitivity_state = "UNASSESSED"
     if fallback_reason:
         reasons.append(f"linear_fallback:{fallback_reason}")
     if selected_method == "linear":
@@ -928,20 +935,27 @@ def analyze_verified_lr(
         )
         if policy.sensitivity_tolerance_eV is None:
             sensitivity_assessment = "UNASSESSED_TOLERANCE_MISSING"
+            sensitivity_state = "UNASSESSED"
             numerical_status = "NUMERICAL_CANDIDATE_UNASSESSED"
         elif sensitivity_exceeded:
             sensitivity_assessment = "MEASURED_EXCEEDS_TOLERANCE"
+            sensitivity_state = "SENSITIVE"
             numerical_status = "NUMERICAL_CANDIDATE_SENSITIVE"
         elif not sensitivity_metrics_complete:
             sensitivity_assessment = "UNASSESSED_REQUIRED_METRIC_UNAVAILABLE"
+            sensitivity_state = "UNASSESSED"
             numerical_status = "NUMERICAL_CANDIDATE_UNASSESSED"
         elif sensitivity_ok and evidence_complete:
             sensitivity_assessment = "WITHIN_TOLERANCE"
+            sensitivity_state = "NUMERICAL_CANDIDATE"
             numerical_status = "NUMERICAL_CANDIDATE"
         else:
             sensitivity_assessment = (
                 "WITHIN_TOLERANCE_EVIDENCE_INCOMPLETE" if sensitivity_ok
                 else "UNASSESSED_REQUIRED_METRIC_UNAVAILABLE"
+            )
+            sensitivity_state = (
+                "WITHIN_TOLERANCE_EVIDENCE_INCOMPLETE" if sensitivity_ok else "UNASSESSED"
             )
             numerical_status = "NUMERICAL_CANDIDATE_SENSITIVE"
         if policy.sensitivity_tolerance_eV is None:
@@ -1060,6 +1074,10 @@ def analyze_verified_lr(
         "screened_out_sha256": sorted({item.screened_out_sha256 for item in observations if item.screened_out_sha256}),
         "projector_fingerprints": sorted({digest for item in observations for digest in item.projector_fingerprints.values() if digest}),
     }
+    estimator_policy = asdict(policy)
+    # Declaration channel is report provenance, not estimator identity. Keeping
+    # it out of this mapping preserves replay comparisons across config/CLI use.
+    estimator_policy.pop("sensitivity_tolerance_provided_via", None)
     result = {
         "schema_version": (
             "siestaflow.lr_u_analysis.v3"
@@ -1075,7 +1093,7 @@ def analyze_verified_lr(
         "analysis_alpha_grid_eV": alphas,
         "analysis_active_window_eV": active_window_ev,
         "full_grid_diagnostic": full_grid_diagnostic,
-        "estimator_policy": asdict(policy),
+        "estimator_policy": estimator_policy,
         "selected_estimator": {"method": selected_method, "degree": policy.polynomial_degree if selected_method == "polynomial" else 1},
         "primary": primary_summary,
         "same_grid_linear": linear_summary,
@@ -1127,6 +1145,12 @@ def analyze_verified_lr(
             "per_site_model_sensitivity_eV": model_sensitivity,
             "per_site_window_sensitivity_eV": window_sensitivity,
             "threshold_eV": policy.sensitivity_tolerance_eV,
+            "state": sensitivity_state,
+            "declared_by": "config" if policy.sensitivity_tolerance_eV is not None else None,
+            "provided_via": (
+                policy.sensitivity_tolerance_provided_via
+                if policy.sensitivity_tolerance_eV is not None else None
+            ),
             "assessment": sensitivity_assessment if primary.U_matrix is not None and not mixed_states else "NOT_ASSESSED",
             "required_metrics_complete": sensitivity_metrics_complete,
             "eligible_window_count": sum(item.get("fit_window_stability_eligible") is True for item in window_results),

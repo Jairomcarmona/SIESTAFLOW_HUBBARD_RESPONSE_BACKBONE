@@ -60,6 +60,11 @@ def _write_report_atomically(path: Path, text: str) -> None:
 
 def add_product_options(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--lr-config", help="versioned LR protocol JSON; no alpha grid is invented")
+    parser.add_argument(
+        "--sensitivity-tolerance-ev",
+        type=float,
+        help="explicit nonnegative absolute sensitivity tolerance in eV; frozen into the effective lr-config",
+    )
     parser.add_argument("--reference-output", help="single unperturbed reference SIESTA output")
     parser.add_argument("--reference-dm", help="parent DM whose bytes enter provenance")
     parser.add_argument(
@@ -130,6 +135,7 @@ def _request(args: argparse.Namespace, fdf: Path) -> ProductRequest:
         args.allow_spin_flip,
         args.allow_rotations,
         getattr(args, "tol_fermi_ev", None),
+        args.sensitivity_tolerance_ev,
     )
 
 
@@ -522,6 +528,7 @@ def product_command(args: argparse.Namespace) -> int:
                 "allow_spin_flip",
                 "allow_rotations",
                 "tol_fermi_ev",
+                "sensitivity_tolerance_ev",
             )
         )
         if provided:
@@ -543,6 +550,11 @@ def product_command(args: argparse.Namespace) -> int:
                 tol_fermi_ev=supplied.tol_fermi_ev
                 if supplied.tol_fermi_ev is not None
                 else frozen_request.tol_fermi_ev,
+                sensitivity_tolerance_eV=(
+                    supplied.sensitivity_tolerance_eV
+                    if supplied.sensitivity_tolerance_eV is not None
+                    else frozen_request.sensitivity_tolerance_eV
+                ),
             )
             if resolve_product_snapshot(merged).to_mapping() != snapshot.to_mapping():
                 raise ProductError(

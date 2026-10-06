@@ -185,6 +185,51 @@ def test_configured_tolerance_distinguishes_exceedance_from_missing_acceptance_l
     )
     assert exceeded["numerical_status"] == "NUMERICAL_CANDIDATE_SENSITIVE"
     assert exceeded["sensitivity_summary"]["assessment"] == "MEASURED_EXCEEDS_TOLERANCE"
+    assert exceeded["sensitivity_summary"]["state"] == "SENSITIVE"
+    assert exceeded["sensitivity_summary"]["declared_by"] == "config"
+    report = render_lr_u_report(exceeded)
+    assert "declarado por: `config`" in report
+    assert "vía: `config`" in report
+
+
+def test_sensitivity_policy_has_four_explicit_assessment_states():
+    observations, _, _ = _observations()
+    alphas = (-0.15, -0.1, -0.05, 0.05, 0.1, 0.15)
+    unassessed = analyze_verified_lr(observations, LRAnalysisPolicy(estimator="auto"))
+    assert unassessed["sensitivity_summary"]["state"] == "UNASSESSED"
+
+    incomplete = analyze_verified_lr(
+        observations,
+        LRAnalysisPolicy(estimator="auto", sensitivity_tolerance_eV=100.0),
+    )
+    assert incomplete["sensitivity_summary"]["state"] == "WITHIN_TOLERANCE_EVIDENCE_INCOMPLETE"
+
+    complete = analyze_verified_lr(
+        observations,
+        LRAnalysisPolicy(estimator="auto", sensitivity_tolerance_eV=100.0),
+        magnetic_state_labels={alpha: "AFM" for alpha in alphas},
+        scf_validated=True,
+    )
+    assert complete["sensitivity_summary"]["state"] == "NUMERICAL_CANDIDATE"
+
+
+def test_cli_declaration_source_is_report_provenance_not_estimator_policy():
+    observations, _, _ = _observations()
+    policy = LRAnalysisPolicy(
+        estimator="auto",
+        sensitivity_tolerance_eV=100.0,
+        sensitivity_tolerance_provided_via="cli",
+    )
+    result = analyze_verified_lr(
+        observations,
+        policy,
+        magnetic_state_labels={alpha: "AFM" for alpha in (-0.15, -0.1, -0.05, 0.05, 0.1, 0.15)},
+        scf_validated=True,
+    )
+    assert result["sensitivity_summary"]["declared_by"] == "config"
+    assert result["sensitivity_summary"]["provided_via"] == "cli"
+    assert "sensitivity_tolerance_provided_via" not in result["estimator_policy"]
+    assert "sensitivity_tolerance_provided_via" not in policy.response_context()
 
 
 def test_active_window_controls_primary_fit_and_full_grid_is_diagnostic():

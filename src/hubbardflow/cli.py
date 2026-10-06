@@ -278,6 +278,7 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "run" and Path(args.campaign).suffix.casefold() != ".fdf":
             product_options = (
                 ("--lr-config", args.lr_config),
+                ("--sensitivity-tolerance-ev", args.sensitivity_tolerance_ev),
                 ("--reference-output", args.reference_output),
                 ("--reference-dm", args.reference_dm),
                 ("--tol-fermi-ev", args.tol_fermi_ev),

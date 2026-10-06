@@ -216,7 +216,8 @@ def initialize_campaign(
         policy = dict(normalized["analysis_policy"])
         allowed_policy = {
             "estimator", "polynomial_degree", "minimum_residual_dof", "matrix_for_inversion",
-            "sensitivity_tolerance_eV", "u_precision_tolerance_eV",
+            "sensitivity_tolerance_eV", "sensitivity_tolerance_provided_via",
+            "u_precision_tolerance_eV",
         }
         if set(policy) - allowed_policy:
             raise CampaignV2Error(f"unsupported analysis_policy fields: {sorted(set(policy) - allowed_policy)}")

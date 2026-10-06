@@ -98,6 +98,20 @@ Use the actual complete species labels in `pseudopotentials`; this illustration 
 
 The config above selects the compatible fixed-grid route. For an adaptive campaign, add a versioned `adaptive_alpha_policy` object and keep `alpha_grid_ev` equal to its six non-zero seed amplitudes; zero is the one shared reference calculation. `init` copies that policy into the campaign config and manifest, and the worker rejects a changed seed or a budget smaller than the seed run.
 
+### Declaring sensitivity tolerance
+
+Sensitivity tolerance has no inferred value and remains unset unless explicitly declared. Set the absolute tolerance in eV in the LR config:
+
+```json
+{
+  "analysis_policy": {
+    "sensitivity_tolerance_eV": 0.02
+  }
+}
+```
+
+The value must be finite and nonnegative; zero is a valid exact threshold. Product commands also accept `--sensitivity-tolerance-ev VALUE`, which freezes the supplied value into the effective LR config and records `provided_via=cli`. Reports record the effective declaration as `declared_by=config`, its source channel, and the resulting state: `UNASSESSED`, `SENSITIVE`, `WITHIN_TOLERANCE_EVIDENCE_INCOMPLETE`, or `NUMERICAL_CANDIDATE`. Without a declared tolerance the result remains `UNASSESSED`; HubbardFlow does not infer a threshold.
+
 ### Adaptive policy with no uncalibrated tolerances
 
 The following illustrative policy deliberately omits stability, truncation, and noise thresholds. It can record a numerical candidate and stop as sensitive, but it cannot claim `STOP_STABLE`, probe SCF noise, shrink, or expand. The example values for `h_eV` and the seed span are inputs to this illustration, not validated SIESTA defaults.
