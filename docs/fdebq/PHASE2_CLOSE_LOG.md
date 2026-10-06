@@ -808,3 +808,21 @@ derivados, sin cambios físicos) está en
 [TASK23C_HASH_AUDIT.md, Corrección de CI y golden R5 de procedencia](TASK23C_HASH_AUDIT.md#corrección-de-ci-y-golden-r5-de-procedencia).
 La ausencia del archivo DM real sigue fallando; únicamente la ausencia de su
 digest deja de producir `PARENT_DM_NOT_ESTABLISHED`.
+
+## TASK 24a — R5 print-bound report schema adaptation
+
+| File / scope | Change and invariant | Scientific audit |
+|---|---|---|
+| `tests/integration/test_runner_replay_nio_p5.py` | Complete Part A comparison is preserved. Only `$.printing_rounding_bounds`, `$.primary.rounding_bound`, `$.same_grid_linear.rounding_bound`, `$.window_results[*].rounding_bound`, and `$.printing_rounding_bound_eV` use the emitted legacy norm compatibility output. Chi/U/occupations/policies/states, U coverage, I.5, stop/resume, manifest and snapshot assertions remain unchanged. The new complete report still compares against the replay golden. | Auditor conditionally approved this specific R5 projection before editing; the final post-fix diff was confirmed by the scientific auditor and verifier. |
+| `tests/fixtures/replay_nio_p5/replay_analysis.v3.json` | Only the five rounding scopes above change. Exact 67-path JSON old/new values: `docs/fdebq/TASK24A_GOLDEN_DIFF.json`. Old SHA256 `b8cf931d85dc42bba00371af82b9ba973db3c5303c70be14356f455ac305bd3d`; new SHA256 `07f93000d3fccf2fdb5a1f51c0a28a2e6f9764bdd56fbc3f145257ab648eeb81`. No chi/U/occupation/policy/state changes. Part A, I.5 golden, manifest/snapshot remain untouched. | Authorized v3 report output change; no scientific invariant or comparator tolerance is relaxed. |
+
+Method, assumptions, focused outputs and residual limits are in `docs/fdebq/TASK24A_ELEMENTWISE_ROUNDING.md`. No SIESTA campaign was executed; WSL integration uses only the fake archived-output replay.
+
+
+### TASK 24a post-audit corrections
+
+The scientific auditor identified and confirmed corrections for two defects before commit: aggregate conversion/summation error of lexical `1.00001` + `2.00003` and JSON serialization of exact q=`18014398509481983/18014398509481984`. The campaign adapter retains nominal float totals and widens only multi-token print widths by their exact error against the lexical sum; single-token widths are unchanged. The exact q is serialized and used by `from_mapping`.
+
+The auditor additionally recommended a scoped replay representation adaptation: only `verified_contraction_exact` is converted from a rational string to a numeric diagnostic for the existing float tolerances; no threshold is changed, runtime q<1 remains exact, and categorical status/reason plus other strings remain exact. The added replay test accepts tiny differences for this field, rejects a large difference, and verifies other strings still compare exactly. Complete Part A, U, I.5, stop/resume, manifest/snapshot assertions remain in place. The 67-path rounding-only golden diff and hashes in the TASK 24a table above were updated to the post-fix result; no physical, policy or state field was changed. The compatibility subtree retains the original norm algorithm and can consume widened input widths in multi-token cases, so numerical equality with an old multi-token bound is not claimed.
+
+Post-fix focused unit output: `28 passed, 2 warnings in 6.84s`; occupation adapter plus those units: `35 passed, 2 warnings in 6.12s`. Final WSL POSIX replay output: `8 passed, 2 warnings in 43.36s`. Ruff/format/mypy of new files are clean; `V6 GATE OK`; `git diff --check` clean.

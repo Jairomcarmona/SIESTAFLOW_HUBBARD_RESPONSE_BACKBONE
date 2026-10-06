@@ -6,8 +6,10 @@ checkpoint for each operation so graph replacement cannot leave stale state.
 
 from __future__ import annotations
 
+import math
 import re
 from collections.abc import Mapping
+from fractions import Fraction
 from hashlib import sha256
 from pathlib import Path
 from typing import Any
@@ -68,7 +70,12 @@ class ObservationAssembler:
         *,
         minimum_decimal_places: int | None,
     ) -> list[float] | None:
-        """Read deterministic half-widths from the selected Occupations tokens."""
+        """Enclose printing plus conversion/summation of Occupations tokens.
+
+        Two printed spin tokens can be converted separately and then summed;
+        half a ULP of the total alone does not enclose that error. Retain the
+        numerical center and add its exact error against the lexical sum.
+        """
         try:
             precision = read_printed_occupation_precision(
                 output_content, event, minimum_decimal_places=minimum_decimal_places
@@ -78,7 +85,22 @@ class ObservationAssembler:
         expected = [int(site["atom_index"]) for site in sites]
         if any(index not in precision for index in expected):
             return None
-        return [float(precision[index].half_width) for index in expected]
+        widths = []
+        for index in expected:
+            measured = precision[index]
+            if len(measured.certification_tokens) == 1:
+                # A single token needs only the conversion cell already
+                # enclosed by fitted_print_interval, preserving legacy widths.
+                widths.append(float(measured.half_width))
+                continue
+            lexical_total = sum((Fraction(token) for token in measured.certification_tokens), Fraction(0))
+            conversion_error = abs(Fraction.from_float(float(measured.total)) - lexical_total)
+            width_exact = Fraction(measured.half_width_exact) + conversion_error
+            width = float(width_exact)
+            if Fraction.from_float(width) < width_exact:
+                width = math.nextafter(width, math.inf)
+            widths.append(width)
+        return widths
 
     @staticmethod
     def projector_fingerprint(

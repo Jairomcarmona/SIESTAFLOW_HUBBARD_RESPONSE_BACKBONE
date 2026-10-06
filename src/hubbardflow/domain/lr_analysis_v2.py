@@ -15,6 +15,13 @@ from typing import Any, Literal, Mapping, Sequence
 
 import numpy as np
 
+from .elementwise_rounding import (
+    InverseBoundStatus,
+    bound_inverse_diagonal,
+    bound_u_diagonal,
+    fitted_print_interval,
+)
+from .u_certification import Interval
 from .matrix_lr import (
     MatrixResponseResult,
     ResponseFitPolicy,
@@ -422,7 +429,7 @@ def _rounding_summary(
         }
         maximum = common_bound
         status = "BOUNDED"
-    return {
+    summary = {
         "status": status,
         "reason": None if robust else "print_intervals_do_not_guarantee_invertibility",
         "rounding_source": occupation_source,
@@ -438,6 +445,89 @@ def _rounding_summary(
         "U_scalar_interval_by_site_eV": intervals,
         "maximum_U_scalar_half_width_eV": maximum,
     }
+
+    if occupation_source == "siesta_occupations_total" and point is not None:
+        summary["legacy_uniform_norm_bound"] = dict(summary)
+        summary.update(_elementwise_rounding_summary(
+            result, observations, trace_half_widths_electron, degree=degree,
+            matrix_for_inversion=matrix_for_inversion,
+            additional_uniform_half_width_e=additional_uniform_half_width_e,
+            coordinate_extra_half_widths_e=coordinate_extra_half_widths_e,
+        ))
+    return summary
+
+
+def _elementwise_rounding_summary(
+    result: MatrixResponseResult,
+    observations: Sequence[ResponseObservation],
+    trace_half_widths_electron: Mapping[tuple[int, float, str], Sequence[float]] | None,
+    *, degree: int, matrix_for_inversion: str,
+    additional_uniform_half_width_e: float,
+    coordinate_extra_half_widths_e: Mapping[tuple[int, float, str, int], float] | None,
+) -> dict[str, Any]:
+    """Retain print intervals through OLS and a verified inverse majorant.
+
+    This v3 path recomputes the exact mathematical OLS center and accounts for
+    its displacement from the reported floating fit. The v2/V6 path retains its
+    existing norm propagation. No SCF uncertainty is inferred from print widths.
+    """
+    labels = result.site_labels
+    boxes: dict[str, list[list[Interval]]] = {
+        mode: [[Interval(0, 0) for _ in labels] for _ in labels]
+        for mode in ("bare", "screened")
+    }
+    for column, label in enumerate(labels):
+        group = sorted((x for x in observations if x.perturbation_site == label), key=lambda x: x.alpha)
+        for row, observed_label in enumerate(labels):
+            for mode in ("bare", "screened"):
+                widths = []
+                for item in group:
+                    values = None if trace_half_widths_electron is None else trace_half_widths_electron.get(
+                        (label, float(item.alpha), mode)
+                    )
+                    extra = 0.0 if coordinate_extra_half_widths_e is None else coordinate_extra_half_widths_e[
+                        (label, float(item.alpha), mode.upper(), observed_label)
+                    ]
+                    components = [0.0 if values is None else float(values[row]),
+                                  additional_uniform_half_width_e, float(extra)]
+                    # Enclose both constituent conversion and summation, without
+                    # an empirical epsilon or any policy tolerance.
+                    widths.append(math.nextafter(math.fsum(
+                        math.nextafter(x, math.inf) if x > 0.0 else x for x in components
+                    ), math.inf) if any(components) else 0.0)
+                boxes[mode][row][column] = fitted_print_interval(
+                    [float(x.alpha) for x in group],
+                    [float(getattr(x, "occupations_" + mode)[row]) for x in group],
+                    widths, degree=degree,
+                )
+    if matrix_for_inversion == "symmetrized":
+        for mode in ("bare", "screened"):
+            original = boxes[mode]
+            boxes[mode] = [[Interval((original[i][j].lo + original[j][i].lo) / 2,
+                                    (original[i][j].hi + original[j][i].hi) / 2)
+                            for j in range(len(labels))] for i in range(len(labels))]
+    bare = bound_inverse_diagonal(boxes["bare"])
+    screened = bound_inverse_diagonal(boxes["screened"])
+    proof = {"chi0": bare.to_mapping(), "chi": screened.to_mapping()}
+    common = {
+        "propagation_method": "verified_elementwise_neumann_with_exact_OLS_print_box",
+        "elementwise_inverse_proof": proof,
+        "elementwise_response_boxes_exact": {
+            mode: [[x.as_json() for x in row] for row in boxes[mode]]
+            for mode in ("bare", "screened")
+        },
+    }
+    if bare.status != InverseBoundStatus.BOUNDED or screened.status != InverseBoundStatus.BOUNDED:
+        return {**common, "status": "UNBOUNDED_MATRIX_SINGULARITY_NOT_EXCLUDED",
+                "reason": "elementwise_print_box_contraction_not_proven",
+                "U_scalar_half_width_by_site_eV": None,
+                "U_scalar_interval_by_site_eV": None, "maximum_U_scalar_half_width_eV": None}
+    assert result.U_matrix is not None
+    bounds = bound_u_diagonal(bare, screened, np.diag(result.U_matrix).tolist()).to_mapping()
+    return {**common, "status": "BOUNDED", "reason": None,
+            "U_scalar_half_width_by_site_eV": dict(zip(map(str, labels), bounds["half_width_eV"])),
+            "U_scalar_interval_by_site_eV": dict(zip(map(str, labels), bounds["intervals_eV"])),
+            "maximum_U_scalar_half_width_eV": max(bounds["half_width_eV"])}
 
 
 def _response_grid_empirical_widths(
