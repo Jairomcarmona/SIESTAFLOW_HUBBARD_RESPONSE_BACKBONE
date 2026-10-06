@@ -12,6 +12,7 @@ from statistics import median
 from typing import Any, Mapping, Sequence
 import json
 from hashlib import sha256
+from .hash_traceability import digest_warning
 from pathlib import Path
 
 
@@ -43,9 +44,10 @@ def load_strict_json(path: Path) -> dict[str, Any]:
 
 
 def _strict_object(value: object, required: set[str], label: str) -> dict[str, Any]:
-    if not isinstance(value, dict) or set(value) != required:
-        raise OccupationNoiseCalibrationError(f"{label} has missing or unexpected fields")
-    return value
+    optional = {key for key in required if key.endswith("sha256")}
+    if not isinstance(value, dict) or set(value) - required or not required - optional <= set(value):
+        raise OccupationNoiseCalibrationError(f"{label} has missing or unexpected semantic fields")
+    return {**dict.fromkeys(optional), **value}
 
 
 def _sha256(value: object, label: str) -> str:
@@ -124,8 +126,11 @@ def validate_calibration_result(result_path: Path, lock_path: Path, *, expected_
     if not result_path.is_file() or not lock_path.is_file():
         raise OccupationNoiseCalibrationError("calibration result or lock is missing")
     result_hash, lock_hash = sha256(result_path.read_bytes()).hexdigest(), sha256(lock_path.read_bytes()).hexdigest()
-    if expected_result_sha256 is not None and result_hash != expected_result_sha256:
-        raise OccupationNoiseCalibrationError("calibration result hash differs from frozen submission hash")
+    traceability_warnings: list[dict[str, str | None]] = []
+    if expected_result_sha256 is not None:
+        warning = digest_warning(expected_result_sha256, result_hash, "calibration_result_sha256")
+        if warning is not None:
+            traceability_warnings.append(warning.to_mapping())
     if expected_lock_sha256 is not None and lock_hash != expected_lock_sha256:
         raise OccupationNoiseCalibrationError("calibration lock hash differs from frozen submission hash")
     result, lock = load_strict_json(result_path), load_strict_json(lock_path)
@@ -181,9 +186,10 @@ def validate_calibration_result(result_path: Path, lock_path: Path, *, expected_
         if not isinstance(receipt["slurm_job_id"], str) or not receipt["slurm_job_id"].isdigit() or receipt["slurm_job_id"] in seen_jobs:
             raise OccupationNoiseCalibrationError("replica receipt Slurm job id is invalid or duplicated")
         seen_jobs.add(receipt["slurm_job_id"])
-        _sha256(receipt["receipts_sha256"], "replica receipts hash")
-        _sha256(receipt["reference_dm_sha256"], "replica reference DM hash")
-        _sha256(receipt["replica_result_sha256"], "replica result hash")
+        for field in ("receipts_sha256", "reference_dm_sha256", "replica_result_sha256"):
+            warning = digest_warning(receipt.get(field), None, f"{receipt['replica_id']}.{field}")
+            if warning is not None:
+                traceability_warnings.append(warning.to_mapping())
         if not isinstance(receipt["replica_result_path"], str):
             raise OccupationNoiseCalibrationError("replica result path is not campaign-relative evidence")
         evidence_path = Path(receipt["replica_result_path"])
@@ -218,6 +224,7 @@ def validate_calibration_result(result_path: Path, lock_path: Path, *, expected_
         "control_alpha_eV": control_alpha,
         "scope": "INDEPENDENT_ZERO_SHIFT_CONTROL_REPEATABILITY_ONLY",
         "observable": observable,
+        "traceability_warnings": traceability_warnings,
     }
 
 

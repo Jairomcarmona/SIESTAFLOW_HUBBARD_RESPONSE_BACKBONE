@@ -413,3 +413,20 @@ def test_400_random_ground_truth_cases_per_regime(regime: str) -> None:
         element = selected.elements[0]
         candidate = element.candidate
         assert abs(candidate.estimate_e_per_ev - chi) <= candidate.total_e_per_ev
+
+
+@pytest.mark.parametrize("digest", [None, "", "malformed"])
+def test_round_evidence_digest_is_optional_without_changing_qualification(digest: str | None) -> None:
+    from hubbardflow.domain.fdebq_models import CalibrationQualification
+
+    original = decide(columns(scf=True), protocol()).qualification
+    raw = original.to_mapping()
+    if digest is None:
+        raw.pop("evidence_sha256")
+    else:
+        raw["evidence_sha256"] = digest
+    restored = CalibrationQualification.from_mapping(raw)
+    assert restored.status is original.status
+    assert restored.columns == original.columns
+    assert restored.matrix == original.matrix
+    assert restored.reasons == original.reasons

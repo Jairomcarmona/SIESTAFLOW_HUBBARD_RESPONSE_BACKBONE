@@ -6,6 +6,7 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
+from hubbardflow.domain.hash_traceability import digest_warning
 from hubbardflow.domain.matrix_lr import ResponseObservation
 from hubbardflow.execution.campaign_v2 import sha256_file
 from hubbardflow.execution.generic_executor import NodeReceipt
@@ -52,6 +53,7 @@ def build_verified_dataset(
     trace_half_widths_electron: Mapping[tuple[int, float, str], list[float]] | None = None,
     reference_trace_half_widths_electron: list[float] | None = None,
     occupation_source: str = "matrix_trace_total",
+    traceability_warnings: list[dict[str, str]] | None = None,
 ) -> dict[str, Any]:
     """Persist verified occupations with the exact run evidence they came from."""
     site_index_map = [
@@ -127,7 +129,7 @@ def build_verified_dataset(
             }
         )
     rows.sort(key=lambda item: (item["perturbed_site_index"], item["alpha_eV"]))
-    return {
+    dataset: dict[str, Any] = {
         "schema_version": (
             "siestaflow.lr_u_verified_dataset.v2"
             if occupation_source == "siesta_occupations_total"
@@ -142,6 +144,9 @@ def build_verified_dataset(
         "reference_source": dict(reference_source),
         "rows": rows,
     }
+    if traceability_warnings:
+        dataset["traceability_warnings"] = traceability_warnings
+    return dataset
 
 
 def source_record(
@@ -172,29 +177,35 @@ def source_record(
     }
 
 
-def verify_record_artifacts(record: Mapping[str, Any], node_id: str) -> dict[str, str]:
+def verify_record_artifacts(record: Mapping[str, Any], node_id: str) -> dict[str, Any]:
     """Recheck artifact bytes against the validator provenance before extraction."""
     command = record.get("command")
     spec = record.get("artifact_spec")
     provenance = record.get("provenance")
-    if not isinstance(command, Mapping) or not isinstance(spec, Mapping) or not isinstance(provenance, Mapping):
+    if (
+        not isinstance(command, Mapping)
+        or not isinstance(spec, Mapping)
+        or not isinstance(provenance, Mapping)
+    ):
         raise ValueError(f"{node_id} has no complete validator provenance record")  # noqa: TRY004
     declared = provenance.get("artifacts")
     if not isinstance(declared, Mapping):
-        raise ValueError(f"{node_id} validator provenance has no artifact hashes")  # noqa: TRY004
+        declared = {}
     cwd = Path(str(command.get("cwd", "")))
     paths = {
         "fdf": Path(str(command.get("stdin_path", ""))),
         "output": Path(str(command.get("stdout_path", ""))),
         "dm": cwd / str(spec.get("dm", "")),
     }
-    actual: dict[str, str] = {}
+    actual: dict[str, Any] = {}
+    hash_warnings: list[str] = []
     for label, path in paths.items():
         if not path.is_file():
             raise ValueError(f"{node_id} validated {label} artifact is missing")
         digest = sha256_file(path)
-        if declared.get(label) != digest:
-            raise ValueError(f"{node_id} {label} changed after output validation")
+        warning = digest_warning(declared.get(label), digest, label)
+        if warning is not None:
+            hash_warnings.append(f"{warning.reason.value}:{node_id}:{label}")
         actual[label] = digest
     parent_dm_name = spec.get("reference_dm")
     semantic = provenance.get("semantic", {})
@@ -204,6 +215,7 @@ def verify_record_artifacts(record: Mapping[str, Any], node_id: str) -> dict[str
             raise ValueError(f"{node_id} reference DM copy is missing")
         parent_digest = sha256_file(parent_dm)
         if not isinstance(semantic, Mapping) or semantic.get("reference_dm_sha256") != parent_digest:
-            raise ValueError(f"{node_id} reference DM changed after output validation")
+            hash_warnings.append(f"PARENT_DM_DIGEST_MISMATCH:{node_id}")
         actual["parent_dm"] = parent_digest
+    actual["hash_warnings"] = hash_warnings
     return actual

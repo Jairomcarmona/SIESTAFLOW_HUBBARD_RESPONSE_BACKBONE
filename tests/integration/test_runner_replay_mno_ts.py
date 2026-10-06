@@ -100,6 +100,9 @@ def test_mno_translation_shadowed_replay_proves_shadows_and_reconstructs(
         "planning_reference_dm": str(planning_dm),
         "reference_dm_name": "00_REFERENCE.DM",
         "shadow_rejection_policy": "STOP",
+        # Explicit fixture policy: identical printed occupations use the FDF
+        # SCF tolerance; Fermi is recorded without an energy tolerance.
+        "parent_reproduction_factor": 1.0,
     }
     config_path = tmp_path / "lr_config.json"
     config_path.write_text(json.dumps(raw_config, sort_keys=True), encoding="utf-8")
@@ -161,6 +164,8 @@ def test_mno_translation_shadowed_replay_proves_shadows_and_reconstructs(
     reproduction = evidence["nodes"]["reference"]["reference_reproduction"]
     assert reproduction["criterion"] == "PRINT_EQUIVALENT"
     assert reproduction["equivalent"] is True
+    assert reproduction["occupation_equivalence"] == "EQUIVALENT"
+    assert reproduction["fermi_equivalence"] == "RECORDED_NOT_ASSESSED"
     assert reproduction == dataset["reference_reproduction"]
     assert reproduction["planning_parent_dm_sha256"] == hashlib.sha256(dm_bytes).hexdigest()
     assert (

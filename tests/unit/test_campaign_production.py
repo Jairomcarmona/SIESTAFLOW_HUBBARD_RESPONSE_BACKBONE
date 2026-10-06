@@ -628,13 +628,16 @@ def test_dm_invariant_manifest_hash_is_prerun(tmp_path):
     assert parent_sha != final_sha
 
 
-def test_dm_invariant_raises_on_corrupt_source(tmp_path):
+def test_dm_digest_mismatch_warns_and_preserves_copied_bytes(tmp_path):
     from hubbardflow.siesta_backend.adapter import prepare_canonical_dm
     ref   = tmp_path / 'reference.DM'
     child = tmp_path / 'child.DM'
     ref.write_bytes(b'real_dm_content')
-    with pytest.raises(RuntimeError, match='mismatch'):
-        prepare_canonical_dm(str(ref), str(child), '0' * 64)
+    with pytest.warns(RuntimeWarning, match='PARENT_DM_DIGEST_MISMATCH'):
+        observed = prepare_canonical_dm(str(ref), str(child), '0' * 64)
+    assert child.read_bytes() == ref.read_bytes() == b'real_dm_content'
+    assert observed == hashlib.sha256(child.read_bytes()).hexdigest()
+    assert observed != '0' * 64
 
 
 def test_resume_does_not_reuse_stale_dm(tmp_path):

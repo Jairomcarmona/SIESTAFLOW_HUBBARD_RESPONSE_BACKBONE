@@ -90,7 +90,7 @@ def _freeze_inventory(inventory: CorrelatedSubspaceInventory) -> CorrelatedSubsp
         require_int(site.atom_index, "atom_index", minimum=0)
         require_int(site.atomic_number, "atomic_number", minimum=1)
         if site.identity_digest:
-            require_sha256(site.identity_digest, "species identity")
+            require_sha256(site.identity_digest, "canonical species identity")
         rows.append(
             CorrelatedSubspace(
                 site.site_id,
@@ -101,8 +101,6 @@ def _freeze_inventory(inventory: CorrelatedSubspaceInventory) -> CorrelatedSubsp
                 site.identity_digest,
             )
         )
-    require_sha256(inventory.effective_fdf_sha256, "effective FDF")
-    require_sha256(inventory.digest, "inventory digest")
     if len({s.site_id for s in rows}) != len(rows) or len({s.atom_index for s in rows}) != len(rows):
         raise PerturbationPlanError("inventory must have unique sites and one correlated subspace per atom")
     if not isinstance(inventory.status, InventoryStatus):
@@ -136,13 +134,13 @@ def inventory_from_mapping(row: Mapping[str, object]) -> CorrelatedSubspaceInven
                     cast(str, s["species_label"]),
                     cast(int, s["atomic_number"]),
                     ProjectorEvidence.from_mapping(cast(Mapping[str, object], s["dftu_record"])),
-                    cast(str, s["identity_digest"]),
+                    cast(str, s.get("identity_digest")),
                 )
                 for s in cast(Sequence[Mapping[str, object]], row["subspaces"])
             ),
-            cast(str, row["effective_fdf_sha256"]),
+            cast(str, row.get("effective_fdf_sha256")),
             InventoryStatus(cast(str, row["status"])),
             tuple(InventoryReason(r) for r in cast(Sequence[str], row["reason_codes"])),
-            cast(str, row["digest"]),
+            cast(str, row.get("digest")),
         )
     )

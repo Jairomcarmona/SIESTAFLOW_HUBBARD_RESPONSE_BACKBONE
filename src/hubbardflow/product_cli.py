@@ -13,6 +13,7 @@ from dataclasses import replace
 from pathlib import Path
 from typing import cast
 
+from hubbardflow.domain.hash_traceability import DigestWarning, digest_warning
 from hubbardflow.domain.perturbation_plan import AlphaStrategy
 from hubbardflow.execution.campaign_plan import CampaignCoverage
 from hubbardflow.execution.campaign_v2 import (
@@ -61,6 +62,12 @@ def add_product_options(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--lr-config", help="versioned LR protocol JSON; no alpha grid is invented")
     parser.add_argument("--reference-output", help="single unperturbed reference SIESTA output")
     parser.add_argument("--reference-dm", help="parent DM whose bytes enter provenance")
+    parser.add_argument(
+        "--tol-fermi-ev",
+        type=float,
+        default=None,
+        help="declared Fermi tolerance in eV; requires --lr-config and overrides tol_Fermi_eV; absent means record only",
+    )
     parser.add_argument("--coverage", choices=[v.value for v in CampaignCoverage])
     parser.add_argument("--alpha-strategy", choices=[v.value for v in AlphaStrategy])
     parser.add_argument("--identity-dir", action="append", help="species identity search directory")
@@ -122,6 +129,7 @@ def _request(args: argparse.Namespace, fdf: Path) -> ProductRequest:
         tuple(sorted(str(Path(d).resolve(strict=True)) for d in (args.identity_dir or [str(fdf.parent)]))),
         args.allow_spin_flip,
         args.allow_rotations,
+        getattr(args, "tol_fermi_ev", None),
     )
 
 
@@ -131,45 +139,53 @@ def _sha256(path: Path) -> str:
 
 def _verify_campaign_inputs(
     campaign: dict[str, object], snapshot: object, profile_path: Path, frozen_config: dict[str, object]
-) -> None:
+) -> tuple[DigestWarning, ...]:
+    """Verify required files, retaining digest discrepancies without a byte veto."""
     from hubbardflow.execution.product_models import ProductSnapshot
 
     if not isinstance(snapshot, ProductSnapshot):
         raise ProductError("execution requires a verified product snapshot")
-    root = Path(str(campaign["_campaign_root"]))
+    root = Path(str(campaign["_campaign_root"])).resolve(strict=True)
     input_rows = cast(Sequence[Mapping[str, object]], campaign["input_files"])
-    rows = {str(row["path"]): str(row["sha256"]) for row in input_rows}
+    rows = {str(row["path"]): row.get("sha256") for row in input_rows}
     input_hashes = json_object(snapshot.input_sha256_json)
+    warnings: list[DigestWarning] = []
 
-    def require_copy(relative: str, expected: str) -> None:
-        declared = rows.get(relative)
-        if declared != expected:
-            raise ProductError(f"campaign input hash disagrees with frozen source evidence: {relative}")
-        if _sha256(root / relative) != expected:
-            raise ProductError(f"campaign source copy changed before execution: {relative}")
+    def require_copy(relative: str, expected: object) -> None:
+        path = (root / relative).resolve(strict=True)
+        try:
+            path.relative_to(root)
+        except ValueError as exc:
+            raise ProductError(f"required input escapes campaign root: {relative}") from exc
+        observed = _sha256(path)  # Missing/unreadable real files still fail.
+        for recorded, field in (
+            (rows.get(relative), f"input_files.{relative}.sha256"),
+            (expected, f"product_sources.{relative}.sha256"),
+        ):
+            warning = digest_warning(recorded, observed, field)
+            if warning is not None:
+                warnings.append(warning)
 
     request = ProductRequest.from_mapping(json_object(snapshot.request_json))
     source_fdf = str(Path(request.fdf).resolve(strict=True))
-    require_copy("provenance/source_reference.fdf", str(input_hashes[source_fdf]))
+    require_copy("provenance/source_reference.fdf", input_hashes.get(source_fdf))
     config_digest = snapshot.frozen_lr_config_sha256
-    if config_digest is None:
-        raise ProductError("frozen lr-config digest is missing")
     require_copy("provenance/source_lr_config.json", config_digest)
     _, includes = resolve_fdf_includes(Path(request.fdf))
     for index, source in enumerate(includes):
         source_key = str(source.resolve(strict=True))
         relative = f"provenance/fdf_includes/{index:03d}_{source.name}"
-        require_copy(relative, str(input_hashes[source_key]))
+        require_copy(relative, input_hashes.get(source_key))
     for label, source_value in sorted(
         cast(dict[str, str], frozen_config.get("pseudopotentials", {})).items()
     ):
         source_key = str(Path(source_value).resolve(strict=True))
-        require_copy(f"pseudopotentials/{label}.psml", str(input_hashes[source_key]))
+        require_copy(f"pseudopotentials/{label}.psml", input_hashes.get(source_key))
     for destination, source_value in sorted(
         cast(dict[str, str], frozen_config.get("static_artifacts", {})).items()
     ):
         source_key = str(Path(source_value).resolve(strict=True))
-        require_copy(f"static/{destination}", str(input_hashes[source_key]))
+        require_copy(f"static/{destination}", input_hashes.get(source_key))
     for field, relative in (
         ("compatibility_registry", "software/backend_compatibility.json"),
         ("version_text_source", "software/siesta_version.txt"),
@@ -179,10 +195,32 @@ def _verify_campaign_inputs(
         value = frozen_config.get(field)
         if value is not None:
             source_key = str(Path(str(value)).resolve(strict=True))
-            require_copy(relative, str(input_hashes[source_key]))
+            require_copy(relative, input_hashes.get(source_key))
     profile_digest = _sha256(profile_path)
     require_copy("execution_profile.json", profile_digest)
-    verify_campaign_inventory(campaign)
+    warnings.extend(DigestWarning.from_mapping(row) for row in verify_campaign_inventory(campaign))
+    retained = tuple(
+        sorted(
+            set(warnings),
+            key=lambda item: (item.field, item.reason.value, item.recorded or "", item.observed or ""),
+        )
+    )
+    campaign["_product_input_traceability_warnings"] = [warning.to_mapping() for warning in retained]
+    # Persist before subsequent run-spec validation or worker startup so a
+    # later structural failure cannot discard already observed traceability.
+    _write_report_atomically(
+        root / "product-input-traceability.json",
+        json.dumps(
+            {
+                "schema": "hubbardflow.product_input_traceability.v1",
+                "warnings": [warning.to_mapping() for warning in retained],
+            },
+            sort_keys=True,
+            allow_nan=False,
+        )
+        + "\n",
+    )
+    return retained
 
 
 def _execute_product_campaign(
@@ -248,7 +286,9 @@ def _execute_product_campaign(
         temporary_config.unlink(missing_ok=True)
     manifest_path = Path(str(initialized["manifest_path"])).resolve(strict=True)
     campaign = load_campaign_v2(manifest_path)
-    _verify_campaign_inputs(campaign, snapshot, profile_path.resolve(strict=True), frozen_config)
+    input_warnings = _verify_campaign_inputs(
+        campaign, snapshot, profile_path.resolve(strict=True), frozen_config
+    )
     campaign_plan_path = manifest_path.parent / str(campaign["resolved_perturbation_plan_file"])
     campaign_plan = json_object(campaign_plan_path.read_text(encoding="utf-8"))
     expected_runs = [run.to_mapping() for run in snapshot.planning.plan.run_specs]
@@ -266,6 +306,7 @@ def _execute_product_campaign(
         "campaign_path": str(manifest_path),
         "manifest_sha256": _sha256(manifest_path),
         "product_plan_digest": snapshot.planning.plan.digest,
+        "input_traceability_warnings": [warning.to_mapping() for warning in input_warnings],
     }
     link_path = root / "execution_link.json"
     with link_path.open("x", encoding="utf-8", newline="\n") as stream:
@@ -350,7 +391,9 @@ def _execute_product_reference(
         temporary_config.unlink(missing_ok=True)
     manifest_path = Path(str(initialized["manifest_path"])).resolve(strict=True)
     campaign = load_campaign_v2(manifest_path)
-    _verify_campaign_inputs(campaign, snapshot, profile_path.resolve(strict=True), frozen_config)
+    input_warnings = _verify_campaign_inputs(
+        campaign, snapshot, profile_path.resolve(strict=True), frozen_config
+    )
     worker = cast(Callable[[str | Path, str], int], run_campaign_worker)
     result = worker(manifest_path, "reference")
     if result != 0:
@@ -392,6 +435,7 @@ def _execute_product_reference(
         "node_id": "reference",
         "command_argv": command["argv"],
         "input_fdf_sha256": _sha256(fdf_path),
+        "input_traceability_warnings": [warning.to_mapping() for warning in input_warnings],
     }
     with receipt_destination.open("x", encoding="utf-8", newline="\n") as stream:
         stream.write(json.dumps(receipt, sort_keys=True, indent=2, allow_nan=False) + "\n")
@@ -400,6 +444,7 @@ def _execute_product_reference(
         "campaign_path": str(manifest_path),
         "manifest_sha256": _sha256(manifest_path),
         "product_plan_digest": snapshot.planning.plan.digest,
+        "input_traceability_warnings": [warning.to_mapping() for warning in input_warnings],
     }
     with (root / "reference_execution_link.json").open("x", encoding="utf-8", newline="\n") as stream:
         stream.write(canonical(root_link) + "\n")
@@ -411,6 +456,8 @@ def _execute_product_reference(
     follow_up.extend(("--reference-output", str(output_destination), "--reference-dm", str(dm_destination)))
     if request.coverage is not None:
         follow_up.extend(("--coverage", request.coverage.value))
+    if request.tol_fermi_ev is not None:
+        follow_up.extend(("--tol-fermi-ev", str(request.tol_fermi_ev)))
     print("Follow-up run: " + shlex.join(follow_up))
     return 0
 
@@ -474,6 +521,7 @@ def product_command(args: argparse.Namespace) -> int:
                 "identity_dir",
                 "allow_spin_flip",
                 "allow_rotations",
+                "tol_fermi_ev",
             )
         )
         if provided:
@@ -492,6 +540,9 @@ def product_command(args: argparse.Namespace) -> int:
                 allow_rotations=supplied.allow_rotations
                 if supplied.allow_rotations is not None
                 else frozen_request.allow_rotations,
+                tol_fermi_ev=supplied.tol_fermi_ev
+                if supplied.tol_fermi_ev is not None
+                else frozen_request.tol_fermi_ev,
             )
             if resolve_product_snapshot(merged).to_mapping() != snapshot.to_mapping():
                 raise ProductError(

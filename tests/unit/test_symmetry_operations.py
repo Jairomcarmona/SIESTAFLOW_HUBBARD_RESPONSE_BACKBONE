@@ -17,6 +17,8 @@ import pytest
 from hypothesis import given
 from hypothesis import strategies as st
 
+from hubbardflow.domain.coverage import CoverageReferenceEvidence, UserCoveragePolicy, qualify_coverage
+from hubbardflow.domain.hash_traceability import DigestWarningReason
 from hubbardflow.domain.state_evidence import (
     EvidenceStatus,
     MomentEvidence,
@@ -204,7 +206,6 @@ def test_fm_ring_and_spontaneously_broken_symmetric_ring() -> None:
         "projector",
         "missing_spectra",
         "missing_moments",
-        "digest",
         "truncated",
     ],
 )
@@ -300,8 +301,6 @@ def test_zero_false_acceptances(negative: str, flags_on: bool) -> None:
         )
     elif negative == "missing_moments":
         state = replace(state, moments_by_atom=state.moments_by_atom[:-1])
-    elif negative == "digest":
-        state = replace(state, input_fdf_sha256=IDENTITY_DIGEST)
     else:
         state = replace(state, normal_completion_verified=False)
     count = len(inventory.subspaces)
@@ -313,6 +312,31 @@ def test_zero_false_acceptances(negative: str, flags_on: bool) -> None:
     assert not result.accepted
     if negative in {"geometry", "ligand_geometry"}:
         assert _condition(result, "F1") is ConditionStatus.AMBIGUOUS
+
+
+@pytest.mark.parametrize("flags_on", [False, True])
+def test_fdf_digest_change_cannot_reject_physical_symmetry_and_is_recorded(flags_on: bool) -> None:
+    model, inventory, state = _ring((0.8, -0.8, 0.8, -0.8))
+    state = replace(state, input_fdf_sha256=IDENTITY_DIGEST)
+    policy = replace(coverage_policy_v1(), allow_spin_flip=flags_on, allow_rotations=flags_on)
+    assert classify(_translation(model, 2), inventory, state, policy).accepted
+    reference = CoverageReferenceEvidence(
+        state,
+        FDF_DIGEST,
+        FDF_DIGEST,
+        True,
+        False,
+        False,
+        EvidenceStatus.ADMISSIBLE,
+        IDENTITY_DIGEST,
+    )
+    coverage = qualify_coverage(inventory, reference, model, policy, UserCoveragePolicy("test-v1", True, ()))
+    warning = next(w for w in coverage.traceability_warnings if w.field == "reference.input_fdf_sha256")
+    assert warning.reason is DigestWarningReason.MISMATCH
+    assert warning.recorded == IDENTITY_DIGEST and warning.observed == FDF_DIGEST
+    assert warning.to_mapping() in cast(
+        list[dict[str, str | None]], coverage.to_mapping()["traceability_warnings"]
+    )
 
 
 def test_pairwise_print_bands_prevent_one_coarse_atom_from_hiding_another() -> None:

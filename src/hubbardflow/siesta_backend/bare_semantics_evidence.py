@@ -16,6 +16,8 @@ from pathlib import Path
 import re
 from typing import Mapping
 
+from hubbardflow.domain.hash_traceability import DigestWarning, digest_warning
+
 
 _HASH = re.compile(r"^[0-9a-f]{64}$")
 _SCHEMA = "siestaflow-bare-semantics-v2"
@@ -200,6 +202,7 @@ class VerifiedBareEvidence:
     evidence_reference: str
     evidence_sha256: str
     selected_event_lines: tuple[int, int]
+    traceability_warnings: tuple[DigestWarning, ...] = ()
 
 
 def verify_bare_semantics_evidence(
@@ -239,7 +242,8 @@ def verify_bare_semantics_evidence(
         "hxc_rebuild_excluded_before_selected_event", "trace_reference", "trace_sha256",
         "trace_markers",
     }
-    if set(payload) != required:
+    hash_fields = {"executable_sha256", "reference_dm_sha256", "input_fdf_sha256", "output_sha256", "trace_sha256"}
+    if set(payload) - required or not required - hash_fields <= set(payload):
         raise BareSemanticEvidenceError("bare semantic sidecar has an unexpected schema")
     if payload["schema_version"] != _SCHEMA or payload["status"] != "PASS":
         raise BareSemanticEvidenceError("bare semantic sidecar is not an accepted PASS record")
@@ -265,14 +269,16 @@ def verify_bare_semantics_evidence(
     output_text = output.read_text(encoding="utf-8", errors="replace")
     if _UNACCEPTABLE_TERMINATION.search(output_text) or not _NORMAL_TERMINATION.search(output_text):
         raise BareSemanticEvidenceError("BARE output is not a normal non-aborted SIESTA termination")
+    warnings = []
     for key, actual in (
         ("executable_sha256", _sha256_file(executable)),
         ("reference_dm_sha256", _sha256_file(reference_dm)),
         ("input_fdf_sha256", _sha256_file(input_fdf)),
         ("output_sha256", _sha256_file(output)),
     ):
-        if _require_hash(payload[key], key) != actual:
-            raise BareSemanticEvidenceError(f"{key} does not match the audited artifact")
+        warning = digest_warning(payload.get(key), actual, key)
+        if warning is not None:
+            warnings.append(warning)
 
     lines = payload["selected_event_lines"]
     if (
@@ -286,8 +292,9 @@ def verify_bare_semantics_evidence(
         raise BareSemanticEvidenceError("selected output interval does not contain a Hubbard population event")
 
     trace = _safe_relative(sidecar.parent, payload["trace_reference"], "trace_reference")
-    if _require_hash(payload["trace_sha256"], "trace_sha256") != _sha256_file(trace):
-        raise BareSemanticEvidenceError("trace_sha256 does not match the native trace")
+    warning = digest_warning(payload.get("trace_sha256"), _sha256_file(trace), "trace_sha256")
+    if warning is not None:
+        warnings.append(warning)
     markers = payload["trace_markers"]
     if not isinstance(markers, dict) or set(markers) != set(_MARKER_KEYS):
         raise BareSemanticEvidenceError("trace_markers must declare the four ordered events")
@@ -309,4 +316,5 @@ def verify_bare_semantics_evidence(
         evidence_reference=f"{sidecar.name}#{_sha256_file(sidecar)}",
         evidence_sha256=_sha256_file(sidecar),
         selected_event_lines=selected_event_lines,
+        traceability_warnings=tuple(sorted(warnings, key=lambda x: x.field)),
     )

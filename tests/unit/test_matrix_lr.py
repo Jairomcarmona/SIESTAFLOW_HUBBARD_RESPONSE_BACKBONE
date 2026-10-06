@@ -836,10 +836,10 @@ def test_dm_invariant_manifest_hash_is_prerun(tmp_path):
     )
 
 
-def test_dm_invariant_raises_on_corrupt_source(tmp_path):
+def test_dm_digest_mismatch_warns_and_preserves_copied_bytes(tmp_path):
     """
-    prepare_canonical_dm must raise RuntimeError if the copied child hash
-    does not match the supplied reference_sha256 (source corruption guard).
+    Digest metadata cannot veto copying the declared DM. Retain the warning,
+    actual digest and exact copied bytes for subsequent physical assessment.
     """
     import hashlib
     from hubbardflow.siesta_backend.adapter import prepare_canonical_dm
@@ -852,9 +852,12 @@ def test_dm_invariant_raises_on_corrupt_source(tmp_path):
 
     ref_dm.write_bytes(real_bytes)
 
-    with pytest.raises(RuntimeError, match="Parent DM identity mismatch"):
-        prepare_canonical_dm(
+    with pytest.warns(RuntimeWarning, match="PARENT_DM_DIGEST_MISMATCH"):
+        observed = prepare_canonical_dm(
             reference_dm_path=str(ref_dm),
             child_dm_path=str(child_dm),
             reference_sha256=wrong_sha256,
         )
+    assert child_dm.read_bytes() == ref_dm.read_bytes() == real_bytes
+    assert observed == hashlib.sha256(real_bytes).hexdigest()
+    assert observed != wrong_sha256

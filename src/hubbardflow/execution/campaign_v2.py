@@ -10,6 +10,7 @@ import xml.etree.ElementTree as ET
 from pathlib import Path, PurePosixPath
 from typing import Any, Mapping
 
+from ..domain.hash_traceability import digest_warning
 from ..domain.adaptive_alpha_control import AdaptiveAlphaControlError, AdaptiveAlphaPolicy
 from ..domain.scientific_profile import (
     ScientificProfileError, profile_from_explicit_functional, require_lr_qualified,
@@ -239,7 +240,26 @@ def validate_lr_config(payload: Mapping[str, Any], fdf_species: Mapping[str, int
     try:
         parent_reproduction = ParentReproduction(payload.get("parent_reproduction", "PRINT_EQUIVALENT"))
     except (ValueError, TypeError) as exc:
-        raise CampaignV2Error("parent_reproduction must be PRINT_EQUIVALENT or BITWISE") from exc
+        raise CampaignV2Error("parent_reproduction must be PRINT_EQUIVALENT or RECORD_ONLY") from exc
+    tolerance_factor = payload.get("parent_reproduction_factor")
+    fermi_tolerance = payload.get("tol_Fermi_eV")
+    if fermi_tolerance is not None and (
+        isinstance(fermi_tolerance, bool)
+        or not isinstance(fermi_tolerance, (int, float))
+        or not math.isfinite(float(fermi_tolerance))
+        or float(fermi_tolerance) < 0
+    ):
+        raise CampaignV2Error("tol_Fermi_eV must be a nonnegative finite number in eV when declared")
+    fermi_source = payload.get("tol_Fermi_eV_source", "config") if fermi_tolerance is not None else None
+    if fermi_source is not None and (not isinstance(fermi_source, str) or fermi_source not in {"config", "cli"}):
+        raise CampaignV2Error("tol_Fermi_eV_source must be config or cli")
+    if tolerance_factor is not None and (
+        isinstance(tolerance_factor, bool)
+        or not isinstance(tolerance_factor, (int, float))
+        or not math.isfinite(float(tolerance_factor))
+        or float(tolerance_factor) <= 0
+    ):
+        raise CampaignV2Error("parent_reproduction_factor must be a positive finite number when declared")
     if "shadow_rejection_policy" in payload and (
         not isinstance(shadow_rejection_policy, str)
         or shadow_rejection_policy not in {"EXPAND", "STOP"}
@@ -399,6 +419,11 @@ def validate_lr_config(payload: Mapping[str, Any], fdf_species: Mapping[str, int
         normalized["shadow_rejection_policy"] = shadow_rejection_policy
     if coverage is CampaignCoverage.TRANSLATION_SHADOWED or "parent_reproduction" in payload:
         normalized["parent_reproduction"] = parent_reproduction.value
+    if tolerance_factor is not None:
+        normalized["parent_reproduction_factor"] = float(tolerance_factor)
+    if fermi_tolerance is not None:
+        normalized["tol_Fermi_eV"] = float(fermi_tolerance)
+        normalized["tol_Fermi_eV_source"] = fermi_source
     return normalized
 
 
@@ -474,6 +499,7 @@ def load_campaign_v2(path: str | Path) -> dict[str, Any]:
     if not isinstance(input_files, list) or not input_files:
         raise CampaignV2Error("campaign v2 requires an input_files identity inventory")
     seen_input_paths: set[str] = set()
+    input_hash_warnings: list[dict[str, str | None]] = []
     for item in input_files:
         if not isinstance(item, dict):
             raise CampaignV2Error("input_files entries must be objects")
@@ -482,8 +508,9 @@ def load_campaign_v2(path: str | Path) -> dict[str, Any]:
             raise CampaignV2Error("input_files contains duplicate paths")
         seen_input_paths.add(rel)
         digest = item.get("sha256")
-        if not isinstance(digest, str) or not re.fullmatch(r"[0-9a-f]{64}", digest):
-            raise CampaignV2Error("input_files sha256 must be lowercase SHA-256")
+        warning = digest_warning(digest, None, f"input_files.{rel}.sha256")
+        if warning is not None:
+            input_hash_warnings.append(warning.to_mapping())
         source = (candidate.parent / rel).resolve(strict=True)
         try:
             source.relative_to(candidate.parent.resolve())
@@ -492,11 +519,13 @@ def load_campaign_v2(path: str | Path) -> dict[str, Any]:
         if not source.is_file():
             raise CampaignV2Error("input_files path is not a file")
     calculated_identity = hashlib.sha256(json.dumps(
-        [{"path": item["path"], "sha256": item["sha256"]} for item in sorted(input_files, key=lambda row: row["path"])],
+        [{"path": item["path"], "sha256": item.get("sha256")} for item in sorted(input_files, key=lambda row: row["path"])],
         sort_keys=True, separators=(",", ":"),
     ).encode()).hexdigest()
-    if payload.get("input_identity") != calculated_identity:
-        raise CampaignV2Error("campaign input identity does not match its declared inventory")
+    warning = digest_warning(payload.get("input_identity"), calculated_identity, "input_identity")
+    if warning is not None:
+        input_hash_warnings.append(warning.to_mapping())
+    payload.setdefault("input_identity", calculated_identity)
     plan: ResolvedPerturbationPlan | None = None
     if payload.get("resolved_perturbation_plan_file") is None and {"resolved_perturbation_plan.json", "campaign.lock"} & seen_input_paths:
         raise CampaignV2Error("campaign plan metadata is missing from its manifest")
@@ -554,12 +583,14 @@ def load_campaign_v2(path: str | Path) -> dict[str, Any]:
         "_profile": profile, "_xc_profile": xc_profile.to_mapping(),
         "_adaptive_alpha_policy": adaptive_policy,
         "_perturbation_plan": plan,
+        "_input_traceability_warnings": input_hash_warnings,
     }
 
 
-def verify_campaign_inventory(campaign: Mapping[str, Any]) -> None:
+def verify_campaign_inventory(campaign: Mapping[str, Any]) -> tuple[dict[str, str | None], ...]:
     """Rehash only the declared campaign inputs once at run/resume startup."""
     root = Path(str(campaign["_campaign_root"])).resolve(strict=True)
+    warnings: list[dict[str, str | None]] = []
     for item in campaign["input_files"]:
         rel = _safe_relative(item["path"], "input_files.path")
         path = (root / rel).resolve(strict=True)
@@ -567,8 +598,10 @@ def verify_campaign_inventory(campaign: Mapping[str, Any]) -> None:
             path.relative_to(root)
         except ValueError as exc:
             raise CampaignV2Error(f"input file escapes campaign root: {rel}") from exc
-        if sha256_file(path) != item["sha256"]:
-            raise CampaignV2Error(f"campaign input changed since init: {rel}")
+        warning = digest_warning(item.get("sha256"), sha256_file(path), f"input_files.{rel}.sha256")
+        if warning is not None:
+            warnings.append(warning.to_mapping())
+    return tuple(warnings)
 
 
 def new_campaign_id() -> str:

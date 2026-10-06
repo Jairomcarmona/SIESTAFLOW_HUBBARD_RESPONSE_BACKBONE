@@ -206,8 +206,8 @@
   ".siestaflow/worker-state.json": "1e42686e6491866e37b273874815cb76ac74fac26cd760e66edb0e713b6e58a9",
   ".siestaflow/worker.lock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
   "backend_contract.json": "12d083c0a04f2c95871ec5e4c0f563f319fcb8085709bcf647229235d352537a",
-  "campaign.lock": "d86108fbcf1d6e5d3206b98b512209e7c300368469c9fcbf750bb123d7588951",
-  "campaign.v2.json": "561fb80c765aaa58c2c938710688b853ca2f5a091d824f6697f9c06020265f08",
+  "campaign.lock": "8f3638ecf293b2022a6924fced7b3bf89e802e02098be562d3f61b7860024754",
+  "campaign.v2.json": "3edfba852e4fb1119611891d83ae9b5112c0b34277d6caf6e5b750f62edef194",
   "execution_profile.json": "8a4241c3525f70c790b09a4eaabdfc8c7211bfd834d6f1c476a78b07c363d7c8",
   "lr_config.json": "5fa38516b508ee68964a9af3708098ade78fda1336f41b0d3b7d5cde546124e4",
   "provenance/source_lr_config.json": "786d0ad8d4b022e055d241dfff6b98864f8092dbd0a823edf6de474d99636a98",
@@ -216,7 +216,7 @@
   "pseudopotentials/NiLR1.psml": "192eb05ffb64671715e570e2ca9a99a551cf15544984592082d43004f8554e06",
   "pseudopotentials/O.psml": "224ded5c59176d9bcb76d19b7a4a68a48d5dffabf8b262f64d5760250e87c35e",
   "reference.fdf": "b4fb34e642d862be6949a5b2033a60c5b9fcae56119879583bb3eaf237620ee7",
-  "resolved_perturbation_plan.json": "96ed7660e4f951114e8b9dcd292ea822e10619dd962d2ad257e5ae5fa3893726",
+  "resolved_perturbation_plan.json": "61ade263afb04e93cd32e15bcd746f0c18b35c9be98818694b0209f2bd38368c",
   "software/backend_compatibility.json": "0272e12d9cd0d9f28da846925814156ec2e7f54859550f3a7e641fdf031a8274",
   "software/siesta_version.txt": "bb5a9b03dfaec9953401a7ef8db045149461047c44f15f9c5bf7758900b5f3ee"
 }

@@ -211,11 +211,6 @@ def _classify(
     ):
         raise SymmetryOperationsError("duplicate occupation records")
     reasons = []
-    if (
-        state.input_fdf_sha256 != op.model.effective_fdf_sha256
-        or inventory.effective_fdf_sha256 != state.input_fdf_sha256
-    ):
-        reasons.append(SymmetryReason.EVIDENCE_BINDING_MISMATCH)
     if any(item.identity_digest != atom_by_index[item.atom_index].identity_digest for item in ordered):
         reasons.append(SymmetryReason.EVIDENCE_BINDING_MISMATCH)
     if not state.normal_completion_verified or not state.scf_converged:

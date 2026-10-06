@@ -7,7 +7,9 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import cast
 
+from hubbardflow.domain.hash_traceability import DigestWarning, compare_traceable_mappings
 from hubbardflow.domain.perturbation_plan import ResolvedPerturbationPlan
+from hubbardflow.domain.perturbation_plan_evidence import inventory_mapping
 from hubbardflow.domain.subspace_inventory import InventoryReason, InventoryStatus
 from hubbardflow.execution.product_models import ProductSnapshot
 
@@ -50,6 +52,7 @@ class ExecutionAdmission:
     scientific_state_requirement: ExecutionRequirementStatus
     pilot_reuse_requirement: ExecutionRequirementStatus
     reference_reason_handling: ExecutionRequirementStatus
+    traceability_warnings: tuple[DigestWarning, ...] = ()
 
     def to_mapping(self) -> dict[str, object]:
         return {
@@ -58,6 +61,7 @@ class ExecutionAdmission:
             "scientific_state_requirement": self.scientific_state_requirement.value,
             "pilot_reuse_requirement": self.pilot_reuse_requirement.value,
             "reference_reason_handling": self.reference_reason_handling.value,
+            "traceability_warnings": [w.to_mapping() for w in self.traceability_warnings],
         }
 
 
@@ -122,7 +126,12 @@ def execution_admission(
             or any(group.reduced for group in plan.coverage.classes)
         ):
             reasons.add(ExecutionAdmissionReason.REDUCED_COLUMNS_PRESENT)
-        if snapshot.inventory.digest != plan.inventory.digest or snapshot.status is not plan.status:
+        if (
+            not compare_traceable_mappings(
+                inventory_mapping(snapshot.inventory), inventory_mapping(plan.inventory)
+            ).equivalent
+            or snapshot.status is not plan.status
+        ):
             reasons.add(ExecutionAdmissionReason.SNAPSHOT_INCONSISTENT)
         if frozen_lr_config is not None:
             configured_sites = frozen_lr_config.get("sites")
@@ -169,6 +178,11 @@ def execution_admission(
         ExecutionRequirementStatus.COVERAGE_DIAGNOSTIC_ONLY
         if admissible
         else ExecutionRequirementStatus.REQUIRED_BY_PLAN,
+        ()
+        if plan is None
+        else compare_traceable_mappings(
+            inventory_mapping(snapshot.inventory), inventory_mapping(plan.inventory)
+        ).warnings,
     )
 
 
@@ -208,15 +222,17 @@ def _translation_shadowed_admission(
         reasons.add(ExecutionAdmissionReason.GRID_NOT_EXPLICIT)
     if plan is not None:
         plan_inventory = plan.inventory
-        if snapshot.inventory.digest != plan_inventory.digest or snapshot.status is not plan.status:
+        if (
+            not compare_traceable_mappings(
+                inventory_mapping(snapshot.inventory), inventory_mapping(plan_inventory)
+            ).equivalent
+            or snapshot.status is not plan.status
+        ):
             reasons.add(ExecutionAdmissionReason.SNAPSHOT_INCONSISTENT)
         reference = getattr(plan, "reference", None)
-        parent_dm_sha256 = getattr(reference, "parent_dm_sha256", None)
         reference_status = getattr(getattr(reference, "status", None), "value", None)
-        if reference_status != "ADMISSIBLE" or not parent_dm_sha256:
+        if reference_status != "ADMISSIBLE":
             reasons.add(ExecutionAdmissionReason.REFERENCE_NOT_ADMISSIBLE)
-        if not parent_dm_sha256:
-            reasons.add(ExecutionAdmissionReason.PARENT_DM_REQUIRED)
         if not {reason.value for reason in plan.reason_codes} <= {"SHADOW_PENDING"}:
             reasons.add(ExecutionAdmissionReason.PLAN_REASONS_PRESENT)
 
@@ -266,6 +282,11 @@ def _translation_shadowed_admission(
         ExecutionRequirementStatus.REQUIRED_BY_PLAN,
         ExecutionRequirementStatus.REQUIRED_BY_PLAN,
         ExecutionRequirementStatus.REQUIRED_BY_PLAN,
+        ()
+        if plan is None
+        else compare_traceable_mappings(
+            inventory_mapping(snapshot.inventory), inventory_mapping(plan.inventory)
+        ).warnings,
     )
 
 

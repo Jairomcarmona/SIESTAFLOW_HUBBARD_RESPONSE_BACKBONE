@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import List, Optional
 import hashlib
 import json
+from hubbardflow.domain.hash_traceability import digest_warning
 from hubbardflow.siesta_backend.parser_models import (
     HubbardPopulationEvent,
     ObservationRole,
@@ -63,13 +64,13 @@ class Siesta542BarePolicyV1:
         candidate = candidates[0]
         
         # Validation
-        if not context.reference_dm_sha256:
-            raise ObservationPolicyError("REFERENCE extraction requires validated reference-DM context.")
+        warning = digest_warning(context.reference_dm_sha256, None, "reference_dm_sha256")
             
         return ObservationSelection(
             role=ObservationRole.REFERENCE,
             policy_id=Siesta542BarePolicyV1.POLICY_ID,
-            evidence="Matched scf_iteration == 1 with validated reference-DM context",
+            evidence="Matched scf_iteration == 1; DM digest is traceability only" +
+                     ("; " + json.dumps(warning.to_mapping(), sort_keys=True) if warning else ""),
             event=candidate
         )
 
@@ -129,14 +130,18 @@ class Siesta542BarePolicyV1:
             selected_event_lines=selected_event_lines,
             expectation=bare_trace_expectation,
         )
-        if context.reference_dm_sha256 is None:
-            raise ObservationPolicyError("BARE semantic evidence requires a reference-DM context hash")
-        if context.reference_dm_sha256 != hashlib.sha256(Path(reference_dm_path).read_bytes()).hexdigest():
-            raise ObservationPolicyError("BARE semantic evidence parent DM differs from the planned context")
+        warning = digest_warning(context.reference_dm_sha256,
+                                 hashlib.sha256(Path(reference_dm_path).read_bytes()).hexdigest(),
+                                 "reference_dm_sha256")
+        warnings = [*context.traceability_warnings,
+                    *(json.dumps(x.to_mapping(), sort_keys=True) for x in evidence.traceability_warnings)]
+        if warning is not None:
+            warnings.append(json.dumps(warning.to_mapping(), sort_keys=True))
         return replace(
             context,
             bare_hxc_rebuild_excluded=True,
             bare_semantics_evidence_ref=evidence.evidence_reference,
+            traceability_warnings=tuple(sorted(set(warnings))),
         )
 
     @staticmethod

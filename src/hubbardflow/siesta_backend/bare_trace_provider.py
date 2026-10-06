@@ -13,6 +13,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
+from hubbardflow.domain.hash_traceability import DigestWarning
+
 from .bare_semantics_evidence import (
     BareTraceExpectation,
     BareSemanticEvidenceError,
@@ -47,6 +49,7 @@ class BareTraceReceipt:
     evidence_reference: str
     evidence_sha256: str
     selected_event_lines: tuple[int, int]
+    traceability_warnings: tuple[DigestWarning, ...] = ()
 
 
 class NativeBareTraceProvider:
@@ -80,6 +83,7 @@ class NativeBareTraceProvider:
             evidence_reference=evidence.evidence_reference,
             evidence_sha256=evidence.evidence_sha256,
             selected_event_lines=evidence.selected_event_lines,
+            traceability_warnings=evidence.traceability_warnings,
         )
 
     def collect(self, destination: str | Path) -> Path:

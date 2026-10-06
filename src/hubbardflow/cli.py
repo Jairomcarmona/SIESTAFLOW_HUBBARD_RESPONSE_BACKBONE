@@ -280,6 +280,7 @@ def main(argv: list[str] | None = None) -> int:
                 ("--lr-config", args.lr_config),
                 ("--reference-output", args.reference_output),
                 ("--reference-dm", args.reference_dm),
+                ("--tol-fermi-ev", args.tol_fermi_ev),
                 ("--coverage", args.coverage),
                 ("--alpha-strategy", args.alpha_strategy),
                 ("--identity-dir", args.identity_dir),

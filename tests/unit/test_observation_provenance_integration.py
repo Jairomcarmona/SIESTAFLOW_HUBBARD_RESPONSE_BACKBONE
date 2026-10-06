@@ -48,8 +48,9 @@ def test_complete_lot_is_accepted_and_mixed_dm_or_missing_point_is_rejected():
     altered = replace(observations[-1], identity=replace(observations[-1].identity, parent_dm_sha256="7" * 64))
     changed_plan = dict(expected)
     changed_plan[altered.identity.step] = altered.identity
-    with pytest.raises(ValueError, match="mixes"):
-        validate_response_lot(observations[:-1] + [altered], changed_plan, (-0.1, 0.0, 0.1))
+    result = validate_response_lot(observations[:-1] + [altered], changed_plan, (-0.1, 0.0, 0.1))
+    assert result["status"] == accepted["status"]
+    assert any(w["reason"] == "ARTIFACT_DIGEST_MISMATCH" for w in result["traceability_warnings"])
 
 
 def test_observation_requires_mode_specific_semantic_evidence():
@@ -58,3 +59,16 @@ def test_observation_requires_mode_specific_semantic_evidence():
     invalid = replace(_observation(identity), scf_state="bare_selected_verified")
     with pytest.raises(ValueError, match="semantic"):
         validate_response_lot([invalid], expected, (0.1,), ("SCREENED",))
+
+
+@pytest.mark.parametrize("field", ["parent_dm_sha256", "fdf_sha256"])
+@pytest.mark.parametrize("value", [None, "", "malformed"])
+def test_file_hash_metadata_never_substitutes_for_semantic_checks(field, value):
+    identity = _identity("SCREENED_+0.10", "SCREENED", 0.1)
+    observation = _observation(replace(identity, **{field: value}))
+    result = validate_response_lot([observation], {identity.step: identity}, (0.1,), ("SCREENED",))
+    assert result["status"] == "compatible_for_analysis"
+    assert result["traceability_warnings"]
+    invalid = replace(observation, dm_read_verified=False)
+    with pytest.raises(ValueError, match="semantic"):
+        validate_response_lot([invalid], {identity.step: identity}, (0.1,), ("SCREENED",))

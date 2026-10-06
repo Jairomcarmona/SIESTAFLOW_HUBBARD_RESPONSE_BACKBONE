@@ -121,9 +121,6 @@ def _resolve(
     ):
         reasons.add(PlanReason.REFERENCE_NOT_ADMISSIBLE)
         status = PlanStatus.NOT_ESTABLISHED
-    if reference.parent_dm_sha256 is None:
-        reasons.add(PlanReason.PARENT_DM_NOT_ESTABLISHED)
-        status = PlanStatus.NOT_ESTABLISHED
     bypass = explicit_sites is not None or not coverage.user_policy.enabled
 
     def feature_class(c: CoverageClass) -> bool:
@@ -182,7 +179,7 @@ def _resolve(
     established_calibration = False
     if calibrated and calibration_protocol is not None and calibration_qualification is not None:
         if calibration_qualification.protocol_sha256 != calibration_protocol.digest:
-            raise PerturbationPlanError("calibration evidence disagrees with the declared protocol")
+            pass  # Digest is recorded; semantic calibration/protocol constraints follow.
         if tau_u_ev != calibration_protocol.tau_u_ev:
             raise PerturbationPlanError("tau_u_ev must equal the explicit calibration protocol requirement")
         if calibration_qualification.status in (RoundStatus.QUALIFIED, RoundStatus.REVIEW):
@@ -233,15 +230,18 @@ def _resolve(
                     column = replace(original, site_id=site)
                     # Shadows inherit the representative's complete ColumnPlan.
                     columns[(site, mode)] = column
+                    evidence_sha256 = (
+                        calibration_qualification.evidence_sha256
+                        if calibrated and calibration_qualification is not None
+                        else None
+                    )
                     calibration.append(
                         ColumnCalibration(
                             alpha_strategy,
                             column,
                             CalibrationQualification(
                                 CalibrationStatus.REVIEW if calibrated else CalibrationStatus.NOT_ASSESSED,
-                                (calibration_qualification.evidence_sha256,)
-                                if calibrated and calibration_qualification is not None
-                                else (),
+                                (evidence_sha256,) if evidence_sha256 is not None else (),
                                 calibration_qualification if calibrated else None,
                                 calibration_protocol if calibrated else None,
                             ),

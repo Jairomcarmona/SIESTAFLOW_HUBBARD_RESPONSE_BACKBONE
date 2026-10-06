@@ -5314,6 +5314,20 @@
         ]
       ],
       "strategy": "ALL_SUBSPACES",
+      "traceability_warnings": [
+        {
+          "field": "reference.echoed_input_sha256",
+          "observed": null,
+          "reason": "ARTIFACT_DIGEST_ABSENT",
+          "recorded": null
+        },
+        {
+          "field": "reference.parent_dm_sha256",
+          "observed": null,
+          "reason": "ARTIFACT_DIGEST_ABSENT",
+          "recorded": null
+        }
+      ],
       "user_policy": {
         "declared_classes": [],
         "enabled": true,
@@ -5321,7 +5335,7 @@
       },
       "would_reduce_to": 2
     },
-    "plan_digest": "184359604f69ab92d9e39d2d7f23eefe0d4656657386d8a83ccf4a502d3b271d",
+    "plan_digest": "ac361235e8776bdec3e2a74a9ad56b0287a3ba373be3f87df1affe6601eb6a17",
     "planning_config_digest": "beb805853592fffa2f69db3a85bef3ef95420d11284f1460d3c85dd3c7d70891",
     "schema": "hubbardflow.campaign_plan_lock.v1"
   },
@@ -5355,7 +5369,7 @@
       },
       {
         "path": "campaign.lock",
-        "sha256": "d86108fbcf1d6e5d3206b98b512209e7c300368469c9fcbf750bb123d7588951"
+        "sha256": "8f3638ecf293b2022a6924fced7b3bf89e802e02098be562d3f61b7860024754"
       },
       {
         "path": "execution_profile.json"
@@ -5388,7 +5402,7 @@
       },
       {
         "path": "resolved_perturbation_plan.json",
-        "sha256": "5814e24672c352e79a4f0808249cf1aa7e3a0072326ad77ee27817ee241458bb"
+        "sha256": "80250feb2f911d017ef3177efe6939686c1f3a8fcac4294db63712605b544ff3"
       },
       {
         "path": "software/backend_compatibility.json",
@@ -5405,7 +5419,7 @@
     "name": "nio_p5_runner_replay",
     "observables": [],
     "reference_fdf": "reference.fdf",
-    "resolved_perturbation_plan_digest": "184359604f69ab92d9e39d2d7f23eefe0d4656657386d8a83ccf4a502d3b271d",
+    "resolved_perturbation_plan_digest": "ac361235e8776bdec3e2a74a9ad56b0287a3ba373be3f87df1affe6601eb6a17",
     "resolved_perturbation_plan_file": "resolved_perturbation_plan.json",
     "schema": "siestaflow.campaign.v2",
     "sites": [
@@ -9300,6 +9314,20 @@
         ]
       ],
       "strategy": "ALL_SUBSPACES",
+      "traceability_warnings": [
+        {
+          "field": "reference.echoed_input_sha256",
+          "observed": null,
+          "reason": "ARTIFACT_DIGEST_ABSENT",
+          "recorded": null
+        },
+        {
+          "field": "reference.parent_dm_sha256",
+          "observed": null,
+          "reason": "ARTIFACT_DIGEST_ABSENT",
+          "recorded": null
+        }
+      ],
       "user_policy": {
         "declared_classes": [],
         "enabled": true,
@@ -9359,7 +9387,6 @@
     "protocol_version": "campaign-fixed-grid-v1",
     "reason_codes": [
       "DISABLED_OR_FIXED",
-      "PARENT_DM_NOT_ESTABLISHED",
       "REFERENCE_NOT_ADMISSIBLE"
     ],
     "reconstruction_maps": [],
@@ -9599,7 +9626,33 @@
     "schema": "hubbardflow.resolved_perturbation_plan.v1",
     "source_fdf_sha256": "b4fb34e642d862be6949a5b2033a60c5b9fcae56119879583bb3eaf237620ee7",
     "status": "NOT_ESTABLISHED",
-    "tau_u_ev": null
+    "tau_u_ev": null,
+    "traceability_warnings": [
+      {
+        "field": "echoed_input_sha256",
+        "observed": null,
+        "reason": "ARTIFACT_DIGEST_ABSENT",
+        "recorded": null
+      },
+      {
+        "field": "parent_dm_sha256",
+        "observed": null,
+        "reason": "ARTIFACT_DIGEST_ABSENT",
+        "recorded": null
+      },
+      {
+        "field": "reference.echoed_input_sha256",
+        "observed": null,
+        "reason": "ARTIFACT_DIGEST_ABSENT",
+        "recorded": null
+      },
+      {
+        "field": "reference.parent_dm_sha256",
+        "observed": null,
+        "reason": "ARTIFACT_DIGEST_ABSENT",
+        "recorded": null
+      }
+    ]
   },
   "software/backend_compatibility.json": {
     "records": [

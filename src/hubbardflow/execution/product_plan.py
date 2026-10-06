@@ -18,6 +18,7 @@ from hubbardflow.domain.coverage import UserCoveragePolicy, qualify_coverage
 from hubbardflow.domain.perturbation_plan import AlphaStrategy, PlanStatus, ResolvedPerturbationPlan
 from hubbardflow.domain.subspace_inventory import InventoryStatus, build_inventory
 from hubbardflow.domain.symmetry_operation_models import bind_symmetry_model
+from hubbardflow.domain.validation import require_nonnegative_finite
 from hubbardflow.execution.campaign_coverage_policy import campaign_coverage_policy
 from hubbardflow.execution.campaign_plan import (
     CampaignCoverage,
@@ -58,6 +59,7 @@ class ProductRequest:
     identity_dirs: tuple[str, ...]
     allow_spin_flip: bool | None
     allow_rotations: bool | None
+    tol_fermi_ev: float | None = None
 
     def __post_init__(self) -> None:
         for value in (
@@ -78,6 +80,11 @@ class ProductRequest:
             for value in (self.allow_spin_flip, self.allow_rotations)
         ):
             raise ProductError("request flags must be explicit booleans")
+        if self.tol_fermi_ev is not None:
+            try:
+                require_nonnegative_finite(self.tol_fermi_ev, "tol_Fermi_eV")
+            except ValueError as exc:
+                raise ProductError(str(exc)) from exc
 
     def to_mapping(self) -> dict[str, object]:
         return asdict(self)
@@ -94,6 +101,7 @@ class ProductRequest:
             tuple(cast(Sequence[str], row["identity_dirs"])),
             cast(bool | None, row["allow_spin_flip"]),
             cast(bool | None, row["allow_rotations"]),
+            cast(float | None, row.get("tol_fermi_ev")),
         )
 
 
@@ -106,6 +114,8 @@ def _file(value: object, base: Path) -> str:
 
 def _config(request: ProductRequest) -> dict[str, object] | None:
     if request.lr_config is None:
+        if request.tol_fermi_ev is not None:
+            raise ProductError("--tol-fermi-ev requires --lr-config to freeze the declared policy")
         return None
     path = Path(request.lr_config)
     raw = json_object(path.read_text(encoding="utf-8"))
@@ -136,6 +146,9 @@ def _config(request: ProductRequest) -> dict[str, object] | None:
     if raw.get("coverage", "DIAGNOSTIC") == "TRANSLATION_SHADOWED":
         raw.setdefault("shadow_rejection_policy", "STOP")
         raw.setdefault("parent_reproduction", "PRINT_EQUIVALENT")
+    if request.tol_fermi_ev is not None:
+        raw["tol_Fermi_eV"] = request.tol_fermi_ev
+        raw["tol_Fermi_eV_source"] = "cli"
     return raw
 
 

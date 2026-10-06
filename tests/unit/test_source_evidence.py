@@ -103,15 +103,23 @@ def test_manifest_schema_requires_parent_dm_locator(tmp_path):
         validate_source_manifest(manifest)
 
 
-def test_out_mutation_rejects_even_if_derived_dataset_would_be_rehashed(tmp_path):
+def test_out_semantic_mutation_remains_a_parse_failure(tmp_path):
     manifest = _manifest(tmp_path)
     out = tmp_path / "response.out"
     text = out.read_text(encoding="utf-8", errors="replace")
     changed, count = re.subn(r"(Occupations:[^\r\n]*?)([-+]?\d+\.\d+)", r"\g<1>9.999999", text, count=1)
     assert count == 1
     out.write_text(changed, encoding="utf-8")
-    with pytest.raises(SourceEvidenceError, match="PROVENANCE_MISMATCH"):
+    with pytest.raises(SourceEvidenceError, match="OUT response could not be re-extracted"):
         extract_verified_response_tokens(manifest, tmp_path)
+
+
+def test_declared_out_digest_mismatch_is_a_traceability_warning(tmp_path):
+    manifest = _manifest(tmp_path)
+    manifest["observations"][0]["out_sha256"] = "0" * 64
+    manifest["source_manifest_identity_sha256"] = source_manifest_identity_sha256(manifest)
+    dataset = extract_verified_response_tokens(manifest, tmp_path)
+    assert "OUT_DIGEST_MISMATCH" in {item["reason_code"] for item in dataset["traceability_warnings"]}
 
 
 @pytest.mark.parametrize("path", ["../outside.out", "/outside.out", "C:/outside.out"])
@@ -140,16 +148,16 @@ def test_receipt_mutation_rejects(tmp_path):
     payload = json.loads(receipt.read_text(encoding="utf-8"))
     payload["state"] = "FAILED_SCIENCE"
     receipt.write_text(json.dumps(payload), encoding="utf-8")
-    with pytest.raises(SourceEvidenceError, match="receipt hash"):
+    with pytest.raises(SourceEvidenceError, match="receipt does not bind"):
         extract_verified_response_tokens(manifest, tmp_path)
 
 
-def test_parent_dm_mutation_rejects(tmp_path):
+def test_parent_dm_mutation_is_a_traceability_warning(tmp_path):
     manifest = _manifest(tmp_path)
     parent = tmp_path / "reference.DM"
     parent.write_bytes(parent.read_bytes() + b"changed")
-    with pytest.raises(SourceEvidenceError, match="DM hash"):
-        extract_verified_response_tokens(manifest, tmp_path)
+    dataset = extract_verified_response_tokens(manifest, tmp_path)
+    assert "PARENT_DM_DIGEST_MISMATCH" in {item["reason_code"] for item in dataset["traceability_warnings"]}
 
 
 @pytest.mark.parametrize("role", ["out", "receipt", "parent_dm"])
@@ -184,5 +192,28 @@ def test_internal_symlink_is_accepted_and_revalidation_detects_target_replacemen
     replacement = tmp_path / "replacement.out"
     replacement.write_bytes(target.read_bytes() + b"\nreplacement target\n")
     os.replace(replacement, target)
-    with pytest.raises(SourceEvidenceError, match="OUT hash differs from source manifest"):
-        extract_verified_response_tokens(manifest, tmp_path)
+    dataset = extract_verified_response_tokens(manifest, tmp_path)
+    assert "OUT_DIGEST_MISMATCH" in {item["reason_code"] for item in dataset["traceability_warnings"]}
+
+
+@pytest.mark.parametrize("value", [None, "", "malformed"])
+def test_all_evidence_hash_metadata_optional_warning(tmp_path: Path, value):
+    manifest = _manifest(tmp_path)
+    baseline = extract_verified_response_tokens(manifest, tmp_path)
+    def change(row):
+        for key in list(row):
+            if key.endswith("sha256"):
+                if value is None:
+                    row.pop(key)
+                else:
+                    row[key] = value
+    change(manifest)
+    change(manifest["reference_calculation"])
+    for row in manifest["observations"]:
+        change(row)
+    result = extract_verified_response_tokens(manifest, tmp_path)
+    def semantic(rows):
+        return [{key: value for key, value in row.items() if not key.endswith("sha256")}
+                for row in rows]
+    assert semantic(result["observations"]) == semantic(baseline["observations"])
+    assert result["traceability_warnings"]

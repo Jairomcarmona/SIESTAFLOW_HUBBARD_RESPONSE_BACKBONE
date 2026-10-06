@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Self
 
+from .hash_traceability import DigestWarning, digest_warning
 from .response_budget_models import BoundKind, CandidateBudget, ElementSeries, ResponseBudgetError, _Record
 from .response_protocol import EstimatorSpec
 from .scf_ladder_models import ScfEnvelope
@@ -284,14 +285,44 @@ class CalibrationQualification(_RoundRecord):
     matrix: ConditionalMatrixQualification | None
     reasons: tuple[RoundReason, ...]
     protocol_sha256: str
-    evidence_sha256: str
+    evidence_sha256: str | None
     label: str
 
+    @classmethod
+    def from_mapping(cls, payload: Mapping[str, object]) -> Self:
+        raw = dict(payload)
+        recorded = raw.pop("evidence_sha256", None)
+        raw.pop("traceability_warnings", None)
+        result = super().from_mapping({**raw, "evidence_sha256": None})
+        object.__setattr__(
+            result,
+            "evidence_sha256",
+            recorded if isinstance(recorded, str) or recorded is None else repr(recorded),
+        )
+        return result
+
+    @property
+    def traceability_warnings(self) -> tuple[DigestWarning, ...]:
+        warning = digest_warning(self.evidence_sha256, None, "evidence_sha256")
+        return () if warning is None else (warning,)
+
+    def to_mapping(self) -> dict[str, object]:
+        result = super().to_mapping()
+        if self.traceability_warnings:
+            result["traceability_warnings"] = [w.to_mapping() for w in self.traceability_warnings]
+        return result
+
     def __post_init__(self) -> None:
+        recorded = self.evidence_sha256
+        object.__setattr__(self, "evidence_sha256", None)
         super().__post_init__()
+        object.__setattr__(
+            self,
+            "evidence_sha256",
+            recorded if isinstance(recorded, str) or recorded is None else repr(recorded),
+        )
         try:
             require_sha256(self.protocol_sha256, "protocol_sha256")
-            require_sha256(self.evidence_sha256, "evidence_sha256")
         except ValueError as exc:
             raise FdebqRoundsError(str(exc)) from exc
         if self.label != "calificación condicional al modelo de error":

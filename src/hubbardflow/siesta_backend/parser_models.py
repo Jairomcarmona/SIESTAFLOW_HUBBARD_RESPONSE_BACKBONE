@@ -33,6 +33,7 @@ class ObservationContext:
     # campaign cannot silently promote a candidate observation to chi0.
     bare_hxc_rebuild_excluded: bool = False
     bare_semantics_evidence_ref: Optional[str] = None
+    traceability_warnings: tuple[str, ...] = ()
 
 @dataclass
 class HubbardAtomPopulation:

@@ -3,13 +3,15 @@
 from __future__ import annotations
 
 import json
+from dataclasses import replace
 from types import SimpleNamespace
 from typing import Any, cast
 
 import pytest
 
 from hubbardflow.domain.perturbation_plan import AlphaStrategy, PlanStatus
-from hubbardflow.domain.subspace_inventory import InventoryReason, InventoryStatus
+from hubbardflow.domain.perturbation_plan_evidence import ProjectorEvidence
+from hubbardflow.domain.subspace_inventory import CorrelatedSubspace, InventoryReason, InventoryStatus
 from hubbardflow.execution.product_admission import (
     ExecutionAdmissionReason,
     ExecutionAdmissionStatus,
@@ -20,8 +22,15 @@ from hubbardflow.execution.product_models import ProductSnapshot
 
 
 def _valid_case() -> tuple[ProductSnapshot, dict[str, object]]:
-    subspace = SimpleNamespace(site_id="Co@0:3:2", species_label="Co", atom_index=0)
-    inventory = SimpleNamespace(status=InventoryStatus.OK, subspaces=(subspace,), digest="inventory")
+    projector = ProjectorEvidence("Co", "1", 3, 2, 0.0, 0.0, 3.0, 1.0, (), "Co 1 3 2 0 0 3 1")
+    subspace = CorrelatedSubspace("Co@0:3:2", 0, "Co", 27, projector, "a" * 64)
+    inventory = SimpleNamespace(
+        status=InventoryStatus.OK,
+        subspaces=(subspace,),
+        digest="a" * 64,
+        effective_fdf_sha256="b" * 64,
+        reason_codes=(),
+    )
     run_specs = tuple(
         SimpleNamespace(site_id=subspace.site_id, mode=SimpleNamespace(value=mode), alpha_ev=alpha)
         for mode in ("BARE", "SCREENED")
@@ -172,7 +181,12 @@ def test_each_admission_condition_fails_closed_alone(change: str, reason: Execut
     elif change == "coverage":
         config["coverage"] = "UNSUPPORTED"
     elif change == "snapshot":
-        bad_inventory = SimpleNamespace(**{**snapshot.inventory.__dict__, "digest": "different"})
+        bad_inventory = SimpleNamespace(
+            **{
+                **snapshot.inventory.__dict__,
+                "subspaces": (replace(snapshot.inventory.subspaces[0], atomic_number=28),),
+            }
+        )
         snapshot = cast(ProductSnapshot, SimpleNamespace(**{**snapshot.__dict__, "inventory": bad_inventory}))
     result = execution_admission(snapshot, config)
     assert result.status is ExecutionAdmissionStatus.BLOCKED
@@ -229,10 +243,29 @@ def test_complete_translation_shadowed_plan_is_admissible(tmp_path: Any) -> None
     assert admission.reasons == ()
 
 
+def test_missing_parent_dm_digest_is_not_an_admission_blocker(tmp_path: Any) -> None:
+    snapshot, config = _translation_shadowed_case(tmp_path)
+    plan = cast(Any, snapshot.planning).plan
+    plan = SimpleNamespace(
+        **{
+            **vars(plan),
+            "reference": SimpleNamespace(**{**vars(plan.reference), "parent_dm_sha256": None}),
+        }
+    )
+    snapshot = cast(
+        ProductSnapshot,
+        SimpleNamespace(
+            **{**vars(snapshot), "planning": SimpleNamespace(**{**vars(snapshot.planning), "plan": plan})}
+        ),
+    )
+    admission = execution_admission(snapshot, config)
+    assert admission.status is ExecutionAdmissionStatus.ADMISSIBLE_TRANSLATION_SHADOWED
+    assert admission.reasons == ()
+
+
 @pytest.mark.parametrize(
     ("change", "reason"),
     [
-        ("parent_dm", ExecutionAdmissionReason.PARENT_DM_REQUIRED),
         ("spin_flip", ExecutionAdmissionReason.OPTIONAL_SYMMETRY_ENABLED),
         ("adaptive", ExecutionAdmissionReason.ADAPTIVE_POLICY_PRESENT),
         ("plan_reason", ExecutionAdmissionReason.PLAN_REASONS_PRESENT),
@@ -244,14 +277,7 @@ def test_translation_shadowed_admission_fails_closed(
     tmp_path: Any, change: str, reason: ExecutionAdmissionReason
 ) -> None:
     snapshot, config = _translation_shadowed_case(tmp_path)
-    if change == "parent_dm":
-        plan = cast(Any, snapshot.planning).plan
-        reference = SimpleNamespace(status=SimpleNamespace(value="ADMISSIBLE"), parent_dm_sha256=None)
-        plan = SimpleNamespace(**{**plan.__dict__, "reference": reference})
-        snapshot = cast(
-            ProductSnapshot, SimpleNamespace(**{**snapshot.__dict__, "planning": SimpleNamespace(plan=plan)})
-        )
-    elif change == "spin_flip":
+    if change == "spin_flip":
         config["allow_spin_flip"] = True
     elif change == "adaptive":
         config["adaptive_alpha_policy"] = {"schema": "declared"}
@@ -277,3 +303,14 @@ def test_translation_shadowed_admission_fails_closed(
     admission = execution_admission(snapshot, config)
     assert admission.status is ExecutionAdmissionStatus.BLOCKED
     assert reason in admission.reasons
+
+
+@pytest.mark.parametrize("digest", [None, "", "malformed", "c" * 64])
+def test_inventory_digest_discrepancies_only_warn(digest: str | None) -> None:
+    snapshot, config = _valid_case()
+    changed = SimpleNamespace(**{**snapshot.inventory.__dict__, "digest": digest})
+    snapshot = cast(ProductSnapshot, SimpleNamespace(**{**snapshot.__dict__, "inventory": changed}))
+    result = execution_admission(snapshot, config)
+    assert result.status is ExecutionAdmissionStatus.ADMISSIBLE_LEGACY_EQUIVALENT
+    assert result.reasons == ()
+    assert any(w.field == "digest" for w in result.traceability_warnings)

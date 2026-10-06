@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pytest
 
+from hubbardflow.domain.hash_traceability import DigestWarningReason
 from hubbardflow.siesta_backend.bare_trace_provider import (
     BareTraceProviderError,
     BareTraceRequest,
@@ -71,11 +72,16 @@ def test_provider_returns_receipt_only_for_hash_bound_native_trace(tmp_path: Pat
     assert receipt.selected_event_lines == (1, 1)
 
 
-def test_provider_rejects_artifact_substitution(tmp_path: Path):
+def test_provider_records_artifact_substitution_warning(tmp_path: Path):
     request = _request(tmp_path)
     request.executable_path.write_bytes(b"different executable")
-    with pytest.raises(BareTraceProviderError, match="rejected"):
-        NativeBareTraceProvider().validate(request)
+    receipt = NativeBareTraceProvider().validate(request)
+    assert receipt.status == "VERIFIED"
+    assert len(receipt.traceability_warnings) == 1
+    warning = receipt.traceability_warnings[0]
+    assert warning.field == "executable_sha256"
+    assert warning.reason is DigestWarningReason.MISMATCH
+    assert warning.observed == _digest(request.executable_path)
 
 
 def test_provider_rejects_missing_sidecar(tmp_path: Path):

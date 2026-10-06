@@ -271,6 +271,11 @@ def initialize_campaign(
                 lr_config[field] = str(target)
         if "parent_reproduction" in normalized:
             lr_config["parent_reproduction"] = normalized["parent_reproduction"]
+        if "parent_reproduction_factor" in normalized:
+            lr_config["parent_reproduction_factor"] = normalized["parent_reproduction_factor"]
+        for field in ("tol_Fermi_eV", "tol_Fermi_eV_source"):
+            if field in normalized:
+                lr_config[field] = normalized[field]
         normalized = validate_lr_config(lr_config, fdf_species, projector_sites, atom_count, inventory=inventory)
         planning = resolve_campaign_planning(reference_path, normalized)
         resolved_plan = planning.plan

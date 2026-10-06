@@ -7,7 +7,7 @@ to domain functions; persisted expansion is monotone and never grants PROVEN.
 from __future__ import annotations
 
 import json
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import replace
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -15,6 +15,11 @@ from typing import TYPE_CHECKING, Any
 from hubbardflow.domain.coverage_models import CoverageStatus
 from hubbardflow.domain.matrix_lr import ResponseObservation
 from hubbardflow.domain.perturbation_plan import ResolvedPerturbationPlan
+from hubbardflow.domain.reference_reproduction import (
+    ReferenceReproduction,
+    ReferenceReproductionError,
+    ReproductionReason,
+)
 from hubbardflow.domain.response_shadow import (
     ShadowOutcome,
     ShadowReason,
@@ -125,6 +130,55 @@ class CampaignShadow:
         if changed:
             self.install(runner)
         return changed
+
+    def expand_for_reference_difference(self, runner: CampaignRunner, evidence: Mapping[str, Any]) -> None:
+        """Run the affected reduced class directly after a measured state change.
+
+        Typed affected atoms map to every changed planned class. Incomplete
+        identity evidence affects every reduced class using this parent. Human
+        detail strings never determine the scope of direct fallback.
+        """
+        try:
+            reproduction = ReferenceReproduction.from_mapping(dict(evidence))
+            reason = (
+                ShadowReason.REFERENCE_FERMI_NOT_EQUIVALENT
+                if reproduction.reason is ReproductionReason.PARENT_FERMI_NOT_EQUIVALENT
+                else ShadowReason.REFERENCE_STATE_NOT_EQUIVALENT
+            )
+            affected_atoms = set(reproduction.affected_atom_indices)
+            all_classes = reproduction.all_reduced_classes_affected or not affected_atoms
+        except ReferenceReproductionError:
+            # Old or incomplete persisted evidence cannot localize the change.
+            affected_atoms, all_classes = set(), True
+            reason = ShadowReason.REFERENCE_STATE_NOT_EQUIVALENT
+        affected_sites = {
+            subspace.site_id
+            for subspace in self.plan.inventory.subspaces
+            if subspace.atom_index + 1 in affected_atoms
+        }
+        located_atoms = {
+            subspace.atom_index + 1
+            for subspace in self.plan.inventory.subspaces
+            if subspace.atom_index + 1 in affected_atoms
+        }
+        if located_atoms != affected_atoms:
+            all_classes = True
+        outcomes = []
+        for group in self.plan.coverage.classes:
+            if not group.reduced or (not all_classes and not affected_sites.intersection(group.members)):
+                continue
+            assert group.shadow is not None
+            outcomes.append(
+                ShadowOutcome(
+                    group.representative,
+                    group.shadow,
+                    CoverageStatus.REJECTED_EXPANDED,
+                    (),
+                    reason,
+                )
+            )
+        if outcomes:
+            self._expand(runner, outcomes)
 
     def failed_shadow(self, runner: CampaignRunner, node: LRDagNode) -> bool:
         """Invalid shadows cannot be reused during their class's explicit retry."""
@@ -237,15 +291,8 @@ class CampaignShadow:
         ],
     ) -> tuple[ShadowOutcome, ...]:
         observations, states, _, widths, reference_widths = data
-        campaign_parent_digest = (
-            runner.records.get("reference", {}).get("provenance", {}).get("artifacts", {}).get("dm")
-        )
-        parent_valid = bool(campaign_parent_digest) and all(
-            o.parent_dm_sha256 == campaign_parent_digest for o in observations
-        )
         state_valid = (
             bool(observations)
-            and parent_valid
             and self._complete_state_gate(runner)
             and states is not None
             and set(states) == {float(o.alpha) for o in observations}
@@ -359,6 +406,7 @@ class CampaignShadow:
                 )
                 for site, op_id in group.ops_rep_to_member
             ],
+            "traceability_warnings": self._parent_dm_digest_warnings(runner, observations),
         }
         reproduction = runner.records.get("reference", {}).get("reference_reproduction")
         if reproduction is not None:
@@ -414,3 +462,25 @@ class CampaignShadow:
                     )
                 )
         return reconstructed, states, magnetic, reconstructed_widths, reference_widths, dataset
+
+    @staticmethod
+    def _parent_dm_digest_warnings(
+        runner: CampaignRunner, observations: Sequence[ResponseObservation]
+    ) -> list[dict[str, str]]:
+        campaign_parent_digest = (
+            runner.records.get("reference", {}).get("provenance", {}).get("artifacts", {}).get("dm")
+        )
+        warnings = []
+        if not campaign_parent_digest:
+            warnings.append(
+                {"reason_code": "PARENT_DM_DIGEST_MISSING", "detail": "reference DM digest unavailable"}
+            )
+        for observation in observations:
+            if campaign_parent_digest and observation.parent_dm_sha256 != campaign_parent_digest:
+                warnings.append(
+                    {
+                        "reason_code": "PARENT_DM_DIGEST_MISMATCH",
+                        "detail": f"observation column {observation.perturbation_site} alpha {observation.alpha}",
+                    }
+                )
+        return warnings
