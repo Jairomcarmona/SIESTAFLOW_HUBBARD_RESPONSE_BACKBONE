@@ -1,9 +1,13 @@
 # Minimal verbatim excerpts from the verified Yoltla SIESTA output.
+# Regenerate/check: python tools/extract_lr06_trace.py FULL_OUTPUT.out.gz --check
 # Source trace SHA-256: 3c909d4e94a34c7685cb31f89ca1193098a4eb7ba5b50396fd5266d41b186028
 # Original full siesta.out SHA-256 (citation only): f28dbe35ff17734f9291676dccf9592e4cc0d09049d6192237be82ea4786eb20
 # SIESTA 5.4.2 executable SHA-256: c69519dc7296ca8f9e454303947084ee246efd609be4bc05244a31a91b82e37e
+# Section digests use UTF-8 text, LF line endings, and a trailing LF.
+# Extracted section native line 4337 SHA-256: 50d5135c2a0438e5c43513ad9c037f72f9f87e4a74e1e4f51ed37638ed199ef1
 # Native output line 4337; production profile signature:
 redata: SCF mix quantity                            = Hamiltonian
+# Extracted section native lines 4483-4514 SHA-256: 781aba606aa28405f0f05761d154a3333d53f1d2fdf845e3f583ef6376a9e5ab
 # Native output lines 4483-4514; complete pre-perturbation population event:
 hubbard_term: recalculating local occupations    1
  hubbard_term: projector occupations
@@ -37,6 +41,7 @@ hubbard_term: Total projector shell
 Occupations:     3.721022    0.952897    4.673919
 hubbard_term: maximum change in local occup.    0.929475
 hubbard_term: recalculating Hamiltonian
+# Extracted section native lines 4515-4579 SHA-256: ec9692f2f30a60c10438c3b0f8dd0c6aad089144774ae2bd86269d149e2302e3
 # Native output lines 4515-4579; verbatim trace lines 70-134:
 
 stepf: Fermi-Dirac step function
