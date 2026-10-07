@@ -1,0 +1,80 @@
+{
+  "campaign": "Yoltla M1 one-column projector scan",
+  "site_id": "MnLR00",
+  "element": "Mn",
+  "formal_d_electrons": 3,
+  "verification": {
+    "fdf_change": "DFTU.CutoffNorm line only",
+    "diff_verified": true,
+    "magnetic_moment_range_mu_b": [2.9183, 2.9207]
+  },
+  "geometry_record_only": {
+    "mn_mn_distance_bohr": 5.390,
+    "half_mn_mn_distance_bohr": 2.695,
+    "mn_o_distance_bohr": 3.59,
+    "pao_3d_radius_bohr": 4.502,
+    "pao_3d_radius_is_constant_across_cutoff_norm": true
+  },
+  "production_control": {
+    "cutoff_norm": 0.90,
+    "one_column_u_ev": 10.6622,
+    "campaign_36x36_u_ev_range": [10.6578, 10.6586],
+    "maximum_absolute_difference_ev": 0.0044
+  },
+  "points": [
+    {
+      "projector": {"kind": "CUTOFF_NORM", "value": 0.50, "method": 2},
+      "u_ev": 25.0833,
+      "n_ref_e": 2.6050,
+      "support_bohr": 1.452035750261572
+    },
+    {
+      "projector": {"kind": "CUTOFF_NORM", "value": 0.60, "method": 2},
+      "u_ev": 19.0979,
+      "n_ref_e": 3.0697,
+      "support_bohr": 1.588122997468477
+    },
+    {
+      "projector": {"kind": "CUTOFF_NORM", "value": 0.70, "method": 2},
+      "u_ev": 15.4146,
+      "n_ref_e": 3.5521,
+      "support_bohr": 1.765052169941702
+    },
+    {
+      "projector": {"kind": "CUTOFF_NORM", "value": 0.80, "method": 2},
+      "u_ev": 13.0972,
+      "n_ref_e": 4.0605,
+      "support_bohr": 2.011479793011571
+    },
+    {
+      "projector": {"kind": "CUTOFF_NORM", "value": 0.85, "method": 2},
+      "u_ev": 12.0211,
+      "n_ref_e": 4.3436,
+      "support_bohr": 2.188619831130068
+    },
+    {
+      "projector": {"kind": "CUTOFF_NORM", "value": 0.90, "method": 2},
+      "u_ev": 10.6622,
+      "n_ref_e": 4.6739,
+      "support_bohr": 2.439367465832430
+    },
+    {
+      "projector": {"kind": "CUTOFF_NORM", "value": 0.95, "method": 2},
+      "u_ev": 8.2302,
+      "n_ref_e": 5.1445,
+      "support_bohr": 2.872995373814031
+    },
+    {
+      "projector": {"kind": "CUTOFF_NORM", "value": 0.98, "method": 2},
+      "u_ev": 6.2659,
+      "n_ref_e": 5.6680,
+      "support_bohr": 3.455406057237902
+    },
+    {
+      "projector": {"kind": "CUTOFF_NORM", "value": 0.99, "method": 2},
+      "u_ev": 5.5708,
+      "n_ref_e": 5.8848,
+      "support_bohr": 3.893329137527022
+    }
+  ]
+}

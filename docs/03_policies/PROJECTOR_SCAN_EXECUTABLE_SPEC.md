@@ -80,21 +80,31 @@ literal phrase `no plateau; U is projector-specific` and the adjacent secant
 slopes `dU/d(norm)` from the observed curve. No averaging between projector
 values is permitted.
 
-## Provisional M1 CutoffNorm fixture
+## Measured M1 CutoffNorm fixture
 
-The current fixture contains four provisional values only:
+The fixture `tests/fixtures/projector_curve_m1.json` records nine measured
+Yoltla points for the one-column MnLR00 probe (Mn formal d3):
 
-| CutoffNorm | U (eV) |
-|---:|---:|
-| 0.80 | 13.0972 |
-| 0.90 | 10.6622 |
-| 0.95 | 8.2302 |
-| 0.98 | 6.2659 |
+| CutoffNorm | U (eV) | n_ref (e) | Projector support (bohr) |
+|---:|---:|---:|---:|
+| 0.50 | 25.0833 | 2.6050 | 1.452035750261572 |
+| 0.60 | 19.0979 | 3.0697 | 1.588122997468477 |
+| 0.70 | 15.4146 | 3.5521 | 1.765052169941702 |
+| 0.80 | 13.0972 | 4.0605 | 2.011479793011571 |
+| 0.85 | 12.0211 | 4.3436 | 2.188619831130068 |
+| 0.90 | 10.6622 | 4.6739 | 2.439367465832430 |
+| 0.95 | 8.2302 | 5.1445 | 2.872995373814031 |
+| 0.98 | 6.2659 | 5.6680 | 3.455406057237902 |
+| 0.99 | 5.5708 | 5.8848 | 3.893329137527022 |
 
-These points do not form a plateau over this sampled range. This is a statement
-about these four provisional records only, not a general conclusion about the
-projector curve. Additional planned records at 0.50, 0.60, 0.70, 0.85, and 0.99
-will extend the fixture when available.
+The recorded verification says the nine runs differed only in the
+`DFTU.CutoffNorm` line and the Mn magnetic moment stayed between 2.9207 and
+2.9183 muB. The fixture preserves these values as measurement metadata. The
+observed least-steep adjacent interval is 0.80–0.85: U falls by 1.0761 eV over
+0.05 in CutoffNorm (secant slope -21.522 eV per norm). No user plateau criteria
+are declared in this fixture, so it does not establish a plateau. Any
+no-plateau observation is limited to these nine sampled points and does not
+generalize to unsampled projector values.
 
 Required plateau evidence covers result stability, response linearity,
 electronic state continuity, magnetic stability, matrix conditioning, local
@@ -107,8 +117,9 @@ accepts externally assessed gate states; it does not implement these analyses.
 
 `ProductionControl` records the exact projector, probe U, full-campaign site U,
 and `abs(probe U - full-campaign site U)`. The projector must be the production
-projector. For the current M1 control, the probe value is 10.6622 eV and the
-full-campaign value is 10.658 eV, for a difference of 0.0042 eV. This is
+projector. For the current M1 control, the one-column probe value is 10.6622 eV
+and the 36x36 full-campaign value is in [10.6578, 10.6586] eV. The absolute
+difference spans 0.0036–0.0044 eV; the recorded maximum is 0.0044 eV. This is
 retained as evidence only; it has no acceptance threshold or gate.
 
 `ProjectorUResult` stores each reported U alongside its exact `ProjectorValue`.
@@ -123,8 +134,12 @@ the minimum distance between Hubbard sites. The diagnostic compares support
 radius with half that minimum distance and records whether support exceeds it.
 This is an exact geometric observation only: it cannot reject a projector, a
 scan, or U. No quantitative overlap metric or threshold is specified here.
-For M1 at CutoffNorm 0.90, the recorded support is 2.44 bohr and half the
-Mn–Mn distance is 2.69 bohr, so the support does not exceed half the distance.
+For M1, Mn–Mn is 5.390 bohr (half-distance 2.695 bohr), Mn–O is 3.59 bohr,
+and the basis PAO 3d radius is 4.502 bohr, identical across CutoffNorm values.
+The generated projector support at CutoffNorm 0.90 is 2.439367465832430 bohr,
+below half the Mn–Mn distance. At 0.95, 0.98, and 0.99 the recorded generated
+support exceeds that half-distance. This comparison is record-only geometry;
+it neither grants nor rejects physical equivalence, projector validity, or U.
 The typed record does not parse projector files; interpreting SIESTA output
 remains a future backend responsibility.
 
