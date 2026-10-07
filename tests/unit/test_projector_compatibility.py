@@ -146,23 +146,47 @@ def test_missing_explicit_label_mapping_is_incomplete() -> None:
     assert result.incomplete_reasons == (ProjectorIncompleteReason.LABEL_MAPPING_MISSING,)
 
 
-def test_every_typed_dftu_projector_record_field_is_compared() -> None:
+def test_only_projector_definition_fields_decide_and_usage_fields_are_recorded() -> None:
     lr_record = _record()
-    changed_records = (
+    structural_changes = (
         ("projector_header_value", replace(lr_record, projector_header_value="2")),
         ("n", replace(lr_record, n=4)),
         ("l", replace(lr_record, l=1)),
-        ("u_ref_ev", replace(lr_record, u_ref_ev=1.0)),
-        ("j_ref_ev", replace(lr_record, j_ref_ev=0.2)),
         ("rc_bohr", replace(lr_record, rc_bohr=2.5)),
         ("omega", replace(lr_record, omega=0.1)),
-        ("lambda_values", replace(lr_record, lambda_values=(0.2,))),
     )
 
-    for field, changed_record in changed_records:
+    for field, changed_record in structural_changes:
         result = _compare(_definition(record=lr_record), _definition("Mn", record=changed_record))
         assert result.status is ProjectorCompatibilityStatus.MISMATCH
         assert f"DFTU.Proj.{field}" in {item.field for item in result.differences}
+
+    informational_changes = (
+        ("u_ref_ev", replace(lr_record, u_ref_ev=11.117477)),
+        ("j_ref_ev", replace(lr_record, j_ref_ev=0.2)),
+        ("lambda_values", replace(lr_record, lambda_values=(0.2,))),
+    )
+    for field, changed_record in informational_changes:
+        result = _compare(_definition(record=lr_record), _definition("Mn", record=changed_record))
+        assert result.status is ProjectorCompatibilityStatus.MATCH
+        assert not result.differences
+        assert len(result.lr_informational_values) == 1
+        assert len(result.dftu_informational_values) == 1
+        assert getattr(result.dftu_informational_values[0], field) == getattr(changed_record, field)
+
+
+def test_new_dftu_u_matches_even_when_it_differs_from_the_lr_reference_u() -> None:
+    lr_record = replace(_record(), u_ref_ev=11.117477)
+    dftu_record = replace(_record(), u_ref_ev=11.5325)
+
+    result = _compare(_definition(record=lr_record), _definition("Mn", record=dftu_record))
+
+    assert result.status is ProjectorCompatibilityStatus.MATCH
+    assert not result.differences
+    assert result.lr_informational_values[0].u_ref_ev == 11.117477
+    assert result.dftu_informational_values[0].u_ref_ev == 11.5325
+    restored = type(result).from_mapping(result.to_mapping())
+    assert restored == result
 
 
 def test_projector_header_numeric_spelling_is_compared_by_value() -> None:

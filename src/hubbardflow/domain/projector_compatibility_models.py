@@ -96,6 +96,44 @@ class ProjectorRecordDefinition:
 
 
 @dataclass(frozen=True)
+class ProjectorRecordInformation:
+    """Applied Hubbard values and response shifts, recorded without comparison."""
+
+    u_ref_ev: float
+    j_ref_ev: float
+    lambda_values: tuple[float, ...]
+
+    def __post_init__(self) -> None:
+        try:
+            require_finite(self.u_ref_ev, "u_ref_ev")
+            require_finite(self.j_ref_ev, "j_ref_ev")
+            for value in self.lambda_values:
+                require_finite(value, "lambda")
+        except ValueError as exc:
+            raise ProjectorCompatibilityError(str(exc)) from exc
+
+    def to_mapping(self) -> dict[str, object]:
+        return {
+            "u_ref_ev": self.u_ref_ev,
+            "j_ref_ev": self.j_ref_ev,
+            "lambda_values": list(self.lambda_values),
+        }
+
+    @classmethod
+    def from_mapping(cls, value: object) -> ProjectorRecordInformation:
+        row = _mapping(value, "informational projector values")
+        try:
+            lambdas = _array(row["lambda_values"], "lambda_values")
+            return cls(
+                _number(row["u_ref_ev"], "u_ref_ev"),
+                _number(row["j_ref_ev"], "j_ref_ev"),
+                tuple(_number(item, "lambda") for item in lambdas),
+            )
+        except KeyError as exc:
+            raise ProjectorCompatibilityError(f"informational projector values lack {exc.args[0]}") from exc
+
+
+@dataclass(frozen=True)
 class ProjectorArtifactDigest:
     """One optional file digest attached to the projector evidence."""
 
@@ -143,6 +181,7 @@ class ProjectorDefinition:
     evidence_consistent: bool = True
     species_present: bool = True
     artifact_digest_issues: tuple[str, ...] = ()
+    informational_values: tuple[ProjectorRecordInformation, ...] = ()
 
     def __post_init__(self) -> None:
         _identifier(self.label, "projector label")
@@ -162,6 +201,8 @@ class ProjectorDefinition:
             _identifier(self.pao_basis_size, "pao_basis_size")
         if self.pao_basis_tokens is not None and any(not token for token in self.pao_basis_tokens):
             raise ProjectorCompatibilityError("pao_basis_tokens cannot contain empty values")
+        if any(not isinstance(item, ProjectorRecordInformation) for item in self.informational_values):
+            raise ProjectorCompatibilityError("informational_values must contain ProjectorRecordInformation")
 
     def to_mapping(self) -> dict[str, object]:
         return {
@@ -177,6 +218,7 @@ class ProjectorDefinition:
             "evidence_consistent": self.evidence_consistent,
             "species_present": self.species_present,
             "artifact_digest_issues": list(self.artifact_digest_issues),
+            "informational_values": [item.to_mapping() for item in self.informational_values],
         }
 
     @classmethod
@@ -187,10 +229,13 @@ class ProjectorDefinition:
             raw_basis = row["pao_basis_tokens"]
             raw_digests = row.get("artifact_digests", [])
             raw_digest_issues = row.get("artifact_digest_issues", [])
+            raw_informational_values = row.get("informational_values", [])
             if not isinstance(raw_digests, list | tuple):
                 raise ProjectorCompatibilityError("artifact_digests must be an array")
             if not isinstance(raw_digest_issues, list | tuple):
                 raise ProjectorCompatibilityError("artifact_digest_issues must be an array")
+            if not isinstance(raw_informational_values, list | tuple):
+                raise ProjectorCompatibilityError("informational_values must be an array")
             if raw_basis is not None and not isinstance(raw_basis, list | tuple):
                 raise ProjectorCompatibilityError("pao_basis_tokens must be an array or null")
             return cls(
@@ -206,6 +251,7 @@ class ProjectorDefinition:
                 _boolean(row["evidence_consistent"], "evidence_consistent"),
                 _boolean(row["species_present"], "species_present"),
                 tuple(_string(item, "artifact digest issue") for item in raw_digest_issues),
+                tuple(ProjectorRecordInformation.from_mapping(item) for item in raw_informational_values),
             )
         except KeyError as exc:
             raise ProjectorCompatibilityError(f"projector definition lacks {exc.args[0]}") from exc
@@ -276,6 +322,8 @@ class ProjectorCompatibilityResult:
     dftu_artifact_digests: tuple[ProjectorArtifactDigest, ...] = ()
     lr_artifact_digest_issues: tuple[str, ...] = ()
     dftu_artifact_digest_issues: tuple[str, ...] = ()
+    lr_informational_values: tuple[ProjectorRecordInformation, ...] = ()
+    dftu_informational_values: tuple[ProjectorRecordInformation, ...] = ()
 
     @property
     def application_permitted(self) -> bool:
@@ -293,6 +341,8 @@ class ProjectorCompatibilityResult:
             "dftu_artifact_digests": [item.to_mapping() for item in self.dftu_artifact_digests],
             "lr_artifact_digest_issues": list(self.lr_artifact_digest_issues),
             "dftu_artifact_digest_issues": list(self.dftu_artifact_digest_issues),
+            "lr_informational_values": [item.to_mapping() for item in self.lr_informational_values],
+            "dftu_informational_values": [item.to_mapping() for item in self.dftu_informational_values],
             "force_requested": self.force_requested,
             "application_permitted": self.application_permitted,
         }
@@ -315,6 +365,8 @@ class ProjectorCompatibilityResult:
             dftu_digest_rows = _array(dftu_digests, "dftu_artifact_digests")
             lr_issue_rows = _array(lr_digest_issues, "lr_artifact_digest_issues")
             dftu_issue_rows = _array(dftu_digest_issues, "dftu_artifact_digest_issues")
+            lr_information = _array(row.get("lr_informational_values", []), "lr_informational_values")
+            dftu_information = _array(row.get("dftu_informational_values", []), "dftu_informational_values")
             force = _boolean(row["force_requested"], "force_requested")
             result = cls(
                 ProjectorCompatibilityStatus(_string(row["status"], "status")),
@@ -328,6 +380,8 @@ class ProjectorCompatibilityResult:
                 tuple(ProjectorArtifactDigest.from_mapping(item) for item in dftu_digest_rows),
                 tuple(_string(item, "LR artifact digest issue") for item in lr_issue_rows),
                 tuple(_string(item, "DFT+U artifact digest issue") for item in dftu_issue_rows),
+                tuple(ProjectorRecordInformation.from_mapping(item) for item in lr_information),
+                tuple(ProjectorRecordInformation.from_mapping(item) for item in dftu_information),
             )
             if row.get("application_permitted") is not result.application_permitted:
                 raise ProjectorCompatibilityError(

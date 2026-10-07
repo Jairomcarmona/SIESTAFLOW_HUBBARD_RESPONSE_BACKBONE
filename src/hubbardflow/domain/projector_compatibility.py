@@ -14,6 +14,7 @@ from hubbardflow.domain.projector_compatibility_models import (
     ProjectorFieldDifference,
     ProjectorIncompleteReason,
     ProjectorRecordDefinition,
+    ProjectorRecordInformation,
     ProjectorValue,
 )
 
@@ -94,6 +95,8 @@ def compare_projector_definitions(
         dftu_definition.artifact_digests,
         lr_definition.artifact_digest_issues,
         dftu_definition.artifact_digest_issues,
+        _record_information(lr_definition),
+        _record_information(dftu_definition),
     )
 
 
@@ -108,11 +111,42 @@ def _record_fields(
         ),
         ("n", lr.n, dftu.n),
         ("l", lr.l, dftu.l),
-        ("u_ref_ev", lr.u_ref_ev, dftu.u_ref_ev),
-        ("j_ref_ev", lr.j_ref_ev, dftu.j_ref_ev),
         ("rc_bohr", lr.rc_bohr, dftu.rc_bohr),
         ("omega", lr.omega, dftu.omega),
-        ("lambda_values", lr.lambda_values, dftu.lambda_values),
+    )
+
+
+def _record_information(definition: ProjectorDefinition) -> tuple[ProjectorRecordInformation, ...]:
+    if definition.informational_values:
+        return definition.informational_values
+    if definition.record is None:
+        return ()
+    record = definition.record
+    return (ProjectorRecordInformation(record.u_ref_ev, record.j_ref_ev, record.lambda_values),)
+
+
+def same_projector_record_definition(
+    left: ProjectorRecordDefinition, right: ProjectorRecordDefinition
+) -> bool:
+    """Compare only the DFTU.Proj fields that define the localized projector.
+
+    Hubbard U/J and response-shift lambdas are intentionally excluded: they
+    describe applied values and perturbations, not projector identity.
+    """
+    if not isinstance(left, ProjectorRecordDefinition) or not isinstance(right, ProjectorRecordDefinition):
+        raise ProjectorCompatibilityError("both inputs must be ProjectorRecordDefinition values")
+    return (
+        _numeric_or_string(left.projector_header_value),
+        left.n,
+        left.l,
+        left.rc_bohr,
+        left.omega,
+    ) == (
+        _numeric_or_string(right.projector_header_value),
+        right.n,
+        right.l,
+        right.rc_bohr,
+        right.omega,
     )
 
 
@@ -156,6 +190,8 @@ __all__ = [
     "ProjectorFieldDifference",
     "ProjectorIncompleteReason",
     "ProjectorRecordDefinition",
+    "ProjectorRecordInformation",
     "ProjectorValue",
     "compare_projector_definitions",
+    "same_projector_record_definition",
 ]

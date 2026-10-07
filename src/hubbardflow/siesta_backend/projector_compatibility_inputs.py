@@ -11,11 +11,13 @@ from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import cast
 
+from hubbardflow.domain.projector_compatibility import same_projector_record_definition
 from hubbardflow.domain.projector_compatibility_models import (
     ProjectorArtifactDigest,
     ProjectorCompatibilityError,
     ProjectorDefinition,
     ProjectorRecordDefinition,
+    ProjectorRecordInformation,
 )
 from hubbardflow.siesta_backend.fdf_model import DftuRecord, FdfModel, parse_effective_fdf
 
@@ -41,9 +43,12 @@ def definition_from_fdf(
     roots: Sequence[Path],
     *,
     evidence_consistent: bool,
+    informational_records: Sequence[ProjectorRecordDefinition] = (),
 ) -> ProjectorDefinition:
     record_in_fdf = record_by_label(model, label)
-    if record is not None and record_in_fdf != record:
+    if record is not None and (
+        record_in_fdf is None or not same_projector_record_definition(record_in_fdf, record)
+    ):
         evidence_consistent = False
     cutoff = _cutoff_norm(model.effective_text)
     basis_by_label = dict(model.pao_basis_blocks)
@@ -58,6 +63,15 @@ def definition_from_fdf(
         0.45 if species is not None and species.atomic_number == 1 else _PAO_SPLIT_NORM_DEFAULT
     )
     artifact_digests, artifact_digest_issues = _artifact_digests(label, roots)
+    informational_values = tuple(
+        sorted(
+            {
+                ProjectorRecordInformation(row.u_ref_ev, row.j_ref_ev, row.lambda_values)
+                for row in informational_records
+            },
+            key=lambda item: (item.u_ref_ev, item.j_ref_ev, item.lambda_values),
+        )
+    )
     return ProjectorDefinition(
         label=label,
         generation_method=_generation_method(model.effective_text, model.dftu_method),
@@ -71,6 +85,7 @@ def definition_from_fdf(
         evidence_consistent=evidence_consistent,
         species_present=species is not None,
         artifact_digest_issues=artifact_digest_issues,
+        informational_values=informational_values,
     )
 
 
@@ -132,11 +147,13 @@ def source_record(
     rows = evidence.get(label, ())
     if not rows:
         return None, False
-    unique = set(rows)
-    if len(unique) != 1:
+    evidence_record = min(rows, key=lambda row: (row.u_ref_ev, row.j_ref_ev, row.lambda_values))
+    if any(not same_projector_record_definition(evidence_record, row) for row in rows):
         return None, False
-    record = next(iter(unique))
-    return record, record_by_label(source_model, label) == record
+    reference_record = record_by_label(source_model, label)
+    if reference_record is None:
+        return evidence_record, False
+    return evidence_record, same_projector_record_definition(reference_record, evidence_record)
 
 
 def _cutoff_norm(text: str) -> float:

@@ -36,6 +36,23 @@ def render_projector_compatibility_report(report: ProjectorCompatibilityReport) 
             lines.extend(_ascii_table(("FIELD", "LR", "DFT+U"), rows))
         else:
             lines.append("  No declared parameter differences.")
+        lr_values = comparison.lr_informational_values
+        dftu_values = comparison.dftu_informational_values
+        if lr_values or dftu_values:
+            lines.append("  Informational DFTU.Proj values (do not affect status):")
+            rows = [
+                (
+                    label,
+                    _information_values(lr_values, attribute),
+                    _information_values(dftu_values, attribute),
+                )
+                for label, attribute in (
+                    ("U (eV)", "u_ref_ev"),
+                    ("J (eV)", "j_ref_ev"),
+                    ("lambda_values (eV)", "lambda_values"),
+                )
+            ]
+            lines.extend(_ascii_table(("VALUE", "LR reference", "DFT+U applied"), rows))
         if comparison.incomplete_reasons:
             lines.append(
                 "  Evidence incomplete: " + ", ".join(item.value for item in comparison.incomplete_reasons)
@@ -80,6 +97,13 @@ def _value(value: object) -> str:
     if isinstance(value, tuple):
         return "(" + ", ".join(_value(item) for item in value) + ")"
     return "<missing>" if value is None else str(value)
+
+
+def _information_values(values: tuple[object, ...], attribute: str) -> str:
+    if not values:
+        return "<missing>"
+    rendered = tuple(_value(getattr(item, attribute)) for item in values)
+    return rendered[0] if len(rendered) == 1 else "[" + "; ".join(rendered) + "]"
 
 
 def _hashes(values: tuple[str, ...]) -> str:

@@ -143,6 +143,7 @@ def check_campaign_projectors(
             source_evidence,
             source_roots,
             evidence_consistent=source_consistent,
+            informational_records=source_inventory.get(lr_label, ()),
         )
         target_record = record_by_label(target_model, dftu_label)
         target_definition = definition_from_fdf(
