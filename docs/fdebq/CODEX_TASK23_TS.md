@@ -328,6 +328,15 @@ is a stop.
    - `RECORD_ONLY` never grants equivalence. It still records and rejects a real
      assessed occupation difference outside the effective tolerance, or incomplete
      atom/projector identity. It cannot suppress a physical failure.
+   - **Accepted clarification (TASK 23c-bis):** the original wording “registra
+     sin decidir” (“record without deciding”) is not interpreted as suppressing
+     an assessed physical failure. `RECORD_ONLY` means no equivalence is granted
+     from the comparison; measured occupation differences beyond tolerance and
+     incomplete identities still reject TS reduction for that parent and schedule
+     direct calculation.
+     This is an intentional, accepted safety clarification, not a hash-based
+     decision. SHA/digest evidence remains traceability-only and cannot accept
+     or reject a parent.
    - A measured occupation difference records `PARENT_STATE_NOT_EQUIVALENT` with
      atom, spin, element, difference and effective tolerance. All affected atom
      indices are persisted; every affected class of this parent runs directly.

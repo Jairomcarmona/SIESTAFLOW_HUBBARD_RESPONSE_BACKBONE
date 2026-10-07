@@ -452,6 +452,17 @@ de rechazo por ruido dentro de tolerancia o DM de bytes distintos. Se actualiza
 documentar cálculo directo por alcance físico y la decisión dimensional Fermi
 recibida del usuario.
 
+### TASK 23c-bis — aclaración aceptada de `RECORD_ONLY`
+
+La redacción inicial de la tarea (“registra sin decidir”) se matiza de forma
+intencional en este modo: `RECORD_ONLY` nunca declara equivalencia física ni
+aprueba una reducción TS. Sí conserva el rechazo y el cálculo directo cuando
+hay una diferencia física medida fuera de tolerancia o una identidad de
+átomo/proyector incompleta. Se acepta esta interpretación como el criterio más
+seguro porque el modo no debe convertir evidencia física negativa en permiso
+para reducir. Esta decisión depende de ocupaciones e identidad física, nunca
+de SHA/digests; los hashes siguen siendo advertencias y trazabilidad solamente.
+
 
 Salida literal después de corregir RECORD_ONLY (pytest con los cinco módulos
 explícitos de referencia, shadow, identidad del runner, hash traceability y
