@@ -231,6 +231,25 @@ def main(argv: list[str] | None = None) -> int:
     add_product_commands(sub)
     audit = sub.add_parser("audit-fdf", help="run the existing read-only FDF consistency audit")
     audit.add_argument("fdf_file", help="FDF path")
+    projector_check = sub.add_parser(
+        "check-projector",
+        help="compare an LR campaign projector with a DFT+U FDF using explicit label mappings",
+    )
+    projector_check.add_argument("--campaign", required=True, help="campaign.v2.json with resolved projector evidence")
+    projector_check.add_argument("--target-fdf", required=True, help="DFT+U application FDF path")
+    projector_check.add_argument(
+        "--map", dest="label_mappings", action="append", required=True,
+        metavar="LR_LABEL=DFTU_LABEL", help="explicit mapping; repeat for each Hubbard species",
+    )
+    projector_check.add_argument(
+        "--artifact-dir", action="append", default=[],
+        help="additional directory containing .psml, .ion, or .dftu_proj files; repeatable",
+    )
+    projector_check.add_argument(
+        "--force", action="store_true",
+        help="record explicit user override for MISMATCH or INCOMPLETE",
+    )
+    projector_check.add_argument("--json-out", help="optional path to save the machine-readable report")
     init = sub.add_parser("init", help="create a fixed-grid or policy-driven adaptive v2 campaign as a WSL pointer or direct Linux manifest")
     init.add_argument("fdf_file", help="reference FDF path")
     init.add_argument("--lr-config", required=True, help="material/site/alpha/config JSON")
@@ -298,6 +317,29 @@ def main(argv: list[str] | None = None) -> int:
                 )
         if args.command == "audit-fdf":
             audit_fdf(args)
+        elif args.command == "check-projector":
+            from hubbardflow.siesta_backend.projector_compatibility import check_campaign_projectors
+
+            mappings: list[tuple[str, str]] = []
+            for raw_mapping in args.label_mappings:
+                source, separator, target = raw_mapping.partition("=")
+                if not separator or not source or not target:
+                    raise ValueError("--map must use LR_LABEL=DFTU_LABEL")
+                mappings.append((source, target))
+            projector_report = check_campaign_projectors(
+                args.campaign,
+                args.target_fdf,
+                mappings,
+                force=args.force,
+                artifact_dirs=args.artifact_dir,
+            )
+            if args.json_out:
+                rendered_json = json.dumps(projector_report.to_mapping(), indent=2, sort_keys=True, allow_nan=False)
+                Path(args.json_out).write_text(rendered_json + "\n", encoding="utf-8")
+            from hubbardflow.reporting.projector_compatibility_report import render_projector_compatibility_report
+
+            print(render_projector_compatibility_report(projector_report))
+            return 0 if projector_report.application_permitted else 1
         elif args.command == "init":
             _public_init(args)
         elif args.command in {"plan", "submit", "reference"} or (args.command == "run" and Path(args.campaign).suffix.casefold() == ".fdf"):
