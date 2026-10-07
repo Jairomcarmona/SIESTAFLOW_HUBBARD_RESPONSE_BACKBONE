@@ -366,6 +366,27 @@ def test_record_only_different_dm_bytes_and_noise_below_tol_do_not_reject(differ
     assert evidence.planning_parent_dm_sha256 != evidence.campaign_parent_dm_sha256
 
 
+def test_record_only_without_fermi_tolerance_records_fermi_without_rejecting() -> None:
+    evidence = reference_reproduction_evidence(
+        output(),
+        output(fermi="1.90000"),
+        FIRST,
+        SECOND,
+        ParentReproduction.RECORD_ONLY,
+        scf_dm_tolerance=1e-5,
+        tolerance_factor=1.0,
+    )
+
+    assert evidence.reason is ReproductionReason.EQUIVALENCE_NOT_ASSESSED
+    assert evidence.occupation_equivalence is OccupationEquivalence.NOT_ASSESSED
+    assert evidence.max_occupation_difference_e == 0.0
+    assert evidence.occupation_tolerance_e == 1e-5
+    assert evidence.fermi_equivalence is FermiEquivalence.RECORDED_NOT_ASSESSED
+    assert evidence.max_fermi_difference_ev == 0.9
+    assert evidence.fermi_tolerance_ev is None
+    assert not evidence.rejects_reduction
+
+
 @pytest.mark.parametrize("fermi", ["1.00000", "1.90000"])
 def test_no_declared_fermi_tolerance_does_not_change_occupation_verdict(fermi: str) -> None:
     evidence = reference_reproduction_evidence(
