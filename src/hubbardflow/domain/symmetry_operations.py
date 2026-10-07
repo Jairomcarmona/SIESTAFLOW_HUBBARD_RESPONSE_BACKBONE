@@ -69,6 +69,16 @@ def candidate_operations(model: SymmetryModel, geometry_band: EquivalenceBands) 
     exact_rows: dict[tuple[str, str, str], tuple[Vector, tuple[int, ...]]] = {}
     if all(atom.rational_coordinates is not None for atom in atoms):
         coordinates = {atom.atom_index: atom.rational_coordinates for atom in atoms}
+        # Keep every atom index per normalized coordinate so duplicate positions
+        # remain ambiguous exactly as in the former full scan.
+        exact_coordinate_index: dict[tuple[Fraction, ...], list[int]] = {}
+        checked_translations: set[tuple[str, str, str]] = set()
+        for atom in atoms:
+            coordinate = coordinates[atom.atom_index]
+            assert coordinate is not None
+            exact_coordinate_index.setdefault(tuple(value % 1 for value in coordinate), []).append(
+                atom.atom_index
+            )
         for anchor_atom in atoms:
             for target_atom in atoms:
                 translation_rational = tuple(
@@ -79,6 +89,12 @@ def candidate_operations(model: SymmetryModel, geometry_band: EquivalenceBands) 
                         strict=True,
                     )
                 )
+                rational_key = cast(tuple[str, str, str], tuple(str(value) for value in translation_rational))
+                # Many atom pairs generate the same exact translation. Its map
+                # depends only on that vector, so evaluate each vector once.
+                if rational_key in checked_translations:
+                    continue
+                checked_translations.add(rational_key)
                 mapping: list[int] = []
                 for source_atom in atoms:
                     translated = tuple(
@@ -87,11 +103,7 @@ def candidate_operations(model: SymmetryModel, geometry_band: EquivalenceBands) 
                             coordinates[source_atom.atom_index] or (), translation_rational, strict=True
                         )
                     )
-                    matches = [
-                        candidate.atom_index
-                        for candidate in atoms
-                        if tuple(value % 1 for value in coordinates[candidate.atom_index] or ()) == translated
-                    ]
+                    matches = exact_coordinate_index.get(translated, [])
                     if len(matches) != 1:
                         mapping = []
                         break
@@ -101,7 +113,6 @@ def candidate_operations(model: SymmetryModel, geometry_band: EquivalenceBands) 
                 atom_map = dict(zip((atom.atom_index for atom in atoms), mapping, strict=True))
                 if {atom_map[index] for index in correlated} != set(correlated):
                     continue
-                rational_key = cast(tuple[str, str, str], tuple(str(value) for value in translation_rational))
                 exact_rows[rational_key] = (
                     cast(Vector, tuple(float(value) for value in translation_rational)),
                     tuple(mapping),

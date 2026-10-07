@@ -404,6 +404,24 @@ def test_exact_rational_ring_translations_are_enumerated_without_spglib(count: i
     assert translations == {str(Fraction(step, count)) for step in range(count)}
 
 
+def test_exact_translation_lookup_preserves_maps_and_output_order() -> None:
+    count = 8
+    model, _, _ = _ring((0.8,) * count)
+    search = candidate_operations(model, EquivalenceBands(1e-19, 1e-18))
+    translations: list[str] = []
+    permutations: list[tuple[int, ...]] = []
+    for operation in search.operations:
+        translation = operation.translation_rational
+        if operation.rotation_int != IDENTITY or operation.eps != 1 or translation is None:
+            continue
+        if translation[1:] != ("0", "0"):
+            continue
+        translations.append(translation[0])
+        permutations.append(operation.atom_permutation)
+    assert translations == [str(Fraction(step, count)) for step in range(count)]
+    assert permutations == [tuple((index + step) % count for index in range(count)) for step in range(count)]
+
+
 @pytest.mark.parametrize("count", [4, 5, 8, 10])
 def test_exact_rational_ring_translations_normalize_integer_cell_shifts(count: int) -> None:
     model, _, _ = _ring((0.8,) * count)
@@ -430,6 +448,18 @@ def test_exact_rational_ring_translations_normalize_integer_cell_shifts(count: i
         and operation.translation_rational[1:] == ("0", "0")
     }
     assert translations == {str(Fraction(step, count)) for step in range(count)}
+
+
+def test_exact_coordinate_index_preserves_duplicate_position_ambiguity() -> None:
+    model, _, _ = _ring((0.8,) * 4)
+    atoms = list(model.atoms)
+    atoms[1] = replace(
+        atoms[1],
+        coordinates_fractional=atoms[0].coordinates_fractional,
+        fractional_coordinates_rational=("0", "0", "0"),
+    )
+    search = candidate_operations(replace(model, atoms=tuple(atoms)), EquivalenceBands(1e-19, 1e-18))
+    assert all(operation.translation_rational is None for operation in search.operations)
 
 
 def test_exact_translation_requires_exact_map_and_commensurate_mesh() -> None:
