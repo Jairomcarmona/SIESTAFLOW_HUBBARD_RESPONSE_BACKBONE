@@ -9,7 +9,7 @@ physical result, set a Hubbard-U acceptance criterion, or authorize a campaign.
 | Case | Regression and repository evidence | Provisional tolerance | Status and limit |
 |---|---|---:|---|
 | MnO Yoltla vs laptop | Compare paired outputs for the same declared MnO calculation. Existing MnO audit data are not a paired laptop run. | Pending; no value assigned | `xfail`: `PENDIENTE_MNO_LAPTOP_ARTIFACT`. No substitute campaign is used. |
-| Cu3N by translation symmetry | Recheck the eight translation permutations against the archived 24-site matrices in `docs/evidence/cu3n_mathematical_20260812/CU3N_PBE_LRU_SC222_RC3p0_V1.json`; retain the three-orbit site-U summary. | Matrix residual `0`; U-spread recomputation `1e-12 eV` | Archive self-consistency passes. It is not an independent shadow validation. The direct-shadow package regression remains xfailed because its source FDF is absent. |
+| Cu3N by translation symmetry | Recheck the eight translation permutations against the archived 24-site matrices in `docs/evidence/cu3n_mathematical_20260812/CU3N_PBE_LRU_SC222_RC3p0_V1.json`; retain the three-orbit site-U summary. | Matrix residual `1e-12 electrons/eV`, an arithmetic allowance for floating-point reconstruction; U-spread recomputation `1e-12 eV` | Archive self-consistency passes. It is not an independent shadow validation. The direct-shadow package regression remains xfailed because its source FDF is absent. |
 | One-column probe vs full campaign | Compare the M1 one-column U `10.6622 eV` with the archived 36x36 range `[10.6578, 10.6586] eV` in `tests/fixtures/projector_curve_m1.json`. The recorded maximum delta is `0.0044 eV`. | `1e-4 eV`, the sum of the two four-decimal half-quanta | Passes as a record-only consistency check; it does not impose an acceptance threshold. |
 | Projector scan | Reproduce the nine measured M1 CutoffNorm points from the same JSON fixture and the table in `docs/03_policies/PROJECTOR_SCAN_EXECUTABLE_SPEC.md`. | `5e-5 eV`, one half-quantum at four decimal places | Passes for these sampled values only. It makes no claim about unsampled norms or a general plateau. |
 | chi0 response selection | `tests/unit/test_lr06_trace_excerpt.py` uses the verified Yoltla SIESTA 5.4.2 trace extract and checks the selected BARE population, its line boundary, and the first indented SCF marker. | `5e-7 electron`, one half-quantum at six decimal places | Passes for the excerpt and the audited profile. The trace is a small extract; it is not a complete campaign artifact. |
@@ -20,6 +20,15 @@ The existing Cu3N direct-shadow test is also left xfailed by
 requires `CU3N_PBE_LRU_SC222_RC3p0_V1/runs/10_X_BARE_MINUS/siesta.fdf`. The
 archived mathematical JSON records reconstructed matrices, not a direct
 perturbation of a translated Cu site.
+
+The Cu3N JSON archive reports `U_Cu_eV = 12.673925610317943 eV`, shown here
+rounded to `12.673926 eV`; it is the stored result reconstructed from that
+archive's response matrices. The LR-16 target `12.6751 eV` is stated in the
+compliance audit as a target reference, not as a validated Cu3N result. The
+repository does not identify an independent source artifact or acceptance
+protocol for that target, so its acceptance provenance remains
+`PENDIENTE_LR16_CU3N_TARGET_PROVENANCE`. These values have different roles and
+are not substituted for one another.
 
 Run the focused suite with:
 

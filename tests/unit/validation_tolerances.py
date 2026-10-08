@@ -32,10 +32,10 @@ MNO_LAPTOP_U_TOLERANCE = ValidationTolerance(
 )
 
 CU3N_MATRIX_PERMUTATION_TOLERANCE = ValidationTolerance(
-    0.0,
+    1.0e-12,
     "electrons/eV",
     ToleranceStatus.PROVISIONAL,
-    "The archived Cu3N audit reports exactly zero residual for the eight certified translation permutations; this checks archive self-consistency only.",
+    "Arithmetic allowance for floating-point reconstruction of the eight archived translation permutations; it is a roundoff allowance, not a physical acceptance threshold.",
 )
 
 CU3N_U_SPREAD_RECOMPUTATION_TOLERANCE_EV = ValidationTolerance(
