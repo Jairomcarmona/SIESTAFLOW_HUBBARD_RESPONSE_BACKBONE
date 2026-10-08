@@ -24,6 +24,14 @@ class ProjectorCompatibilityStatus(str, Enum):
     INCOMPLETE = "INCOMPLETE"
 
 
+class ProjectorCompatibilityReasonCode(str, Enum):
+    """Stable machine-readable reason for the projector application decision."""
+
+    MATCH = "PROJECTOR_DEFINITION_MATCH"
+    MANIFOLD_MISMATCH = "DFTU_PROJECTOR_MANIFOLD_MISMATCH"
+    EVIDENCE_INCOMPLETE = "DFTU_PROJECTOR_EVIDENCE_INCOMPLETE"
+
+
 class ProjectorIncompleteReason(str, Enum):
     LABEL_MAPPING_MISSING = "PROJECTOR_LABEL_MAPPING_MISSING"
     SOURCE_DEFINITION_INCONSISTENT = "SOURCE_PROJECTOR_EVIDENCE_INCONSISTENT"
@@ -326,12 +334,21 @@ class ProjectorCompatibilityResult:
     dftu_informational_values: tuple[ProjectorRecordInformation, ...] = ()
 
     @property
+    def reason_code(self) -> ProjectorCompatibilityReasonCode:
+        if self.status is ProjectorCompatibilityStatus.MISMATCH:
+            return ProjectorCompatibilityReasonCode.MANIFOLD_MISMATCH
+        if self.status is ProjectorCompatibilityStatus.INCOMPLETE:
+            return ProjectorCompatibilityReasonCode.EVIDENCE_INCOMPLETE
+        return ProjectorCompatibilityReasonCode.MATCH
+
+    @property
     def application_permitted(self) -> bool:
         return self.status is ProjectorCompatibilityStatus.MATCH or self.force_requested
 
     def to_mapping(self) -> dict[str, object]:
         return {
             "status": self.status.value,
+            "reason_code": self.reason_code.value,
             "lr_label": self.lr_label,
             "dftu_label": self.dftu_label,
             "differences": [item.to_mapping() for item in self.differences],
@@ -387,6 +404,9 @@ class ProjectorCompatibilityResult:
                 raise ProjectorCompatibilityError(
                     "application_permitted disagrees with status and force_requested"
                 )
+            reason_code = row.get("reason_code")
+            if reason_code is not None and reason_code != result.reason_code.value:
+                raise ProjectorCompatibilityError("reason_code disagrees with projector status")
             return result
         except (KeyError, TypeError, ValueError) as exc:
             raise ProjectorCompatibilityError(f"invalid projector compatibility result: {exc}") from exc

@@ -11,6 +11,7 @@ from hubbardflow.domain.projector_compatibility import (
     ProjectorRecordDefinition,
     compare_projector_definitions,
 )
+from hubbardflow.domain.projector_compatibility_models import ProjectorCompatibilityReasonCode
 
 
 def _record(*, rc_bohr: float = 0.0) -> ProjectorRecordDefinition:
@@ -64,6 +65,8 @@ def test_cutoff_norm_difference_is_mismatch() -> None:
     assert [(item.field, item.lr_value, item.dftu_value) for item in result.differences] == [
         ("DFTU.CutoffNorm", 0.9, 0.95)
     ]
+    assert result.reason_code is ProjectorCompatibilityReasonCode.MANIFOLD_MISMATCH
+    assert result.to_mapping()["reason_code"] == "DFTU_PROJECTOR_MANIFOLD_MISMATCH"
 
 
 def test_projector_generation_method_difference_is_mismatch() -> None:
@@ -225,6 +228,7 @@ def test_missing_projector_evidence_is_incomplete() -> None:
     assert ProjectorIncompleteReason.GENERATION_METHOD_MISSING in result.incomplete_reasons
     assert ProjectorIncompleteReason.RECORD_MISSING in result.incomplete_reasons
     assert ProjectorIncompleteReason.CUTOFF_NORM_MISSING in result.incomplete_reasons
+    assert result.reason_code is ProjectorCompatibilityReasonCode.EVIDENCE_INCOMPLETE
 
 
 def test_digest_collection_issue_is_recorded_without_deciding() -> None:

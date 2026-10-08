@@ -7,6 +7,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from hubbardflow.domain.projector_compatibility_models import (
+    ProjectorCompatibilityReasonCode,
     ProjectorCompatibilityStatus,
     ProjectorIncompleteReason,
 )
@@ -284,8 +285,91 @@ def test_check_projector_records_force_and_keeps_mismatch_status(tmp_path: Path)
     assert "[MISMATCH]" in screen
     assert "--force was explicitly requested" in screen
     assert report["status"] == "MISMATCH"
+    assert report["reason_code"] == ProjectorCompatibilityReasonCode.MANIFOLD_MISMATCH.value
     assert report["force_requested"] is True
     assert report["application_permitted"] is True
+
+
+def test_m1_u_at_norm_090_is_rejected_at_080_and_matches_at_090(tmp_path: Path) -> None:
+    fixture = Path(__file__).parents[1] / "fixtures" / "projector_curve_m1.json"
+    curve = json.loads(fixture.read_text(encoding="utf-8"))
+    points = {row["projector"]["value"]: row for row in curve["points"]}
+    point_080 = points[0.80]
+    point_090 = points[0.90]
+    lr_u = point_090["u_ev"]
+
+    campaign_dir = tmp_path / "campaign"
+    target_dir = tmp_path / "target"
+    plan_record = _record()
+    plan_record["u_ref_ev"] = lr_u
+    campaign = _write_campaign(
+        campaign_dir,
+        _fdf(("MnLR00",), cutoff_norm=str(point_090["projector"]["value"])),
+        plan_record=plan_record,
+    )
+    target_dir.mkdir()
+    target_fdf = target_dir / "dftu.fdf"
+    target_fdf.write_text(
+        _fdf(("Mn",), cutoff_norm=str(point_080["projector"]["value"]), u_ev=str(lr_u)),
+        encoding="utf-8",
+    )
+
+    rejected = check_campaign_projectors(campaign, target_fdf, [("MnLR00", "Mn")])
+
+    assert rejected.status is ProjectorCompatibilityStatus.MISMATCH
+    assert rejected.reason_code is ProjectorCompatibilityReasonCode.MANIFOLD_MISMATCH
+    assert not rejected.application_permitted
+    assert [(item.field, item.lr_value, item.dftu_value) for item in rejected.results[0].differences] == [
+        ("DFTU.CutoffNorm", point_090["projector"]["value"], point_080["projector"]["value"])
+    ]
+    rejected_json = tmp_path / "rejected.json"
+    rejected_cli = _run_cli(
+        [
+            "check-projector",
+            "--campaign",
+            str(campaign),
+            "--target-fdf",
+            str(target_fdf),
+            "--map",
+            "MnLR00=Mn",
+            "--json-out",
+            str(rejected_json),
+        ]
+    )
+    assert rejected_cli.returncode == 1
+    assert "DFTU_PROJECTOR_MANIFOLD_MISMATCH" in rejected_cli.stdout
+    assert json.loads(rejected_json.read_text(encoding="utf-8"))["reason_code"] == (
+        ProjectorCompatibilityReasonCode.MANIFOLD_MISMATCH.value
+    )
+
+    target_fdf.write_text(
+        _fdf(
+            ("Mn",),
+            cutoff_norm=str(point_090["projector"]["value"]),
+            u_ev=str(point_080["u_ev"]),
+        ),
+        encoding="utf-8",
+    )
+    matched = check_campaign_projectors(campaign, target_fdf, [("MnLR00", "Mn")])
+
+    assert matched.status is ProjectorCompatibilityStatus.MATCH
+    assert matched.reason_code is ProjectorCompatibilityReasonCode.MATCH
+    assert matched.application_permitted
+    assert matched.results[0].lr_informational_values[0].u_ref_ev == lr_u
+    assert matched.results[0].dftu_informational_values[0].u_ref_ev == point_080["u_ev"]
+    matched_cli = _run_cli(
+        [
+            "check-projector",
+            "--campaign",
+            str(campaign),
+            "--target-fdf",
+            str(target_fdf),
+            "--map",
+            "MnLR00=Mn",
+        ]
+    )
+    assert matched_cli.returncode == 0
+    assert "PROJECTOR_DEFINITION_MATCH" in matched_cli.stdout
 
 
 def test_unreadable_artifact_digest_is_reported_without_changing_match(tmp_path: Path) -> None:
