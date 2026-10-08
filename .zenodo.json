@@ -1,0 +1,22 @@
+{
+  "title": "HubbardFlow",
+  "upload_type": "software",
+  "description": "HubbardFlow — Reproducible workflows for first-principles Hubbard parameter determination and certification.",
+  "version": "0.1.2",
+  "license": "PENDIENTE_AUTOR",
+  "creators": [
+    {
+      "name": "PENDIENTE_AUTOR",
+      "affiliation": "PENDIENTE_AUTOR",
+      "orcid": "PENDIENTE_AUTOR"
+    }
+  ],
+  "contributors": [
+    {
+      "name": "PENDIENTE_AUTOR",
+      "type": "PENDIENTE_AUTOR",
+      "affiliation": "PENDIENTE_AUTOR",
+      "orcid": "PENDIENTE_AUTOR"
+    }
+  ]
+}
