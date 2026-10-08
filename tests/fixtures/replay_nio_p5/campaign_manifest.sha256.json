@@ -200,7 +200,7 @@
   ".siestaflow/attempts/ATTEMPT-GROUP/attempt-NORMALIZED/response_lr_s001_p0p06_screened_ATTEMPT-SUFFIX/siesta.out": "79d7d7bc1c4774ea8023528f7818397875096cfd763a4259dfe4ff19ce61760e",
   ".siestaflow/dag-checkpoint.json": "86f147a457c30401f0dc5726db60f3fda003039a365a039c551ec4853fff2457",
   ".siestaflow/gates/alpha-diagnostic.json": "289e378c9af5d7f7acf21f58be6d30a9da621df4023400f78a3c1d252f6262a3",
-  ".siestaflow/node-evidence.json": "0bc6e5e293c99ad26f2b15a3064d7ce95c24071aee0c612eb0990e6670359a47",
+  ".siestaflow/node-evidence.json": "272753b6e205c1d0fe2b3f2b73c82b5e4110b2e753068b915ff6d4c25e7499be",
   ".siestaflow/replay-run-count": "1a252402972f6057fa53cc172b52b9ffca698e18311facd0f3b06ecaaef79e17",
   ".siestaflow/replay-stop-issued": "866bec5121f6919a3805e481bf4960729edaf14097fc01b4800bd588932fd1f9",
   ".siestaflow/worker-state.json": "1e42686e6491866e37b273874815cb76ac74fac26cd760e66edb0e713b6e58a9",

@@ -68,6 +68,7 @@ from hubbardflow.execution.occupation_provenance import (
     rebuild_campaign_occupation_provenance,
     write_occupation_provenance,
 )
+from hubbardflow.execution.campaign_report_artifacts import write_campaign_report_artifacts
 from hubbardflow.execution.response_grid_context import response_grid_source_campaign_context
 from hubbardflow.execution.reference_reproduction_step import check_reference_reproduction
 from hubbardflow.execution.state_gate_step import (
@@ -81,9 +82,6 @@ from hubbardflow.execution.generic_executor import (
 )
 from hubbardflow.execution.lr_dag import (
     LRDag, LRDagNode, LRNodeKind, build_adaptive_campaign_dag,
-)
-from hubbardflow.reporting.lr_u_report import (
-    reference_reproduction_report_lines, render_lr_u_report, write_lr_u_report,
 )
 from hubbardflow.siesta_backend.backend_admission_plugin import admit_siesta542_from_campaign_contract
 from hubbardflow.siesta_backend.command_factory import SiestaCampaignLayout
@@ -260,6 +258,7 @@ class CampaignRunner:
         return self._minimum_occupation_decimal_places
 
     def __init__(self, manifest_path: str | Path):
+        self.manifest_path = Path(manifest_path).resolve()
         self.campaign = load_campaign_v2(manifest_path)
         input_hash_warnings = verify_campaign_inventory(self.campaign)
         self.root = Path(self.campaign["_campaign_root"])
@@ -1141,10 +1140,29 @@ class CampaignRunner:
         result["noise_not_quantified"] = not bool(decision.get("scf_probe_metrics"))
         is_v3 = result.get("schema_version") == "siestaflow.lr_u_analysis.v3"
         final_path = self.results / ("lr_u_analysis.v3.json" if is_v3 else "lr_u_analysis.v2.json")
-        report_path = self.results / ("LR_U_REPORT.v3.md" if is_v3 else "LR_U_REPORT.md")
         write_lr_analysis_v2(final_path, result)
         state_gate = self._read_state_gate_for_report()
-        write_lr_u_report(report_path, result, state_gate=state_gate)
+        occupation_path = self.results / "data" / "occupation_provenance.v1.json"
+        rebuild_campaign_occupation_provenance(final_path, campaign_root=self.root)
+        admission = getattr(self.admitted, "admission", None)
+        observed = getattr(admission, "observed", None)
+        factory = getattr(self.admitted, "factory", None)
+        bare_profile = getattr(factory, "bare_profile", None)
+        write_campaign_report_artifacts(
+            campaign_root=self.root,
+            manifest_path=getattr(self, "manifest_path", self.root / "campaign.v2.json"),
+            campaign=self.campaign,
+            analysis_path=final_path,
+            analysis=result,
+            state_gate=state_gate,
+            occupation_provenance_path=occupation_path,
+            runtime={
+                "version": getattr(observed, "version", None),
+                "binary_sha256": getattr(observed, "executable_sha256", None),
+                "bare_profile": getattr(bare_profile, "profile_id", None),
+            },
+            traceability_warnings=self.records.get("traceability_warnings", []),
+        )
 
     def _read_state_gate_for_report(self) -> Mapping[str, Any] | None:
         path = self.results / "i5_state_gate.json"
@@ -1790,12 +1808,12 @@ class CampaignRunner:
 
     def _execute_analysis(self, node: LRDagNode) -> NodeReceipt:
         adaptive = self.adaptive_policy is not None
+        report_path = self.results / "HUBBARDFLOW.out"
         if adaptive:
             round_state, fit_state, round_index, level_id, is_rerun = self._adaptive_analysis_context(node)
             evidence_path = self.results / "alpha_rounds" / f"round-{round_index:02d}" / (
                 "scf-rerun-analysis.v3.json" if is_rerun else "analysis.v3.json"
             )
-            report_path = evidence_path.with_suffix(".md")
             fit = fit_state.get("fit_policy", fit_state.get("analysis_policy", {}))
             round_policy = replace(
                 self.analysis_policy,
@@ -1813,7 +1831,6 @@ class CampaignRunner:
             level_id = "base"
             is_rerun = False
             evidence_path = self.results / "lr_u_analysis.v3.json"
-            report_path = self.results / "LR_U_REPORT.v3.md"
             round_policy = self.analysis_policy
             alpha_grid = self.alpha_grid
             active_window = None
@@ -1948,11 +1965,27 @@ class CampaignRunner:
             report_state_gate = failed_state_gate_mapping(
                 self.sites, StateGateReason.INVALID_STATE_EVIDENCE
             )
-        write_lr_u_report(report_path, analysis, state_gate=report_state_gate)
+        runtime_admission = getattr(self.admitted, "admission", None)
+        runtime_observed = getattr(runtime_admission, "observed", None)
+        runtime_factory = getattr(self.admitted, "factory", None)
+        runtime_bare_profile = getattr(runtime_factory, "bare_profile", None)
+        report = write_campaign_report_artifacts(
+            campaign_root=self.root,
+            manifest_path=getattr(self, "manifest_path", self.root / "campaign.v2.json"),
+            campaign=self.campaign,
+            analysis_path=evidence_path,
+            analysis=analysis,
+            state_gate=report_state_gate,
+            occupation_provenance_path=self.results / "data" / "occupation_provenance.v1.json",
+            runtime={
+                "version": getattr(runtime_observed, "version", None),
+                "binary_sha256": getattr(runtime_observed, "executable_sha256", None),
+                "bare_profile": getattr(runtime_bare_profile, "profile_id", None),
+            },
+            traceability_warnings=self.records.get("traceability_warnings", []),
+        )
         digest = sha256_file(evidence_path)
-        # Keep the analysis-node record tied to the canonical LR-U report. The
-        # separate I.5 diagnostic section must not change node-evidence.json.
-        canonical_report_digest = sha256(render_lr_u_report(analysis).encode("utf-8")).hexdigest()
+        canonical_report_digest = sha256(report.encode("ascii")).hexdigest()
         receipt = NodeReceipt(node.node_id, NodeState.VALIDATED, digest)
         if adaptive:
             assert self.adaptive_state is not None and round_state is not None
@@ -2136,80 +2169,58 @@ def render_campaign_report(manifest_path: str | Path) -> str:
     if analysis_path.is_file():
         analysis = json.loads(analysis_path.read_text(encoding="utf-8"))
         rebuild_campaign_occupation_provenance(analysis_path, campaign_root=root)
+        report_source_path = root / "results" / "data" / "hubbardflow_report_source.v1.json"
+        report_warnings: list[Any] | None = None
+        if not report_source_path.is_file():
+            report_warnings = list(campaign.get("_input_traceability_warnings", []))
+            try:
+                saved_records = json.loads(
+                    (root / ".siestaflow" / "node-evidence.json").read_text(encoding="utf-8")
+                )
+                if isinstance(saved_records, Mapping) and isinstance(
+                    saved_records.get("traceability_warnings"), list
+                ):
+                    report_warnings.extend(saved_records["traceability_warnings"])
+            except (OSError, json.JSONDecodeError):
+                pass
         state_gate_path = root / "results" / "i5_state_gate.json"
         try:
             state_gate = json.loads(state_gate_path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
             state_gate = None
-        report_path = root / "results" / (
-            "LR_U_REPORT.v3.md" if analysis.get("schema_version") == "siestaflow.lr_u_analysis.v3"
-            else "LR_U_REPORT.md"
+        return write_campaign_report_artifacts(
+            campaign_root=root,
+            manifest_path=manifest_path,
+            campaign=campaign,
+            analysis_path=analysis_path,
+            analysis=analysis,
+            state_gate=state_gate if isinstance(state_gate, Mapping) else None,
+            occupation_provenance_path=root / "results" / "data" / "occupation_provenance.v1.json",
+            traceability_warnings=report_warnings,
         )
-        report = render_lr_u_report(analysis, state_gate=state_gate)
-        report_path.parent.mkdir(parents=True, exist_ok=True)
-        report_path.write_text(report, encoding="utf-8", newline="\n")
-        return report
     try:
         status = json.loads((root / ".siestaflow" / "worker-state.json").read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
         status = {"status": "NOT_STARTED"}
-    try:
-        adaptive = json.loads((root / ".siestaflow" / "adaptive-alpha-state.json").read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        adaptive = None
-    lines = [
-        "# Estado de campaña HubbardFlow",
-        "",
-        f"- Campaña: {campaign.get('name', campaign['campaign_id'])}",
-        f"- Estado: **{status.get('status', 'NOT_STARTED')}**",
-        f"- Nodo activo: {status.get('active_node') or '—'}",
-        "- Análisis U: todavía no hay JSON v2; report se actualizará al terminar MATRIX_ANALYSIS.",
-        f"- Aviso del esquema del proyector: {METHOD2_PROJECTOR_WARNING.message}",
-        "",
-        "## Machine-readable projector warning",
-        "",
-        "```json",
-        json.dumps(
-            {"projector_diagnostics": {
-                "status": "RECORD_ONLY",
-                "projector_generation_method": 2,
-                "decision_role": "RECORD_ONLY",
-                "method2_warning": METHOD2_PROJECTOR_WARNING.to_mapping(),
-                "sites": [],
-            }},
-            ensure_ascii=False,
-            sort_keys=True,
-            indent=2,
-        ),
-        "```",
-    ]
+    traceability_warnings = list(campaign.get("_input_traceability_warnings", []))
     try:
         records = json.loads((root / ".siestaflow" / "node-evidence.json").read_text(encoding="utf-8"))
-        for warning in records.get("traceability_warnings", []):
-            lines.append(f"- Advertencia de trazabilidad: {json.dumps(warning, sort_keys=True)}")
-        reproduction = records.get("nodes", {}).get("reference", {}).get("reference_reproduction")
-        if isinstance(reproduction, Mapping):
-            lines.extend(reference_reproduction_report_lines(reproduction))
+        if isinstance(records, Mapping) and isinstance(records.get("traceability_warnings"), list):
+            traceability_warnings.extend(records["traceability_warnings"])
     except (OSError, json.JSONDecodeError):
         pass
-    if isinstance(adaptive, Mapping):
-        rounds = adaptive.get("rounds", [])
-        current = rounds[-1] if isinstance(rounds, list) and rounds else {}
-        decisions = adaptive.get("decisions", [])
-        decision = decisions[-1] if isinstance(decisions, list) and decisions else {}
-        budget = adaptive.get("budget", {})
-        lines.extend([
-            "",
-            "## Refinamiento adaptativo de α",
-            "",
-            f"- Estado de campaña: **{adaptive.get('campaign_status', 'RUNNING')}**.",
-            f"- Estado del candidato: **{adaptive.get('candidate_status', 'PENDING')}**.",
-            f"- Ronda actual/final: {current.get('round_index', '—')} ({current.get('status', '—')}); ventana activa: {current.get('active_window_eV', '—')} eV.",
-            f"- Decisión más reciente: `{decision.get('decision', 'PENDING')}` — {str(decision.get('reason') or '—').replace(chr(10), ' ')}.",
-            f"- Nodos SIESTA reservados: {budget.get('reserved_nodes', 0)}/{budget.get('total_siesta_node_budget', '—')}; quedan {budget.get('remaining_nodes', '—')}.",
-        ])
-    lines.append("")
-    return "\n".join(lines)
+    placeholder_analysis = root / "results" / "lr_u_analysis.v2.json"
+    return write_campaign_report_artifacts(
+        campaign_root=root,
+        manifest_path=manifest_path,
+        campaign=campaign,
+        analysis_path=placeholder_analysis,
+        analysis={},
+        state_gate=None,
+        occupation_provenance_path=root / "results" / "data" / "occupation_provenance.v1.json",
+        traceability_warnings=traceability_warnings,
+        workflow_state=status if isinstance(status, Mapping) else None,
+    )
 
 
 __all__ = ["CampaignRunner", "campaign_status", "render_campaign_report", "request_campaign_stop", "run_campaign_worker"]
