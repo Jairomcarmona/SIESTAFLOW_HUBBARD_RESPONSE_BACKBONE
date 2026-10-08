@@ -7,6 +7,18 @@
     "job_id": 794120,
     "siesta_version": "5.4.2",
     "profile": "siesta-5.4.2-potential-shift-hamiltonian-v1",
+    "quicklook_file": {
+      "name": "lr14_quicklook.txt",
+      "path": "tests/fixtures/lr14/lr14_quicklook.txt",
+      "sha256": "a7b6b3678c6bd979b5c18f5e9777f7bd0de0c1d208f6bc8ab503449536bfe421",
+      "role": "source of the five U values and separated-effect report"
+    },
+    "steps_file": {
+      "name": "supercell_steps.tsv",
+      "path": "tests/fixtures/lr14/supercell_steps.tsv",
+      "sha256": "49531effab146b184a92a7e74f329ad3469279cc8761b567e5715781f8ee370b",
+      "role": "run-state and timestamp record only; contains no U values"
+    },
     "projector": {
       "generation_method": 2,
       "cutoff_norm": 0.90,
@@ -20,15 +32,16 @@
         "cells/n8_k3x3_v35/probe.fdf": "20b5750bcfb866b8282fc267ffafa0e832b326544543c1c60e54feb8584c50d9",
         "cells/n8_k3x3_v35/probe-lr-config.json": "83d14f7fdfd5dcbb65be934eb62dde32d9255fec0f4a0e7a2e0045357b094f13"
       }
-    },
-    "steps_file": {
-      "name": "supercell_steps.tsv",
-      "status": "PENDING_ARTIFACT",
-      "k_grid_effect_sign_status": "PENDING_ARTIFACT",
-      "note": "The source TSV was not available for this repository update; the listed U values are the values supplied for the audit."
     }
   },
   "value_precision": "U values are reported to four decimal places in eV.",
+  "reported_effects": {
+    "k_grid_effect_ev": "-0.0000",
+    "vacuum_effect_ev": "-0.0001",
+    "delta_4x4_to_6x6_ev": "-0.0059",
+    "delta_6x6_to_8x8_ev": "+0.0053",
+    "source_file": "lr14_quicklook.txt"
+  },
   "points": [
     {
       "cell": "4x4",

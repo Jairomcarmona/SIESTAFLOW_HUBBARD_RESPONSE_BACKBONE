@@ -1,0 +1,19 @@
+cell	atoms	kgrid	k*N	vacuum_A	image_dist_A	worker	U_eV	U-anchor_eV	numerical_status	I5
+4x4	48	4x4x1	16	35	11.408	COMPLETED	10.6681	+0.0059	NUMERICAL_CANDIDATE_UNASSESSED	PASS:2
+4x4	48	4x4x1	16	45	11.408	COMPLETED	10.6680	+0.0058	NUMERICAL_CANDIDATE_UNASSESSED	PASS:2
+4x4	48	5x5x1	20	35	11.408	COMPLETED	10.6681	+0.0059	NUMERICAL_CANDIDATE_UNASSESSED	PASS:2
+8x8	192	3x3x1	24	35	22.816	COMPLETED	10.6675	+0.0053	NUMERICAL_CANDIDATE_UNASSESSED	PASS:2
+
+anchor: 6x6 production, kgrid 3x3x1 (k*N=18), vacuum 33 A, U = 10.6622 eV
+finite-size bound implied by the measured chi0 decay: |U(6x6) - U(inf)| <~ 0.0050 eV
+
+--- separated effects (each line isolates ONE variable) ---
+k-sampling, 4x4 at fixed cell/vacuum: U(4x4x1)=10.6681  U(5x5x1)=10.6681  dU=-0.0000 eV
+vacuum, 4x4 at fixed cell/k:        U(35 A)=10.6681  U(45 A)=10.6680  dU=-0.0001 eV
+cell size, 4x4 -> 6x6:             dU=-0.0059 eV (image distance 11.408 -> 17.112 A)
+cell size, 6x6 -> 8x8:             dU=+0.0053 eV (image distance 17.112 -> 22.816 A)
+convergence: |dU(4->6)|=0.0059 eV, |dU(6->8)|=0.0053 eV -> increments decreasing; last increment bounds the residual
+last increment vs decay bound: 0.0053 eV > 0.0050 eV (direct test exceeds the decay-based bound; the bound was optimistic)
+
+Verdict is NOT issued here. LR-14 closure requires: decreasing increments in the size
+series, the k effect smaller than the size effect, and the vacuum effect negligible.
