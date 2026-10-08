@@ -34,6 +34,12 @@ from hubbardflow.domain.response_grid_reproducibility import (
 )
 from hubbardflow.domain.lr_campaign_contract import LinearResponseBareCampaignContract
 from hubbardflow.domain.matrix_lr import ResponseObservation
+from hubbardflow.domain.projector_diagnostics import (
+    METHOD2_PROJECTOR_WARNING,
+    ProjectorDiagnosticInput,
+    SiteElectronReference,
+    build_projector_diagnostics,
+)
 from hubbardflow.domain.reference_reproduction import ParentReproduction, ReferenceReproduction, ToleranceSource
 from hubbardflow.domain.state_gate_results import StateGateReason
 from hubbardflow.domain.symmetry_reduction import PerturbationSpec, ResponseMode
@@ -1413,6 +1419,53 @@ class CampaignRunner:
             "provenance": {"input_identity": self.campaign["input_identity"], "campaign_inputs": self._analysis_input_provenance()},
         }
 
+    def _projector_diagnostics_mapping(
+        self,
+        analysis: Mapping[str, Any],
+        observations: list[ResponseObservation],
+    ) -> dict[str, object]:
+        """Build report-only per-site projector diagnostics from verified analysis data."""
+        site_labels = analysis.get("site_labels", list(range(len(self.sites))))
+        site_labels = site_labels if isinstance(site_labels, list) else []
+        primary = analysis.get("primary")
+        primary = primary if isinstance(primary, Mapping) else {}
+        u_by_site = primary.get("U_by_site_eV")
+        u_by_site = u_by_site if isinstance(u_by_site, Mapping) else {}
+        chi0 = primary.get("matrix_used_chi0")
+        chi0 = chi0 if isinstance(chi0, list) else []
+        occupation_by_label: dict[str, float] = {}
+        if observations:
+            reference_observation = observations[0]
+            occupation_by_label = {
+                str(label): float(reference_observation.occupations_ref[offset])
+                for offset, label in enumerate(reference_observation.site_labels)
+                if offset < len(reference_observation.occupations_ref)
+            }
+        declarations = self.config.get("projector_diagnostic_references", {})
+        declarations = declarations if isinstance(declarations, Mapping) else {}
+        inputs: list[ProjectorDiagnosticInput] = []
+        for index, site in enumerate(self.sites):
+            site_id = str(site["site_id"])
+            label = site_labels[index] if index < len(site_labels) else index
+            u_value = u_by_site.get(str(label))
+            chi0_value: object | None = None
+            if index < len(chi0) and isinstance(chi0[index], list) and index < len(chi0[index]):
+                chi0_value = chi0[index][index]
+            raw_reference = declarations.get(site_id)
+            electron_reference = None
+            if isinstance(raw_reference, Mapping):
+                electron_reference = SiteElectronReference.from_mapping(raw_reference)
+            inputs.append(ProjectorDiagnosticInput(
+                site_id=site_id,
+                reference_occupation_e=occupation_by_label.get(str(label)),
+                u_ev=u_value if isinstance(u_value, (int, float)) and not isinstance(u_value, bool) else None,
+                chi0_diagonal_per_ev=(
+                    chi0_value if isinstance(chi0_value, (int, float)) and not isinstance(chi0_value, bool) else None
+                ),
+                electron_reference=electron_reference,
+            ))
+        return build_projector_diagnostics(inputs, projector_generation_method=2).to_mapping()
+
     def _event_occupations(
         self, output_content: str, event: HubbardPopulationEvent, sites: list[dict[str, Any]],
     ) -> list[float]:
@@ -1758,6 +1811,7 @@ class CampaignRunner:
             alpha_grid = self.alpha_grid
             active_window = None
         magnetic: dict[str, Any] = {}
+        observations: list[ResponseObservation] = []
         try:
             if getattr(self, "shadow", None) is not None:
                 observations, states, magnetic, trace_half_widths_electron, reference_trace_half_widths_electron, verified_dataset = self.shadow.analysis_data(self)
@@ -1818,6 +1872,20 @@ class CampaignRunner:
                 f"analysis_or_observation_extraction_failed:{type(exc).__name__}:{exc}",
                 magnetic_diagnostics=magnetic,
             )
+        # ``validate_reference_fdf`` requires Method 2 during runner setup.
+        try:
+            analysis["projector_diagnostics"] = self._projector_diagnostics_mapping(analysis, observations)
+        except Exception as exc:  # noqa: BLE001 - optional diagnostics must not block the numerical result.
+            # Diagnostics are report-only. Preserve the Method 2 warning and
+            # make any malformed diagnostic inputs visible without altering U.
+            analysis["projector_diagnostics"] = {
+                "status": "RECORD_ONLY",
+                "projector_generation_method": 2,
+                "decision_role": "RECORD_ONLY",
+                "method2_warning": METHOD2_PROJECTOR_WARNING.to_mapping(),
+                "sites": [],
+                "diagnostic_error": f"{type(exc).__name__}: {exc}",
+            }
         write_lr_analysis_v2(evidence_path, analysis)
         state_gate_path = self.results / "i5_state_gate.json"
         try:
@@ -2067,6 +2135,24 @@ def render_campaign_report(manifest_path: str | Path) -> str:
         f"- Estado: **{status.get('status', 'NOT_STARTED')}**",
         f"- Nodo activo: {status.get('active_node') or '—'}",
         "- Análisis U: todavía no hay JSON v2; report se actualizará al terminar MATRIX_ANALYSIS.",
+        f"- Aviso del esquema del proyector: {METHOD2_PROJECTOR_WARNING.message}",
+        "",
+        "## Machine-readable projector warning",
+        "",
+        "```json",
+        json.dumps(
+            {"projector_diagnostics": {
+                "status": "RECORD_ONLY",
+                "projector_generation_method": 2,
+                "decision_role": "RECORD_ONLY",
+                "method2_warning": METHOD2_PROJECTOR_WARNING.to_mapping(),
+                "sites": [],
+            }},
+            ensure_ascii=False,
+            sort_keys=True,
+            indent=2,
+        ),
+        "```",
     ]
     try:
         records = json.loads((root / ".siestaflow" / "node-evidence.json").read_text(encoding="utf-8"))
