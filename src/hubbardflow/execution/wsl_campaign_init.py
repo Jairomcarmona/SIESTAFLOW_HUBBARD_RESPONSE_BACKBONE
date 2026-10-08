@@ -249,6 +249,7 @@ def initialize_campaign(
             "xc_profile": normalized["xc_profile"],
             "sites": normalized["sites"],
             "alpha_grid_ev": alpha_grid,
+            "projector_diagnostic_references": normalized["projector_diagnostic_references"],
             "pseudopotentials": normalized_pseudopotentials,
             "static_artifacts": static_node_paths,
             "analysis_policy": policy,

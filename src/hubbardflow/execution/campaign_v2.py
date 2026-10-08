@@ -20,6 +20,7 @@ from .execution_profile import ExecutionProfile, ProfileValidationError
 from .campaign_plan import CampaignCoverage, CampaignPlanError, inventory_sites
 from .campaign_coverage_policy import CampaignCoveragePolicyError, campaign_coverage_policy
 from ..domain.perturbation_plan import AlphaStrategy, ResolvedPerturbationPlan
+from ..domain.projector_diagnostics import ProjectorDiagnosticError, SiteElectronReference
 from ..domain.reference_reproduction import ParentReproduction
 from ..domain.subspace_inventory import CorrelatedSubspaceInventory
 
@@ -230,6 +231,22 @@ def validate_lr_config(payload: Mapping[str, Any], fdf_species: Mapping[str, int
         normalized_sites.append({"site_id": site_id, "atom_index": atom_index, "orbit_id": str(item.get("orbit_id", site_id))})
     if seen_ids != set(projector_sites):
         raise CampaignV2Error("lr-config sites must enumerate every DFTU.Proj site exactly once")
+    raw_projector_references = payload.get("projector_diagnostic_references", {})
+    if not isinstance(raw_projector_references, Mapping):
+        raise CampaignV2Error("projector_diagnostic_references must be an object keyed by declared site_id")
+    if set(raw_projector_references) - seen_ids:
+        raise CampaignV2Error(
+            "projector_diagnostic_references may only name site_ids declared in the campaign"
+        )
+    normalized_projector_references: dict[str, dict[str, float | None]] = {}
+    for site_id, reference_payload in sorted(raw_projector_references.items()):
+        if not isinstance(site_id, str) or not isinstance(reference_payload, Mapping):
+            raise CampaignV2Error("each projector diagnostic reference must be an object keyed by site_id")
+        try:
+            reference = SiteElectronReference.from_mapping(reference_payload)
+        except ProjectorDiagnosticError as exc:
+            raise CampaignV2Error(f"invalid projector diagnostic reference for {site_id}: {exc}") from exc
+        normalized_projector_references[site_id] = reference.to_mapping()
     try:
         coverage = CampaignCoverage(payload.get("coverage", "DIAGNOSTIC"))
         raw_alpha_strategy = payload.get("alpha_strategy", "FIXED_PROTOCOL_GRID")
@@ -420,6 +437,7 @@ def validate_lr_config(payload: Mapping[str, Any], fdf_species: Mapping[str, int
         "static_artifacts": normalized_static,
         "response_grid_reproducibility_calibration": grid_calibration,
         "analysis_policy": dict(analysis),
+        "projector_diagnostic_references": normalized_projector_references,
         "alpha_selection_policy": None if alpha_policy is None else dict(alpha_policy),
         "adaptive_alpha_policy": None if adaptive_policy is None else adaptive_policy.to_mapping(),
         "reference_dm_name": _safe_relative(payload.get("reference_dm_name", "reference.DM"), "reference_dm_name"),

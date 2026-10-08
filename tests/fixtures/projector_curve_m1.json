@@ -3,6 +3,7 @@
   "site_id": "MnLR00",
   "element": "Mn",
   "formal_d_electrons": 3,
+  "free_atom_d_electrons": 5,
   "verification": {
     "fdf_change": "DFTU.CutoffNorm line only",
     "diff_verified": true,
@@ -26,54 +27,63 @@
       "projector": {"kind": "CUTOFF_NORM", "value": 0.50, "method": 2},
       "u_ev": 25.0833,
       "n_ref_e": 2.6050,
+      "u_times_abs_chi0": 3.80,
       "support_bohr": 1.452035750261572
     },
     {
       "projector": {"kind": "CUTOFF_NORM", "value": 0.60, "method": 2},
       "u_ev": 19.0979,
       "n_ref_e": 3.0697,
+      "u_times_abs_chi0": 3.91,
       "support_bohr": 1.588122997468477
     },
     {
       "projector": {"kind": "CUTOFF_NORM", "value": 0.70, "method": 2},
       "u_ev": 15.4146,
       "n_ref_e": 3.5521,
+      "u_times_abs_chi0": 4.06,
       "support_bohr": 1.765052169941702
     },
     {
       "projector": {"kind": "CUTOFF_NORM", "value": 0.80, "method": 2},
       "u_ev": 13.0972,
       "n_ref_e": 4.0605,
+      "u_times_abs_chi0": 4.21,
       "support_bohr": 2.011479793011571
     },
     {
       "projector": {"kind": "CUTOFF_NORM", "value": 0.85, "method": 2},
       "u_ev": 12.0211,
       "n_ref_e": 4.3436,
+      "u_times_abs_chi0": 4.20,
       "support_bohr": 2.188619831130068
     },
     {
       "projector": {"kind": "CUTOFF_NORM", "value": 0.90, "method": 2},
       "u_ev": 10.6622,
       "n_ref_e": 4.6739,
+      "u_times_abs_chi0": 4.00,
       "support_bohr": 2.439367465832430
     },
     {
       "projector": {"kind": "CUTOFF_NORM", "value": 0.95, "method": 2},
       "u_ev": 8.2302,
       "n_ref_e": 5.1445,
+      "u_times_abs_chi0": 3.30,
       "support_bohr": 2.872995373814031
     },
     {
       "projector": {"kind": "CUTOFF_NORM", "value": 0.98, "method": 2},
       "u_ev": 6.2659,
       "n_ref_e": 5.6680,
+      "u_times_abs_chi0": 2.61,
       "support_bohr": 3.455406057237902
     },
     {
       "projector": {"kind": "CUTOFF_NORM", "value": 0.99, "method": 2},
       "u_ev": 5.5708,
       "n_ref_e": 5.8848,
+      "u_times_abs_chi0": 2.35,
       "support_bohr": 3.893329137527022
     }
   ]

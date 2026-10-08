@@ -4,6 +4,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Mapping
 
+from ..domain.projector_diagnostics import METHOD2_PROJECTOR_WARNING
+
 
 def _cell(value: Any) -> str:
     if value is None:
@@ -304,6 +306,42 @@ def render_lr_u_report(
         )
     if not site_labels:
         lines.append(f"| U_scalar_charge | — | — | {_cell(estimator)} | — | — | {_cell(state)} | {_cell(dag_action)} |")
+
+    projector_diagnostics = analysis.get("projector_diagnostics")
+    projector_diagnostics = projector_diagnostics if isinstance(projector_diagnostics, Mapping) else {}
+    method2_warning = projector_diagnostics.get("method2_warning")
+    method2_warning = method2_warning if isinstance(method2_warning, Mapping) else METHOD2_PROJECTOR_WARNING.to_mapping()
+    projector_sites = projector_diagnostics.get("sites")
+    projector_sites = projector_sites if isinstance(projector_sites, list) else []
+    lines.extend([
+        "",
+        "## Projector diagnostics (record-only)",
+        "",
+        "These diagnostics do not change U calculation, acceptance, or campaign status.",
+        "",
+        f"- Permanent scheme warning `{_cell(method2_warning.get('code'))}`: {_cell(method2_warning.get('message'))}",
+        f"- Decision role: `{_cell(method2_warning.get('decision_role', 'RECORD_ONLY'))}`.",
+        "- The occupation comparisons use only electron counts explicitly declared in `lr-config`; missing declarations remain `NOT_ASSESSED`.",
+        "- `U × |χ⁰ᵢᵢ|` is a dimensionless regime indicator; it is approximately constant when screened and bare responses remain proportional.",
+        "",
+        "| Site | n reference (e) | Formal d (e) | Δ from formal (e) | Free atom d (e) | Δ from free atom (e) | Ligand charge capture | U (eV) | χ⁰ᵢᵢ (eV⁻¹) | U × \\|χ⁰ᵢᵢ\\| | Status |",
+        "|---|---:|---:|---:|---:|---:|---|---:|---:|---:|---|",
+    ])
+    for item in projector_sites:
+        if not isinstance(item, Mapping):
+            continue
+        lines.append(
+            f"| {_cell(item.get('site_id'))} | {_fmt(item.get('reference_occupation_e'))} | "
+            f"{_fmt(item.get('formal_d_electrons'))} | {_fmt(item.get('difference_from_formal_d_e'))} | "
+            f"{_fmt(item.get('free_atom_d_electrons'))} | {_fmt(item.get('difference_from_free_atom_d_e'))} | "
+            f"`{_cell(item.get('ligand_charge_capture', 'NOT_ASSESSED'))}` | {_fmt(item.get('u_ev'))} | "
+            f"{_fmt(item.get('chi0_diagonal_per_ev'))} | {_fmt(item.get('u_times_abs_chi0'))} | "
+            f"`{_cell(item.get('regime_indicator_status', 'NOT_ASSESSED'))}` |"
+        )
+    if not projector_sites:
+        lines.append("| — | — | — | — | — | — | `NOT_ASSESSED` | — | — | — | `NOT_ASSESSED` |")
+    if projector_diagnostics.get("diagnostic_error"):
+        lines.append(f"\nDiagnostic input issue (record-only): `{_cell(projector_diagnostics.get('diagnostic_error'))}`.")
 
     additional_observables = campaign.get("observables", [])
     if isinstance(additional_observables, list) and additional_observables:

@@ -274,8 +274,23 @@ def test_nio_p5_runner_replay_matches_part_a_and_resumes(
 
     actual_analysis = json.loads((manifest.parent / "results" / ANALYSIS).read_text(encoding="utf-8"))
     part_a_analysis = json.loads((REAL_FIXTURE / ANALYSIS).read_text(encoding="utf-8"))
+    projector_diagnostics = actual_analysis["projector_diagnostics"]
+    assert projector_diagnostics["decision_role"] == "RECORD_ONLY"
+    assert projector_diagnostics["method2_warning"]["code"] == (
+        "SIESTA_METHOD_2_ATOMIC_NONORTHOGONALIZED_PROJECTOR"
+    )
+    assert projector_diagnostics["method2_warning"]["comparable_to_orthogonalized_projector_u"] is False
+    for site in projector_diagnostics["sites"]:
+        assert site["u_times_abs_chi0"] == pytest.approx(
+            site["u_ev"] * abs(site["chi0_diagonal_per_ev"])
+        )
+        assert site["formal_comparison"] == "NOT_ASSESSED"
+        assert site["ligand_charge_capture"] == "NOT_ASSESSED"
     removed: dict[str, str] = {}
-    actual_view = _comparison_view(_part_a_rounding_compatibility_view(actual_analysis), removed, "$")
+    legacy_comparison_analysis = {
+        key: value for key, value in actual_analysis.items() if key != "projector_diagnostics"
+    }
+    actual_view = _comparison_view(_part_a_rounding_compatibility_view(legacy_comparison_analysis), removed, "$")
     expected_view = _comparison_view(part_a_analysis, removed, "$")
     _assert_replay_equivalent(actual_view, expected_view)
     _assert_part_a_u_within_rounding_bound(actual_analysis, part_a_analysis)
@@ -284,8 +299,11 @@ def test_nio_p5_runner_replay_matches_part_a_and_resumes(
     report_path = manifest.parent / "results" / "LR_U_REPORT.v3.md"
     assert analysis_path.is_file() and analysis_path.stat().st_size > 0
     assert report_path.is_file() and report_path.stat().st_size > 0
+    rendered_lr_report = report_path.read_text(encoding="utf-8")
+    assert "Projector diagnostics (record-only)" in rendered_lr_report
+    assert "SIESTA_METHOD_2_ATOMIC_NONORTHOGONALIZED_PROJECTOR" in rendered_lr_report
     replay_golden = json.loads(REPLAY_ANALYSIS.read_text(encoding="utf-8"))
-    replay_view = _analysis_comparison_view(actual_analysis, manifest.parent.parent.parent)
+    replay_view = _analysis_comparison_view(legacy_comparison_analysis, manifest.parent.parent.parent)
     replay_golden_view = _analysis_comparison_view(replay_golden, manifest.parent.parent.parent)
     _assert_replay_equivalent(replay_view, replay_golden_view)
 
