@@ -68,8 +68,11 @@ def test_analysis_comparator_compares_serialized_contraction_as_numeric_diagnost
     with pytest.raises(AssertionError):
         _assert_replay_equivalent({"verified_contraction_exact": "1/100"}, expected)
     with pytest.raises(AssertionError):
-        _assert_replay_equivalent({"other": actual["verified_contraction_exact"]},
-                                  {"other": expected["verified_contraction_exact"]})
+        _assert_replay_equivalent(
+            {"other": actual["verified_contraction_exact"]}, {"other": expected["verified_contraction_exact"]}
+        )
+
+
 def test_analysis_comparator_derives_and_checks_sensitivity_state() -> None:
     removed: dict[str, str] = {}
     archived = _comparison_view(
@@ -281,16 +284,38 @@ def test_nio_p5_runner_replay_matches_part_a_and_resumes(
     )
     assert projector_diagnostics["method2_warning"]["comparable_to_orthogonalized_projector_u"] is False
     for site in projector_diagnostics["sites"]:
-        assert site["u_times_abs_chi0"] == pytest.approx(
-            site["u_ev"] * abs(site["chi0_diagonal_per_ev"])
-        )
+        assert site["u_times_abs_chi0"] == pytest.approx(site["u_ev"] * abs(site["chi0_diagonal_per_ev"]))
         assert site["formal_comparison"] == "NOT_ASSESSED"
         assert site["ligand_charge_capture"] == "NOT_ASSESSED"
     removed: dict[str, str] = {}
+    occupation_summary = actual_analysis["occupation_provenance"]
+    assert occupation_summary["hash_policy"] == "WARN_ONLY"
+    provenance_path = manifest.parent / occupation_summary["path"]
+    provenance = json.loads(provenance_path.read_text(encoding="utf-8"))
+    assert provenance["schema_version"] == "hubbardflow.occupation_provenance.v1"
+    assert occupation_summary["status"] == provenance["status"]
+    assert occupation_summary["record_count"] == len(provenance["records"])
+    assert occupation_summary["hash_policy"] == provenance["hash_policy"]
+    records = provenance["records"]
+    assert records
+    for record in records:
+        assert record["mode"] in {"BARE", "SCREENED", "REFERENCE_SCREENED"}
+        assert record["observed_site_id"]
+        assert record["file"] == f"{record['run_folder']}/siesta.out"
+        assert isinstance(record["selected_block_line"], int)
+        assert record["selected_block_line"] > 0
+    removed["$.projector_diagnostics"] = "record-only diagnostics absent from archived Part A"
+    removed["$.occupation_provenance"] = (
+        "TASK 34a summary is checked against its sidecar; archived Part A predates this provenance"
+    )
     legacy_comparison_analysis = {
-        key: value for key, value in actual_analysis.items() if key != "projector_diagnostics"
+        key: value
+        for key, value in actual_analysis.items()
+        if key not in {"projector_diagnostics", "occupation_provenance"}
     }
-    actual_view = _comparison_view(_part_a_rounding_compatibility_view(legacy_comparison_analysis), removed, "$")
+    actual_view = _comparison_view(
+        _part_a_rounding_compatibility_view(legacy_comparison_analysis), removed, "$"
+    )
     expected_view = _comparison_view(part_a_analysis, removed, "$")
     _assert_replay_equivalent(actual_view, expected_view)
     _assert_part_a_u_within_rounding_bound(actual_analysis, part_a_analysis)
@@ -325,9 +350,10 @@ def test_nio_p5_runner_replay_matches_part_a_and_resumes(
     )
     assert "## I.5 state consistency (diagnostic)" in render_campaign_report(manifest)
     node_evidence = json.loads((manifest.parent / ".siestaflow" / "node-evidence.json").read_text())
-    assert node_evidence["nodes"]["matrix-analysis"]["report_sha256"] == hashlib.sha256(
-        render_lr_u_report(actual_analysis).encode("utf-8")
-    ).hexdigest()
+    assert (
+        node_evidence["nodes"]["matrix-analysis"]["report_sha256"]
+        == hashlib.sha256(render_lr_u_report(actual_analysis).encode("utf-8")).hexdigest()
+    )
 
     actual_manifest = _campaign_file_manifest(manifest.parent)
     expected_manifest = json.loads(GOLDEN_MANIFEST.read_text(encoding="utf-8"))
@@ -567,6 +593,9 @@ def _campaign_file_manifest(root: Path) -> dict[str, str]:
             "results/lr_u_analysis.v3.json",
             "results/LR_U_REPORT.v3.md",
             "results/i5_state_gate.json",
+            # TASK 34a validates this derived artifact against the analysis
+            # summary above. Its output digests are advisory, not a replay gate.
+            "results/data/occupation_provenance.v1.json",
         }:
             continue
         raw = path.read_bytes()
