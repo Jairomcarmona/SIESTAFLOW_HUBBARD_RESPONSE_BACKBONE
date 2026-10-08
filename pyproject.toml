@@ -372,6 +372,51 @@ exclude = [
     "tests/unit/test_units.py",
 ]
 
+[tool.ruff.format]
+# Formatter-only legacy debt; keep lint coverage, defer format-only churn; see docs/LINT_MIGRATION_BASELINE.md.
+exclude = [
+    # Pre-existing formatting debt; keep included in ruff check.
+    "src/hubbardflow/domain/capabilities.py",
+    # Pre-existing formatting debt; keep included in ruff check.
+    "src/hubbardflow/domain/exceptions.py",
+    # Pre-existing formatting debt; keep included in ruff check.
+    "src/hubbardflow/domain/matrix_response_acceptance.py",
+    # Pre-existing formatting debt; keep included in ruff check.
+    "src/hubbardflow/domain/quantized_response.py",
+    # Pre-existing formatting debt; keep included in ruff check.
+    "src/hubbardflow/execution/campaign_store.py",
+    # Pre-existing formatting debt; keep included in ruff check.
+    "src/hubbardflow/execution/dag_contract.py",
+    # Pre-existing formatting debt; keep included in ruff check.
+    "src/hubbardflow/execution/hydra_launcher.py",
+    # Pre-existing formatting debt; keep included in ruff check.
+    "src/hubbardflow/execution/observation_assembly.py",
+    # Pre-existing formatting debt; keep included in ruff check.
+    "src/hubbardflow/execution/orchestrator.py",
+    # Pre-existing formatting debt; keep included in ruff check.
+    "src/hubbardflow/siesta_backend/symmetry_evidence.py",
+    # Pre-existing formatting debt; keep included in ruff check.
+    "tests/__init__.py",
+    # Pre-existing formatting debt; keep included in ruff check.
+    "tests/conftest.py",
+    # Pre-existing formatting debt; keep included in ruff check.
+    "tests/integration/test_runner_replay_nio_p5.py",
+    # Pre-existing formatting debt; keep included in ruff check.
+    "tests/support.py",
+    # Pre-existing formatting debt; keep included in ruff check.
+    "tests/unit/test_adaptive_alpha_control.py",
+    # Pre-existing formatting debt; keep included in ruff check.
+    "tests/unit/test_alpha_selection_integration.py",
+    # Pre-existing formatting debt; keep included in ruff check.
+    "tests/unit/test_backend_admission.py",
+    # Pre-existing formatting debt; keep included in ruff check.
+    "tests/unit/test_lr_analysis_v2.py",
+    # Pre-existing formatting debt; keep included in ruff check.
+    "tests/unit/test_siesta_command_factory.py",
+    # Pre-existing formatting debt; keep included in ruff check.
+    "tests/unit/test_symmetry_evidence_contract.py",
+]
+
 [tool.mypy]
 strict = true
 files = ["src", "tests"]

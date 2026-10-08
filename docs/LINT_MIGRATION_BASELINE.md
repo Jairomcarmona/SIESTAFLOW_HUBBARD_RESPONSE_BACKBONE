@@ -373,3 +373,7 @@ Archivos Python rastreados en `src/` y `tests/`: **343**. Ruff: **672** hallazgo
 - Los archivos no listados siguen bajo las reglas completas. Los conteos y códigos por archivo permiten priorizar el retiro posterior de cada exclusión.
 - `follow_imports = "silent"` evita errores transitivos en código fuera de las dos raíces; todos los módulos de `src/` y `tests/` se inspeccionan explícitamente.
 - Esta ampliación no cambia código de producción ni pruebas; habilita detección en archivos antes fuera de la lista blanca, sin mezclar reparaciones de deuda histórica.
+
+### Deuda existente de formato
+
+El primer CI con la cobertura ampliada ejecutó `ruff format --check .` y señaló 20 archivos con formato heredado pendiente. Se registran en `[tool.ruff.format].exclude` de `pyproject.toml`, con motivo en cada entrada. Esas exclusiones son solo del formateador: los archivos permanecen sujetos a `ruff check` salvo que también aparezcan en la lista separada de deuda de lint. Se pospone el churn de formato no relacionado; se puede retirar cada exclusión cuando ese archivo reciba una revisión de formato independiente.
