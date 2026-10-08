@@ -437,7 +437,6 @@ def validate_lr_config(payload: Mapping[str, Any], fdf_species: Mapping[str, int
         "static_artifacts": normalized_static,
         "response_grid_reproducibility_calibration": grid_calibration,
         "analysis_policy": dict(analysis),
-        "projector_diagnostic_references": normalized_projector_references,
         "alpha_selection_policy": None if alpha_policy is None else dict(alpha_policy),
         "adaptive_alpha_policy": None if adaptive_policy is None else adaptive_policy.to_mapping(),
         "reference_dm_name": _safe_relative(payload.get("reference_dm_name", "reference.DM"), "reference_dm_name"),
@@ -448,6 +447,8 @@ def validate_lr_config(payload: Mapping[str, Any], fdf_species: Mapping[str, int
         "observables": payload.get("observables", []),
         "magnetic_moment_tolerance_muB": magnetic_tolerance,
     }
+    if "projector_diagnostic_references" in payload:
+        normalized["projector_diagnostic_references"] = normalized_projector_references
     if shadow_rejection_policy is not None:
         normalized["shadow_rejection_policy"] = shadow_rejection_policy
     if coverage is CampaignCoverage.TRANSLATION_SHADOWED or "parent_reproduction" in payload:

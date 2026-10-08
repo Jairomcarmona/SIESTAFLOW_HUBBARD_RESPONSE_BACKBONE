@@ -249,7 +249,6 @@ def initialize_campaign(
             "xc_profile": normalized["xc_profile"],
             "sites": normalized["sites"],
             "alpha_grid_ev": alpha_grid,
-            "projector_diagnostic_references": normalized["projector_diagnostic_references"],
             "pseudopotentials": normalized_pseudopotentials,
             "static_artifacts": static_node_paths,
             "analysis_policy": policy,
@@ -264,6 +263,8 @@ def initialize_campaign(
             "alpha_strategy": normalized["alpha_strategy"],
             "auto_split_species": normalized["auto_split_species"],
         }
+        if "projector_diagnostic_references" in normalized:
+            lr_config["projector_diagnostic_references"] = normalized["projector_diagnostic_references"]
         for field in ("planning_reference_output", "planning_reference_dm"):
             if raw_config.get(field) is not None:
                 source = _source_file(raw_config[field], config_base, field)

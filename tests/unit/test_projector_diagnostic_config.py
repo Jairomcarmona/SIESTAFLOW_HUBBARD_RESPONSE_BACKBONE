@@ -14,7 +14,7 @@ from tests.unit.test_campaign_plan import inputs, normalized
 def test_projector_electron_references_are_optional_validated_and_frozen(tmp_path: Path) -> None:
     fdf, raw, profile = inputs(tmp_path / "inputs")
     without_references = normalized(fdf, raw)
-    assert without_references["projector_diagnostic_references"] == {}
+    assert "projector_diagnostic_references" not in without_references
 
     references = {"Co": {"formal_d_electrons": 7, "free_atom_d_electrons": 9}}
     with_references = normalized(fdf, {**raw, "projector_diagnostic_references": references})
