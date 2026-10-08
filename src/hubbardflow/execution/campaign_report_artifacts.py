@@ -247,6 +247,13 @@ def _file_map(
     analysis: Mapping[str, Any],
 ) -> dict[str, Any]:
     data = "results/data"
+    results_root = root / "results"
+    runs_directory = results_root / "runs"
+    state_gate_candidates = (
+        results_root / "data" / "i5_state_gate.json",
+        results_root / "i5_state_gate.json",
+    )
+    state_gate_path = next((path for path in state_gate_candidates if path.is_file()), None)
     dataset = analysis.get("response_observation_dataset")
     dataset = dataset if isinstance(dataset, Mapping) else {}
     runs: set[str] = set()
@@ -269,7 +276,8 @@ def _file_map(
         "analysis_json": _relative_or_absolute(analysis_path, root) if analysis_path.is_file() else None,
         "report_source_json": f"{data}/{_SOURCE_NAME}",
         "occupation_provenance_json": f"{data}/occupation_provenance.v1.json",
-        "state_gate_json": "results/i5_state_gate.json",
+        "state_gate_json": _relative_or_absolute(state_gate_path, root) if state_gate_path else None,
+        "runs_directory": _relative_or_absolute(runs_directory, root) if runs_directory.is_dir() else None,
         "report": "results/HUBBARDFLOW.out",
         "u_by_site_csv": f"{data}/u_by_site.csv",
         "chi0_matrix_csv": f"{data}/chi0_matrix.csv",
@@ -353,6 +361,7 @@ def write_campaign_report_artifacts(
     root = Path(campaign_root)
     manifest = Path(manifest_path)
     analysis_file = Path(analysis_path)
+    (root / "results" / "runs").mkdir(parents=True, exist_ok=True)
     data_dir = root / "results" / "data"
     data_dir.mkdir(parents=True, exist_ok=True)
     source_path = data_dir / _SOURCE_NAME

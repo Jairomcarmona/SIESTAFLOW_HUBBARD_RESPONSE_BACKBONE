@@ -158,7 +158,9 @@ def test_mno_translation_shadowed_replay_proves_shadows_and_reconstructs(
     assert status["status"] == "COMPLETED"
     assert len(call_log.read_text(encoding="utf-8").splitlines()) == 49
 
-    analysis = json.loads((manifest.parent / "results/lr_u_analysis.v3.json").read_text(encoding="utf-8"))
+    analysis = json.loads(
+        (manifest.parent / "results/data/lr_u_analysis.v3.json").read_text(encoding="utf-8")
+    )
     dataset = analysis["response_observation_dataset"]
     evidence = json.loads((manifest.parent / ".siestaflow/node-evidence.json").read_text(encoding="utf-8"))
     reproduction = evidence["nodes"]["reference"]["reference_reproduction"]

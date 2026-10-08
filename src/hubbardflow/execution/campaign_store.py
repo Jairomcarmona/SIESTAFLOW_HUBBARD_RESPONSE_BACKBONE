@@ -89,29 +89,41 @@ class CampaignStore:
         receipts[node.node_id] = receipt
         self.save_checkpoint(receipts)
 
-    def archive_unvalidated_attempts(self, control: Path, node_ids: set[str]) -> None:
+    def archive_unvalidated_attempts(
+        self,
+        control: Path,
+        node_ids: set[str],
+        *,
+        runs_directory: Path | None = None,
+    ) -> None:
         archive = control / "archive" / "attempts"
-        for node_id in node_ids:
-            key = sha256(node_id.encode()).hexdigest()[:20]
-            node_root = control / "attempts" / key
-            if not node_root.is_dir():
-                continue
-            for attempt in list(node_root.iterdir()):
-                if not attempt.is_dir():
+        attempts_roots = [control / "attempts"]
+        if runs_directory is not None:
+            attempts_roots.append(runs_directory / "attempts")
+        for attempts_root in attempts_roots:
+            for node_id in node_ids:
+                key = sha256(node_id.encode()).hexdigest()[:20]
+                node_root = attempts_root / key
+                if not node_root.is_dir():
                     continue
-                destination = archive / key / f"{attempt.name}-{time.time_ns()}"
-                destination.parent.mkdir(parents=True, exist_ok=True)
-                try:
-                    attempt.replace(destination)
-                except OSError:
-                    # Keep the original forensic data and do not reuse it; the
-                    # next materialization always receives a unique attempt ID.
-                    pass
+                for attempt in list(node_root.iterdir()):
+                    if not attempt.is_dir():
+                        continue
+                    destination = archive / key / f"{attempt.name}-{time.time_ns()}"
+                    destination.parent.mkdir(parents=True, exist_ok=True)
+                    try:
+                        attempt.replace(destination)
+                    except OSError:
+                        # Keep the original forensic data and do not reuse it; the
+                        # next materialization always receives a unique attempt ID.
+                        pass
 
     def archive_orphaned_attempts(
         self,
         control: Path,
         receipts: Mapping[str, NodeReceipt],
+        *,
+        runs_directory: Path | None = None,
     ) -> None:
         """Archive partial/orphan attempts while retaining validated node dirs."""
         retained: set[Path] = set()
@@ -120,19 +132,22 @@ class CampaignStore:
             command = record.get("command", {}) if isinstance(record, dict) else {}
             if receipt.state is NodeState.VALIDATED and isinstance(command, dict) and command.get("cwd"):
                 retained.add(Path(command["cwd"]).parent.resolve())
-        attempts_root = control / "attempts"
-        if not attempts_root.is_dir():
-            return
+        attempts_roots = [control / "attempts"]
+        if runs_directory is not None:
+            attempts_roots.append(runs_directory / "attempts")
         archive_root = control / "archive" / "attempts"
-        for node_root in attempts_root.iterdir():
-            if not node_root.is_dir():
+        for attempts_root in attempts_roots:
+            if not attempts_root.is_dir():
                 continue
-            for attempt in list(node_root.iterdir()):
-                if not attempt.is_dir() or attempt.resolve() in retained:
+            for node_root in attempts_root.iterdir():
+                if not node_root.is_dir():
                     continue
-                destination = archive_root / node_root.name / f"{attempt.name}-{time.time_ns()}"
-                destination.parent.mkdir(parents=True, exist_ok=True)
-                try:
-                    attempt.replace(destination)
-                except OSError:
-                    pass
+                for attempt in list(node_root.iterdir()):
+                    if not attempt.is_dir() or attempt.resolve() in retained:
+                        continue
+                    destination = archive_root / node_root.name / f"{attempt.name}-{time.time_ns()}"
+                    destination.parent.mkdir(parents=True, exist_ok=True)
+                    try:
+                        attempt.replace(destination)
+                    except OSError:
+                        pass
