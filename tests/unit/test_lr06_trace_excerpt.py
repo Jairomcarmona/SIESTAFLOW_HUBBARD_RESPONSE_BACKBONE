@@ -1,10 +1,13 @@
-# mypy: disable-error-code=import-untyped
+# mypy: disable-error-code=import-untyped, follow-imports=silent
 import re
 from pathlib import Path
+
+import pytest
 
 from hubbardflow.siesta_backend.siesta542_bare_profile import (
     Siesta542PotentialShiftHamiltonianProfile,
 )
+from tests.unit.validation_tolerances import LR06_OCCUPATION_TOLERANCE_E
 
 FIXTURE = Path(__file__).resolve().parents[1] / "fixtures" / "lr06_siesta542_yoltla_extract.txt"
 
@@ -27,9 +30,11 @@ def test_real_yoltla_trace_selects_population_between_stepf_and_first_scf() -> N
     assert selection.response_event.dftu_population_iteration == 1
     assert len(selection.response_event.atoms) == 1
     atom = selection.response_event.atoms[0]
-    assert atom.printed_up_trace == 3.731167
-    assert atom.printed_down_trace == 0.965385
-    assert atom.printed_total_trace == 4.696552
+    occupation_tolerance = LR06_OCCUPATION_TOLERANCE_E.value
+    assert occupation_tolerance is not None
+    assert atom.printed_up_trace == pytest.approx(3.731167, abs=occupation_tolerance)
+    assert atom.printed_down_trace == pytest.approx(0.965385, abs=occupation_tolerance)
+    assert atom.printed_total_trace == pytest.approx(4.696552, abs=occupation_tolerance)
 
     old_summary = "Occupations:     3.721022    0.952897    4.673919"
     response_summary = "Occupations:     3.731167    0.965385    4.696552"

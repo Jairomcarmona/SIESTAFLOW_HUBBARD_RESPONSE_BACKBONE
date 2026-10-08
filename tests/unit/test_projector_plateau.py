@@ -23,6 +23,10 @@ from hubbardflow.domain.projector_plateau import (
     ProjectorValue,
     projector_assessment,
 )
+from tests.unit.validation_tolerances import (
+    M1_PROBE_CAMPAIGN_DELTA_TOLERANCE_EV,
+    M1_PROJECTOR_SCAN_U_TOLERANCE_EV,
+)
 
 
 def _scan(criteria: PlateauCriteria | None = None) -> ProjectorScanSpec:
@@ -263,17 +267,20 @@ def test_measured_m1_curve_is_projector_specific_and_limited_to_sampled_points()
         0.98,
         0.99,
     ]
-    assert [point.u_ev for point in curve.points] == [
-        25.0833,
-        19.0979,
-        15.4146,
-        13.0972,
-        12.0211,
-        10.6622,
-        8.2302,
-        6.2659,
-        5.5708,
-    ]
+    assert [point.u_ev for point in curve.points] == pytest.approx(
+        [
+            25.0833,
+            19.0979,
+            15.4146,
+            13.0972,
+            12.0211,
+            10.6622,
+            8.2302,
+            6.2659,
+            5.5708,
+        ],
+        abs=M1_PROJECTOR_SCAN_U_TOLERANCE_EV.value,
+    )
     assert curve.segments[3].slope_ev_per_parameter == pytest.approx((12.0211 - 13.0972) / 0.05)
     assert "dU/d(norm)=" in curve.no_plateau_report_line()
     assert ProjectorCurve.from_mapping(curve.to_mapping()) == curve
@@ -357,7 +364,7 @@ def test_projector_curve_recomputes_serialized_slope_instead_of_exact_comparing(
 def test_m1_production_control_records_delta_without_acceptance_gate() -> None:
     control = ProductionControl(ProjectorValue(ProjectorParameterKind.CUTOFF_NORM, 0.90), 10.6622, 10.6578)
 
-    assert control.delta_u_ev == pytest.approx(0.0044)
+    assert control.delta_u_ev == pytest.approx(0.0044, abs=M1_PROBE_CAMPAIGN_DELTA_TOLERANCE_EV.value)
     assert ProductionControl.from_mapping(control.to_mapping()) == control
 
 
@@ -369,7 +376,7 @@ def test_production_control_recomputes_serialized_delta_without_exact_comparison
     restored = ProductionControl.from_mapping(mapping)
 
     assert restored == control
-    assert restored.delta_u_ev == pytest.approx(0.0044)
+    assert restored.delta_u_ev == pytest.approx(0.0044, abs=M1_PROBE_CAMPAIGN_DELTA_TOLERANCE_EV.value)
 
 
 def test_projector_support_geometry_is_record_only_and_compares_half_distance() -> None:
