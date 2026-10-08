@@ -2,136 +2,67 @@
 
 ## Scope and verdict
 
-This is a code-and-evidence audit against the methodological contract
-`Cococcioni Linear-Response Hubbard (U)` supplied for this project, and the
-finite-difference LR-cDFT formulation of Cococcioni and de Gironcoli.
+This audit re-evaluates LR-01 through LR-22 against the tracked implementation and evidence in this repository as of 2026-10-07. It distinguishes code behavior from evidence that a real campaign ran. A PASS is limited to the scope stated in its row; it does not certify an unarchived campaign. No SIESTA campaign was run for this audit.
 
-**Overall status: PARTIAL.**  The implemented finite-difference matrix algebra
-and the demonstrated BARE/SCREENED execution chain are compatible with the
-method.  LR-06 is now **PASS for the source-audited SIESTA 5.4.2 PotentialShift
-profile**, based on the native Yoltla output and end-to-end selector test
-recorded below. This verifies the profile's BARE event selection; it does not
-certify every historical campaign or grant the separate legacy
-`VERIFIED_BARE` certificate. LR-14 (supercell convergence) remains
-**NOT_YET_TESTED** for the ordered birnessite result. A 32-atom ordered cell
-is not, by itself, evidence of the isolated-perturbation limit.
+**Overall status: PARTIAL.** The response-matrix implementation uses signed finite differences, preserves the full matrices, checks rank, and uses direct inversion. There is source-audited real SIESTA evidence for the BARE event selector, a six-point real NiO P5 analysis fixture, and a measured nine-point M1 projector curve. The independent-supercell limit remains open (LR-14), and translation shadowing has not been validated by a completed real MnO or Cu3N campaign (LR-16). The real MnO TS campaign was deliberately paused after 23 of 48 response nodes; Cu3N 23.7 was not run. These facts do not support a production TS-validation claim.
 
-Consequently, results must be labelled **one-shot \(U_{LR}^{DFT}\)** for the
-declared manifold, not self-consistent \(U_{scf}\), and not a
-supercell-converged bulk value.
+Results currently in scope should be described as one-shot \(U_{LR}^{DFT}\) for the explicitly declared localized manifold. This audit does not certify a self-consistent \(U_{scf}\) or a supercell-converged bulk value. Localized-orbital/projector choice is part of the definition of the result: [Cococcioni and de Gironcoli (2005)](https://doi.org/10.1103/PhysRevB.71.035105); [Timrov, Marzari and Cococcioni (2022)](https://arxiv.org/abs/2203.15684).
 
-The foundational formulation requires that the response be internally
-consistent with the occupation-matrix definition; it also states that results
-depend strongly on the definition of the localized orbitals. [Cococcioni and
-de Gironcoli (2005)](https://doi.org/10.1103/PhysRevB.71.035105).  Modern DFPT
-work likewise identifies projector choice and Hubbard parameters as coupled
-choices. [Timrov, Marzari and Cococcioni (2022)](https://arxiv.org/abs/2203.15684).
+### Status meanings
+
+- **PASS (scoped)** means the cited code or artifact demonstrates the stated requirement for that specific path, fixture, or campaign.
+- **PARTIAL** means a software mechanism or subset of evidence exists, but a required campaign-level claim cannot be independently checked from tracked evidence.
+- **OPEN** means the requested scientific evidence has not been established.
+- **NOT APPLICABLE (one-shot scope)** means the item is outside the one-shot \(U_{LR}\) claim. It becomes an open requirement if the project claims the corresponding self-consistent result.
 
 ## Requirement matrix
 
-| Requirement | Status | Code / evidence | Finding and required action |
+| Requirement | Status | Tracked code and evidence | Assessment and what remains |
 |---|---|---|---|
-| LR-01 manifold explicit | PASS | `tools/build_k_birnessite_initial_lru.py:76-80`; `campaign.json` | Mn-3d, Method-2, \(r_c\), \(\omega\), sites and pseudos are declared. |
-| LR-02 same manifold | PASS for standalone check scope | `hubbardflow check-projector`; `src/hubbardflow/domain/projector_compatibility.py`; `tests/unit/test_projector_compatibility.py`; `tests/unit/test_projector_compatibility_cli.py` | The read-only command compares explicitly mapped LR campaign projector evidence against a target DFT+U FDF: `DFTU.ProjectorGenerationMethod`; `DFTU.Proj.projector_header_value`, `n`, `l`, `rc_bohr`, and `omega`; effective `DFTU.CutoffNorm` (default 0.9); and mapped-species `PAO.BasisSize`, `PAO.EnergyShift`, `PAO.SplitNorm`, and `PAO.Basis`. `u_ref_ev`, `j_ref_ev`, and `lambda_values` are recorded as informational values (LR reference versus DFT+U applied values) and do not affect MATCH/MISMATCH. File digests remain warning-only provenance; `--force` is explicit and recorded. This does not add an automatic gate to campaign execution or another application workflow. |
-| LR-03 \(\alpha P_J\) | PASS | `tools/build_k_birnessite_initial_lru.py:76-80` | Only the target label receives signed `DFTU.Proj` potential shift; `DFTU.PotentialShift true`. |
-| LR-04 signed perturbations | PASS | campaign manifests and evidence audit | Every target has \(+\alpha\) and \(-\alpha\). |
-| LR-05 linear regime | PASS for birnessite validation; PARTIAL generically | `01_ALPHA_LINEARITY`; `production_benchmarks/lr_arithmetic.py:176-244` | 0.025/0.050/0.100 eV were tested. Generic three-point mode alone cannot establish a window. |
-| LR-06 BARE definition | PASS for the source-audited SIESTA 5.4.2 PotentialShift profile | Native Yoltla output SHA-256 `f28dbe35ff17734f9291676dccf9592e4cc0d09049d6192237be82ea4786eb20`; trace SHA-256 `3c909d4e94a34c7685cb31f89ca1193098a4eb7ba5b50396fd5266d41b186028`; `src/hubbardflow/siesta_backend/siesta542_bare_profile.py::Siesta542PotentialShiftHamiltonianProfile.select_response`; `tests/unit/test_lr06_trace_excerpt.py` | The real 48-atom 4x4 BARE output selects the event at native line 4546 (trace line 101), with occupations `3.731167 / 0.965385 / 4.696552`, after `stepf` at native line 4516 (trace line 71) and before indented `scf: 1` at native line 4575 (trace line 130). The earlier summary at trace line 67 is the pre-perturbation event and is not selected. `SCF_NOT_CONV` at trace line 133 is expected with `MaxSCFIterations 1`. The SIESTA 5.4.2 binary SHA-256 is `c69519dc7296ca8f9e454303947084ee246efd609be4bc05244a31a91b82e37e`. The full output is cited by digest and is not included; the fixture stores only the selector-relevant excerpts. |
-| LR-07 SCREENED definition | PASS | SCREENED FDF at `tools/build_k_birnessite_initial_lru.py:85-86`; archive audit | Full SCF is required; all 84 SCREENED runs in the validation archive have normal completion and no SCF nonconvergence marker. |
-| LR-08 common reference | PARTIAL | DAG stages children from `runs/00_REFERENCE/00_REFERENCE.DM`; `DM.UseSaveDM true` | Same parent DM is copied operationally. The campaign archive does not preserve/check a per-child DM hash or prove the DM was accepted unchanged by SIESTA. |
-| LR-09 global response | PASS | six occupations are parsed for every perturbation | Each perturbation records the occupation vector of all six Mn manifolds. |
-| LR-10 complete matrices | PASS | `production_benchmarks/lr_arithmetic.py:111-158`; evidence appendix | Row \(I\)=observed site and column \(J\)=perturbed site; full 6x6 matrices are reconstructed. |
-| LR-11 matrix inverse | PASS in production path | `production_benchmarks/lr_arithmetic.py:248-320` | Full-rank check then `numpy.linalg.inv`; no diagonal-only formula. |
-| LR-12 signs and order | PASS | `production_benchmarks/lr_arithmetic.py:24-31, 305-306` | Central differences retain signs and use \(K=\chi_0^{-1}-\chi^{-1}\). |
-| LR-13 on-site extraction | PASS | `production_benchmarks/lr_arithmetic.py:305-306`; evidence appendix | \(U_I=K_{II}\); off-diagonal kernel entries are retained. |
-| LR-14 supercell limit | NOT_YET_TESTED | birnessite campaign metadata | No size series \(U(L)\) for the birnessite structure. Do not claim isolated-perturbation convergence. |
-| LR-15 no artificial neutrality | PASS in production path | no row/column-sum transformation in `lr_arithmetic.py` | No neutralizing row/column projection is applied. |
-| LR-16 symmetry reconstruction | NOT_APPLICABLE for birnessite | `no_symmetry_reduction: true` | All six Mn sites were explicitly perturbed; no equivalence claim is needed. Generic symmetry reconstruction requires its own proof. |
-| LR-17 numerical QA | PASS for audited campaign | evidence audit and appendix | Alpha sensitivity, raw asymmetry, ranks, condition numbers and inverse residuals are preserved. Thresholds are implementation QA, not Cococcioni axioms. |
-| LR-18 raw evidence | PASS | `docs/evidence_audit_k_birnessite_minimum_validation_20260815.json` | Raw/symmetrized matrices, inverses, kernels, selected occupations and native-output paths are retained. |
-| LR-19 projector dependence | PASS conceptually | `04_PROJECTOR_RC2p5` evidence | \(r_c=2.5\) and 3.0 Bohr are reported as distinct manifolds, not averaged. |
-| LR-20 no projector averaging | PASS | validation report | No average across radii is formed. |
-| LR-21 frozen \(V_{Hub}\) for \(U_{scf}\) | NOT_APPLICABLE / UNRESOLVED | one-shot PBE campaign only | No prior DFT+U potential is present. SIESTA support for frozen pre-existing \(V_{Hub}\) has not been demonstrated. |
-| LR-22 structure–U self-consistency | NOT_APPLICABLE | no DFT+U relaxation loop | Required only if claiming a relaxed self-consistent structure/U solution. |
+| LR-01 Explicit Hubbard manifold | PASS (declared generator/configuration scope) | tools/build_k_birnessite_initial_lru.py:76-80,192-206; tests/fixtures/projector_curve_m1.json:2-5,24-78 | The generator declares Mn 3d, Method 2, rc and omega, site labels, alpha, k-grid and pseudopotential identities; the M1 fixture records a specific site and projector curve. The generated birnessite campaign package/output archive is not tracked here, so this is not a claim that those 25 runs were completed. |
+| LR-02 Same manifold for applying U | PASS for the standalone check-projector command; production gate not yet merged | src/hubbardflow/domain/projector_compatibility.py:22-99,103-170; tests/unit/test_projector_compatibility.py; tests/unit/test_projector_compatibility_cli.py; PR [#23](https://github.com/Jairomcarmona/SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE/pull/23) | The standalone comparator explicitly maps LR labels to FDF species and compares generation method; projector header, n, l, rc and omega; effective CutoffNorm; and mapped-species PAO parameters. U, J and lambda are informational. File-digest differences produce warnings only. PR #23 proposes the production application gate and remains separate from this audit; do not describe automatic execution-time enforcement as merged. |
+| LR-03 Apply alpha P_J | PASS (generator contract) | tools/build_k_birnessite_initial_lru.py:47-58,76-86 | The generated FDF applies the signed shift only to the selected site and declares DFTU.PotentialShift true. This establishes generator logic; the generated campaign archive is absent. |
+| LR-04 Both perturbation signs | PASS (generator contract) | tools/build_k_birnessite_initial_lru.py:47-53,204-206 | The generator constructs plus and minus alpha runs for each site and its package verifier asserts 12 BARE and 12 SCREENED response nodes. The assertion verifies the generated package if run; it is not evidence of completed real calculations. |
+| LR-05 Linear-response regime | PARTIAL | docs/fdebq/REAL_VALIDATION_NIO_P5.md:125-149; tests/fixtures/real_nio_p5_rerun/lr_u_analysis.v3.json:7-18,6015-6018 | A real NiO P5 analysis fixture contains six alpha points and reports window_sensitivity_eV. This is evidence for that analyzed data and its selected windows. It does not establish a universal linear window or repair the missing birnessite 01_ALPHA_LINEARITY artifact cited by the older audit. |
+| LR-06 BARE definition and event selection | PASS for the audited SIESTA 5.4.2 PotentialShift profile | src/hubbardflow/siesta_backend/siesta542_bare_profile.py:94-158; tests/unit/test_lr06_trace_excerpt.py:19-77; tests/fixtures/lr06_siesta542_yoltla_extract.txt; docs/fdebq/TASK30_FOLLOWUP.md:5-17 | The exact Yoltla trace has SHA-256 3c909d4e94a34c7685cb31f89ca1193098a4eb7ba5b50396fd5266d41b186028. The selected occupations 3.731167 / 0.965385 / 4.696552 are at trace line 101, between stepf at line 71 and the indented scf: 1 at line 130. The earlier population at line 67 is not selected. SCF_NOT_CONV at line 133 is expected for MaxSCFIterations 1. The cited original output SHA-256 is f28dbe35ff17734f9291676dccf9592e4cc0d09049d6192237be82ea4786eb20; the SIESTA binary SHA-256 is c69519dc7296ca8f9e454303947084ee246efd609be4bc05244a31a91b82e37e. The source output was 5,871 lines; the user-supplied trace was 142 lines, while the checked-in selector fixture contains 107 non-empty lines (110 logical lines including three blank separators) and only the three extracted native ranges documented below. Scope is this audited profile/trace, not every historical BARE output or a separate legacy VERIFIED_BARE certificate. |
+| LR-07 SCREENED definition and convergence | PARTIAL | src/hubbardflow/siesta_backend/output_validator.py:62-65,109-124,195-246; tests/unit/test_siesta_output_validator.py:75-200; tools/build_k_birnessite_initial_lru.py:82-86,204-206 | The validator requires normal termination and, for SCREENED nodes, converged SCF evidence; BARE is treated separately. The earlier audit's claim that all 84 birnessite SCREENED outputs passed cited docs/evidence_audit_k_birnessite_minimum_validation_20260815.json, which is not present in the tracked repository. No 84-output claim is retained without that archive. |
+| LR-08 Common parent reference | PASS for physical-state comparison and traceability behavior; no real TS completion claim | src/hubbardflow/domain/reference_reproduction.py:236-383; src/hubbardflow/execution/campaign_runner.py:884-895,1603-1696; tests/integration/test_runner_replay_mno_ts.py:161-177; docs/fdebq/AMENDMENTS_2.md:145-168 | D16.1 compares the parent occupation state using declared physical tolerances; Fermi has its own optional declared tolerance. Both DM digests are recorded as provenance and do not decide equivalence. RECORD_ONLY without a Fermi tolerance records Fermi and does not reject an otherwise eligible reduction, as documented and tested in docs/fdebq/TASK30_FOLLOWUP.md:41-58. The replay is software evidence, not a completed real TS campaign. |
+| LR-09 Global response occupations | PASS (analyzed response-data scope) | src/hubbardflow/domain/matrix_lr.py:278-385; docs/fdebq/REAL_VALIDATION_NIO_P5.md:125-136 | The analysis consumes each measured response vector across the observed Hubbard sites. The real NiO fixture preserves BARE and SCREENED occupations for both sites. This does not assert an archived six-site birnessite result. |
+| LR-10 Complete response matrices | PASS (analysis implementation and NiO fixture scope) | src/hubbardflow/domain/matrix_lr.py:278-385; docs/fdebq/REAL_VALIDATION_NIO_P5.md:125-136 | The fitted matrix uses observed site I as row and perturbed site J as column; the full matrix is assembled rather than reducing to diagonal responses. NiO provides a two-site real-data example. A real six-site birnessite output archive is not tracked. |
+| LR-11 Matrix inversion | PASS (direct-inversion implementation) | src/hubbardflow/domain/matrix_lr.py:390-434,522-534 | Rank and conditioning are evaluated; rank-deficient matrices are rejected, and full-rank matrices use numpy.linalg.inv. No pseudoinverse or regularized fallback is used. This verifies the numerical path, not an absent campaign archive. |
+| LR-12 Signs and finite-difference order | PASS (analysis implementation) | src/hubbardflow/domain/matrix_lr.py:278-385 | Perturbation columns are reconstructed from signed alpha observations with the declared response fit; the matrix engine retains central-difference sign and ordering. The six-point NiO analysis is an analyzed real-data fixture, but it does not substitute for the missing birnessite run archive. |
+| LR-13 On-site U extraction | PASS (analysis implementation) | src/hubbardflow/domain/matrix_lr.py:448-460,522-549; docs/fdebq/REAL_VALIDATION_NIO_P5.md:129-136 | The full interaction kernel is formed from the inverse bare and screened matrices; reported site values are its diagonal entries. Off-diagonal kernel information remains available. |
+| LR-14 Isolated-perturbation / supercell limit | OPEN | Repository evidence: tests/fixtures/projector_curve_m1.json is a projector scan, not a size series. | The requester reports external M1 4×4 checks at k-grids 4×4×1 and 5×5×1, vacuum 35 and 45 Å, a 6×6 anchor, and an 8×8 job in queue. Those results are not archived in this repository and are not independently audited here. The k-grid/vacuum checks do not establish convergence with supercell size. To close LR-14, archive comparable completed size-series evidence including the 8×8 result and show that successive increments in the relevant response and/or final diagonal U(L) decrease while other settings are controlled. A 32-atom cell or one 6×6 anchor alone is insufficient. |
+| LR-15 No artificial neutrality projection | PASS (current matrix-analysis path) | src/hubbardflow/domain/matrix_lr.py:463-534 | The analysis selects raw or explicitly symmetrized matrices for inversion; no row-sum or column-sum neutralizing projection is applied. Raw and symmetrized evidence remain distinct. |
+| LR-16 Reduced-column equivalence and shadow validation | OPEN | docs/fdebq/CODEX_TASK23_TS.md:597-644; docs/fdebq/TASK23_SUMMARY.md:13-37; tests/integration/test_runner_replay_mno_ts.py:1,26 | This is not NOT_APPLICABLE: the real translation-shadow campaign evidence is still required. MnO 23.6 was stopped safely after 23 of 48 response nodes; gates a–e were unevaluated and no production U-by-site table was produced. Cu3N 23.7 was not run. The integration replay exercises a fake SIESTA runner and cannot promote LR-16. The requested target references 11.5325 eV (MnO) and 12.6751 eV (Cu3N) remain targets, not validated results. |
+| LR-17 Numerical quality checks | PARTIAL | src/hubbardflow/domain/lr_analysis_v2.py:365-379,830-968,1101-1154; src/hubbardflow/domain/matrix_lr.py:390-434; tests/fixtures/real_nio_p5_rerun/lr_u_analysis.v3.json | The software records rank/conditioning, inversion and sensitivity diagnostics, and the NiO fixture contains these analysis products. Those checks characterize the analyzed fixture; they do not establish quality of the paused MnO TS calculation or an unrun Cu3N calculation. Numerical QA thresholds are implementation policy, not axioms of the Cococcioni method. |
+| LR-18 Reproducible raw evidence | PARTIAL | docs/fdebq/REAL_VALIDATION_NIO_P5.md:1-24,107-149; tests/fixtures/real_nio_p5_rerun/; docs/fdebq/TASK23_SUMMARY.md:27-37 | The repository includes a real NiO P5 analysis fixture and its validation report, and the LR-06 selector excerpt is traceable to its cited source output. MnO TS remains partial/PAUSADO, and Cu3N has no 23.7 evidence. The older audit's birnessite evidence JSON is absent, so its claims about raw/symmetrized matrices and all native-output paths cannot be relied on here. |
+| LR-19 Projector dependence | PASS for the measured nine-point M1 curve | tests/fixtures/projector_curve_m1.json:1-78; docs/03_policies/PROJECTOR_SCAN_EXECUTABLE_SPEC.md:83-107,118-142 | The fixture records nine measured CutoffNorm values, U, reference occupation, and support radius for the stated M1 one-column setup. It shows substantial projector dependence; for example U falls from 13.0972 to 12.0211 eV between 0.80 and 0.85. This does not establish a general plateau. The 0.90 production control is 10.6622 eV for one column versus 10.6578–10.6586 eV for the 36×36 campaign; geometry remains RECORD-ONLY. |
+| LR-20 No averaging across projectors | PASS (specification and analysis behavior) | src/hubbardflow/domain/projector_plateau.py:437-502,674-732; docs/03_policies/PROJECTOR_SCAN_EXECUTABLE_SPEC.md:70-79 | Each U remains attached to its declared projector; the report states “no plateau; U is projector-specific” when no plateau is established. The M1 curve is projector-specific evidence. A plateau is optional and no averaging across projectors is performed. |
+| LR-21 Frozen V_Hub for a self-consistent U_scf claim | NOT APPLICABLE to one-shot U_LR; OPEN for U_scf | src/hubbardflow/execution/downstream_u_admission.py:49-90 | The tracked downstream admission code binds an accepted U input to its certificate; it does not implement a frozen pre-existing V_Hub self-consistent calculation. No U_scf claim is made by this audit. Demonstrating support for the frozen-potential route is required before claiming U_scf. |
+| LR-22 Coupled structure–U self-consistency | NOT APPLICABLE to one-shot U_LR; OPEN for a relaxed self-consistent structure/U claim | src/hubbardflow/execution/downstream_u_admission.py:49-90 | No iterative geometry/U workflow is implemented or evidenced in the current tracked path. This does not block the limited one-shot U_LR claim, but it must not be represented as a relaxed self-consistent structure/U result. |
 
-## Evidence actually established
+## Evidence established and non-claims
 
-- The independent archive audit verifies SHA-256, 173 native outputs and 173
-  normal-exit markers.
-- Every required REFERENCE and SCREENED calculation passes its convergence
-  gate; intentionally non-self-consistent BARE calculations are not mistaken
-  for failed SCREENED calculations.
-- Direct reconstruction reproduces stored \(\chi^0\), \(\chi\), \(K\), and
-  \(U\) to \(10^{-9}\); each reconstructed matrix has rank six and modest
-  condition number.
-- The reported 3.0-Bohr result is therefore a reproducible
-  \(U_{LR}^{DFT}[P_{\mathrm{Method\,2}}(3.0,0.05)]\), not an element-wide
-  constant and not \(U_{scf}\).
-- The full native Yoltla output has SHA-256
-  `f28dbe35ff17734f9291676dccf9592e4cc0d09049d6192237be82ea4786eb20` and
-  was checked with `Siesta542PotentialShiftHamiltonianProfile.select_response`.
-  Its selected response summary is native output line 4546 (trace line 101),
-  after `stepf` at line 4516 (trace line 71) and before the first indented
-  `scf: 1` at line 4575 (trace line 130). It selects
-  `3.731167 / 0.965385 / 4.696552`; the old `3.721022 / 0.952897 / 4.673919`
-  block at trace line 67 is the parent event. The one-iteration run's
-  `SCF_NOT_CONV` at trace line 133 is expected. The selected event and parent
-  event parse from a 105-line fixture of exact output excerpts; the full
-  `siesta.out` is not checked in.
+- The birnessite generator defines a 25-node package with one reference and signed BARE/SCREENED perturbations for six inequivalent Mn sites. Its generated campaign package and the formerly cited 84-output evidence archive are not in this repository. Generator assertions are not presented as proof that those calculations ran.
+- The real NiO P5 report records 24 coordinates across two sites, two response modes, and six alpha values, with matching materialized input digests. Its six-point analysis fixture reports window sensitivity and numerical diagnostics for that analysis.
+- The real Yoltla LR-06 trace selects the intended BARE population under the source-audited SIESTA 5.4.2 profile. The full native output is cited by its SHA-256 and is not checked into the repository.
+- The M1 projector fixture contains nine measured CutoffNorm points and a production-control comparison. It establishes U's dependence on the measured projector parameter range, not a universal plateau.
+- MnO TS 23.6 ended in PAUSADO after 23/48 response nodes. Its final gates and production U-by-site results are absent. Cu3N 23.7 was not run.
+- SHA-256 values for DMs and input/evidence files are provenance and traceability records. They do not decide physical equivalence or reject a reduction. The parent-state decision uses occupation matrices and a separately declared Fermi tolerance; missing assessable state data is reported explicitly.
 
-## Architecture discrepancies requiring attention
+## Corrected statements from the previous audit
 
-### 1. Duplicated analysis paths
+1. The claim that 84 birnessite SCREENED outputs were independently audited referred to a JSON archive that is not tracked. LR-07 is therefore PARTIAL, not a verified 84-run result.
+2. The older LR-08 text said the flow did not preserve or check parent DM hashes. D16.1 now records both digests as provenance and decides on physical state equivalence. A digest mismatch is not a rejection condition.
+3. LR-16 was previously labelled NOT_APPLICABLE because the initial birnessite generator disables symmetry reduction. That is not the current acceptance question for translation shadowing. LR-16 stays OPEN until a real TS campaign proves the requested gates.
+4. The user-supplied LR-06 trace had 142 lines; the checked-in fixture has 107 non-empty lines (110 logical lines including three blank separators) and three extracted native ranges (4337, 4483-4514, and 4515-4579), not the complete supplied trace or full output. The earlier audit's 105-line fixture count was also inaccurate. docs/fdebq/TASK30_FOLLOWUP.md:5-17 records the source digest, native ranges, per-section hashes, and regeneration command.
 
-The Yoltla campaign generators embed standalone `ANALYZE` strings
-(`tools/build_k_birnessite_initial_lru.py:113-151`), while the reusable
-production implementation is `production_benchmarks/lr_arithmetic.py` and
-`src/siestaflow_hubbard/domain/matrix_lr.py`.  They currently use the same
-central-difference/direct-inversion equations, but are separate code paths.
-This is a **traceability and regression risk**, not evidence of a wrong matrix
-calculation.  Future campaign generators should import one tested production
-analysis module rather than embed a second parser/arithmetic implementation.
+## Remaining evidence to close open claims
 
-### 1a. Inversion target is explicit in the reusable matrix engine
+1. LR-14: archive a controlled supercell-size series with a completed 8×8 point and demonstrate decreasing successive changes in response and/or U(L).
+2. LR-16: complete and archive the real MnO TS validation with gates a–e and site values; separately run and document the Cu3N diagnostic. Software replay alone does not satisfy this evidence requirement.
+3. LR-02 production enforcement: review and merge PR #23 before describing the standalone projector check as an automatic gate on an actual downstream DFT+U application.
+4. LR-21/LR-22: provide an implementation and evidence of the frozen V_Hub and coupled structure/U paths before making U_scf or relaxed structure/U claims.
 
-`src/siestaflow_hubbard/domain/matrix_lr.py` now takes and preserves
-`matrix_for_inversion = raw | symmetrized`; rank, condition, inverse,
-residuals, \(K\), and reported \(U\) use exactly that selected representation.
-Raw and symmetric matrices remain distinct evidence. Materialized campaign
-generators still need to import this common production path rather than keep a
-separate embedded analysis string.
-
-### 2. Pseudoinverse is prohibited in the LR source tree
-
-The historical opt-in pseudoinverse fallback is fail-closed: enabling it now
-raises an error, and an adversarial source-tree test rejects direct
-pseudoinverse calls in `src/`. The production contract is direct inversion
-only.
-
-### 3. BARE semantic proof uses the production profile
-
-Do not replace LR-06 with a heuristic such as “two iterations means bare.”
-The stale audit finding referred to the historical ordinal selector and
-`MaxSCFIterations 2`. The production path is
-`Siesta542PotentialShiftHamiltonianProfile.select_response`, which requires
-the SIESTA 5.4.2 Hamiltonian-mixing signature, a complete pre-perturbation
-population event, and exactly one populated event between `stepf` and the
-first `scf: 1`. The real Yoltla 4x4 trace passes this path with the expected
-occupation at trace line 101. `SCF_NOT_CONV` is expected for this one-iteration
-BARE run and does not invalidate the selected event. The legacy ordinal BARE
-methods in `observation_selector.py` remain disabled and are not the active
-production selector. This evidence promotes LR-06 for that audited profile;
-it does not retroactively certify historical runs or issue the separate
-`VERIFIED_BARE` certificate.
-
-## Ordered next actions
-
-1. Add a birnessite supercell-size series and compare the final diagonal
-   \(U(L)\), not merely individual response entries.
-2. Add a production-level projector fingerprint check between LR evidence and
-   any subsequent DFT+U FDF.
-3. Consolidate the campaign analysis onto the tested production module; add a
-   regression fixture covering the semantic event selection.
-
-No numerical result should be tuned to a literature value while resolving
-these items.
+No U value is tuned to literature or experiment to resolve any open item.
