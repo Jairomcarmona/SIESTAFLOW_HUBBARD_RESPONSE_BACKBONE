@@ -37,7 +37,11 @@ class _RoundRecord(_Record):
     @classmethod
     def from_mapping(cls, payload: Mapping[str, object]) -> Self:
         try:
-            return super().from_mapping(payload)
+            normalized = dict(payload)
+            legacy_label = "calificaci\u00f3n condicional al modelo de error"
+            if normalized.get("label") == legacy_label:
+                normalized["label"] = "conditional qualification under the error model"
+            return super().from_mapping(normalized)
         except ValueError as exc:
             raise FdebqRoundsError(f"invalid {cls.__name__}: {exc}") from exc
 
@@ -272,7 +276,7 @@ class ConditionalMatrixQualification(_RoundRecord):
                 require_nonnegative_finite(radius, "half_width_u_ev")
         except ValueError as exc:
             raise FdebqRoundsError(str(exc)) from exc
-        if self.label != "calificación condicional al modelo de error":
+        if self.label != "conditional qualification under the error model":
             raise FdebqRoundsError("matrix qualification must carry the conditional-model label")
         if self.passed and (self.beta0 >= 1 or self.beta >= 1 or not self.half_width_u_ev or self.reasons):
             raise FdebqRoundsError("passing matrix requires strict beta gates and resolved U intervals")
@@ -325,7 +329,7 @@ class CalibrationQualification(_RoundRecord):
             require_sha256(self.protocol_sha256, "protocol_sha256")
         except ValueError as exc:
             raise FdebqRoundsError(str(exc)) from exc
-        if self.label != "calificación condicional al modelo de error":
+        if self.label != "conditional qualification under the error model":
             raise FdebqRoundsError("qualification must carry the conditional-model label")
         if self.status is RoundStatus.QUALIFIED and (
             self.matrix is None

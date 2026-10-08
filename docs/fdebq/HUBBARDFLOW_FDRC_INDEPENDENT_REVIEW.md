@@ -1,279 +1,279 @@
-# Revisión adversarial independiente de FDRC-v1 (HubbardFlow)
+# Independent Adversarial Review of FDRC-v1 (HubbardFlow)
 
 **Objeto revisado:** `HUBBARDFLOW_FDRC_V1_METHOD_PROPOSAL.md` + `HUBBARDFLOW_FDRC_CONTEXT_FOR_INDEPENDENT_REVIEW.md`
-**Código inspeccionado:** rama `codex/hubbardflow-rename` @ `3c1398b0a591ea622ef9726cf2f92e536b6206e2` (autoritativa); tag `scientific-v6-final` → commit `45cb53c5a98d9d55a163c05ca3b815a8ff9cfb7f` (sólo lectura, como referencia histórica).
-**Datos usados para ilustración:** `results/stage-ub-v6-observables/coo-u-b-campaigns/stageubv6-coo-a0/lr_u_analysis.v3.json` (lectura; ningún artefacto V6 fue modificado). Todos los cálculos numéricos de este informe son reproducibles con `fdrc_review_numerics.py` (adjunto).
+**Code inspected:** branch `codex/hubbardflow-rename` @ `3c1398b0a591ea622ef9726cf2f92e536b6206e2` (authoritative); tag `scientific-v6-final` → commit `45cb53c5a98d9d55a163c05ca3b815a8ff9cfb7f` (read-only, as historical reference).
+**Data used for illustration:** `results/stage-ub-v6-observables/coo-u-b-campaigns/stageubv6-coo-a0/lr_u_analysis.v3.json` (read-only; no V6 artifact was modified). All numerical calculations in this report are reproducible with the attached `fdrc_review_numerics.py`.
 **Fecha:** 2026-10-01
 
-> **Advertencia de alcance.** Los cálculos sobre CoO son *ilustraciones post-hoc sobre un sistema de desarrollo*, no validación. Se usan para falsar o apoyar supuestos, nunca para fijar umbrales ni para reinterpretar la calificación V6 de CoO.
+> **Scope warning.** The CoO calculations are *post-hoc illustrations on a development system*, not validation. They are used to falsify or support assumptions, never to set thresholds or reinterpret the V6 CoO qualification.
 
 ---
 
-## Resumen ejecutivo
+## Executive summary
 
-**Veredicto: REEMPLAZAR la metodología de decisión de FDRC-v1.** Se conserva su *diseño de medición* (pares simétricos \(\pm a\), diferencias centrales, varias escalas, compuerta de estado, procedencia), pero se sustituye su *lógica de calificación* (cocientes \(C\), \(D\), ventanas anidadas, intersecciones obligatorias, noise floor desde controles \(\alpha=0\)) por una **calificación por presupuesto de error específico del estimador** (en adelante **FD-EBQ**, *Finite-Difference Error-Budget Qualification*).
+**Verdict: REPLACE the FDRC-v1 decision methodology.** Preserve its *measurement design* (symmetric pairs \(\pm a\), central differences, multiple scales, state gate, provenance), but replace its *qualification logic* (ratios \(C\), \(D\), nested windows, mandatory intersections, and noise floor from \(\alpha=0\) controls) with **estimator-specific error-budget qualification** (hereafter **FD-EBQ**, *Finite-Difference Error-Budget Qualification*).
 
-Hallazgos principales, ordenados por gravedad:
+Main findings, ordered by severity:
 
-1. **La calificación tiene que ser específica del estimador, y FDRC-v1 no lo es.** FDRC-v1 analiza la pendiente central \(s(a)\), pero el estimador de producción V6 es el coeficiente \(c_1\) de un ajuste cúbico. Son funcionales lineales distintos de los mismos datos, con ganancias de ruido distintas (en el grid V6: \(\sum|w|=21.4\ \mathrm{eV^{-1}}\) lineal, \(58.3\ \mathrm{eV^{-1}}\) cúbico, \(50\ \mathrm{eV^{-1}}\) central a 0.02 eV) y errores de truncamiento de orden distinto (\(O(a^2)\) vs \(O(a^4)\)). Calificar una ventana "para la derivada" sin decir *con qué estimador* no tiene contenido matemático.
+1. **Qualification must be estimator-specific, and FDRC-v1 is not.** FDRC-v1 analyzes the central slope \(s(a)\), but the V6 production estimator is the coefficient \(c_1\) of a cubic fit. These are distinct linear functionals of the same data, with different noise gains (on the V6 grid: \(\sum|w|=21.4\ \mathrm{eV^{-1}}\) for linear, \(58.3\ \mathrm{eV^{-1}}\) for cubic, and \(50\ \mathrm{eV^{-1}}\) for central at 0.02 eV) and different truncation-error orders (\(O(a^2)\) vs. \(O(a^4)\)). Qualifying a window "for the derivative" without specifying *which estimator* has no mathematical meaning.
 
-2. **El modelo \(E(a)\sim C_{\rm num}/a + C_{\rm nl}a^2\) es incompleto en el punto que más importa.** Faltan componentes de error *independientes de \(a\)* (error SCF relativo, sesgo del Hamiltoniano/DM parental). Ningún diagnóstico multiescala puede verlos: en la prueba sintética, un sesgo SCF relativo de \(10^{-3}\) produce **cobertura 0 %** con todos los diagnósticos multiescala en verde. Sólo una **escalera de tolerancias SCF sobre la diferencia \(n(+a)-n(-a)\)** lo detecta.
+2. **The model \(E(a)\sim C_{\rm num}/a + C_{\rm nl}a^2\) is incomplete where it matters most.** It omits error components *independent of \(a\)* (relative SCF error, reference-Hamiltonian/parent-DM bias). No multiscale diagnostic can detect them: in the synthetic test, a relative SCF bias of \(10^{-3}\) yields **0% coverage** while every multiscale diagnostic is green. Only an **SCF-tolerance ladder applied to the difference \(n(+a)-n(-a)\)** detects it.
 
-3. **El noise floor por réplicas a \(\alpha=0\) (ya implementado en `domain/occupation_noise_calibration.py`) mide reproducibilidad, no exactitud**, y a \(\alpha=0\) un reinicio desde la DM convergida converge casi sin iterar, así que subestima sistemáticamente el error a \(\alpha\neq0\). El propio código lo admite (`transfer_to_nonzero_alpha_established: False`). No debe ser la base del noise floor.
+3. **The replica-based noise floor at \(\alpha=0\) (already implemented in `domain/occupation_noise_calibration.py`) measures reproducibility, not accuracy.** At \(\alpha=0\), a restart from the converged DM converges with almost no iterations, so this systematically underestimates the error at \(\alpha\neq0\). The code itself acknowledges this (`transfer_to_nonzero_alpha_established: False`). It must not be the basis of the noise floor.
 
-4. **BARE y SCREENED viven en regímenes de error opuestos** (CoO V6): BARE está dominado por truncamiento suave (cociente de derivas 1.645 frente a 1.667 teórico para \(c_3a^2\); \(c_3\approx9.4\ \mathrm{e/eV^3}\)); SCREENED está dominado por ruido (derivas \(\le10^{-4}\) con cocientes \(\pm4\), signo errático). Exigir **una ventana común y un estimador común** fuerza un compromiso subóptimo. Ilustración: con el estimador V6 los dos sitios AFM equivalentes por simetría difieren en 2.1 meV; usando Richardson para BARE y diferencia central a 0.02 eV para SCREENED difieren en 1.1×10⁻⁵ eV.
+4. **BARE and SCREENED occupy opposite error regimes** (CoO V6): BARE is dominated by smooth truncation (drift ratio 1.645 versus the theoretical 1.667 for \(c_3a^2\); \(c_3\approx9.4\ \mathrm{e/eV^3}\)); SCREENED is noise-dominated (drifts \(\le10^{-4}\), ratios \(\pm4\), erratic signs). Requiring **a common window and a common estimator** forces a suboptimal compromise. Illustration: with the V6 estimator, two AFM sites equivalent by symmetry differ by 2.1 meV; using Richardson for BARE and a central difference at 0.02 eV for SCREENED, they differ by 1.1×10⁻⁵ eV.
 
-5. **La componente par está contaminada y es irrelevante para la pendiente.** En una malla simétrica, el estimador de mínimos cuadrados de los coeficientes impares depende *sólo* de la parte impar de los datos. La parte par mide curvatura \(c_2\), \(c_4\) **y** un desplazamiento de referencia \(\delta_0\) (CoO BARE: \(\delta_0\approx\pm2\times10^{-5}\) e, unos 40 cuantos de impresión). Por tanto, \(C^m_J(a)\) de FDRC-v1, los tests de residuo del ajuste completo y el criterio `nonlinear_residual` de `alpha_selection.py` penalizan términos que **no afectan** a \(\chi\).
+5. **The even component is contaminated and irrelevant to the slope.** On a symmetric grid, the least-squares estimator of odd coefficients depends *only* on the odd part of the data. The even part measures curvature \(c_2\), \(c_4\) **and** a reference offset \(\delta_0\) (CoO BARE: \(\delta_0\approx\pm2\times10^{-5}\) e, about 40 print quanta). Therefore, FDRC-v1's \(C^m_J(a)\), full-fit residual tests, and `nonlinear_residual` criterion in `alpha_selection.py` penalize terms that **do not affect** \(\chi\).
 
-6. **La métrica V6 "model sensitivity" \(|U_{\rm cúbico}-U_{\rm lineal}|\) mide el sesgo \(O(a^2)\) conocido del estimador inferior, no la incertidumbre del estimador usado.** En CoO, BARE está en régimen asintótico verificado; la diferencia lineal–cúbico es esencialmente \(c_3\sum_k w_k\alpha_k^3\) del estimador lineal. La calificación `REVIEW` de CoO es plausiblemente un artefacto de esta métrica. *Esto no modifica el estado V6 congelado*; sólo indica que FD-EBQ no debe heredar esa métrica como incertidumbre.
+6. **The V6 "model sensitivity" metric \(|U_{\rm cubic}-U_{\rm linear}|\) measures the known \(O(a^2)\) bias of the lower-order estimator, not uncertainty in the estimator being used.** In CoO, BARE is in a verified asymptotic regime; the linear–cubic difference is essentially \(c_3\sum_k w_k\alpha_k^3\) for the linear estimator. CoO's `REVIEW` qualification is plausibly an artifact of this metric. *This does not change the frozen V6 status*; it only indicates that FD-EBQ must not inherit this metric as uncertainty.
 
-7. **Existe una prueba de falsación interna gratuita que FDRC-v1 no usa: reciprocidad \(\chi_{IJ}=\chi_{JI}\)** (tanto \(\chi^0\) como \(\chi\) son simétricas en la teoría exacta). Dos columnas obtenidas con perturbaciones distintas dan dos estimaciones independientes del mismo número. Hoy la simetrización la oculta.
+7. **FDRC-v1 does not use a free internal falsification test: reciprocity \(\chi_{IJ}=\chi_{JI}\)** (both \(\chi^0\) and \(\chi\) are symmetric in the exact theory). Two columns obtained from distinct perturbations provide two independent estimates of the same value. Current symmetrization hides this check.
 
-8. **Una ventana común multi-sitio no es un requisito matemático.** Columnas obtenidas con mallas distintas son perfectamente válidas si cada elemento lleva su presupuesto de error. Declarar `NOT_ESTABLISHED` cuando la intersección es vacía rechaza sistemas heterogéneos sanos.
+8. **A common multi-site window is not a mathematical requirement.** Columns obtained on different grids are valid as long as each element carries its own error budget. Declaring `NOT_ESTABLISHED` when the intersection is empty rejects healthy heterogeneous systems.
 
-9. **FDRC-v1 ignora que la rama ya contiene tres mecanismos de selección de \(\alpha\) solapados** (`alpha_selection.py`/`adaptive_alpha.py`, `adaptive_alpha_control.py`, y la calibración de ruido/réplicas), dos clases distintas llamadas `AdaptiveAlphaPolicy`, umbrales numéricos por defecto ya codificados (0.02, 0.05, 10, 0.05), y un controlador en producción (`campaign_runner._execute_adaptive_gate` → `decide_round`) que **para por estabilidad de \(U\) entre rondas** con un contador histórico. Esto viola dos restricciones del propio encargo (no usar \(U\) como criterio de selección; decisión independiente del historial).
+9. **FDRC-v1 ignores three overlapping alpha-selection mechanisms already in the branch** (`alpha_selection.py`/`adaptive_alpha.py`, `adaptive_alpha_control.py`, and noise/replica calibration), two distinct classes named `AdaptiveAlphaPolicy`, hard-coded numeric defaults (0.02, 0.05, 10, 0.05), and a production controller (`campaign_runner._execute_adaptive_gate` → `decide_round`) that **stops based on U stability across rounds** using a historical counter. This violates two requirements of the task itself (do not use U as a selection criterion; make decisions independent of history).
 
-10. **La frontera `ResolvedPerturbationPlan` es insuficiente.** Como la calificación depende del estimador, del nivel SCF y del modo, el objeto que cruza la frontera debe ser un **`ResolvedResponseProtocol`**: malla por (sitio, modo), estimador por (sitio, modo), nivel SCF, y referencia a la evidencia de presupuesto.
+10. **The `ResolvedPerturbationPlan` boundary is insufficient.** Because qualification depends on the estimator, SCF level, and mode, the object crossing this boundary must be a **`ResolvedResponseProtocol`**: grid by (site, mode), estimator by (site, mode), SCF level, and a reference to the budget evidence.
 
-**Bloqueo científico principal:** la componente SCF del noise floor (absoluta y, sobre todo, relativa/independiente de \(a\)). La cuantización de impresión ya está resuelta de forma rigurosa en el código.
+**Main scientific blocker:** the SCF component of the noise floor (absolute and, especially, relative/independent of \(a\)). Print quantization is already rigorously handled in the code.
 
 ---
 
 ## A. Reconstruction of the problem
 
-Sea \(\mathbf n^m(\boldsymbol\alpha)\in\mathbb R^N\) el vector de ocupaciones de los \(N\) subespacios correlacionados en el estado \(m\in\{\mathrm{BARE},\mathrm{SCREENED}\}\), con \(\boldsymbol\alpha\) el vector de desplazamientos de potencial sobre los proyectores. El objeto científico es el Jacobiano en el origen,
+Let \(\mathbf n^m(\boldsymbol\alpha)\in\mathbb R^N\) be the occupation vector for the \(N\) correlated subspaces in state \(m\in\{\mathrm{BARE},\mathrm{SCREENED}\}\), where \(\boldsymbol\alpha\) is the vector of potential shifts on the projectors. The scientific target is the Jacobian at the origin,
 \[
 \chi^m_{IJ}=\left.\frac{\partial n^m_I}{\partial\alpha_J}\right|_{\boldsymbol\alpha=0},
 \qquad
 U=(\chi^0)^{-1}-\chi^{-1},
 \]
-donde \(\chi^0\) es la respuesta sin autoconsistencia (primera diagonalización de \(H_{\rm ref}+\alpha P_J\) desde la DM parental; perfil `siesta542_bare_profile.py`) y \(\chi\) la respuesta autoconsistente.
+where \(\chi^0\) is the non-self-consistent response (the first diagonalization of \(H_{\rm ref}+\alpha P_J\) from the parent DM; profile `siesta542_bare_profile.py`) and \(\chi\) is the self-consistent response.
 
-HubbardFlow no tiene acceso al Jacobiano: sólo puede evaluar \(\mathbf n^m\) en puntos \(\alpha_J=\pm a_k\) (una columna \(J\) por perturbación, todas las filas \(I\) a la vez), y cada evaluación es:
+HubbardFlow cannot access the Jacobian: it can only evaluate \(\mathbf n^m\) at points \(\alpha_J=\pm a_k\) (one column \(J\) per perturbation, all rows \(I\) at once), and each evaluation is:
 
-- **truncada** por la salida impresa (SIESTA estándar: `f12.6`, semipaso \(5\times10^{-7}\) e por token);
-- **inexacta** por SCF incompleto (tolerancias finitas, historia de mezcla, reinicio desde la DM parental);
-- **sesgada** de forma común por la calidad de la referencia (\(H_{\rm ref}\), DM parental);
-- **potencialmente discontinua** si el punto cae en otra rama (orden orbital, magnético, metaestable).
+- **truncated** by printed output (standard SIESTA: `f12.6`, half-step \(5\times10^{-7}\) e per token);
+- **inexact** due to incomplete SCF (finite tolerances, mixing history, restart from the parent DM);
+- **commonly biased** by reference quality (\(H_{\rm ref}\), parent DM);
+- **potentially discontinuous** if the point falls on another branch (orbital order, magnetic order, metastability).
 
-Cualquier estimador práctico es un funcional lineal de los datos de una columna,
+Any practical estimator is a linear functional of the data in one column,
 \[
 \hat\chi^m_{IJ}=\sum_k w_k\,n^m_I(\alpha_k),\qquad \sum_k w_k=0,\quad\sum_k w_k\alpha_k=1,
 \]
-y su error tiene tres naturalezas distintas: (i) error de datos amplificado por \(\sum_k|w_k|\); (ii) error de modelo (truncamiento) controlado por los momentos \(\sum_k w_k\alpha_k^p\) de orden superior al eliminado; (iii) errores que no dependen de la malla. El problema de "elegir \(\alpha\)" es, en realidad, **elegir un par (malla, estimador) por columna y modo, y demostrar una cota del error resultante que sea suficientemente pequeña para la precisión de \(U\) que se declara**, sin usar el valor de \(U\) como señal de calidad.
+and its error has three distinct components: (i) data error amplified by \(\sum_k|w_k|\); (ii) model (truncation) error controlled by moments \(\sum_k w_k\alpha_k^p\) above the canceled order; and (iii) errors that do not depend on the grid. The problem of "choosing \(\alpha\)" is really **choosing a (grid, estimator) pair for each column and mode, and demonstrating that the resulting error bound is sufficiently small for the stated precision of \(U\)**, without using the value of \(U\) as a quality signal.
 
-Este es el planteamiento que uso en todo el informe. Difiere del de FDRC-v1 en que (a) el estimador es parte de la decisión, (b) la tolerancia sale de un requisito declarado sobre \(U\) propagado por las matrices reales, y (c) los errores independientes de \(a\) se miden aparte.
+This is the framing used throughout the report. It differs from FDRC-v1 in that (a) the estimator is part of the decision, (b) the tolerance comes from a declared requirement on \(U\), propagated through the actual matrices, and (c) errors independent of \(a\) are measured separately.
 
 ---
 
 ## B. Audit of FDRC-v1 assumptions
 
-| # | Supuesto (explícito o implícito) | Tipo | Evaluación |
+| # | Assumption (explicit or implicit) | Type | Assessment |
 |---|---|---|---|
-| B1 | Existe una ventana intermedia en \(a\) donde el error total es pequeño | Num. | Correcto **sólo** para las componentes que dependen de \(a\). Falla si domina un error independiente de \(a\) (§C.4). |
-| B2 | El error numérico de ocupaciones se resume en un escalar \(\epsilon_n\) | Num./Estad. | **Falso.** Hay al menos cuatro componentes con escalados distintos: impresión (cota exacta), SCF absoluto (\(\propto1/a\) en la pendiente), SCF relativo (\(\propto|\chi|\), independiente de \(a\)), sesgo de referencia (independiente de \(a\)). |
-| B3 | Ese \(\epsilon_n\) se puede estimar con réplicas deterministas, \(\alpha=0\), etc. | Estad. | Las réplicas deterministas miden *reproducibilidad del camino*, no exactitud; \(\alpha=0\) reiniciado desde DM convergida no ejercita el SCF. Ver §E. |
-| B4 | La pendiente central \(s(a)\) es el objeto a calificar | Mat. | **Falso para producción**: el estimador V6 es \(c_1\) cúbico. La calificación debe referirse al funcional realmente usado. |
-| B5 | La componente par detecta no linealidad / asimetría | Mat. | Detecta curvatura par y **desplazamiento de referencia \(\delta_0\)**, ninguno de los cuales afecta a \(\hat\chi\) en malla simétrica. Útil sólo como detector de anomalías de estado. |
-| B6 | Estabilidad de pendientes entre escalas (\(D\)) evidencia linealidad | Num. | Acuerdo no implica exactitud: (i) dos valores ruidosos pueden coincidir por azar; (ii) un sesgo común pasa; (iii) no distingue \(O(a)\) de \(O(a^2)\). Se necesita verificación de orden y cotas explícitas. |
-| B7 | Richardson es secundario | Num. | Invertido. La estimación de error tipo Richardson (con verificación de orden) es el núcleo defendible; el estimador extrapolado es un candidato legítimo cuando el orden está verificado. |
-| B8 | Hace falta ventana común BARE∩SCREENED | Mat. | No es requisito matemático; las corridas ya son nodos separados (`PerturbationSpec.mode`). Ver §F. |
-| B9 | Hace falta ventana común entre todos los sitios | Mat. | No es requisito matemático. Ver §F. |
-| B10 | Umbrales fijos \(S_{\min},D_{\max},C_{\max},R_{\max}\) | Estad. | La mayoría deben ser cantidades **derivadas** (ganancias, cotas) y un requisito **declarado** (precisión de \(U\)), no umbrales calibrados. Quedan pocos parámetros genuinos (§K). |
-| B11 | Calibración y certificabilidad matricial son independientes | Arq./Mat. | Parcial. No hay que *ajustar \(\alpha\)* para mejorar \(\kappa\), pero el condicionamiento **sí fija la exactitud requerida** de \(\chi\). Separar "qué ventanas son válidas" (independiente de la matriz) de "qué exactitud se necesita" (depende de la matriz). |
-| B12 | El estado electrónico se puede verificar con convergencia y momentos | E.E. | Insuficiente: cambios de orden orbital pueden conservar los momentos; momentos cambian legítimamente con \(\alpha\) (respuesta lineal del momento). Hay que inspeccionar matrices de ocupación locales y **suavidad**, no constancia. |
-| B13 | Las corridas piloto son distintas de las de producción | Arq. | En FD-EBQ la evidencia de calibración **es** la evidencia de producción; la "promoción" se reduce a la clave de identidad de nodo que ya existe (§I.9). |
-| B14 | Un grid V6 como semilla es neutral | Val. | Introduce sesgo de selección hacia los cuatro óxidos. La semilla debe derivarse de una red versionada + un piloto BARE barato. |
-| B15 | La decisión es función del conjunto de evidencia | Arq. | Correcto como requisito, pero **el controlador existente lo viola** (`stable_comparisons`, dirección de refinamiento persistida). |
-| B16 | La referencia \(\alpha=0\) es intercambiable con el parent | E.E. | El diferencial central no usa \(n(0)\); el par sí. Diferencias de referencia aparecen como \(\delta_0\) y no deben confundirse con curvatura. |
-| B17 | Las respuestas son analíticas en \(\alpha=0\) | E.E. | Falso para metales a baja temperatura electrónica y en fronteras de fase: términos \(\alpha|\alpha|\) (impares) dan error \(O(a)\). Requiere verificación de orden. |
-| B18 | Se puede representar cualquier \(a\) | Num. | El FDF se escribe con resolución \(10^{-4}\) eV (`_fdf_representable`). La red de amplitudes debe ser representable exactamente. |
+| B1 | There is an intermediate window in \(a\) where total error is small | Numerical | Correct **only** for components that depend on \(a\). Fails if an \(a\)-independent error dominates (§C.4). |
+| B2 | Numerical occupation error can be summarized by one scalar \(\epsilon_n\) | Numerical/statistical | **False.** At least four components have different scaling: print quantization (exact bound), absolute SCF error (\(\propto1/a\) in the slope), relative SCF error (\(\propto|\chi|\), independent of \(a\)), and reference bias (independent of \(a\)). |
+| B3 | That \(\epsilon_n\) can be estimated from deterministic replicas, \(\alpha=0\), etc. | Statistical | Deterministic replicas measure *path reproducibility*, not accuracy; a restart from converged DM at \(\alpha=0\) does not exercise SCF. See §E. |
+| B4 | The central slope \(s(a)\) is the quantity to qualify | Mathematical | **False for production**: the V6 estimator is cubic \(c_1\). Qualification must apply to the functional actually used. |
+| B5 | The even component detects nonlinearity/asymmetry | Mathematical | Detects even curvature and **reference offset \(\delta_0\)**, neither of which affects \(\hat\chi\) on a symmetric grid. Useful only as a state-anomaly detector. |
+| B6 | Slope stability across scales (\(D\)) is evidence of linearity | Numerical | Agreement does not imply accuracy: (i) two noisy values may coincide by chance; (ii) common bias passes; (iii) it does not distinguish \(O(a)\) from \(O(a^2)\). Order verification and explicit bounds are needed. |
+| B7 | Richardson is secondary | Numerical | The reverse is true. Richardson-type error estimation (with order verification) is the defensible core; the extrapolated estimator is a valid candidate when its order is verified. |
+| B8 | A common BARE∩SCREENED window is required | Mathematical | Not mathematically required; runs are already separate nodes (`PerturbationSpec.mode`). See §F. |
+| B9 | A common window across all sites is required | Mathematical | Not mathematically required. See §F. |
+| B10 | Fixed thresholds \(S_{\min},D_{\max},C_{\max},R_{\max}\) | Statistical | Most should be **derived** quantities (gains, bounds) and a **declared** requirement (precision of \(U\)), not calibrated thresholds. Few genuine parameters remain (§K). |
+| B11 | Calibration and matrix certifiability are independent | Architectural/mathematical | Partly. Do not *tune \(\alpha\)* to improve \(\kappa\), but conditioning **does determine the required accuracy** of \(\chi\). Separate "which windows are valid" (matrix-independent) from "what accuracy is needed" (matrix-dependent). |
+| B12 | Electronic state can be verified with convergence and moments | Electronic state | Insufficient: orbital-order changes can preserve moments; moments legitimately change with \(\alpha\) (linear moment response). Inspect local occupation matrices and **smoothness**, not constancy. |
+| B13 | Pilot runs differ from production runs | Architectural | In FD-EBQ, calibration evidence **is** production evidence; "promotion" reduces to the existing node-identity key (§I.9). |
+| B14 | A V6 grid is a neutral seed | Validation | It introduces selection bias toward the four oxides. The seed should derive from a versioned grid plus a cheap BARE pilot. |
+| B15 | The decision is a function of the evidence set | Architectural | Correct as a requirement, but **the existing controller violates it** (`stable_comparisons`, persisted refinement direction). |
+| B16 | The \(\alpha=0\) reference is interchangeable with the parent | Electronic state | The central difference does not use \(n(0)\); the even pair does. Reference differences appear as \(\delta_0\) and must not be confused with curvature. |
+| B17 | Responses are analytic at \(\alpha=0\) | Electronic state | False for metals at low electronic temperature and at phase boundaries: \(\alpha|\alpha|\) (odd) terms cause \(O(a)\) error. Order verification is required. |
+| B18 | Any \(a\) can be represented | Numerical | The FDF is written with \(10^{-4}\) eV resolution (`_fdf_representable`). The amplitude grid must be exactly representable. |
 
 ---
 
 ## C. Mathematical analysis
 
-### C.1 Desacople par/impar (resultado que FDRC-v1 no explota)
+### C.1 Even/odd decoupling (a result FDRC-v1 does not exploit)
 
-Para una malla simétrica \(\{\pm a_k\}\) (con o sin \(\alpha=0\)) y una base polinómica \(\{\alpha^p\}\), las columnas pares e impares de la matriz de diseño son ortogonales: \(\sum_{\pm,k}(\pm a_k)^{p}(\pm a_k)^{q}=0\) si \(p+q\) es impar. Por tanto, para **cualquier** ajuste de mínimos cuadrados (lineal, cúbico, de cualquier grado) sobre malla simétrica:
+For a symmetric grid \(\{\pm a_k\}\) (with or without \(\alpha=0\)) and polynomial basis \(\{\alpha^p\}\), the even and odd columns of the design matrix are orthogonal: \(\sum_{\pm,k}(\pm a_k)^{p}(\pm a_k)^{q}=0\) when \(p+q\) is odd. Therefore, for **any** least-squares fit (linear, cubic, or any degree) on a symmetric grid:
 \[
-\hat c_1=\text{función sólo de }\;o_k=\tfrac12[n(+a_k)-n(-a_k)].
+\hat c_1=\text{function only of }\;o_k=\tfrac12[n(+a_k)-n(-a_k)].
 \]
-Consecuencias:
+Consequences:
 
-- \(n(0)\), \(c_2\), \(c_4\) y cualquier desplazamiento de referencia **no afectan** a \(\hat\chi\).
-- Un test de residuo o \(R^2\) sobre el ajuste completo mezcla residuos pares (irrelevantes) con impares (relevantes). En CoO BARE, el residuo máximo del cúbico V6 (\(1.36\times10^{-5}\) e, 27 cuantos de impresión) se explica por el término par \(c_4\alpha^4\) con \(c_4\approx-7.8\), que el cúbico no modela y que **no contamina** \(\hat c_1\).
-- El criterio `nonlinear_residual` de `alpha_selection.py` (residuos de OLS lineal incluyendo curvatura par) rechaza ventanas por un motivo irrelevante para \(\chi\).
+- \(n(0)\), \(c_2\), \(c_4\), and any reference offset **do not affect** \(\hat\chi\).
+- A residual or \(R^2\) test on the full fit mixes even residuals (irrelevant) with odd residuals (relevant). In CoO BARE, the maximum residual of the V6 cubic fit (\(1.36\times10^{-5}\) e, 27 print quanta) is explained by the even term \(c_4\alpha^4\), with \(c_4\approx-7.8\), which the cubic fit does not model and which **does not contaminate** \(\hat c_1\).
+- The `nonlinear_residual` criterion in `alpha_selection.py` (linear OLS residuals including even curvature) rejects windows for a reason irrelevant to \(\chi\).
 
-### C.2 Todo estimador es un funcional; su calificación es suya
+### C.2 Every estimator is a functional; qualification belongs to that estimator
 
-Sobre los datos impares, el problema se reduce a la secuencia de pendientes centrales \(s_k=o_k/a_k\) con modelo suave
+For the odd data, the problem reduces to the sequence of central slopes \(s_k=o_k/a_k\) with smooth model
 \[
 s(a)=\chi+b_1a^2+b_2a^4+\cdots\qquad(b_1=c_3,\ b_2=c_5).
 \]
-Un estimador \(\hat\chi=\sum_k v_k s_k\) con \(\sum v_k=1\) tiene:
+An estimator \(\hat\chi=\sum_k v_k s_k\) with \(\sum v_k=1\) has:
 \[
-\text{truncamiento}=\sum_{p\ge1} b_p\,\mu_p,\qquad \mu_p=\sum_k v_k a_k^{2p};
+\text{truncation}=\sum_{p\ge1} b_p\,\mu_p,\qquad \mu_p=\sum_k v_k a_k^{2p};
 \qquad
-\text{ganancia de ruido sobre }o:\ G=\sum_k|v_k|/a_k .
+\text{noise gain on }o:\ G=\sum_k|v_k|/a_k .
 \]
-- Diferencia central en \(a_k\): \(\mu_1=a_k^2\), \(G=1/a_k\) (sobre ocupaciones: \(\sum|w|=1/a_k\cdot\) [dos puntos de peso \(1/2a_k\)]).
+- Central difference at \(a_k\): \(\mu_1=a_k^2\), \(G=1/a_k\) (for occupations: \(\sum|w|=1/a_k\cdot\) [two points with weight \(1/2a_k\)]).
 - Richardson de dos escalas \((a_k,a_{k+1})\): \(\mu_1=0\), \(\mu_2=-a_k^2a_{k+1}^2\).
-- Cúbico V6 en \(\{\pm0.02,\pm0.04,\pm0.06\}\): \(\mu_1=0\) exactamente; \(\sum_k w_k\alpha_k^5=-3.99\times10^{-6}\); \(\sum|w|=58.3\ \mathrm{eV^{-1}}\).
-- Lineal OLS en el mismo grid: \(\sum w_k\alpha_k^3=2.8\times10^{-3}\); \(\sum|w|=21.4\ \mathrm{eV^{-1}}\).
+- V6 cubic on \(\{\pm0.02,\pm0.04,\pm0.06\}\): \(\mu_1=0\) exactly; \(\sum_k w_k\alpha_k^5=-3.99\times10^{-6}\); \(\sum|w|=58.3\ \mathrm{eV^{-1}}\).
+- Linear OLS on the same grid: \(\sum w_k\alpha_k^3=2.8\times10^{-3}\); \(\sum|w|=21.4\ \mathrm{eV^{-1}}\).
 
-**El cúbico V6 es un Richardson ponderado disfrazado.** Elimina \(b_1\) a cambio de ~2.7× la ganancia de ruido del lineal. Eso es óptimo cuando domina el truncamiento (BARE en CoO) y subóptimo cuando domina el ruido (SCREENED en CoO). Ningún diagnóstico sobre \(s(a)\) que no conozca \(v\) puede calificarlo.
+**The V6 cubic is a disguised weighted Richardson estimator.** It removes \(b_1\) at the cost of about 2.7× the noise gain of the linear estimator. This is optimal when truncation dominates (CoO BARE) and suboptimal when noise dominates (CoO SCREENED). No diagnostic of \(s(a)\) that does not know \(v\) can qualify it.
 
-### C.3 Auditoría de los diagnósticos propuestos
+### C.3 Audit of the proposed diagnostics
 
-| Diagnóstico FDRC-v1 | Defecto |
+| FDRC-v1 diagnostic | Defect |
 |---|---|
-| 7.1 Resolución de señal \(\|\mathbf n(+a)-\mathbf n(-a)\|\) vs floor | Correcto en espíritu, pero debe aplicarse a la **ganancia del estimador** y por elemento, no a la norma de columna (los elementos cruzados pequeños quedan sin resolver aunque la norma lo esté). |
-| 7.2 Consistencia \(\pm\alpha\) | Equivale a la componente par; ver abajo. |
-| 7.3 \(C^m_J(a)=\|e\|/(\|o\|+E_{\rm floor})\) | Contaminado por \(\delta_0\) (desplazamiento de referencia) y por \(c_2a^2\), ninguno relevante para \(\hat\chi\). A amplitud pequeña, \(\delta_0\) domina: \(C\) se dispara precisamente donde la pendiente es mejor. CoO BARE: \(\delta_0\approx2\times10^{-5}\) e vs \(o(0.02)\approx2.7\times10^{-2}\) e. |
-| 7.4 Deriva \(D^m_J(a_p,a_q)\) normalizada por \(S^m_J\) | No distingue ruido de truncamiento; el umbral \(D_{\max}\) no tiene derivación; la normalización por columna oculta elementos cruzados; no identifica el orden. |
-| 7.5 Ventanas anidadas \(W_1,W_2,W_3\) | Redundantes y fuertemente correlacionadas (comparten puntos); "coherencia" sin cota no tiene interpretación. |
-| 7.6 Estado | Necesario pero subespecificado (§I.5). |
-| 8 Richardson secundario | Debe ser primario como **estimación de error** con verificación de orden. |
+| 7.1 Signal resolution \(\|\mathbf n(+a)-\mathbf n(-a)\|\) vs. floor | Sound in spirit, but must be applied to **estimator gain** and per element, not the column norm (small cross-elements remain unresolved even when the norm is resolved). |
+| 7.2 \(\pm\alpha\) consistency | Equivalent to the even component; see below. |
+| 7.3 \(C^m_J(a)=\|e\|/(\|o\|+E_{\rm floor})\) | Contaminated by \(\delta_0\) (reference offset) and \(c_2a^2\), neither relevant to \(\hat\chi\). At small amplitude, \(\delta_0\) dominates: \(C\) spikes precisely where the slope is best. CoO BARE: \(\delta_0\approx2\times10^{-5}\) e vs. \(o(0.02)\approx2.7\times10^{-2}\) e. |
+| 7.4 Drift \(D^m_J(a_p,a_q)\) normalized by \(S^m_J\) | Does not distinguish noise from truncation; threshold \(D_{\max}\) has no derivation; column normalization hides cross-elements; does not identify order. |
+| 7.5 Nested windows \(W_1,W_2,W_3\) | Redundant and strongly correlated (they share points); "coherence" without a bound has no interpretation. |
+| 7.6 State | Necessary but underspecified (§I.5). |
+| 8 Richardson secondary | Should be primary as an **error estimate** with order verification. |
 
-### C.4 El modelo de error correcto
+### C.4 The correct error model
 
-Para la ocupación impresa \(\tilde n_I(\alpha)\) en el punto \(\alpha\):
+For the printed occupation \(\tilde n_I(\alpha)\) at point \(\alpha\):
 \[
-\tilde n_I(\alpha)=n_I(\alpha)+\underbrace{\rho_I(\alpha)}_{\text{impresión}}+\underbrace{r^{\rm abs}_I(\alpha)}_{\text{SCF abs.}}+\underbrace{r^{\rm rel}_I(\alpha)}_{\text{SCF rel.}}+\underbrace{\beta_I(\alpha)}_{\text{referencia}},
+\tilde n_I(\alpha)=n_I(\alpha)+\underbrace{\rho_I(\alpha)}_{\text{print quantization}}+\underbrace{r^{\rm abs}_I(\alpha)}_{\text{SCF abs.}}+\underbrace{r^{\rm rel}_I(\alpha)}_{\text{SCF rel.}}+\underbrace{\beta_I(\alpha)}_{\text{reference}},
 \]
-con \(|\rho_I|\le q_I\) (exacto, de los tokens), \(|r^{\rm abs}|\le\varepsilon_{\rm abs}\), \(|r^{\rm rel}|\le\varepsilon_{\rm rel}|n_I(\alpha)-n_I(0)|\), y \(\beta\) una función **suave** de \(\alpha\) (p. ej. el efecto de un \(H_{\rm ref}\) no convergido sobre toda la familia de corridas BARE). El error del estimador es entonces
+where \(|\rho_I|\le q_I\) (exact, from the tokens), \(|r^{\rm abs}|\le\varepsilon_{\rm abs}\), \(|r^{\rm rel}|\le\varepsilon_{\rm rel}|n_I(\alpha)-n_I(0)|\), and \(\beta\) is a **smooth** function of \(\alpha\) (e.g. the effect of an unconverged \(H_{\rm ref}\) across the family of BARE runs). The estimator error is then
 \[
 |\hat\chi-\chi|\ \le\ \underbrace{G\,q}_{\text{1/a}}+\underbrace{G\,\varepsilon_{\rm abs}}_{\text{1/a}}+\underbrace{\varepsilon_{\rm rel}\,\textstyle\sum_k|v_k|\,|s_k|}_{\text{independiente de }a}+\underbrace{|\textstyle\sum_p b_p\mu_p|}_{\text{truncamiento}}+\underbrace{|\partial_\alpha\beta|}_{\text{independiente de }a}.
 \]
-Sólo los términos 1, 2 y 4 tienen la estructura \(C/a+Ca^2\). **Los términos 3 y 5 son invisibles para cualquier análisis multiescala**: desplazan todas las pendientes por igual. Por eso FDRC-v1, aun perfectamente implementado, puede emitir PASS con un error arbitrario. Esto no es teórico: la prueba sintética (Apéndice) da cobertura 0.000 con sesgo relativo \(10^{-3}\).
+Only terms 1, 2, and 4 have the form \(C/a+Ca^2\). **Terms 3 and 5 are invisible to any multiscale analysis**: they shift all slopes equally. Therefore, even a perfectly implemented FDRC-v1 can return PASS with arbitrary error. This is not theoretical: the synthetic test (Appendix) has 0.000 coverage with relative bias \(10^{-3}\).
 
-Observación empírica en CoO SCREENED: las derivas irregulares crecen con \(a\) (\(\sim10^{-5}\) entre 0.02–0.04, \(\sim10^{-4}\) entre 0.04–0.06) con signo errático, y el residuo de reciprocidad \(|\hat\chi_{01}-\hat\chi_{10}|\) pasa de \(0\) a 0.02 eV a \(4.2\times10^{-5}\) a 0.06 eV, por encima de la cota de impresión del par (\(2q/a=1.7\times10^{-5}\)). Eso no es truncamiento suave (no tiene signo coherente) ni ruido de impresión: es consistente con un error SCF que crece con el tamaño de la perturbación, lo que refuerza la necesidad del término relativo.
+Empirical observation for CoO SCREENED: irregular drifts grow with \(a\) (\(\sim10^{-5}\) between 0.02–0.04, \(\sim10^{-4}\) between 0.04–0.06) with erratic sign, and the reciprocity residual \(|\hat\chi_{01}-\hat\chi_{10}|\) rises from \(0\) at 0.02 eV to \(4.2\times10^{-5}\) at 0.06 eV, above the pair's print bound (\(2q/a=1.7\times10^{-5}\)). This is neither smooth truncation (there is no coherent sign) nor print noise; it is consistent with SCF error that grows with perturbation size, reinforcing the need for the relative term.
 
 ---
 
 ## D. Numerical-analysis assessment
 
-**Truncamiento.** Para la diferencia central, \(T(a)=b_1a^2+O(a^4)\). Para Richardson/cúbico, \(T=O(a^4)\). El orden sólo es fiable si se **verifica** en los datos: con red geométrica de razón \(r\), las derivas \(d_k=s_{k+1}-s_k\) cumplen \(d_{k+1}/d_k\to r^{p}\) en régimen asintótico (\(p=2\) analítico, \(p=1\) si hay un término impar \(\alpha|\alpha|\)). CoO BARE: cociente 1.645 frente a 1.667 esperado (malla aritmética 2:4:6) → régimen asintótico verificado, \(b_1\approx9.4\ \mathrm{e/eV^3}\), igual al \(c_3=9.34\) del cúbico V6.
+**Truncation.** For a central difference, \(T(a)=b_1a^2+O(a^4)\). For Richardson/cubic, \(T=O(a^4)\). The order is reliable only if **verified** in the data: on a geometric grid with ratio \(r\), drifts \(d_k=s_{k+1}-s_k\) satisfy \(d_{k+1}/d_k\to r^{p}\) in the asymptotic regime (\(p=2\) analytic, \(p=1\) with an odd \(\alpha|\alpha|\) term). CoO BARE: ratio 1.645 versus expected 1.667 (arithmetic grid 2:4:6) → verified asymptotic regime, \(b_1\approx9.4\ \mathrm{e/eV^3}\), matching the V6 cubic's \(c_3=9.34\).
 
-**Error de datos.** La cota de impresión se propaga exactamente: \(\sum_k|w_k|q_k\) (ya implementado en `quantized_response.fit_centered_linear_response` y en `u_certification.propagate_linear_occupation_tokens`). Los componentes SCF no tienen cota rigurosa; requieren medición (§E).
+**Data error.** The print bound propagates exactly: \(\sum_k|w_k|q_k\) (already implemented in `quantized_response.fit_centered_linear_response` and `u_certification.propagate_linear_occupation_tokens`). SCF components have no rigorous bound; they require measurement (§E).
 
-**Escala óptima (ilustrativa, sólo CoO).** Minimizando \(q/a+|b_1|a^2\): \(a^\*=(q/2|b_1|)^{1/3}\).
-- BARE: \(a^\*\approx3\times10^{-3}\) eV con diferencia central; o bien amplitudes mayores con Richardson (residuo \(\sim2\times10^{-4}\) entre las dos extrapolaciones disponibles).
-- SCREENED: \(|b_1|\lesssim0.05\) (no resuelto) → \(a^\*\gtrsim0.017\) eV.
+**Optimal scale (illustrative, CoO only).** Minimize \(q/a+|b_1|a^2\): \(a^\*=(q/2|b_1|)^{1/3}\).
+- BARE: \(a^\*\approx3\times10^{-3}\) eV with a central difference; alternatively, larger amplitudes with Richardson (residual \(\sim2\times10^{-4}\) between the two available extrapolations).
+- SCREENED: \(|b_1|\lesssim0.05\) (unresolved) → \(a^\*\gtrsim0.017\) eV.
 
-Es decir, **en el mismo material las escalas óptimas de BARE y SCREENED difieren en un factor \(\sim6\)** y además prefieren estimadores distintos. Esto es la razón numérica de fondo para no imponer ventana/estimador común (§F).
+Thus, **in the same material, optimal BARE and SCREENED scales differ by a factor of about \(6\)** and also favor different estimators. This is the underlying numerical reason not to impose a common window/estimator (§F).
 
-**Condicionamiento.** La exactitud requerida de \(\chi\) depende de la matriz. Linealizando \(U_{KK}\):
+**Conditioning.** The required accuracy of \(\chi\) depends on the matrix. Linearizing \(U_{KK}\):
 \[
 \delta U_{KK}=-\big[(\chi^0)^{-1}\delta\chi^0(\chi^0)^{-1}\big]_{KK}+\big[\chi^{-1}\delta\chi\,\chi^{-1}\big]_{KK},
 \qquad
 \frac{\partial U_{KK}}{\partial\chi_{IJ}}=(\chi^{-1})_{KI}(\chi^{-1})_{JK}.
 \]
-CoO: \(\partial U_{00}/\partial\chi_{00}=87.5\), \(\partial U_{00}/\partial\chi_{01}\approx25.9\), \(\partial U_{00}/\partial\chi^0_{00}=-12.5\) (unidades eV²/e). Un error de \(10^{-4}\) e/eV en \(\chi_{00}\) son ~9 meV en \(U\). Los valores propios de \(\chi^0\) son \(-2.56\) y \(-0.150\): el modo \((1,1)\) amplifica errores ~17×.
+For CoO, \(\partial U_{00}/\partial\chi_{00}=87.5\), \(\partial U_{00}/\partial\chi_{01}\approx25.9\), and \(\partial U_{00}/\partial\chi^0_{00}=-12.5\) (units eV²/e). An error of \(10^{-4}\) e/eV in \(\chi_{00}\) is about 9 meV in \(U\). The eigenvalues of \(\chi^0\) are \(-2.56\) and \(-0.150\): the \((1,1)\) mode amplifies errors by about 17×.
 
-Dos observaciones finas:
-- Los errores de **truncamiento** son estructurados y con signo (la matriz \(b_1\) tiene el mismo patrón que \(\chi^0\)); en CoO el sesgo del estimador lineal en \(\chi^0\) (~0.026) produce sólo ~0.017 eV en \(U\) por cancelaciones. Sumar cotas elementales en valor absoluto es ~10× pesimista para truncamiento. El **ruido**, en cambio, debe propagarse en valor absoluto.
-- La validez de la linealización exige \(\beta=\|\chi^{-1}\|_2\|\Delta\chi\|_2<1\) con \(\Delta\chi\) el **presupuesto completo**, no sólo impresión (hoy `inverse_rounding_bound` usa sólo impresión).
+Two finer points:
+- **Truncation** errors are structured and signed (the \(b_1\) matrix has the same pattern as \(\chi^0\)); in CoO, the linear estimator's bias in \(\chi^0\) (~0.026) produces only ~0.017 eV in \(U\) due to cancellation. Summing elementary bounds in absolute value is about 10× too pessimistic for truncation. **Noise**, by contrast, must propagate in absolute value.
+- Linearization is valid only if \(\beta=\|\chi^{-1}\|_2\|\Delta\chi\|_2<1\), with \(\Delta\chi\) equal to the **full budget**, not print error alone (`inverse_rounding_bound` currently uses print error only).
 
-**Selección de escala.** Red geométrica versionada, representable con \(10^{-4}\) eV (p. ej. de forma ilustrativa \(\{0.005,0.01,0.02,0.04,0.08\}\); ningún valor de este informe es un umbral recomendado). Las fórmulas de §I admiten razón variable, así que la representabilidad no exige \(r=2\) exacto.
+**Scale selection.** Use a versioned geometric grid representable at \(10^{-4}\) eV (e.g. illustrative \(\{0.005,0.01,0.02,0.04,0.08\}\); no value in this report is a recommended threshold). The formulas in §I allow variable ratios, so representability does not require exactly \(r=2\).
 
 ---
 
 ## E. Noise-floor solution
 
-### E.1 Principios
+### E.1 Principles
 
-1. **Medir el error de la cantidad que entra al estimador**: la diferencia \(\Delta(a)=n(+a)-n(-a)\), no \(n\) aislado. Los errores de \(+a\) y \(-a\) están correlacionados (mismo parent, misma historia de mezcla) y pueden cancelarse o sumarse; sólo medir \(\Delta\) lo captura.
-2. **Separar componentes con escalado distinto** (§C.4) en vez de un escalar \(\epsilon_n\).
-3. **Distinguir cota de estimación.** La impresión tiene cota; lo SCF sólo tiene estimación a posteriori, que necesita un factor de seguridad validado.
-4. **No tratar errores deterministas como varianzas**: combinar por suma de cotas, no por RSS.
+1. **Measure the error in the quantity entering the estimator**: the difference \(\Delta(a)=n(+a)-n(-a)\), not isolated \(n\). The errors at \(+a\) and \(-a\) are correlated (same parent, same mixing history) and may cancel or add; measuring \(\Delta\) captures this.
+2. **Separate components with different scaling** (§C.4) instead of using one scalar \(\epsilon_n\).
+3. **Distinguish bounds from estimates.** Print error has a bound; SCF error has only an a-posteriori estimate, which needs a validated safety factor.
+4. **Do not treat deterministic errors as variances**: combine by adding bounds, not by RSS.
 
-### E.2 Procedimiento recomendado
+### E.2 Recommended procedure
 
-| Componente | Medición | Estatus |
+| Component | Measurement | Status |
 |---|---|---|
-| Impresión \(q\) | Tokens impresos por punto, exacto (`siesta_backend/occupation_precision.py`; `read_printed_matrix_trace_precision` o `read_printed_occupation_precision`, **sin mezclar observables** entre puntos) | Cota rigurosa. Ya implementado. |
-| SCF absoluto y relativo (SCREENED) | **Escalera de tolerancias SCF sobre \(\Delta(a)\).** Para cada columna \(J\), en la amplitud más pequeña y en la más grande que vaya a usarse, repetir \(\pm a\) en niveles \(L_0\) (producción), \(L_1\), \(L_2\) (DM.Tolerance y tolerancia en H endurecidas por un factor declarado), cada nivel con referencia parental propia del mismo nivel. \(\eta_1=\|\Delta_{L_0}-\Delta_{L_1}\|\), \(\eta_2=\|\Delta_{L_1}-\Delta_{L_2}\|\). Si \(\eta_2\le\hat\rho\,\eta_1\) con \(\hat\rho<1\) (contracción) o ambos están al nivel de impresión, estimar el error en \(L_0\) como \(\theta\,\eta_1/(1-\hat\rho)\). La comparación entre amplitud pequeña y grande separa absoluto (\(\eta\) constante) de relativo (\(\eta\propto a\)). | Estimación a posteriori; \(\theta\) requiere validación (§K). Sin contracción → `NOISE_FLOOR_NOT_ESTABLISHED`. |
-| Sesgo de referencia (BARE) | BARE \(\pm a\) desde una DM parental del nivel \(L_1\) frente a la de \(L_0\); además, el ajuste \(e_k=\delta_0+c_2a_k^2+c_4a_k^4\) de la parte par estima \(\delta_0\) (no autoconsistencia del parent) sin coste adicional | Estimación; \(\delta_0\) es un indicador, no una cota. |
-| Camino computacional | Reiniciar desde DM alternativa dentro de la cuenca (p. ej. la de la amplitud vecina), y cambio de descomposición MPI | **Sólo en validación** o disparado por ambigüedad de estado; mide sensibilidad al camino/multiestabilidad. |
-| Réplicas \(\alpha=0\) | Mantener como prueba de humo de determinismo | **No** usar como noise floor. |
+| Print quantization \(q\) | Exact printed tokens per point (`siesta_backend/occupation_precision.py`; `read_printed_matrix_trace_precision` or `read_printed_occupation_precision`, **do not mix observables** across points) | Rigorous bound. Already implemented. |
+| Absolute and relative SCF error (SCREENED) | **SCF-tolerance ladder on \(\Delta(a)\).** For each column \(J\), at the smallest and largest amplitude to be used, repeat \(\pm a\) at levels \(L_0\) (production), \(L_1\), \(L_2\) (tighten DM.Tolerance and H tolerance by a declared factor), each level with its own parent reference at that level. \(\eta_1=\|\Delta_{L_0}-\Delta_{L_1}\|\), \(\eta_2=\|\Delta_{L_1}-\Delta_{L_2}\|\). If \(\eta_2\le\hat\rho\,\eta_1\) with \(\hat\rho<1\) (contraction), or both are at print precision, estimate the error at \(L_0\) as \(\theta\,\eta_1/(1-\hat\rho)\). Comparing small and large amplitudes separates absolute (constant \(\eta\)) from relative (\(\eta\propto a\)) error. | A-posteriori estimate; \(\theta\) requires validation (§K). No contraction → `NOISE_FLOOR_NOT_ESTABLISHED`. |
+| Reference bias (BARE) | BARE \(\pm a\) from a parent DM at level \(L_1\) versus \(L_0\); also, the even-component fit \(e_k=\delta_0+c_2a_k^2+c_4a_k^4\) estimates \(\delta_0\) (parent non-self-consistency) at no additional cost | Estimate; \(\delta_0\) is an indicator, not a bound. |
+| Computational path | Restart from an alternative DM within the basin (e.g. from a neighboring amplitude), and change MPI decomposition | **Validation only** or triggered by state ambiguity; measures path sensitivity/multistability. |
+| \(\alpha=0\) replicas | Retain as a determinism smoke test | **Do not** use as a noise floor. |
 
-Infraestructura existente reutilizable: el controlador ya tiene el concepto de *strict SCF probe* (`v_base_electron` vs `v_strict_electron` en `adaptive_alpha_control.py`) y `lr_dag.build_adaptive_campaign_dag` ya enclava nodos por (sitio, \(\alpha\), modo, nivel SCF, nodo de referencia) con una referencia estricta compartida. FD-EBQ cambia el **uso**: el probe deja de ser un disparador heurístico y se convierte en una medición obligatoria con verificación de contracción.
+Reusable existing infrastructure: the controller already has a *strict SCF probe* concept (`v_base_electron` vs `v_strict_electron` in `adaptive_alpha_control.py`), and `lr_dag.build_adaptive_campaign_dag` already keys nodes by (site, \(\alpha\), mode, SCF level, reference node) with a shared strict reference. FD-EBQ changes its **use**: the probe stops being a heuristic trigger and becomes a mandatory measurement with contraction verification.
 
-Coste adicional orientativo por columna: 4–8 corridas SCREENED (dos niveles × dos amplitudes × \(\pm\)), 2 BARE baratas, más una referencia por nivel compartida por todas las columnas.
+Indicative additional cost per column: 4–8 SCREENED runs (two levels × two amplitudes × \(\pm\)), 2 inexpensive BARE runs, plus one reference per level shared by all columns.
 
-### E.3 Combinación
+### E.3 Combination
 
 \[
-\varepsilon_I(\alpha)=q_I(\alpha)+\theta\big[\hat\eta^{\rm abs}_I+\hat\eta^{\rm rel}_I\,|\tilde n_I(\alpha)-\tilde n_I(0)|\big]\ (+\,s^{\rm path}_I\ \text{si se midió}).
+\varepsilon_I(\alpha)=q_I(\alpha)+\theta\big[\hat\eta^{\rm abs}_I+\hat\eta^{\rm rel}_I\,|\tilde n_I(\alpha)-\tilde n_I(0)|\big]\ (+\,s^{\rm path}_I\ \text{if measured}).
 \]
 
-### E.4 Falsación interna del noise floor
+### E.4 Internal falsification of the noise floor
 
-- **Reciprocidad:** \(|\hat\chi_{IJ}-\hat\chi_{JI}|\le\kappa(B_{IJ}+B_{JI})\) para todo \(I\ne J\) perturbados.
-- **Equivalencia declarada:** si (y sólo si) el módulo de simetría (`domain/symmetry_reduction.py`, con su compuerta de sombra) declara sitios equivalentes con evidencia, \(|\hat\chi_{II}-\hat\chi_{KK}|\) debe quedar dentro de los presupuestos. No se infiere equivalencia: sólo se *usa* la declarada.
+- **Reciprocity:** \(|\hat\chi_{IJ}-\hat\chi_{JI}|\le\kappa(B_{IJ}+B_{JI})\) for every perturbed \(I\ne J\).
+- **Declared equivalence:** if and only if the symmetry module (`domain/symmetry_reduction.py`, with its shadow gate) declares sites equivalent based on evidence, \(|\hat\chi_{II}-\hat\chi_{KK}|\) must fall within the budgets. Equivalence is not inferred; only a declared equivalence is *used*.
 
-Advertencia derivada de la prueba sintética: la consistencia interna entre escalas **no rescata fiablemente** un noise floor subestimado (cobertura 0.98 con verificación de orden conservadora, 0.58 sin ella). La reciprocidad añade poder, pero **la escalera SCF no es opcional**.
+Warning from the synthetic test: internal consistency across scales **does not reliably rescue** an underestimated noise floor (coverage 0.98 with conservative order verification, 0.58 without it). Reciprocity adds power, but **the SCF ladder is not optional**.
 
-**Requisito previo a usar la reciprocidad como compuerta:** verificar una vez (validación T2) que en SIESTA 5.4.2 el operador de ocupación y el operador de perturbación de `DFTU.PotentialShift` son el mismo proyector (par adjunto). Los datos CoO lo apoyan (BARE: \(1.201775\) vs \(1.201775\)), pero un caso no es una demostración.
+**Prerequisite to using reciprocity as a gate:** verify once (validation T2) that in SIESTA 5.4.2 the occupation operator and `DFTU.PotentialShift` perturbation operator are the same projector (adjoint pair). The CoO data support this (BARE: \(1.201775\) vs. \(1.201775\)), but one case is not proof.
 
 ---
 
 ## F. Multi-site and BARE/SCREENED analysis
 
-### F.1 ¿Ventana común para \(\chi^0\) y \(\chi\)? **No.**
+### F.1 A common window for \(\chi^0\) and \(\chi\)? **No.**
 
-- **Matemática:** \(\chi^0\) y \(\chi\) son derivadas en el origen de dos funciones distintas. La definición de \(U\) no exige que se evalúen con la misma amplitud; el límite \(a\to0\) es independiente para cada una.
-- **Supuesta cancelación de errores:** no existe un argumento general de que errores \(O(a^2)\) de \(\chi^0\) y \(\chi\) se cancelen en \((\chi^0)^{-1}-\chi^{-1}\); los coeficientes \(b_1\) son de funciones distintas y en CoO difieren en dos órdenes de magnitud. No debe asumirse; puede *medirse* en validación.
-- **Numérica:** regímenes opuestos (§D). El común es subóptimo para ambos.
-- **Coste:** BARE y SCREENED ya son nodos separados (`PerturbationSpec.mode`); amplitudes distintas no añaden corridas.
+- **Mathematics:** \(\chi^0\) and \(\chi\) are derivatives at the origin of two different functions. The definition of \(U\) does not require evaluating them at the same amplitude; the \(a\to0\) limit is independent for each.
+- **Assumed error cancellation:** there is no general argument that \(O(a^2)\) errors in \(\chi^0\) and \(\chi\) cancel in \((\chi^0)^{-1}-\chi^{-1}\); the \(b_1\) coefficients belong to different functions and differ by two orders of magnitude in CoO. Do not assume cancellation; it can be *measured* during validation.
+- **Numerics:** opposite regimes (§D). A common window is suboptimal for both.
+- **Cost:** BARE and SCREENED are already separate nodes (`PerturbationSpec.mode`); different amplitudes add no runs.
 
-**Regla:** calificar por separado cada par \((J,m)\). Usar malla común si ambos modos califican sobre el mismo subconjunto (default: simplicidad y comparabilidad con V6); si no, mallas específicas por modo, marcadas en procedencia. Nunca `NOT_ESTABLISHED` sólo por intersección vacía.
+**Rule:** qualify each pair \((J,m)\) separately. Use a common grid if both modes qualify on the same subset (default: simplicity and comparability with V6); otherwise use mode-specific grids, recorded in provenance. Never return `NOT_ESTABLISHED` solely because the intersection is empty.
 
-### F.2 ¿Malla común para todos los sitios? **No es requisito; es una preferencia de simplicidad.**
+### F.2 A common grid for all sites? **Not required; it is a simplicity preference.**
 
-Columnas obtenidas con mallas distintas son matemáticamente válidas si:
+Columns obtained on different grids are mathematically valid if:
 
-1. todas comparten **la misma referencia** (misma DM parental, mismo nivel SCF de la referencia) — la matriz debe ser el Jacobiano en un único punto;
-2. **no se mezclan niveles SCF dentro del estimador de una columna**; entre columnas se recomienda un único nivel por campaña (simplifica el presupuesto, y el código actual ya prohíbe mezclar);
-3. cada elemento lleva su **presupuesto de error** propio (\(B_{IJ}\));
-4. se aplica la **compuerta de reciprocidad** entre columnas — con mallas distintas pasa a ser un control cruzado aún más fuerte, porque los truncamientos son distintos;
-5. la política de inversión (raw vs simetrizada) se mantiene declarada; con mallas distintas, la antisimetría del raw refleja truncamientos distintos y debe quedar dentro de los presupuestos.
+1. they share **the same reference** (same parent DM, same SCF level for the reference)—the matrix must be the Jacobian at one point;
+2. **SCF levels are not mixed within a column estimator**; one level per campaign is recommended across columns (simplifies the budget, and the current code already prohibits mixing);
+3. each element carries its own **error budget** (\(B_{IJ}\));
+4. the **reciprocity gate** is applied across columns—with different grids it becomes an even stronger cross-check because truncation differs;
+5. the inversion policy (raw vs. symmetrized) remains declared; with different grids, raw antisymmetry reflects different truncation and must remain within the budgets.
 
-**Procedencia mínima por \((J,m)\):** amplitudes usadas, estimador (identificador + pesos), nivel SCF, componentes del presupuesto (\(q\), \(\eta\), truncamiento con orden verificado), estado de compuertas.
+**Minimum provenance per \((J,m)\):** amplitudes used, estimator (identifier + weights), SCF level, budget components (\(q\), \(\eta\), truncation with verified order), and gate states.
 
-**Recomendación v1:** malla común por defecto; si la intersección es vacía y cada columna califica por separado, emitir `QUALIFIED_HETEROGENEOUS` (no `NOT_ESTABLISHED`). La única razón legítima para no implementarlo en la primera iteración es el cambio de modelo de datos (§M), no la corrección matemática.
+**v1 recommendation:** use a common grid by default; if the intersection is empty and each column qualifies independently, return `QUALIFIED_HETEROGENEOUS` (not `NOT_ESTABLISHED`). The only legitimate reason not to implement this in the first iteration is the data-model change (§M), not mathematical correctness.
 
-### F.3 Respuestas cruzadas cerca de cero
+### F.3 Cross-responses near zero
 
-Los criterios relativos por elemento son la métrica equivocada. El peso correcto de un error en \(\chi_{IJ}\) es su influencia en \(U\), \(|(\chi^{-1})_{KI}(\chi^{-1})_{JK}|\), que **no depende del tamaño de \(\chi_{IJ}\)**. En FD-EBQ:
+Per-element relative criteria are the wrong metric. The correct weight of an error in \(\chi_{IJ}\) is its influence on \(U\), \(|(\chi^{-1})_{KI}(\chi^{-1})_{JK}|\), which **does not depend on the size of \(\chi_{IJ}\)**. In FD-EBQ:
 
-- El error de cada elemento se expresa en absoluto (e/eV): \(B_{IJ}=N_{IJ}+T_{IJ}+\ldots\).
-- La aceptación se decide en espacio de \(U\): \(\delta U_{KK}\le\sum_{IJ}|A_{KI}A_{JK}|B^0_{IJ}+|\mathcal B_{KI}\mathcal B_{JK}|B_{IJ}\le\tau_U\) (con \(A=(\chi^0)^{-1}\), \(\mathcal B=\chi^{-1}\)), más \(\beta<1\).
-- Un elemento cruzado cuyo \(|\hat\chi_{IJ}|<B_{IJ}\) se reporta como "no resuelto respecto de cero" sin que eso sea un fallo, si su influencia en \(U\) cabe en el presupuesto.
+- Express each element's error in absolute units (e/eV): \(B_{IJ}=N_{IJ}+T_{IJ}+\ldots\).
+- Decide acceptance in U-space: \(\delta U_{KK}\le\sum_{IJ}|A_{KI}A_{JK}|B^0_{IJ}+|\mathcal B_{KI}\mathcal B_{JK}|B_{IJ}\le\tau_U\) (with \(A=(\chi^0)^{-1}\), \(\mathcal B=\chi^{-1}\)), plus \(\beta<1\).
+- Report a cross-element with \(|\hat\chi_{IJ}|<B_{IJ}\) as "unresolved relative to zero" without failing it, if its influence on \(U\) fits within the budget.
 
 ---
 
-## G. Failure modes (contraejemplos adversariales)
+## G. Failure modes (adversarial counterexamples)
 
-| # | Escenario | FDRC-v1 | FD-EBQ |
+| # | Scenario | FDRC-v1 | FD-EBQ |
 |---|---|---|---|
-| G1 | Sesgo SCF relativo común a todas las amplitudes (tolerancia floja) | **PASS falso**: todas las escalas coinciden | Detectado por escalera SCF; sin ella, igual de ciego (sintético: cobertura 0) |
-| G2 | Noise floor estimado con réplicas \(\alpha=0\) que convergen en 1 iteración | **PASS falso** con \(\epsilon\) subestimado | Réplicas \(\alpha=0\) no usadas; escalera en \(\alpha\neq0\) |
-| G3 | Dos pendientes ruidosas coinciden por azar a escala grande | PASS (D pequeño) | Cota \(B\) explícita grande → no satisface \(\tau_U\) |
-| G4 | Metal / borde de fase: término impar \(\kappa\alpha|\alpha|\) (error \(O(a)\)) | Deriva pequeña → PASS; Richardson con orden 2 erróneo | Verificación de orden → cota conservadora \(p=1\) (sintético: cobertura 1.0) |
-| G5 | BARE con \(\delta_0\) apreciable (parent no del todo autoconsistente) | \(C(a)\) grande a amplitud pequeña → rechaza la mejor escala | \(\delta_0\) se ajusta y reporta; no afecta \(\hat\chi\) |
-| G6 | Sitios heterogéneos (p. ej. Fe octaédrico/tetraédrico; TM + 4f) | Intersección vacía → `NOT_ESTABLISHED` | Mallas por columna → `QUALIFIED_HETEROGENEOUS` |
-| G7 | \(\chi^0\) fuertemente acoplada (valor propio pequeño, como CoO 0.150 vs 2.56) | Normalización por columna dominada por la diagonal → PASS aunque \(U\) sea inexacto | Requisito propagado por influencia y \(\beta<1\) |
-| G8 | Cambio de orden orbital a \(+a\) con momentos iguales | Momentos dentro de 0.05 μB → pasa la compuerta | Autovalores/autovectores de la matriz de ocupación local, salto en parte par |
-| G9 | Momento que responde linealmente con \(\alpha\) y supera una tolerancia absoluta (imanes blandos) | `magnetic_tolerance` absoluto rechaza un caso sano | La compuerta evalúa **suavidad**, no constancia |
-| G10 | \(\pm a\) caen en mínimos de orden orbital distintos (degeneración) | Parte impar enorme → interpretada como respuesta grande | Solapamiento de subespacios con la referencia; salto de la parte par |
-| G11 | Cúbico con 1–2 grados de libertad residuales y ruido SCF | Residuo bajo (sobreajuste) → buena "linealidad" | Ganancia de ruido explícita del cúbico (58/eV) entra en \(B\) |
-| G12 | Tareas terminando en distinto orden; refinamiento con contador histórico | Riesgo explícito; el controlador actual lo viola | Barrera por ronda + decisión \(f(\mathcal E,\text{protocolo})\) |
-| G13 | Amplitud no representable en el FDF (redondeo a \(10^{-4}\) eV) | No contemplado | Red versionada representable por construcción |
-| G14 | Observable mezclado (resumen `Occupations:` vs traza de matriz) entre puntos | No contemplado | Identidad del observable en la clave de evidencia |
-| G15 | Ventana elegida por mínima cota entre muchas (maldición del ganador) | — | Conjunto candidato pequeño y predeclarado; exigencia de consistencia con vecinos |
+| G1 | Common relative SCF bias across all amplitudes (loose tolerance) | **False PASS**: all scales agree | Detected by SCF ladder; equally blind without it (synthetic coverage: 0) |
+| G2 | Noise floor estimated from \(\alpha=0\) replicas that converge in one iteration | **False PASS** with underestimated \(\epsilon\) | Do not use \(\alpha=0\) replicas; use a ladder at \(\alpha\neq0\) |
+| G3 | Two noisy slopes coincide by chance at a large scale | PASS (small D) | Explicit bound \(B\) is large → fails \(\tau_U\) |
+| G4 | Metal/phase boundary: odd \(\kappa\alpha|\alpha|\) term (\(O(a)\) error) | Small drift → PASS; incorrect order-2 Richardson | Order verification → conservative \(p=1\) bound (synthetic coverage: 1.0) |
+| G5 | BARE with appreciable \(\delta_0\) (parent not fully self-consistent) | Large \(C(a)\) at small amplitude → rejects the best scale | Fit and report \(\delta_0\); it does not affect \(\hat\chi\) |
+| G6 | Heterogeneous sites (e.g. octahedral/tetrahedral Fe; TM + 4f) | Empty intersection → `NOT_ESTABLISHED` | Per-column grids → `QUALIFIED_HETEROGENEOUS` |
+| G7 | Strongly coupled \(\chi^0\) (small eigenvalue, as in CoO 0.150 vs. 2.56) | Column normalization dominated by diagonal → PASS although \(U\) is inaccurate | Influence-propagated requirement and \(\beta<1\) |
+| G8 | Orbital-order change at \(+a\) with equal moments | Moments within 0.05 μB → passes gate | Local occupation-matrix eigenvalues/eigenvectors; jump in even component |
+| G9 | Moment responds linearly to \(\alpha\) beyond an absolute tolerance (soft magnets) | Absolute `magnetic_tolerance` rejects a healthy case | Gate evaluates **smoothness**, not constancy |
+| G10 | \(\pm a\) fall into different orbital-order minima (degeneracy) | Large odd component → interpreted as large response | Subspace overlap with reference; jump in even component |
+| G11 | Cubic fit with 1–2 residual degrees of freedom and SCF noise | Small residual (overfit) → apparent "linearity" | Explicit cubic noise gain (58/eV) enters \(B\) |
+| G12 | Tasks finish in different order; refinement uses a historical counter | Explicit risk; current controller violates this | Round barrier + decision \(f(\mathcal E,\text{protocol})\) |
+| G13 | Amplitude not representable in FDF (rounding to \(10^{-4}\) eV) | Not considered | Versioned grid is representable by construction |
+| G14 | Observable is mixed across points (summary `Occupations:` vs. matrix trace) | Not considered | Observable identity is part of evidence key |
+| G15 | Window selected as the minimum bound among many (winner's curse) | — | Small, predeclared candidate set; require consistency with neighbors |
 
 ---
 
@@ -281,102 +281,102 @@ Los criterios relativos por elemento son la métrica equivocada. El peso correct
 
 **Replace.**
 
-Justificación: los componentes que deciden el resultado — noise floor, métricas \(C\)/\(D\), ventanas anidadas, intersecciones obligatorias, umbrales a calibrar, Richardson secundario, tratamiento del estimador como externo — son precisamente los defectuosos (§B, §C, §G). Lo que sobrevive (pares simétricos, diferencias centrales en varias escalas, compuerta de estado, determinismo como requisito, procedencia, reutilización por identidad) es el diseño de medición y la infraestructura, y se reutiliza en FD-EBQ. No es "retener con modificaciones mayores" porque la teoría de decisión cambia de naturaleza: de "acuerdo entre diagnósticos con umbrales" a "cota de error del estimador concreto frente a un requisito declarado".
+Rationale: the components that determine the result—noise floor, \(C\)/\(D\) metrics, nested windows, mandatory intersections, thresholds to calibrate, secondary Richardson, treating the estimator as external—are precisely the defective components (§B, §C, §G). What survives (symmetric pairs, central differences at multiple scales, state gate, determinism as a requirement, provenance, identity-based reuse) is the measurement design and infrastructure, which FD-EBQ reuses. This is not "retain with major modifications" because the decision theory changes in kind: from "agreement among diagnostics with thresholds" to "an error bound for the specific estimator against a declared requirement."
 
 ---
 
 ## I. Recommended final methodology (FD-EBQ)
 
-### I.1 Datos y notación
+### I.1 Data and notation
 
-Para cada columna \(J\), modo \(m\), fila \(I\), amplitud \(a_k\) de una red versionada \(\mathcal L=\{a_1<\dots<a_K\}\):
+For each column \(J\), mode \(m\), row \(I\), and amplitude \(a_k\) from a versioned grid \(\mathcal L=\{a_1<\dots<a_K\}\):
 \[
 o_k=\tfrac12[\tilde n_I(+a_k)-\tilde n_I(-a_k)],\quad s_k=o_k/a_k,\quad e_k=\tfrac12[\tilde n_I(+a_k)+\tilde n_I(-a_k)]-\tilde n_I(0).
 \]
 Error de datos de \(s_k\) (de §E): \(\nu_k=\big(\varepsilon(+a_k)+\varepsilon(-a_k)\big)/(2a_k)\).
 
-### I.2 Verificación de orden
+### I.2 Order verification
 
-Derivas \(d_k=s_{k+1}-s_k\) con incertidumbre \(\delta_k=\nu_k+\nu_{k+1}\). Una deriva está **resuelta** si \(|d_k|>\delta_k\). Para dos derivas consecutivas resueltas del mismo signo, el cociente admisible es el intervalo
+Define drifts \(d_k=s_{k+1}-s_k\) with uncertainty \(\delta_k=\nu_k+\nu_{k+1}\). A drift is **resolved** if \(|d_k|>\delta_k\). For two consecutive resolved drifts of the same sign, the admissible ratio is the interval
 \[
 \Big[\tfrac{|d_{k+1}|-\delta_{k+1}}{|d_k|+\delta_k},\ \tfrac{|d_{k+1}|+\delta_{k+1}}{|d_k|-\delta_k}\Big]\ \ni\ \rho_p\equiv\frac{a_{k+2}^{p}-a_{k+1}^{p}}{a_{k+1}^{p}-a_{k}^{p}}
 \]
-(para red geométrica de razón \(r\), \(\rho_p=r^p\); para la malla aritmética V6, \(\rho_2=20/12\)). Orden 2 verificado si el intervalo contiene \(\rho_2\) y excluye \(\rho_1\); orden 1 si contiene \(\rho_1\); **inconsistente** (ninguno) → esas escalas quedan excluidas. Si las derivas no están resueltas, el orden no es identificable y se usa la cota conservadora \(p=1\).
+(for a geometric grid with ratio \(r\), \(\rho_p=r^p\); for the V6 arithmetic grid, \(\rho_2=20/12\)). Order 2 is verified if the interval contains \(\rho_2\) and excludes \(\rho_1\); order 1 if it contains \(\rho_1\); **inconsistent** (neither) means those scales are excluded. If the drifts are unresolved, the order is not identifiable and the conservative bound \(p=1\) is used.
 
-### I.3 Estimadores candidatos (familia cerrada y predeclarada)
+### I.3 Candidate estimators (closed, predeclared family)
 
 1. **Central** en \(a_k\): \(\hat\chi=s_k\),
 \[
-B^{\rm C}_k=\nu_k+\frac{|d_k|+\delta_k}{r^{p_k}-1},\qquad p_k=\begin{cases}2&\text{orden 2 verificado}\\1&\text{en otro caso}\end{cases}
+B^{\rm C}_k=\nu_k+\frac{|d_k|+\delta_k}{r^{p_k}-1},\qquad p_k=\begin{cases}2&\text{order 2 verified}\\1&\text{otherwise}\end{cases}
 \]
-2. **Richardson** \((a_k,a_{k+1})\), sólo si orden 2 verificado: \(\hat\chi=\frac{a_{k+1}^2s_k-a_k^2s_{k+1}}{a_{k+1}^2-a_k^2}\), con cota
+2. **Richardson** \((a_k,a_{k+1})\), only if order 2 is verified: \(\hat\chi=\frac{a_{k+1}^2s_k-a_k^2s_{k+1}}{a_{k+1}^2-a_k^2}\), with bound
 \[
 B^{\rm R}_k=N_k+\frac{|\hat\chi^{\rm R}_{k+1}-\hat\chi^{\rm R}_k|+N_k+N_{k+1}}{r^4-1},\quad N_k=\frac{a_{k+1}^2\nu_k+a_k^2\nu_{k+1}}{a_{k+1}^2-a_k^2}.
 \]
-3. **Estimador protocolario** (p. ej. cúbico V6) con sus pesos \(w\): \(B=\sum|w_k|\varepsilon_k+|\sum_k w_k\alpha_k^5|\cdot\overline{|b_2|}\), con \(\overline{|b_2|}\) acotado desde la segunda diferencia dividida de \(s\) en \(t=a^2\). Esto permite **calificar** el protocolo FIXED sin cambiarlo.
+3. **Protocol estimator** (e.g. V6 cubic) with weights \(w\): \(B=\sum|w_k|\varepsilon_k+|\sum_k w_k\alpha_k^5|\cdot\overline{|b_2|}\), with \(\overline{|b_2|}\) bounded from the second divided difference of \(s\) in \(t=a^2\). This allows the FIXED protocol to be **qualified** without changing it.
 
-### I.4 Compuertas de falsación (sin umbrales libres salvo \(\kappa\))
+### I.4 Falsification gates (no free thresholds except \(\kappa\))
 
-- **Consistencia entre vecinos:** un candidato es admisible sólo si \(|\hat\chi_E-\hat\chi_{E'}|\le\kappa(B_E+B_{E'})\) para los vecinos de su familia.
-- **Reciprocidad** (§E.4) y **equivalencia declarada**.
-- **Parte par:** \(e_k=\delta_0+c_2a_k^2+c_4a_k^4\) debe ajustarse dentro de \(\varepsilon\); un residuo anómalo en un punto señala ese punto para la compuerta de estado (no afecta a \(\hat\chi\) directamente).
+- **Neighbor consistency:** a candidate is admissible only if \(|\hat\chi_E-\hat\chi_{E'}|\le\kappa(B_E+B_{E'})\) for its family neighbors.
+- **Reciprocity** (§E.4) and **declared equivalence**.
+- **Even component:** \(e_k=\delta_0+c_2a_k^2+c_4a_k^4\) must fit within \(\varepsilon\); an anomalous residual at one point flags that point for the state gate (it does not directly affect \(\hat\chi\)).
 
 ### I.5 STATE_CONSISTENCY_GATE
 
-Inspecciona por punto \((J,m,\pm a_k)\) frente a la referencia:
+Inspect each point \((J,m,\pm a_k)\) against the reference:
 
-1. **Convergencia SCF** (bandera, dDmax/dHmax finales vs tolerancia del nivel, número de iteraciones; outliers de iteraciones respecto a la amplitud).
-2. **Matrices de ocupación locales** \(n^{\sigma}_{mm'}\) de cada subespacio: autovalores ordenados y **solapamiento de subespacios ocupados** con la referencia (detecta cambios de orden orbital con momento constante).
-3. **Momentos** por sitio (vector si no colineal) y total; en aislantes, el momento total cuantizado.
-4. **Gap/HOMO-LUMO o nivel de Fermi** (cierre de gap ⇒ cambio de carácter).
-5. **Suavidad**, no constancia: cada observable de estado debe admitir un modelo polinómico de bajo orden en \(\alpha\) dentro de su propio error (impresión + escalera); un salto aislado es un cambio de rama.
-6. **Opcional (validación/disparado):** histéresis — reiniciar \(\pm a_k\) desde la DM de la amplitud vecina en lugar del parent; diferencia > presupuesto ⇒ multiestabilidad.
-7. **Condicional:** consistencia energía–ocupación (Hellmann–Feynman, \(E(+a)-E(-a)\approx\int n_J\,d\alpha\)) **sólo** tras verificar qué incluye la energía impresa por SIESTA con `DFTU.PotentialShift`.
+1. **SCF convergence** (flag, final dDmax/dHmax versus the level tolerance, iteration count; iteration-count outliers relative to amplitude).
+2. **Local occupation matrices** \(n^{\sigma}_{mm'}\) for each subspace: ordered eigenvalues and **overlap of occupied subspaces** with the reference (detects orbital-order changes at constant moment).
+3. **Moments** per site (vector if non-collinear) and total; in insulators, the total moment is quantized.
+4. **Gap/HOMO-LUMO or Fermi level** (gap closure ⇒ change of character).
+5. **Smoothness**, not constancy: each state observable must admit a low-order polynomial model in \(\alpha\) within its own error (print quantization + ladder); an isolated jump is a branch change.
+6. **Optional (triggered validation):** hysteresis—restart \(\pm a_k\) from the neighboring-amplitude DM rather than the parent; difference > budget ⇒ multistability.
+7. **Conditional:** energy–occupation consistency (Hellmann–Feynman, \(E(+a)-E(-a)\approx\int n_J\,d\alpha\)) **only** after verifying what is included in the energy printed by SIESTA with `DFTU.PotentialShift`.
 
-Clasificación de causas:
+Cause classification:
 
-| Señal | Diagnóstico |
+| Signal | Diagnosis |
 |---|---|
-| Suave, orden verificado, compuertas en verde | No linealidad ordinaria de diferencias finitas |
-| No convergencia, escalera no contractiva, iteraciones anómalas | Inestabilidad SCF |
-| Salto en autovalores/subespacios o momentos, histéresis | Cambio de rama metaestable / estado magnético |
-| Orden \(p\approx1\) estable o falta de régimen asintótico a todas las escalas resolubles | Discontinuidad física / no analiticidad: **no hay derivada a esa escala** → STOP |
+| Smooth, order verified, gates pass | Ordinary finite-difference nonlinearity |
+| Non-convergence, non-contracting ladder, anomalous iteration counts | SCF instability |
+| Jump in eigenvalues/subspaces or moments, hysteresis | Metastable branch / magnetic-state change |
+| Stable order \(p\approx1\) or no asymptotic regime at any resolvable scale | Physical discontinuity / non-analyticity: **no derivative exists at that scale** → STOP |
 
-**Regla monótona:** si un punto falla la compuerta en \(a_k\), esa amplitud y todas las mayores se excluyen para esa columna y modo.
+**Monotonicity rule:** if a point fails the gate at \(a_k\), exclude that amplitude and all larger amplitudes for that column and mode.
 
-### I.6 Selección por columna
+### I.6 Per-column selection
 
-Entre los candidatos admisibles, elegir \(E^\*=\arg\min_E B_E\), desempate determinista (menor amplitud máxima, luego familia en orden fijo). La selección ve sólo cotas; nunca \(U\).
+Among admissible candidates, choose \(E^\*=\arg\min_E B_E\), with deterministic tie-breaking (smallest maximum amplitude, then family in fixed order). Selection sees only bounds, never \(U\).
 
-### I.7 Requisito propagado y compuerta matricial
+### I.7 Propagated requirement and matrix gate
 
-Con las matrices estimadas: \(\beta^0=\|(\hat\chi^0)^{-1}\|_2\|\mathbf B^0\|_2<1\), \(\beta=\|\hat\chi^{-1}\|_2\|\mathbf B\|_2<1\); y por sitio,
+With the estimated matrices: \(\beta^0=\|(\hat\chi^0)^{-1}\|_2\|\mathbf B^0\|_2<1\), \(\beta=\|\hat\chi^{-1}\|_2\|\mathbf B\|_2<1\); and per site,
 \[
 \delta U_{KK}\le\sum_{I,J}\Big(|A_{KI}A_{JK}|B^0_{IJ}+|\mathcal B_{KI}\mathcal B_{JK}|B_{IJ}\Big)+O(\beta^2)\ \le\ \tau_U .
 \]
-\(\tau_U\) es un **requisito científico declarado por el usuario** (como el ±0.02 eV del contrato existente), no un parámetro calibrado. Si falla: los únicos remedios permitidos son los que **reducen cotas** (endurecer SCF, mayor precisión de salida en validación, más escalas dentro de la región válida); nunca buscar otra ventana para mejorar \(\kappa\).
+\(\tau_U\) is a **user-declared scientific requirement** (such as the ±0.02 eV in the existing contract), not a calibrated parameter. If it is not met, the only allowed remedies are those that **reduce bounds** (tighten SCF, use higher output precision during validation, add scales within the valid region); never search for another window to improve \(\kappa\).
 
-### I.8 Separación respecto a la certificación existente
+### I.8 Separation from existing certification
 
-La certificación intervalar actual (`domain/u_certification.py`: racional 2×2, Krawczyk, Neumann) **no se toca** y sigue certificando la propagación de la impresión. FD-EBQ puede emitir, como **artefacto separado**, una segunda evaluación con las mismas rutinas sobre un `MatrixBox` ampliado al presupuesto completo, etiquetada como *calificación condicional al modelo de error*, nunca como certificación.
+The current interval certification (`domain/u_certification.py`: rational 2×2, Krawczyk, Neumann) is **not modified** and continues to certify print-quantization propagation. FD-EBQ may emit, as a **separate artifact**, a second evaluation using the same routines on a `MatrixBox` expanded to the full budget, labeled *qualification conditional on the error model*, never as certification.
 
-### I.9 Reutilización piloto → producción
+### I.9 Pilot-to-production reuse
 
-En FD-EBQ las corridas de la escalera **son** la evidencia de producción; no hay fase piloto separada salvo cuando el usuario declare explícitamente un subconjunto (prohibido inferirlo). La reutilización es por clave de identidad exacta:
+In FD-EBQ, ladder runs **are** production evidence; there is no separate pilot phase unless the user explicitly declares a subset (inferring one is prohibited). Reuse is keyed by exact identity:
 
-- digest del FDF **efectivo** (incluye \(\alpha\), sitio, modo, tolerancias SCF, perfil BARE);
-- digest en bytes de la DM parental y del nodo de referencia;
-- identidad del binario SIESTA (hash + versión) y del perfil de backend;
+- digest of the **effective** FDF (including \(\alpha\), site, mode, SCF tolerances, BARE profile);
+- byte digest of the parent DM and reference node;
+- SIESTA binary identity (hash + version) and backend profile identity;
 - digests de pseudopotenciales y huella de proyectores;
-- identidad del observable/parser (`siesta_occupations_total` vs traza de matriz) y su versión;
+- observable/parser identity (`siesta_occupations_total` versus matrix trace) and its version;
 - nivel SCF;
-- descomposición MPI: registrar; tratar como no-identidad hasta que la validación de camino demuestre equivalencia por debajo de \(q\).
+- MPI decomposition: record it; treat it as non-identity until path validation demonstrates equivalence below \(q\).
 
-Una corrida del nivel estricto **no** es reutilizable en un estimador de nivel base. El enclavado actual de `build_adaptive_campaign_dag` (sitio, \(\alpha\), modo, nivel SCF, referencia) ya cubre la mayor parte.
+A strict-level run is **not** reusable in a base-level estimator. The current key in `build_adaptive_campaign_dag` (site, \(\alpha\), mode, SCF level, reference) already covers most of this.
 
-### I.10 Estados de salida
+### I.10 Output states
 
-`QUALIFIED`, `QUALIFIED_HETEROGENEOUS`, `REVIEW` (evidencia válida, presupuesto > \(\tau_U\) o noise floor sólo parcialmente establecido), `NOT_ESTABLISHED` (no hay estimador admisible en la red), `NOT_DIFFERENTIABLE_AT_SCALE`, `FAIL` (evidencia inválida/incompleta). Nombre del artefacto: **Response Error-Budget Qualification** — no "certificate".
+`QUALIFIED`, `QUALIFIED_HETEROGENEOUS`, `REVIEW` (valid evidence, budget > \(\tau_U\), or only a partially established noise floor), `NOT_ESTABLISHED` (no admissible estimator on the grid), `NOT_DIFFERENTIABLE_AT_SCALE`, `FAIL` (invalid/incomplete evidence). Artifact name: **Response Error-Budget Qualification**—not "certificate".
 
 ---
 
@@ -458,79 +458,79 @@ S10 DECISION (pure function of E and P)
     emit ResolvedResponseProtocol + ResponseErrorBudgetQualification (+ evidence digest of E)
 ```
 
-**Determinismo.** (i) \(\mathcal E\) es un conjunto (sin orden) y todas las funciones \(f\), \(g\) lo leen ordenado por clave; (ii) barrera por ronda: el orden de terminación dentro de una ronda no afecta a nada; (iii) sin contadores históricos — dos campañas que reúnen el mismo \(\mathcal E\) por caminos distintos producen la misma decisión; (iv) red finita y añadidos monótonos ⇒ terminación garantizada; (v) desempates deterministas.
+**Determinism.** (i) \(\mathcal E\) is an unordered set and all functions \(f\), \(g\) read it in key order; (ii) round barrier: completion order within a round has no effect; (iii) no historical counters—two campaigns that collect the same \(\mathcal E\) through different paths produce the same decision; (iv) a finite grid and monotone additions guarantee termination; (v) tie-breaking is deterministic.
 
 ---
 
 ## K. Threshold strategy
 
-| Cantidad | Naturaleza | Cómo se establece |
+| Quantity | Nature | How it is established |
 |---|---|---|
-| \(q\) | Derivada | Exacta desde tokens. Sin umbral. |
-| \(G\), \(\mu_p\), pesos | Derivada | Algebraica desde la malla y el estimador. Sin umbral. |
-| \(\eta\), \(\hat\rho\) | Medida | Escalera SCF por campaña. |
-| \(\tau_U\) | **Requisito declarado** | Lo fija el usuario por razones científicas antes de ver resultados; no se calibra. |
-| \(\theta\) (seguridad de la escalera) | **Parámetro a validar** | Elegir el menor valor que logra la cobertura objetivo predeclarada frente a referencia de alta precisión (T2) en desarrollo; congelar; evaluar en holdout. |
-| \(\rho_{\max}\) (contracción aceptable) | **Parámetro a validar** | Igual que \(\theta\); además verificar en T0 con contracción conocida. |
-| \(\kappa\) (consistencia/reciprocidad) | Parámetro | Por defecto 1 (intervalos estrictos); sólo aumentar con evidencia de que las cotas son conservadoras, nunca para hacer pasar casos. |
-| Política de orden | Sin parámetro libre | Intervalos estrictos (§I.2). |
-| Suavidad de la compuerta de estado | Derivada + validar | Error de los observables de estado (impresión + escalera); el orden polinómico admitido se fija en el protocolo y se valida con casos de cambio de rama inducidos. |
-| Red \(\mathcal L\), presupuesto de corridas | Constantes de protocolo | Representabilidad + coste; validar insensibilidad desplazando la red (T2). |
+| \(q\) | Derived | Exact from tokens. No threshold. |
+| \(G\), \(\mu_p\), weights | Derived | Algebraic from the grid and estimator. No threshold. |
+| \(\eta\), \(\hat\rho\) | Measured | SCF ladder per campaign. |
+| \(\tau_U\) | **Declared requirement** | Set by the user for scientific reasons before seeing results; not calibrated. |
+| \(\theta\) (ladder safety factor) | **Parameter to validate** | Choose the smallest value that achieves the preregistered coverage target against the high-precision reference (T2) on development systems; freeze it; evaluate on holdout. |
+| \(\rho_{\max}\) (acceptable contraction) | **Parameter to validate** | Same as \(\theta\); also verify on T0 with known contraction. |
+| \(\kappa\) (consistency/reciprocity) | Parameter | Default 1 (strict intervals); increase only with evidence that bounds are conservative, never to make cases pass. |
+| Order policy | No free parameter | Strict intervals (§I.2). |
+| State-gate smoothness | Derived + validate | Error in state observables (print quantization + ladder); the admitted polynomial order is fixed in the protocol and validated on induced branch-change cases. |
+| Grid \(\mathcal L\), run budget | Protocol constants | Representability + cost; validate insensitivity by shifting the grid (T2). |
 
-Proceso: preregistro de (\(\theta,\rho_{\max},\kappa\), red, familia de estimadores, objetivo de cobertura); calibración sólo en T0 + sistemas de desarrollo; congelación con versión; evaluación en holdout sin reajuste. Cualquier cambio posterior ⇒ nueva versión y nuevo holdout. Los umbrales históricos V6 permanecen intactos y no se reutilizan como parámetros de FD-EBQ.
+Process: preregister (\(\theta,\rho_{\max},\kappa\), grid, estimator family, coverage target); calibrate only on T0 + development systems; freeze with a version; evaluate on holdout without retuning. Any later change ⇒ a new version and new holdout. Historical V6 thresholds remain unchanged and are not reused as FD-EBQ parameters.
 
 ---
 
 ## L. Validation program
 
-**T0 — Sintético con verdad conocida** (usar `synthetic_backend/`: `population_generator.py`, `noise_injection.py`). Funciones \(n(\alpha)\) analíticas con \(\chi\), \(b_1\), \(b_2\) conocidos; ruido de impresión exacto; ruido SCF absoluto, relativo, correlacionado entre \(\pm a\); sesgo común; términos \(\alpha|\alpha|\); saltos de rama a un lado; matrices casi singulares. Métricas: cobertura (verdad dentro de \(B\)), tasa de PASS falso, tasa de rechazo de casos sanos, determinismo bajo permutación de llegada.
+**T0 — Synthetic with known truth** (use `synthetic_backend/`: `population_generator.py`, `noise_injection.py`). Analytic \(n(\alpha)\) functions with known \(\chi\), \(b_1\), \(b_2\); exact print noise; absolute and relative SCF noise, correlated between \(\pm a\); common bias; \(\alpha|\alpha|\) terms; one-sided branch jumps; nearly singular matrices. Metrics: coverage (truth within \(B\)), false-PASS rate, healthy-case rejection rate, determinism under arrival-order permutation.
 
-**T1 — Modelo de campo medio interno** (Hubbard de pocos sitios autoconsistente, rápido): derivada analítica por solución lineal, multisitio, condicionamiento controlable, multiestabilidad controlable.
+**T1 — Internal mean-field model** (fast, self-consistent few-site Hubbard): analytic derivative through a linear solve, multisite, controllable conditioning, controllable multistability.
 
-**T2 — Referencia SIESTA de alta precisión (núcleo de la validación).** Para cada sistema: escalera densa de amplitudes, SCF muy estricto y **el build con salida `f20.12`** (`reserved_external_patches/`) usado **sólo como referencia de validación**, nunca como producto. Comparar la decisión y la cota de FD-EBQ con salida estándar frente a la "verdad" de alta precisión. Incluye verificación de reciprocidad y de la contabilidad energética de `DFTU.PotentialShift`.
+**T2 — High-precision SIESTA reference (core validation).** For each system: dense amplitude ladder, very strict SCF, and **the build with `f20.12` output** (`reserved_external_patches/`) used **only as a validation reference**, never as a product. Compare the FD-EBQ decision and bound using standard output against the high-precision "truth". Include reciprocity checks and energy accounting for `DFTU.PotentialShift`.
 
-**T3 — Controles negativos inducidos.** Amplitudes deliberadamente demasiado pequeñas y grandes, SCF flojo, DM parental no convergida, rama forzada: todos deben ser señalados (PASS falso = 0).
+**T3 — Induced negative controls.** Deliberately too-small and too-large amplitudes, loose SCF, unconverged parent DM, forced branch: all must be flagged (false PASS = 0).
 
-**T4 — Cruce entre códigos (opcional, débil).** Comparación cualitativa con DFPT (`hp.x`) sólo de tendencias de \(\chi^0,\chi\); los proyectores difieren, así que no es una referencia cuantitativa.
+**T4 — Cross-code comparison (optional, weak).** Qualitative comparison with DFPT (`hp.x`) of \(\chi^0,\chi\) trends only; the projectors differ, so this is not a quantitative reference.
 
-**Clases de benchmark mínimas** (desarrollo = NiO, FeO, CoO, MnO; el resto holdout):
+**Minimum benchmark classes** (development = NiO, FeO, CoO, MnO; all others holdout):
 
-| Clase | Ejemplos posibles | Qué estresa |
+| Class | Possible examples | What it stresses |
 |---|---|---|
-| Óxido AFM de gap amplio | NiO (dev) | Caso fácil de control |
-| Degeneración orbital / ramas | CoO, FeO (dev); un Jahn–Teller (LaMnO₃ o KCuF₃) holdout | Compuerta de estado |
-| Respuesta apantallada pequeña | MnO (dev); d¹⁰ o d⁰ (ZnO, TiO₂) holdout | Límite de ruido |
-| Metal | bcc Fe o Ni metálico; SrVO₃ | No analiticidad, smearing |
-| Sitios inequivalentes | Fe₃O₄ (oct/tet) o una espinela | Mallas por columna |
-| Muchos sitios | Supercelda de NiO con 8–16 sitios; un defecto | Escalado, condicionamiento |
-| Proyector distinto (4f) | CeO₂ | Generalidad del proyector |
-| Matriz casi singular | Par de sitios fuertemente acoplados, construido a propósito | Compuerta matricial |
+| Wide-gap AFM oxide | NiO (dev) | Easy control case |
+| Orbital degeneracy / branches | CoO, FeO (dev); a Jahn–Teller system (LaMnO₃ or KCuF₃) holdout | State gate |
+| Small screened response | MnO (dev); d¹⁰ or d⁰ (ZnO, TiO₂) holdout | Noise limit |
+| Metal | bcc Fe or metallic Ni; SrVO₃ | Non-analyticity, smearing |
+| Inequivalent sites | Fe₃O₄ (oct/tet) or a spinel | Per-column grids |
+| Many sites | NiO supercell with 8–16 sites; a defect | Scaling, conditioning |
+| Different projector (4f) | CeO₂ | Projector generality |
+| Nearly singular matrix | Deliberately constructed pair of strongly coupled sites | Matrix gate |
 
-**Criterios de éxito preregistrados:** cobertura ≥ objetivo declarado en T0 y T2; PASS falso = 0 en T3; ninguna violación de reciprocidad en casos `QUALIFIED`; decisiones invariantes bajo permutación de orden de llegada y desplazamiento de la red; acuerdo con revisión experta ciega en los casos holdout. Nunca: acuerdo de \(U\) con experimento o literatura.
+**Preregistered success criteria:** coverage ≥ declared target on T0 and T2; false PASS = 0 on T3; no reciprocity violations in `QUALIFIED` cases; decisions invariant under arrival-order permutation and grid translation; agreement with blind expert review on holdout cases. Never require agreement of \(U\) with experiment or literature.
 
 ---
 
 ## M. HubbardFlow integration
 
-### M.1 Lo que ya existe (y FDRC-v1 no menciona)
+### M.1 Existing components (not mentioned by FDRC-v1)
 
-| Archivo | Qué hace | Destino |
+| File | What it does | Disposition |
 |---|---|---|
-| `domain/alpha_selection.py` | Gate de 7 puntos, 3 ventanas OLS anidadas, defaults `residual_relative=0.02`, `slope_relative=0.05`, `min_signal_to_noise=10`, `magnetic_tolerance=0.05` | **Deprecar.** Umbrales inventados; residuo con parte par; magnetismo por constancia. Usado sólo por `tools/` históricos y tests. |
-| `domain/adaptive_alpha.py` | Envoltorio del anterior; define **otra** `AdaptiveAlphaPolicy` | **Deprecar** (colisión de nombre con la de `adaptive_alpha_control.py`). |
-| `domain/adaptive_alpha_control.py` | Controlador de rondas; `STOP_STABLE` por estabilidad de \(U\) en dos comparaciones; `stable_comparisons` histórico; "truncation metric" en eV de \(U\) | **Reemplazar la lógica de decisión** por \(f(\mathcal E,P)\); conservar presupuesto de nodos, representabilidad, concepto de probe SCF. |
-| `execution/campaign_runner.py::_execute_adaptive_gate` | Llama a `decide_round` con métricas de \(U\) | Cambiar la llamada a la nueva función de calificación. |
-| `execution/lr_dag.py::build_adaptive_campaign_dag` | DAG acumulativo, nodos por (sitio, \(\alpha\), modo, nivel SCF, referencia) | **Reutilizar** tal cual para rondas y escalera SCF. |
-| `domain/occupation_noise_calibration.py` | Réplicas \(\alpha=0\) | Mantener como prueba de determinismo; no como noise floor. |
-| `domain/response_grid_reproducibility.py`, `lr_analysis_v2._response_grid_empirical_widths` | Envolvente de réplicas de malla completa | Mantener como evidencia de camino (validación). |
-| `siesta_backend/occupation_precision.py` | Cuantización exacta | **Reutilizar** (q). |
-| `domain/quantized_response.py` | Propagación de impresión, \(\beta\) | Añadir función hermana con presupuesto completo; no modificar las existentes. |
-| `domain/u_certification.py` | Certificación intervalar | **No tocar.** |
-| `domain/matrix_lr.py::ResponseObservation` | Acopla BARE y SCREENED en el mismo \(\alpha\) | Ver M.3. |
-| `domain/lr_analysis_v2.py::_validate_observations` | Exige "every perturbed site must use the same alpha grid" | Generalizar para el nuevo camino; conservar para FIXED. |
-| `execution/campaign_v2.py::validate_lr_config` | `alpha_grid_ev` global único | Añadir bloque `perturbation_strategy`. |
+| `domain/alpha_selection.py` | Seven-point gate, three nested OLS windows, defaults `residual_relative=0.02`, `slope_relative=0.05`, `min_signal_to_noise=10`, `magnetic_tolerance=0.05` | **Deprecate.** Invented thresholds; residual includes even component; magnetism judged by constancy. Used only by historical `tools/` and tests. |
+| `domain/adaptive_alpha.py` | Wrapper around the previous module; defines **another** `AdaptiveAlphaPolicy` | **Deprecate** (name collision with the one in `adaptive_alpha_control.py`). |
+| `domain/adaptive_alpha_control.py` | Round controller; `STOP_STABLE` based on stable \(U\) across two comparisons; historical `stable_comparisons`; "truncation metric" in eV of \(U\) | **Replace decision logic** with \(f(\mathcal E,P)\); retain node budget, representability, and SCF-probe concept. |
+| `execution/campaign_runner.py::_execute_adaptive_gate` | Calls `decide_round` with \(U\) metrics | Change the call to the new qualification function. |
+| `execution/lr_dag.py::build_adaptive_campaign_dag` | Cumulative DAG, nodes per (site, \(\alpha\), mode, SCF level, reference) | **Reuse** as-is for rounds and the SCF ladder. |
+| `domain/occupation_noise_calibration.py` | Replicas at \(\alpha=0\) | Keep as a determinism test, not as a noise floor. |
+| `domain/response_grid_reproducibility.py`, `lr_analysis_v2._response_grid_empirical_widths` | Envelope of full-grid replicas | Keep as path evidence (validation). |
+| `siesta_backend/occupation_precision.py` | Exact quantization | **Reuse** (q). |
+| `domain/quantized_response.py` | Print-quantization propagation, \(\beta\) | Add a companion function for the full budget; do not modify existing functions. |
+| `domain/u_certification.py` | Interval certification | **Do not touch.** |
+| `domain/matrix_lr.py::ResponseObservation` | Couples BARE and SCREENED at the same \(\alpha\) | See M.3. |
+| `domain/lr_analysis_v2.py::_validate_observations` | Requires "every perturbed site must use the same alpha grid" | Generalize for the new path; retain for FIXED. |
+| `execution/campaign_v2.py::validate_lr_config` | Single global `alpha_grid_ev` | Add a `perturbation_strategy` block. |
 
-### M.2 Frontera mínima
+### M.2 Minimal boundary
 
 ```text
 FDF → preflight → subspace inventory
@@ -541,125 +541,125 @@ FDF → preflight → subspace inventory
     → production DAG (lr_dag) → χ0/χ via declared estimators → U → existing certification
 ```
 
-**Auditoría de la abstracción "el resto no debe saber de dónde viene el plan":** es sólida **sólo** si el objeto lleva estimador, nivel SCF y mallas por \((J,m)\). Un `ResolvedPerturbationPlan` que sólo lleve amplitudes obliga a que el análisis elija el estimador por su cuenta (`LRAnalysisPolicy` en la campaña), y la calificación pierde su significado. Recomendación adicional: calcular el presupuesto también para FIXED y USER (en modo diagnóstico), para que el downstream sea uniforme y el V6 pueda *describirse* con el mismo lenguaje sin cambiarse.
+**Audit of the abstraction "the rest of the system should not need to know where the plan came from":** it is sound **only** if the object carries the estimator, SCF level, and grids for each \((J,m)\). A `ResolvedPerturbationPlan` carrying amplitudes alone forces the analysis to choose the estimator independently (`LRAnalysisPolicy` in the campaign), making the qualification meaningless. Additional recommendation: also calculate the budget for FIXED and USER (in diagnostic mode), so downstream handling is uniform and V6 can be *described* in the same terms without changing it.
 
-### M.3 Módulos nuevos (dominio puro, sin E/S)
+### M.3 New modules (pure domain, no I/O)
 
-- `domain/response_error_budget.py`: odd/even, \(s_k\), \(\nu_k\), verificación de orden, candidatos y cotas, pesos de estimadores (incluido el cúbico V6), reciprocidad, propagación por influencia.
-- `domain/scf_tolerance_ladder.py`: \(\eta\), contracción, separación abs/rel, estados.
-- `domain/response_state_gate.py`: compuerta de estado sobre evidencia ya parseada (autovalores/subespacios de matrices locales, momentos, convergencia, gap).
-- `domain/response_qualification.py`: \(f(\mathcal E,P)\) y \(g(\mathcal E,P)\) (decisión y siguiente ronda), salida `ResponseErrorBudgetQualification`.
-- `domain/response_protocol.py`: `ResolvedResponseProtocol` (dataclass congelada, serializable, con digest).
-- Modelo de datos: `ResponseColumnRecord` por \((J,m,\alpha,\text{nivel})\) — desacopla modos. Adaptador hacia `ResponseObservation` sólo para el camino FIXED existente.
-- Backend: extender el parser (`siesta_backend/event_parser.py`, `parser_models.py`) para exponer matrices de ocupación locales completas y datos de convergencia por corrida, si no están ya accesibles.
+- `domain/response_error_budget.py`: odd/even decomposition, \(s_k\), \(\nu_k\), order verification, candidates and bounds, estimator weights (including V6 cubic), reciprocity, influence propagation.
+- `domain/scf_tolerance_ladder.py`: \(\eta\), contraction, absolute/relative separation, states.
+- `domain/response_state_gate.py`: state gate over already-parsed evidence (eigenvalues/subspaces of local matrices, moments, convergence, gap).
+- `domain/response_qualification.py`: \(f(\mathcal E,P)\) and \(g(\mathcal E,P)\) (decision and next round), returning `ResponseErrorBudgetQualification`.
+- `domain/response_protocol.py`: `ResolvedResponseProtocol` (frozen, serializable dataclass with digest).
+- Data model: `ResponseColumnRecord` per \((J,m,\alpha,\text{level})\)—decouples modes. Adapter to `ResponseObservation` only for the existing FIXED path.
+- Backend: extend the parser (`siesta_backend/event_parser.py`, `parser_models.py`) to expose full local occupation matrices and per-run convergence data, if not already available.
 
 ---
 
 ## N. Preservation requirements
 
-1. Tag `scientific-v6-final` / commit `45cb53c…`, todos sus artefactos y hashes (`MANIFEST.sha256`, `production_benchmarks_v6.zip*`, `validation_observables_v6/`, `results/stage-ub-v6-observables/`).
-2. Las calificaciones V6 (NiO/FeO ACCEPTED, CoO REVIEW, MnO PROTOCOL_REVIEW_REQUIRED) y sus umbrales; este informe no las reinterpreta.
-3. Definición de \(\chi^0\) (perfil `siesta-5.4.2-potential-shift-hamiltonian-v1`), de \(\chi\), y de \(U=(\chi^0)^{-1}-\chi^{-1}\); inversión directa; sin pseudoinversa ni regularización.
-4. `domain/u_certification.py` y su semántica (impresión → intervalos → certificación).
-5. Ruta de reinicio `DM.UseSaveDM true` y la identidad de la DM parental; no introducir `File.DM.Init`.
-6. Camino FIXED_PROTOCOL_GRID reproducible bit a bit (mismo estimador cúbico, misma malla, mismo análisis), incluidas las restricciones de `_validate_observations` en ese camino.
-7. Prohibición de inferir equivalencias de sitios.
+1. Tag `scientific-v6-final` / commit `45cb53c…`, all its artifacts and hashes (`MANIFEST.sha256`, `production_benchmarks_v6.zip*`, `validation_observables_v6/`, `results/stage-ub-v6-observables/`).
+2. V6 qualifications (NiO/FeO ACCEPTED, CoO REVIEW, MnO PROTOCOL_REVIEW_REQUIRED) and their thresholds; this report does not reinterpret them.
+3. Definition of \(\chi^0\) (profile `siesta-5.4.2-potential-shift-hamiltonian-v1`), \(\chi\), and \(U=(\chi^0)^{-1}-\chi^{-1}\); direct inversion; no pseudoinverse or regularization.
+4. `domain/u_certification.py` and its semantics (print quantization → intervals → certification).
+5. Restart route `DM.UseSaveDM true` and parent DM identity; do not introduce `File.DM.Init`.
+6. Bitwise-reproducible FIXED_PROTOCOL_GRID path (same cubic estimator, same grid, same analysis), including the `_validate_observations` restrictions on that path.
+7. Prohibition on inferring site equivalences.
 
 ---
 
 ## O. Implementation sequence
 
 **Safe to implement immediately**
-- `ResolvedResponseProtocol` y bloque `perturbation_strategy` (FIXED/USER/CALIBRATED como enum; CALIBRATED deshabilitado) con mallas y estimador por \((J,m)\).
-- Desacoplar modos en el modelo de datos (registro por columna-modo), con adaptador al camino FIXED.
-- `response_error_budget.py` en **modo diagnóstico**: pesos, ganancias, momentos, derivas, verificación de orden, reciprocidad, \(\delta_0\). Ejecutarlo sobre campañas existentes como *sidecar* (escrito fuera de las carpetas V6).
-- Clave de identidad de reutilización completa (§I.9) sobre el enclavado actual de `lr_dag`.
-- Deprecación explícita de `alpha_selection.py`/`adaptive_alpha.py` y resolución de la colisión `AdaptiveAlphaPolicy`.
-- Retirar `STOP_STABLE` por estabilidad de \(U\) y el contador `stable_comparisons` de la ruta de decisión (puede quedar como diagnóstico reportado).
-- Escalera SCF como **tipo de nodo** del DAG (ejecutable a demanda), sin que influya aún en decisiones automáticas.
+- `ResolvedResponseProtocol` and `perturbation_strategy` block (FIXED/USER/CALIBRATED as an enum; CALIBRATED disabled) with grids and estimator per \((J,m)\).
+- Decouple modes in the data model (record per column-mode), with an adapter for the FIXED path.
+- `response_error_budget.py` in **diagnostic mode**: weights, gains, moments, drifts, order verification, reciprocity, \(\delta_0\). Run it on existing campaigns as a *sidecar* (written outside V6 directories).
+- Complete reuse identity key (§I.9) on the current `lr_dag` key.
+- Explicitly deprecate `alpha_selection.py`/`adaptive_alpha.py` and resolve the `AdaptiveAlphaPolicy` name collision.
+- Remove `STOP_STABLE` based on \(U\) stability and the historical `stable_comparisons` counter from the decision path (it may remain as a reported diagnostic).
+- Make the SCF ladder a **DAG node type** (on-demand execution), without yet affecting automatic decisions.
 
 **Requires scientific validation first**
-- Uso de la escalera SCF como noise floor (\(\theta\), \(\rho_{\max}\)).
-- Reciprocidad como compuerta (verificar operador adjunto en SIESTA 5.4.2).
-- Compuerta de estado con autovalores/subespacios y criterio de suavidad.
-- Selección automática por mínima cota y la estrategia CALIBRATED completa.
-- Mallas heterogéneas por columna en producción.
-- Consistencia energía–ocupación.
-- Evaluación del presupuesto completo con Krawczyk como artefacto separado.
+- Use of the SCF ladder as a noise floor (\(\theta\), \(\rho_{\max}\)).
+- Reciprocity as a gate (verify the adjoint operator in SIESTA 5.4.2).
+- State gate using eigenvalues/subspaces and a smoothness criterion.
+- Automatic minimum-bound selection and the complete CALIBRATED strategy.
+- Heterogeneous per-column grids in production.
+- Energy–occupation consistency.
+- Evaluation of the full budget with Krawczyk as a separate artifact.
 
 **Should not be implemented**
-- Noise floor basado en réplicas \(\alpha=0\).
-- Umbrales \(D_{\max}\), \(C_{\max}\), \(R_{\max}\), \(R^2\), o residuos del ajuste completo como criterio de linealidad.
-- Intersección obligatoria BARE∩SCREENED o entre sitios como condición de fallo.
-- Cualquier criterio de parada o selección basado en \(U\) (valor, estabilidad entre rondas, o sensibilidad lineal–cúbico como incertidumbre).
-- Selección de ventana para mejorar \(\kappa\) o la invertibilidad.
-- Calibración en un subconjunto de sitios "representativos" inferido automáticamente.
-- El build `f20.12` como ruta de producto.
+- Noise floor based on replicas at \(\alpha=0\).
+- Thresholds \(D_{\max}\), \(C_{\max}\), \(R_{\max}\), \(R^2\), or full-fit residuals as linearity criteria.
+- Mandatory BARE∩SCREENED or inter-site intersection as a failure condition.
+- Any stopping or selection criterion based on \(U\) (value, stability across rounds, or linear–cubic sensitivity as uncertainty).
+- Window selection to improve \(\kappa\) or invertibility.
+- Calibration on an automatically inferred subset of "representative" sites.
+- The `f20.12` build as a product path.
 
 ---
 
 ## P. Final recommendation
 
-1. **¿Es defendible la calibración automática por diferencias finitas?** Sí, **condicionada** a: (a) calificación específica del estimador; (b) noise floor con escalera SCF sobre la diferencia \(\pm a\) y verificación de contracción; (c) verificación de orden; (d) requisito declarado sobre \(U\) propagado por las matrices; (e) validación T0/T2/T3 con holdout. Sin (b), no lo es: los errores independientes de \(a\) quedan fuera de alcance de cualquier lógica multiescala. No hace falta DFPT.
+1. **Is automatic finite-difference calibration defensible?** Yes, **conditionally** on: (a) estimator-specific qualification; (b) a noise floor measured with an SCF ladder on the \(\pm a\) difference and contraction verification; (c) order verification; (d) a declared requirement on \(U\) propagated through the matrices; (e) T0/T2/T3 validation with holdout. Without (b), it is not: errors independent of \(a\) are beyond the reach of any multiscale logic. DFPT is not required.
 
-2. **¿Es FDRC-v1 el diseño correcto?** No. Su diseño de medición es bueno; su teoría de decisión no.
+2. **Is FDRC-v1 the right design?** No. Its measurement design is good; its decision theory is not.
 
-3. **¿Qué lo reemplaza?** FD-EBQ (§I–§J): presupuesto de error por \((J,m,I)\) para una familia cerrada de estimadores (central, Richardson con orden verificado, estimador protocolario), con falsación interna (vecinos, reciprocidad, equivalencias declaradas), compuerta de estado por suavidad, selección por mínima cota, aceptación en espacio de \(U\) frente a \(\tau_U\), mallas y estimadores por modo y columna, decisión \(f(\mathcal E,P)\) con barreras.
+3. **What replaces it?** FD-EBQ (§I–§J): an error budget per \((J,m,I)\) for a closed estimator family (central, Richardson with verified order, protocol estimator), with internal falsification (neighbors, reciprocity, declared equivalences), a smoothness-based state gate, minimum-bound selection, acceptance in U-space against \(\tau_U\), grids and estimators per mode and column, and a barrier-based decision \(f(\mathcal E,P)\).
 
-4. **¿Cuál es el mayor bloqueo científico?** Acotar la componente SCF del error —en particular la parte relativa/independiente de \(a\)— a partir de una escalera de tolerancias, y demostrar con referencia de alta precisión (T2) que la estimación \(\theta\eta_1/(1-\hat\rho)\) cubre el error real.
+4. **What is the largest scientific blocker?** Bounding the SCF component of the error—especially the relative component independent of \(a\)—from a tolerance ladder, and demonstrating against a high-precision reference (T2) that the estimate \(\theta\eta_1/(1-\hat\rho)\) covers the true error.
 
-5. **¿Diseñar la metodología antes de la consolidación?** **Diseñar el contrato sí, ahora**: el modelo de datos actual (modos acoplados en `ResponseObservation`, malla común obligatoria en `lr_analysis_v2`, `alpha_grid_ev` global en `campaign_v2`) incrusta exactamente las restricciones que esta revisión rechaza, y consolidar sobre él las congelaría. **Habilitar el selector automático no**: eso espera a la validación. La consolidación debe además reducir los tres mecanismos de \(\alpha\) existentes a uno.
+5. **Design the methodology before consolidation?** **Design the contract now: yes**. The current data model (modes coupled in `ResponseObservation`, a mandatory common grid in `lr_analysis_v2`, global `alpha_grid_ev` in `campaign_v2`) embeds precisely the constraints rejected by this review, and consolidating on top of it would freeze them. **Enable the automatic selector: no**; that must wait for validation. Consolidation should also reduce the three existing mechanisms for \(\alpha\) to one.
 
-6. **Evidencia mínima antes de habilitar el selector para usuarios:**
-   - T0: cobertura ≥ objetivo preregistrado en toda la batería adversarial, determinismo bajo permutación.
-   - T2: en todos los sistemas de desarrollo **y** en al menos un representante holdout de cada clase de §L (incluido un metal, un sistema heterogéneo y uno de muchos sitios), la verdad de alta precisión cae dentro de la cota en todos los casos calificados.
-   - T3: cero PASS falsos.
-   - Ninguna violación de reciprocidad en casos `QUALIFIED`; reciprocidad del operador verificada en SIESTA 5.4.2.
-   - Parámetros \(\theta,\rho_{\max},\kappa\) congelados y versionados antes de evaluar el holdout.
-   - Hasta entonces, CALIBRATED sólo en modo **asesor**: produce el informe de presupuesto y una propuesta, y el usuario firma la elección como USER_EXPLICIT_GRID.
+6. **Minimum evidence before enabling the selector for users:**
+   - T0: coverage ≥ the preregistered target over the full adversarial suite, with determinism under permutation.
+   - T2: on all development systems **and** at least one holdout representative from each class in §L (including a metal, a heterogeneous system, and a many-site system), the high-precision truth falls within the bound in every qualified case.
+   - T3: zero false PASS results.
+   - No reciprocity violations in `QUALIFIED` cases; operator reciprocity verified in SIESTA 5.4.2.
+   - Freeze and version parameters \(\theta,\rho_{\max},\kappa\) before evaluating the holdout.
+   - Until then, CALIBRATED operates only in **advisory** mode: it produces a budget report and proposal, and the user signs off on the choice as USER_EXPLICIT_GRID.
 
 ---
 
-## Apéndice 1 — Reanálisis ilustrativo de CoO V6 (desarrollo, post-hoc)
+## Appendix 1 — Illustrative reanalysis of CoO V6 (development, post-hoc)
 
-**Derivas de la pendiente central** (malla 0.02/0.04/0.06 eV; para \(b_1a^2\) puro el cociente es \(20/12=1.667\)):
+**Central-slope drifts** (grid 0.02/0.04/0.06 eV; for pure \(b_1a^2\), the ratio is \(20/12=1.667\)):
 
-| Elemento | \(s(0.02)\) | \(s(0.04)\) | \(s(0.06)\) | Cociente | Régimen |
+| Quantity | \(s(0.02)\) | \(s(0.04)\) | \(s(0.06)\) | Ratio | Regime |
 |---|---|---|---|---|---|
-| BARE \(\chi^0_{00}\) | −1.351575 | −1.340237 | −1.321592 | 1.645 | Truncamiento suave, orden 2 verificado |
-| BARE \(\chi^0_{10}\) | 1.201775 | 1.190037 | 1.170808 | 1.638 | Ídem |
-| SCREENED \(\chi_{00}\) | −0.117175 | −0.117163 | −0.117108 | 4.3 | Ruido, signo/cociente erráticos |
-| SCREENED \(\chi_{10}\) vs \(\chi_{01}\) | 0.034650 / 0.034650 | 0.034662 / 0.034675 | 0.034617 / 0.034575 | — | Reciprocidad exacta a 0.02; residuo \(4.2\times10^{-5}\) a 0.06 > \(2q/a\) |
+| BARE \(\chi^0_{00}\) | −1.351575 | −1.340237 | −1.321592 | 1.645 | Smooth truncation, order 2 verified |
+| BARE \(\chi^0_{10}\) | 1.201775 | 1.190037 | 1.170808 | 1.638 | Same |
+| SCREENED \(\chi_{00}\) | −0.117175 | −0.117163 | −0.117108 | 4.3 | Noise; erratic sign/ratio |
+| SCREENED \(\chi_{10}\) vs \(\chi_{01}\) | 0.034650 / 0.034650 | 0.034662 / 0.034675 | 0.034617 / 0.034575 | — | Exact reciprocity at 0.02; residual \(4.2\times10^{-5}\) a 0.06 > \(2q/a\) |
 
-**Parte par BARE:** \(e(a)=\delta_0+c_2a^2+c_4a^4\) con \(\delta_0=+1.9\times10^{-5}\) (sitio 0) y \(-2.1\times10^{-5}\) (sitio 1), \(c_2\approx0.35\), \(c_4\approx-7.8\).
+**BARE even component:** \(e(a)=\delta_0+c_2a^2+c_4a^4\), with \(\delta_0=+1.9\times10^{-5}\) (site 0) and \(-2.1\times10^{-5}\) (site 1), \(c_2\approx0.35\), \(c_4\approx-7.8\).
 
-**\(U\) por sitio (eV) con distintos estimadores** (sitios equivalentes por simetría AFM):
+**\(U\) per site (eV) with different estimators** (sites equivalent under AFM symmetry):
 
-| Estimador | \(U_0\) | \(U_1\) | \(|U_0-U_1|\) |
+| Estimator | \(U_0\) | \(U_1\) | \(|U_0-U_1|\) |
 |---|---|---|---|
-| Central 0.02 (ambos modos) | 5.81843 | 5.81843 | <10⁻¹⁴ |
+| Central 0.02 (both modes) | 5.81843 | 5.81843 | <10⁻¹⁴ |
 | Central 0.06 | 5.83906 | 5.84104 | 2.0×10⁻³ |
-| Lineal OLS 6 pt | 5.83431 | 5.83528 | 9.7×10⁻⁴ |
-| **Cúbico 6 pt (V6)** | 5.81715 | 5.81502 | 2.1×10⁻³ |
+| Linear OLS 6 pt | 5.83431 | 5.83528 | 9.7×10⁻⁴ |
+| **6-point cubic (V6)** | 5.81715 | 5.81502 | 2.1×10⁻³ |
 | BARE Richardson / SCREENED central 0.02 | 5.81609 | 5.81610 | 1.1×10⁻⁵ |
-| BARE cúbico / SCREENED central 0.02 | 5.81691 | 5.81688 | 2.3×10⁻⁵ |
+| BARE cubic / SCREENED central 0.02 | 5.81691 | 5.81688 | 2.3×10⁻⁵ |
 
-Lectura: la asimetría entre sitios equivalentes del estimador V6 procede de amplificar el ruido SCREENED con un estimador diseñado para eliminar truncamiento; tratar cada modo según su régimen la elimina. **No se propone recalcular ni reclasificar CoO.**
+Interpretation: the asymmetry between equivalent sites under the V6 estimator results from amplifying SCREENED noise with an estimator designed to eliminate truncation; treating each mode according to its regime removes it. **Recalculation or reclassification of CoO is not proposed.**
 
-## Apéndice 2 — Prueba sintética de cobertura (400 ensayos por caso)
+## Appendix 2 — Synthetic coverage test (400 trials per case)
 
-| Caso | Aceptados | Cobertura | Cota relativa mediana | Estimador elegido |
+| Case | Accepted | Coverage | Median relative bound | Selected estimator |
 |---|---|---|---|---|
-| BARE-like, sólo impresión | 400 | 1.000 | 1.2×10⁻⁴ | Richardson |
+| BARE-like, print quantization only | 400 | 1.000 | 1.2×10⁻⁴ | Richardson |
 | SCREENED-like, SCF abs. conocido | 400 | 1.000 | 2.6×10⁻³ | Central |
 | SCREENED-like, SCF rel. conocido | 400 | 1.000 | 3.9×10⁻³ | Central |
 | SCREENED-like, SCF abs. **asumido 0** | 400 | 0.983 | 8.5×10⁻⁴ | Central |
-| **Sesgo SCF relativo común** | 400 | **0.000** | 7.5×10⁻⁴ | Central |
-| Término impar no analítico \(\kappa\alpha|\alpha|\) | 400 | 1.000 | 8.5×10⁻³ | Central (orden 1) |
+| **Common relative SCF bias** | 400 | **0.000** | 7.5×10⁻⁴ | Central |
+| Non-analytic odd term \(\kappa\alpha|\alpha|\) | 400 | 1.000 | 8.5×10⁻³ | Central (order 1) |
 
-Sin verificación de orden, el caso no analítico tenía cobertura 0 y el de noise floor subestimado 0.58. El caso de sesgo común permanece en 0 con cualquier lógica multiescala: es la demostración operativa del bloqueo principal.
+Without order verification, coverage was 0 for the non-analytic case and 0.58 for the underestimated-noise-floor case. Coverage for the common-bias case remains 0 under any multiscale logic: this is the operational demonstration of the main blocker.
 
-## Apéndice 3 — Reproducción
+## Appendix 3 — Reproduction
 
 ```bash
 git checkout codex/hubbardflow-rename

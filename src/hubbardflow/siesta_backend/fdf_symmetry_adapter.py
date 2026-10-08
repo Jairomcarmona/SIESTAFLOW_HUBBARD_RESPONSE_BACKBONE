@@ -72,53 +72,53 @@ def _block(lines: list[str], name: str) -> list[str]:
         lowered = line.lower()
         if lowered == start:
             if inside:
-                raise FdfSymmetryError(f"Bloque FDF duplicado: {name}")
+                raise FdfSymmetryError(f"Duplicate FDF block: {name}")
             inside = True
             continue
         if lowered == end:
             if not inside:
-                raise FdfSymmetryError(f"Fin de bloque sin inicio: {name}")
+                raise FdfSymmetryError(f"End of FDF block without a start: {name}")
             return values
         if inside and line:
             values.append(line)
-    raise FdfSymmetryError(f"Bloque FDF ausente o sin cierre: {name}")
+    raise FdfSymmetryError(f"FDF block is missing or has no closing marker: {name}")
 
 
 def _scalar(lines: list[str], key: str) -> list[str]:
     pattern = re.compile(rf"^\s*{re.escape(key)}\s+(.+?)\s*$", re.IGNORECASE)
     matches = [match.group(1) for line in lines if (match := pattern.match(line))]
     if len(matches) != 1:
-        raise FdfSymmetryError(f"Se requiere exactamente una directiva {key}")
+        raise FdfSymmetryError(f"Exactly one {key} directive is required")
     return matches[0].split()
 
 
 def _lattice_scale(lines: list[str]) -> float:
     values = _scalar(lines, "LatticeConstant")
     if len(values) != 2:
-        raise FdfSymmetryError("LatticeConstant debe declarar valor y unidad")
+        raise FdfSymmetryError("LatticeConstant must declare a value and unit")
     try:
         magnitude = float(values[0])
     except ValueError as exc:
-        raise FdfSymmetryError("LatticeConstant no numérico") from exc
+        raise FdfSymmetryError("LatticeConstant is not numeric") from exc
     unit = values[1].lower()
     if unit in {"ang", "angstrom", "angstroms"}:
         return magnitude
     if unit in {"bohr", "bohrs"}:
         return magnitude * _BOHR_TO_ANGSTROM
-    raise FdfSymmetryError(f"Unidad LatticeConstant no admitida: {values[1]}")
+    raise FdfSymmetryError(f"Unsupported LatticeConstant unit: {values[1]}")
 
 
 def _parse_dftu(lines: list[str]) -> dict[str, dict[str, Any]]:
     entries = _block(lines, "DFTU.Proj")
     if len(entries) % 4:
-        raise FdfSymmetryError("DFTU.Proj debe contener grupos de cuatro líneas")
+        raise FdfSymmetryError("DFTU.Proj must contain groups of four lines")
     result: dict[str, dict[str, Any]] = {}
     for offset in range(0, len(entries), 4):
-        header, shell, shift, radial = entries[offset:offset + 4]
+        header, shell, shift, radial = entries[offset : offset + 4]
         header_fields, shell_fields = header.split(), shell.split()
         radial_fields = radial.split()
         if len(header_fields) != 2 or len(shell_fields) != 2 or len(radial_fields) != 2:
-            raise FdfSymmetryError("Entrada DFTU.Proj incompleta")
+            raise FdfSymmetryError("DFTU.Proj record is incomplete")
         label = header_fields[0]
         try:
             result[label] = {
@@ -129,9 +129,9 @@ def _parse_dftu(lines: list[str]) -> dict[str, dict[str, Any]]:
                 "omega": float(radial_fields[1]),
             }
         except ValueError as exc:
-            raise FdfSymmetryError(f"Entrada DFTU.Proj no numérica para {label}") from exc
+            raise FdfSymmetryError(f"DFTU.Proj record for {label} is not numeric") from exc
     if len(result) != len(entries) // 4:
-        raise FdfSymmetryError("Etiquetas DFTU.Proj duplicadas")
+        raise FdfSymmetryError("Duplicate DFTU.Proj labels")
     return result
 
 
@@ -147,30 +147,30 @@ def parse_fdf_symmetry_input(fdf_path: str | Path) -> FdfSymmetryInput:
     lines = _clean_lines(raw.decode("utf-8"))
     coordinate_format = " ".join(_scalar(lines, "AtomicCoordinatesFormat")).lower()
     if coordinate_format != "fractional":
-        raise FdfSymmetryError("Sólo AtomicCoordinatesFormat Fractional es auditable actualmente")
+        raise FdfSymmetryError("Only AtomicCoordinatesFormat Fractional is currently auditable")
 
     scale = _lattice_scale(lines)
     vectors = _block(lines, "LatticeVectors")
     if len(vectors) != 3:
-        raise FdfSymmetryError("LatticeVectors debe tener tres filas")
+        raise FdfSymmetryError("LatticeVectors must have three rows")
     try:
         lattice = tuple(tuple(scale * float(value) for value in line.split()) for line in vectors)
     except ValueError as exc:
-        raise FdfSymmetryError("LatticeVectors no numérico") from exc
+        raise FdfSymmetryError("LatticeVectors contains a non-numeric value") from exc
     if any(len(row) != 3 for row in lattice):
-        raise FdfSymmetryError("LatticeVectors debe ser 3x3")
+        raise FdfSymmetryError("LatticeVectors must be 3x3")
 
     species_map: dict[int, tuple[int, str]] = {}
     for line in _block(lines, "ChemicalSpeciesLabel"):
         fields = line.split()
         if len(fields) != 3:
-            raise FdfSymmetryError("ChemicalSpeciesLabel inválido")
+            raise FdfSymmetryError("ChemicalSpeciesLabel is invalid")
         try:
             index, atomic_number = int(fields[0]), int(fields[1])
         except ValueError as exc:
-            raise FdfSymmetryError("ChemicalSpeciesLabel no numérico") from exc
+            raise FdfSymmetryError("ChemicalSpeciesLabel contains a non-numeric value") from exc
         if index in species_map:
-            raise FdfSymmetryError("Índice ChemicalSpeciesLabel duplicado")
+            raise FdfSymmetryError("Duplicate ChemicalSpeciesLabel index")
         species_map[index] = (atomic_number, fields[2])
 
     dftu = _parse_dftu(lines)
@@ -185,14 +185,14 @@ def parse_fdf_symmetry_input(fdf_path: str | Path) -> FdfSymmetryInput:
     for atom_index, line in enumerate(_block(lines, "AtomicCoordinatesAndAtomicSpecies"), start=1):
         fields = line.split()
         if len(fields) < 4:
-            raise FdfSymmetryError("AtomicCoordinatesAndAtomicSpecies inválido")
+            raise FdfSymmetryError("AtomicCoordinatesAndAtomicSpecies is invalid")
         try:
             coordinate = tuple(float(value) for value in fields[:3])
             species_index = int(fields[3])
         except ValueError as exc:
-            raise FdfSymmetryError("Coordenada o especie atómica no numérica") from exc
+            raise FdfSymmetryError("Atomic coordinate or species index is not numeric") from exc
         if species_index not in species_map or len(coordinate) != 3:
-            raise FdfSymmetryError("Especie atómica no declarada")
+            raise FdfSymmetryError("Atomic species was not declared")
         atomic_number, label = species_map[species_index]
         atom_id = label if label not in label_seen else f"{label}@{atom_index}"
         label_seen.add(label)
@@ -203,29 +203,39 @@ def parse_fdf_symmetry_input(fdf_path: str | Path) -> FdfSymmetryInput:
             definition = dftu[label]
             classes.append(
                 "correlated:Z={}:n={}:l={}:U={:.12g}:J={:.12g}:rc={:.12g}:omega={:.12g}".format(
-                    atomic_number, definition["n"], definition["l"], definition["u_j_line"][0],
-                    definition["u_j_line"][1], definition["rc_bohr"], definition["omega"]
+                    atomic_number,
+                    definition["n"],
+                    definition["l"],
+                    definition["u_j_line"][0],
+                    definition["u_j_line"][1],
+                    definition["rc_bohr"],
+                    definition["omega"],
                 )
             )
             # An FDF declares a shell but does not, by itself, prove that an
             # arbitrary orbital rotation preserves the measured occupation.
-            subspaces.append({"kind": "correlated", **definition,
-                              "complete_l_shell": False, "scalar_occupation": False})
-            projectors.append({"kind": "siesta_dftu", "generation_method": "declared",
-                               "rotationally_invariant": False})
+            subspaces.append(
+                {"kind": "correlated", **definition, "complete_l_shell": False, "scalar_occupation": False}
+            )
+            projectors.append(
+                {"kind": "siesta_dftu", "generation_method": "declared", "rotationally_invariant": False}
+            )
             correlated.append(atom_id)
         else:
             classes.append(f"spectator:Z={atomic_number}")
-            subspaces.append({"kind": "spectator", "complete_l_shell": False,
-                              "scalar_occupation": False})
+            subspaces.append({"kind": "spectator", "complete_l_shell": False, "scalar_occupation": False})
             projectors.append({"kind": "spectator", "rotationally_invariant": False})
     if not coordinates or not correlated:
-        raise FdfSymmetryError("No se hallaron átomos o subespacios DFTU correlacionados")
+        raise FdfSymmetryError("No correlated atoms or DFTU subspaces were found")
     return FdfSymmetryInput(
-        fdf_sha256=sha256(raw).hexdigest(), lattice_angstrom=lattice,
-        fractional_coordinates=tuple(coordinates), atom_ids=tuple(atom_ids),
-        physical_species=tuple(physical_species), equivalence_classes=tuple(classes),
-        subspaces=tuple(subspaces), projectors=tuple(projectors),
+        fdf_sha256=sha256(raw).hexdigest(),
+        lattice_angstrom=lattice,
+        fractional_coordinates=tuple(coordinates),
+        atom_ids=tuple(atom_ids),
+        physical_species=tuple(physical_species),
+        equivalence_classes=tuple(classes),
+        subspaces=tuple(subspaces),
+        projectors=tuple(projectors),
         correlated_atom_ids=tuple(correlated),
     )
 
@@ -239,21 +249,23 @@ def _load_verified_moments(path: str | Path, input_data: FdfSymmetryInput) -> np
     """
     data = json.loads(Path(path).read_text(encoding="utf-8"))
     if data.get("schema_version") != 1 or data.get("input_fdf_sha256") != input_data.fdf_sha256:
-        raise FdfSymmetryError("La evidencia magnética no está ligada a esta FDF")
+        raise FdfSymmetryError("Magnetic evidence is not bound to this FDF")
     moments = data.get("moments_by_atom_index")
     expected = {str(index) for index in range(1, len(input_data.atom_ids) + 1)}
     if not isinstance(moments, dict) or set(moments) != expected:
-        raise FdfSymmetryError("La evidencia magnética debe cubrir exactamente todos los átomos")
+        raise FdfSymmetryError("Magnetic evidence must cover exactly all atoms")
     try:
         values = np.asarray([moments[str(index)] for index in range(1, len(expected) + 1)], dtype=float)
     except (TypeError, ValueError) as exc:
-        raise FdfSymmetryError("Momentos magnéticos no numéricos") from exc
+        raise FdfSymmetryError("Magnetic moments contain a non-numeric value") from exc
     if values.shape != (len(expected), 3) or not np.all(np.isfinite(values)):
-        raise FdfSymmetryError("Momentos magnéticos incompletos o no finitos")
+        raise FdfSymmetryError("Magnetic moments are incomplete or non-finite")
     return values
 
 
-def audit_fdf_symmetry(fdf_path: str | Path, magnetic_evidence_path: str | Path | None = None) -> FdfSymmetryAudit:
+def audit_fdf_symmetry(
+    fdf_path: str | Path, magnetic_evidence_path: str | Path | None = None
+) -> FdfSymmetryAudit:
     """Return a reduction certificate only when accepted magnetic evidence exists."""
     input_data = parse_fdf_symmetry_input(fdf_path)
     common = dict(
@@ -268,15 +280,18 @@ def audit_fdf_symmetry(fdf_path: str | Path, magnetic_evidence_path: str | Path 
         # Zero vectors here are a geometry-only probe, never a certificate.
         candidate = detect_symmetry(moments=np.zeros((len(input_data.atom_ids), 3)), **common)
         return FdfSymmetryAudit(
-            input=input_data, geometric_candidate_count=len(candidate.crystal_operations),
+            input=input_data,
+            geometric_candidate_count=len(candidate.crystal_operations),
             reduction_enabled=False,
             reasons=("reference_magnetic_evidence_missing", "reduction_fail_closed"),
         )
     moments = _load_verified_moments(magnetic_evidence_path, input_data)
     certificate = detect_symmetry(moments=moments, **common)
     return FdfSymmetryAudit(
-        input=input_data, geometric_candidate_count=len(certificate.crystal_operations),
-        reduction_enabled=certificate.reduction_enabled, reasons=certificate.reasons,
+        input=input_data,
+        geometric_candidate_count=len(certificate.crystal_operations),
+        reduction_enabled=certificate.reduction_enabled,
+        reasons=certificate.reasons,
         certificate=certificate,
     )
 

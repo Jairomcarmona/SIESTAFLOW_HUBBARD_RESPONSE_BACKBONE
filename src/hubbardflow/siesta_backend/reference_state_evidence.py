@@ -177,14 +177,12 @@ def _spectrum_evidence(
         atom = by_atom.get(output_atom_index)
         if atom is None:
             raise ReferenceStateEvidenceError(
-                f"la población local no contiene el átomo correlacionado {output_atom_index}"
+                f"Local population does not contain correlated atom {output_atom_index}"
             )
         if atom.species_index != species_by_atom[subspace.atom_index]:
-            raise ReferenceStateEvidenceError(
-                f"el índice de especie de salida no coincide para el átomo {output_atom_index}"
-            )
+            raise ReferenceStateEvidenceError(f"Output species index does not match atom {output_atom_index}")
         if event.source_start_line is None or event.source_end_line is None:
-            raise ReferenceStateEvidenceError("evento de ocupaciones sin límites de líneas")
+            raise ReferenceStateEvidenceError("Occupation event has no source line range")
         matrices: dict[str, list[list[str]]] = {"up": []}
         if atom.raw_matrix_down is not None:
             matrices["down"] = []
@@ -207,7 +205,7 @@ def _spectrum_evidence(
             if matrix_match:
                 row, col = int(matrix_match.group(1)), int(matrix_match.group(2))
                 if row > len(atom.raw_matrix_up) or col > len(atom.raw_matrix_up):
-                    raise ReferenceStateEvidenceError("índice de matriz local fuera de dimensión")
+                    raise ReferenceStateEvidenceError("Local matrix index is out of range")
                 while len(matrices["up"]) < row:
                     matrices["up"].append([""] * len(atom.raw_matrix_up))
                     if "down" in matrices:
@@ -215,14 +213,14 @@ def _spectrum_evidence(
                 matrices["up"][row - 1][col - 1] = matrix_match.group(3)
                 if "down" in matrices:
                     if matrix_match.group(4) is None:
-                        raise ReferenceStateEvidenceError("entrada down-spin ausente en la matriz local")
+                        raise ReferenceStateEvidenceError("Local matrix is missing a down-spin entry")
                     matrices["down"][row - 1][col - 1] = matrix_match.group(4)
         spectra: list[OccupationSpectrum] = []
         for spin, tokens_by_row in matrices.items():
             if len(tokens_by_row) != atom.raw_matrix_up.shape[0] or any(
                 not value for row in tokens_by_row for value in row
             ):
-                raise ReferenceStateEvidenceError(f"matriz local {spin} incompleta para {subspace.site_id}")
+                raise ReferenceStateEvidenceError(f"Local {spin} matrix is incomplete for {subspace.site_id}")
             array = np.asarray(
                 [
                     [float(token.replace("D", "E").replace("d", "e")) for token in row]
@@ -231,7 +229,7 @@ def _spectrum_evidence(
                 dtype=float,
             )
             if not np.isfinite(array).all():
-                raise ReferenceStateEvidenceError("matriz local contiene valores no finitos")
+                raise ReferenceStateEvidenceError("Local matrix contains non-finite values")
             radii = tuple(tuple(_half_width(token) for token in row) for row in tokens_by_row)
             spectra.append(
                 OccupationSpectrum(spin, tuple(float(x) for x in np.linalg.eigvalsh(array)), radii)
@@ -256,9 +254,7 @@ def _subspaces_from_population_event(
         atom_index = item.atom_index - 1
         fdf_atom = by_index.get(atom_index)
         if fdf_atom is None or fdf_atom.species_index != item.species_index:
-            raise ReferenceStateEvidenceError(
-                f"el índice de especie de salida no coincide para el átomo {item.atom_index}"
-            )
+            raise ReferenceStateEvidenceError(f"Output species index does not match atom {item.atom_index}")
         observed.append(_OutputSubspace(f"{fdf_atom.species_label}@{atom_index}", atom_index))
     return tuple(observed)
 
@@ -274,7 +270,7 @@ def build_reference_state_evidence(
     output_text = output_bytes.decode("utf-8", errors="replace")
     model = parse_effective_fdf(fdf_file)
     if any(space.atom_index < 0 or space.atom_index >= model.number_of_atoms for space in subspaces):
-        raise ReferenceStateEvidenceError("inventory contiene atom_index fuera del FDF")
+        raise ReferenceStateEvidenceError("Inventory contains an atom_index outside the FDF")
 
     normal = _completion(output_text)
     converged = bool(

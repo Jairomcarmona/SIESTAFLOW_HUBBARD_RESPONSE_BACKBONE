@@ -1,29 +1,83 @@
-# MnO: auditoría de la correspondencia entre respuesta lineal y funcional DFT+U
+# MnO: Audit of the Correspondence Between Linear Response and the DFT+U Functional
 
-Fecha: 2026-09-23. Auditoría estática del código, la fuente SIESTA 5.4.2 y los resultados ya guardados. No se ejecutó SIESTA ni se inició una campaña.
+Date: 2026-09-23. Static audit of the code, SIESTA 5.4.2 source, and saved
+results. SIESTA was not run and no campaign was started.
 
-## Hallazgo principal: la U calculada no es, en general, el U−J aplicado
+## Main finding: calculated U is not, in general, the applied U−J
 
-`tools/run_mno_afmii_response_quantized_v1.py` selecciona exclusivamente `precision[atom.atom_index].total` en `_occupations` (líneas 142–160). A partir de ese total $n_I=n_{I\uparrow}+n_{I\downarrow}$, ajusta las matrices de respuesta BARE y SCREENED, y `src/siestaflow_hubbard/domain/quantized_response.py` (líneas 93–111) calcula
+`tools/run_mno_afmii_response_quantized_v1.py` selects only
+`precision[atom.atom_index].total` in `_occupations` (lines 142–160). From this
+total, $n_I=n_{I\uparrow}+n_{I\downarrow}$, it fits BARE and SCREENED response
+matrices, and `src/siestaflow_hubbard/domain/quantized_response.py` (lines
+93–111) computes
 
 \[
-U_I^{\rm carga}=\left[\chi_0^{-1}-\chi^{-1}\right]_{II}.
+U_I^{\rm charge}=\left[\chi_0^{-1}-\chi^{-1}\right]_{II}.
 \]
 
-La fórmula y su evaluación matricial son correctas **para la respuesta escalar de carga definida así**. La evidencia actual da 11.5320557 eV; la discrepancia BARE/SCREENED se encuentra en las ocupaciones nativas, no aparece por un cambio accidental de signo o por la inversión.
+The formula and matrix evaluation are correct **for the scalar charge
+response defined this way**. Current evidence gives 11.5320557 eV; the BARE /
+SCREENED difference is in the native occupations and does not arise from an
+accidental sign change or inversion.
 
-Sin embargo, los FDF de validación (por ejemplo `campaigns/mno_afmii_strict_lr_v3r2/results/u1153_minimal_afmii_relaxation/siesta.fdf`, líneas 49–57) pasan `11.53 0.00` a `DFTU.Proj` con `DFTU.PotentialShift false`. En `third_party/siesta-5.4.2-source-audit/Src/dftu.F` (líneas 682–713), la rama normal usa explícitamente `Ueff = U - J` y construye un potencial de tipo Dudarev que depende de la matriz de ocupación de *cada espín*. Ese funcional tiene términos cuadráticos intraespín, sin un término correctivo mixto $n_\uparrow n_\downarrow$. El parámetro obtenido al perturbar y observar ambos espines juntos sí incorpora, en general, la respuesta cruzada entre espines. Por ello no está justificada la identificación automática $U^{\rm carga}=U_{\rm eff}^{\rm Dudarev}$ para MnO magnético.
+However, the validation FDFs (for example,
+`campaigns/mno_afmii_strict_lr_v3r2/results/u1153_minimal_afmii_relaxation/siesta.fdf`,
+lines 49–57) pass `11.53 0.00` to `DFTU.Proj` with
+`DFTU.PotentialShift false`. In
+`third_party/siesta-5.4.2-source-audit/Src/dftu.F` (lines 682–713), the normal
+branch explicitly uses `Ueff = U - J` and constructs a Dudarev-type potential
+that depends on the occupation matrix for *each spin*. That functional has
+intra-spin quadratic terms and no mixed correction term
+$n_\uparrow n_\downarrow$. The parameter obtained by perturbing and observing
+both spins together generally includes the cross-spin response. Therefore,
+automatically identifying $U^{\rm charge}=U_{\rm eff}^{\rm Dudarev}$ for
+magnetic MnO is unjustified.
 
-Linscott et al., *Phys. Rev. B* **98**, 235157 (2018), [texto completo](https://harvest.aps.org/v2/journals/articles/10.1103/PhysRevB.98.235157/fulltext), sección II B y ecuaciones 27–28, demuestran la equivalencia entre la respuesta escalar y una combinación espín-resuelta que incluye interacciones entre espines. En la página 5 explican expresamente que ese resultado **no corresponde** a la interacción de un solo espín $U_{\rm eff}=U-J$ de la corrección convencional. Es un resultado metodológico publicado, no una conjetura basada en que el número parezca alto. El propio artículo muestra, para MnO con otro código, proyectores y definición de $\chi_0$, que distintos tratamientos del espín dan valores diferentes; sus números no son una referencia numérica directamente intercambiable con esta campaña.
+Linscott et al., *Phys. Rev. B* **98**, 235157 (2018),
+[full text](https://harvest.aps.org/v2/journals/articles/10.1103/PhysRevB.98.235157/fulltext),
+Sec. II B and Eqs. 27–28, demonstrate equivalence between scalar response and
+a spin-resolved combination that includes inter-spin interactions. On page 5
+they explicitly explain that this result **does not correspond** to the
+single-spin interaction $U_{\rm eff}=U-J$ of the conventional correction.
+This is a published methodological result, not a conjecture based on the
+number appearing high. The paper itself shows, for MnO with a different code,
+projectors, and definition of $\chi_0$, that different spin treatments give
+different values; its numbers are not directly interchangeable numerical
+references for this campaign.
 
-## Consecuencia verificable para el software
+## Verifiable consequence for the software
 
-La salida `REPORTABLE_NUMERICAL_U_INTERVAL` del análisis certifica como máximo un intervalo de redondeo de la **U escalar de carga**. No certifica su equivalencia al coeficiente del funcional usado después, ni predicciones físicas de MnO. Los `.out` guardan ocupaciones up/down, pero la campaña aplicó el mismo desplazamiento a ambos espines; con esas perturbaciones no se determina por separado la matriz completa \(\partial n_{I\sigma}/\partial\alpha_{J\sigma'}\). Ajustar de nuevo los mismos datos o reducir el error de redondeo no resuelve esa identificación.
+The analysis output `REPORTABLE_NUMERICAL_U_INTERVAL` certifies at most a
+rounding interval for **scalar charge U**. It does not certify equivalence to
+the coefficient of the later-applied functional or physical predictions for
+MnO. The `.out` files retain up/down occupations, but the campaign applied the
+same shift to both spins; those perturbations do not determine the full
+matrix $\partial n_{I\sigma}/\partial\alpha_{J\sigma'}$ separately. Refitting
+the same data or reducing rounding error does not resolve that identification.
 
-Esta falla de correspondencia puede explicar que un U numéricamente estable no reproduzca observables. **No demuestra por sí sola que 11.53 eV sea una U escalar incorrecta ni cuantifica cuánto de la anomalía física proviene de este punto**. La sensibilidad documentada al proyector y las demás aproximaciones del material permanecen como causas separadas. No se debe sustituir 11.53 por otro valor sin definir primero qué parámetro pretende recibir el funcional aplicado.
+This correspondence failure could explain why a numerically stable U does
+not reproduce observables. **It does not, by itself, prove that 11.53 eV is an
+incorrect scalar U or quantify how much of the physical anomaly arises from
+this issue**. Documented projector sensitivity and the material's other
+approximations remain separate causes. Do not replace 11.53 with another
+value before defining which parameter the applied functional is meant to
+receive.
 
-## Comprobación adicional sobre las salidas existentes
+## Additional check on existing outputs
 
-Se extrajeron los totales impresos por espín de los mismos eventos ya seleccionados y se ajustó cada componente contra los siete alphas guardados. Para el sitio A, las pendientes BARE up/down son −0.063203/−0.083502 electrones por eV; las SCREENED son −0.018350/−0.035788. El sitio B intercambia esas dos componentes por la orientación AFM. Las pendientes de ambos espines tienen el mismo signo, así que **no hay cancelación entre espines que explique artificialmente el valor alto de 11.53 eV**. La respuesta SCREENED total es aproximadamente −0.05414 frente a −0.14670 BARE; esa reducción es la fuente numérica inmediata de U alta para este modelo. Esta comprobación sólo relee las salidas existentes.
+Printed spin-resolved totals were extracted from the same selected events,
+and each component was fit against the seven saved alpha values. For site A,
+BARE up/down slopes are −0.063203/−0.083502 electrons per eV; SCREENED slopes
+are −0.018350/−0.035788. Site B swaps those two components due to AFM
+orientation. Both spin slopes have the same sign, so **there is no
+inter-spin cancellation that could artificially explain the high value of
+11.53 eV**. Total SCREENED response is approximately −0.05414 versus
+−0.14670 BARE; this reduction is the immediate numerical source of high U for
+this model. This check only rereads existing outputs.
 
-La regla correctiva de producto es nombrar el resultado `U_scalar_charge`, conservar su trazabilidad y bloquear su promoción automática a `Ueff_Dudarev` en cálculos espín-polarizados salvo que exista una derivación y validación explícitas de esa correspondencia. Cambiar simplemente el número de U o el campo J del FDF no repara el problema: la implementación examinada usa la diferencia `U-J` para el mismo término de Dudarev.
+The product correction is to name the result `U_scalar_charge`, retain its
+provenance, and block automatic promotion to `Ueff_Dudarev` in spin-polarized
+calculations unless an explicit derivation and validation of that
+correspondence exists. Merely changing the U number or the FDF J field does
+not repair the issue: the examined implementation uses the difference
+`U-J` for the same Dudarev term.

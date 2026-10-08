@@ -1,26 +1,38 @@
-# Baseline de lint y tipado antes de 25c
+# Lint and typing baseline before 25c
 
-Este documento registra la deuda existente antes de ampliar la configuración de Ruff y mypy. No se editó código para producir el baseline. Los conteos incluyen cada hallazgo/error individual; los archivos no listados no tenían hallazgos en esa herramienta.
+This document records existing debt before expanding the Ruff and mypy
+configuration. No code was edited to produce the baseline. Counts include
+each individual finding/error; files not listed had no findings from that
+tool.
 
-## Comandos de baseline
+## Baseline commands
 
-Los comandos y conteos siguientes se ejecutaron antes de modificar `pyproject.toml`, en el commit `8185281f78963e8da3236597c16fe76e4aeea5d0` (Ruff 0.16.10, mypy 2.4.0). Al ejecutarlos sobre la configuración final se heredan las exclusiones de esta migración y no se reproducen los conteos originales; para reproducirlos hay que usar ese commit/configuración anterior. Ambos comandos de baseline terminaron con código de salida 1 por los hallazgos registrados.
+The following commands and counts were run before modifying `pyproject.toml`,
+at commit `8185281f78963e8da3236597c16fe76e4aeea5d0` (Ruff 0.16.10, mypy
+2.4.0). Running them against the final configuration inherits this migration's
+exclusions and does not reproduce the original counts; reproduce them using
+that earlier commit/configuration. Both baseline commands exited with code 1
+because of the recorded findings.
 
-Ruff (sobrescribe solo `include` para escanear todos los archivos Python de `src/` y `tests/`, manteniendo el resto de `pyproject.toml`):
+Ruff (overrides only `include` to scan every Python file under `src/` and
+`tests/`, retaining the rest of `pyproject.toml`):
 ```powershell
 ruff check --config "include = ['src/*.py', 'src/**/*.py', 'tests/*.py', 'tests/**/*.py']" --output-format=json src tests
 ```
 
-Mypy (raíces explícitas completas; `follow-imports=silent` limita los diagnósticos a los archivos objetivo, que también se recorren como raíces):
+Mypy (complete explicit roots; `follow-imports=silent` limits diagnostics to
+target files, which are also traversed as roots):
 ```powershell
 mypy --strict --no-incremental --follow-imports=silent --show-error-codes src tests
 ```
 
-Archivos Python rastreados en `src/` y `tests/`: **343**. Ruff: **672** hallazgos en **170** archivos. Mypy: **1662** errores en **168** archivos; mypy informó 343 archivos fuente inspeccionados.
+Tracked Python files under `src/` and `tests/`: **343**. Ruff: **672** findings
+in **170** files. Mypy: **1662** errors in **168** files; mypy reported 343
+source files inspected.
 
-## Ruff: hallazgos por archivo
+## Ruff: findings by file
 
-| Archivo | Hallazgos | Códigos y conteos |
+| File | Findings | Codes and counts |
 |---|---:|---|
 | `src/hubbardflow/cli.py` | 3 | `I001` 3 |
 | `src/hubbardflow/domain/adaptive_alpha.py` | 1 | `UP035` 1 |
@@ -193,9 +205,9 @@ Archivos Python rastreados en `src/` y `tests/`: **343**. Ruff: **672** hallazgo
 | `tests/unit/test_u_release_gate.py` | 1 | `I001` 1 |
 | `tests/unit/test_units.py` | 2 | `F401` 1, `I001` 1 |
 
-## Mypy: errores por archivo
+## Mypy: errors by file
 
-| Archivo | Errores | Códigos y conteos |
+| File | Errors | Codes and counts |
 |---|---:|---|
 | `src/hubbardflow/cli.py` | 7 | `return` 1, `return-value` 4, `str, Any` 2 |
 | `src/hubbardflow/domain/adaptive_alpha_control.py` | 2 | `str, Any` 2 |
@@ -366,14 +378,28 @@ Archivos Python rastreados en `src/` y `tests/`: **343**. Ruff: **672** hallazgo
 | `tests/unit/test_u_release_gate.py` | 25 | `no-untyped-call` 13, `no-untyped-def` 12 |
 | `tests/unit/test_units.py` | 2 | `arg-type` 1, `no-untyped-def` 1 |
 
-## Política de cobertura en 25c
+## Coverage policy in 25c
 
-- Ruff incluye todos los `.py` de `src/` y `tests/`. Los archivos de su tabla se excluyen por ruta exacta para preservar CI sin arreglos masivos; cada exclusión incluye su conteo y motivo en `pyproject.toml`.
-- Mypy usa `src/` y `tests/` como raíces completas. Los archivos de su tabla son exclusiones exactas por ruta; cada entrada documenta el error preexistente y el motivo común de diferir la corrección a cambios de tipado separados.
-- Los archivos no listados siguen bajo las reglas completas. Los conteos y códigos por archivo permiten priorizar el retiro posterior de cada exclusión.
-- `follow_imports = "silent"` evita errores transitivos en código fuera de las dos raíces; todos los módulos de `src/` y `tests/` se inspeccionan explícitamente.
-- Esta ampliación no cambia código de producción ni pruebas; habilita detección en archivos antes fuera de la lista blanca, sin mezclar reparaciones de deuda histórica.
+- Ruff includes every `.py` file under `src/` and `tests/`. Files in its table
+  are excluded by exact path to preserve CI without mass fixes; each exclusion
+  includes its count and reason in `pyproject.toml`.
+- Mypy uses `src/` and `tests/` as complete roots. Files in its table are
+  exact-path exclusions; each entry documents the pre-existing error and the
+  shared reason for deferring the fix to separate typing changes.
+- Unlisted files remain subject to the full rules. Per-file counts and codes
+  help prioritize later removal of each exclusion.
+- `follow_imports = "silent"` avoids transitive errors in code outside the two
+  roots; all modules under `src/` and `tests/` are inspected explicitly.
+- This expansion does not change production code or tests; it enables
+  detection in files previously outside the allowlist without mixing in fixes
+  for historical debt.
 
-### Deuda existente de formato
+### Existing formatting debt
 
-El primer CI con la cobertura ampliada ejecutó `ruff format --check .` y señaló 20 archivos con formato heredado pendiente. Se registran en `[tool.ruff.format].exclude` de `pyproject.toml`, con motivo en cada entrada. Esas exclusiones son solo del formateador: los archivos permanecen sujetos a `ruff check` salvo que también aparezcan en la lista separada de deuda de lint. Se pospone el churn de formato no relacionado; se puede retirar cada exclusión cuando ese archivo reciba una revisión de formato independiente.
+The first CI run with expanded coverage ran `ruff format --check .` and flagged
+20 files with pending legacy formatting. They are listed in
+`[tool.ruff.format].exclude` in `pyproject.toml`, with a reason for each entry.
+Those exclusions apply only to the formatter: files remain subject to
+`ruff check` unless they also appear in the separate lint-debt list. Unrelated
+formatting churn is deferred; each exclusion can be removed when that file
+receives a separate formatting review.

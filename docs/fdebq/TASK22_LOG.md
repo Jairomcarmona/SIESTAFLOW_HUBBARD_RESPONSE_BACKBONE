@@ -1,51 +1,51 @@
-# TASK 22 — log de premisas, ediciones y gates
+# TASK 22 — premises, edits, and gates log
 
-## Base y rama
+## Base and branch
 
-- `git fetch` → avanzó `origin/codex/hubbardflow-rename` desde `041adf8` a `299b8f0db44ba385c36d7b0fcef54639f1bcffb7`.
-- `git rev-parse codex/hubbardflow-rename` → `241d009b92d39519b9a308284c783add94849625` (premisa falsa solo para la referencia local; se registra en `BLOCKERS.md`).
-- `git rev-parse origin/codex/hubbardflow-rename` y `git show -s --format='%H%n%s' 299b8f0` → `299b8f0db44ba385c36d7b0fcef54639f1bcffb7`, merge del PR #8. La rama TASK 22 se creó directamente desde ese commit verificado.
-- El commit documental inicial `3c0b8ca` contiene solo la copia de la especificación y `AMENDMENTS_2.md`. La fuente y copia de `CODEX_TASK22_I5.md` coincidieron por SHA-256 `C751DC106DFBB9BB99D2B54870FE4386668B5E4E367C096E9E51FBA5D1B82B79`.
+- `git fetch` → advanced `origin/codex/hubbardflow-rename` from `041adf8` to `299b8f0db44ba385c36d7b0fcef54639f1bcffb7`.
+- `git rev-parse codex/hubbardflow-rename` → `241d009b92d39519b9a308284c783add94849625` (premise false only for the local ref; recorded in `BLOCKERS.md`).
+- `git rev-parse origin/codex/hubbardflow-rename` and `git show -s --format='%H%n%s' 299b8f0` → `299b8f0db44ba385c36d7b0fcef54639f1bcffb7`, merge of PR #8. The TASK 22 branch was created directly from that verified commit.
+- The initial documentation commit `3c0b8ca` contains only the specification copy and `AMENDMENTS_2.md`. The source and copy of `CODEX_TASK22_I5.md` matched at SHA-256 `C751DC106DFBB9BB99D2B54870FE4386668B5E4E367C096E9E51FBA5D1B82B79`.
 
-## Gates de línea base posteriores al commit documental
+## Baseline gates after the documentation commit
 
 - `python -m pytest tests/unit/test_phase2_golden.py -q` → `4 passed`.
 - `python -m pytest tests/unit/test_product_cli.py tests/unit/test_product_execution.py tests/unit/test_product_admission.py tests/unit/test_product_paths.py tests/unit/test_campaign_plan.py -q` → `109 passed`.
-- 70 regresiones científicas (`test_lr_analysis_v2.py`, `test_matrix_lr.py`, `test_quantized_response.py`, `test_u_certification.py`) → `70 passed`.
+- 70 scientific regressions (`test_lr_analysis_v2.py`, `test_matrix_lr.py`, `test_quantized_response.py`, `test_u_certification.py`) → `70 passed`.
 - `python -m pytest -q tests/unit/test_import_architecture.py` → `8 passed`.
-- `python -m pytest tests -q -rfE --continue-on-collection-errors` → `1367 passed, 25 skipped, 20 xfailed, 4 subtests passed`; sin errores activos ni errores de colección.
+- `python -m pytest tests -q -rfE --continue-on-collection-errors` → `1367 passed, 25 skipped, 20 xfailed, 4 subtests passed`; no active failures or collection errors.
 - `ruff check .` → `All checks passed!`; `ruff format --check .` → `91 files already formatted`; `MYPYPATH=src mypy` → `Success: no issues found in 91 source files`; `bash tools/check_v6_integrity.sh` → `V6 GATE OK`.
-- Replay POSIX en WSL, con `PYTHONPATH=src python -m pytest tests/integration/test_runner_replay_nio_p5.py -q` → `7 passed` en 11.46 s. La primera invocación sin `PYTHONPATH=src` no importó el paquete; se repitió con el entorno correcto y pasó.
+- POSIX replay in WSL, with `PYTHONPATH=src python -m pytest tests/integration/test_runner_replay_nio_p5.py -q` → `7 passed` in 11.46 s. The first invocation without `PYTHONPATH=src` did not import the package; it was repeated with the correct environment and passed.
 
-## 22.1 — premisas verificadas
+## 22.1 — verified premises
 
-| Premisa | Comando ejecutado | Resultado |
+| Premise | Command run | Result |
 |---|---|---|
-| `_failed_receipt` guarda solo digest; si stdout va a archivo `CompletedProcess.stdout` queda vacío | `Get-Content src/hubbardflow/execution/runtime_adapters.py | Select-Object -First 150` | La función original construía `NodeReceipt(node_id, FAILED_EXECUTION, digest)`; `run` redirigía a handles y activaba `capture_output` solo si ambos faltaban. |
-| El runner acepta `extra` y el store lo mezcla en el registro del nodo | `Get-Content src/hubbardflow/execution/campaign_store.py | Select-Object -Skip 74 -First 18` | `**dict(extra or {})` en el record. |
-| `status` imprime `campaign_status` y el estado del worker es el objeto de salida | `Select-String -Path src/hubbardflow/cli.py -Pattern 'campaign_status\|worker-state' -Context 2,4` | El comando `status` hace `json.dumps(campaign_status(...))`; `campaign_status` carga `.siestaflow/worker-state.json`. |
-| Fallo de ejecución finaliza heartbeat con estado FAILED | `Select-String -Path src/hubbardflow/execution/campaign_runner.py -Pattern 'heartbeat.finish' -Context 2,5` | Camino de nodo fallido finaliza `heartbeat.finish("FAILED", failed_node=..., failure_state=...)`. |
+| `_failed_receipt` stores only the digest; if stdout goes to a file, `CompletedProcess.stdout` is empty | `Get-Content src/hubbardflow/execution/runtime_adapters.py | Select-Object -First 150` | The original function constructed `NodeReceipt(node_id, FAILED_EXECUTION, digest)`; `run` redirected to handles and enabled `capture_output` only if both were absent. |
+| The runner accepts `extra` and the store merges it into the node record | `Get-Content src/hubbardflow/execution/campaign_store.py | Select-Object -Skip 74 -First 18` | `**dict(extra or {})` in the record. |
+| `status` prints `campaign_status`, and the worker state is the output object | `Select-String -Path src/hubbardflow/cli.py -Pattern 'campaign_status\|worker-state' -Context 2,4` | The `status` command calls `json.dumps(campaign_status(...))`; `campaign_status` loads `.siestaflow/worker-state.json`. |
+| An execution failure finishes the heartbeat with FAILED state | `Select-String -Path src/hubbardflow/execution/campaign_runner.py -Pattern 'heartbeat.finish' -Context 2,5` | The failed-node path calls `heartbeat.finish("FAILED", failed_node=..., failure_state=...)`. |
 
-Cambios de prueba de 22.1: se extendió `tests/unit/test_runtime_adapters.py` para salida 3 (`EXIT`), señal directa SIGTERM (`SIGNAL:SIGTERM`), script launcher con 143 (`PROBABLE_SIGNAL:SIGTERM`), OSError sintético (`SYNTHETIC_OSERROR`), código 255 (`EXIT`), colas stdout/stderr limitadas a las últimas 20 líneas, argv, digest legacy bajo redirección parcial y ausencia de `failure.json` al tener éxito. En Windows se saltan los dos casos que dependen del convenio POSIX; corren en CI/WSL. Decisión conservadora: con un único stream redirigido, se captura el otro para `failure.json` y se reproduce en el stream padre tras finalizar el proceso. El digest y el objeto del validador conservan los campos históricos; solo cambia el momento/intercalado de ese output diagnóstico.
+TASK 22.1 test changes: `tests/unit/test_runtime_adapters.py` was extended for exit code 3 (`EXIT`), direct SIGTERM (`SIGNAL:SIGTERM`), launcher script with 143 (`PROBABLE_SIGNAL:SIGTERM`), synthetic OSError (`SYNTHETIC_OSERROR`), exit code 255 (`EXIT`), stdout/stderr queues limited to the last 20 lines, argv, legacy digest under partial redirection, and absence of `failure.json` on success. Windows skips the two cases depending on POSIX conventions; they run in CI/WSL. Conservative decision: when one stream is redirected, capture the other for `failure.json` and replay it to the parent stream after the process exits. The digest and validator object retain historical fields; only the timing/interleaving of diagnostic output changes.
 
-Gates dirigidos antes del commit: `python -m pytest tests/unit/test_runtime_adapters.py -q` en Windows → `6 passed, 2 skipped`; en WSL POSIX → `8 passed`; `ruff format --check` en los archivos nuevos/editados → pasa; `ruff check` de imports/tipos no usados → pasa; `MYPYPATH=src mypy --strict src/hubbardflow/execution/runtime_adapters.py` → `Success: no issues found in 1 source file`.
+Focused gates before commit: `python -m pytest tests/unit/test_runtime_adapters.py -q` on Windows → `6 passed, 2 skipped`; on POSIX WSL → `8 passed`; `ruff format --check` on new/edited files → passed; `ruff check` for unused imports/types → passed; `MYPYPATH=src mypy --strict src/hubbardflow/execution/runtime_adapters.py` → `Success: no issues found in 1 source file`.
 
-## 22.2 — premisas verificadas
+## 22.2 — verified premises
 
-- `Select-String` y lectura de `campaign_plan.py` confirmaron `planner_version="campaign-planner-v3"` en la planificación.
-- `verify_frozen_campaign_plan` leía `resolved_perturbation_plan.json`, llamaba `from_mapping` y recomputaba el plan dentro del mismo `try`; el `except` convertía el error a `cannot resume frozen campaign plan: ...`.
-- La prueba de alteración a `campaign-planner-v2` se añadirá con el ítem 22.2.
+- `Select-String` and reading `campaign_plan.py` confirmed `planner_version="campaign-planner-v3"` in planning.
+- `verify_frozen_campaign_plan` read `resolved_perturbation_plan.json`, called `from_mapping`, and recomputed the plan in the same `try`; the `except` converted the error to `cannot resume frozen campaign plan: ...`.
+- The test for a change to `campaign-planner-v2` will be added in item 22.2.
 
-## 22.3 — premisas verificadas con NiO P5 real
+## 22.3 — premises verified with real NiO P5
 
-- WSL comprobó 25 salidas y 25 `.EIG` en `~/.local/state/siestaflow/campaigns/nio_p5_product_2/.siestaflow/attempts`: 1 referencia, 12 BARE, 12 SCREENED.
-- Auditoría de lectura con los selectores actuales sobre las 24 corridas: cada selección corresponde a un evento del parser; dos átomos, matrices up/down simétricas y 25 filas por átomo con cinco decimales. Resultado: `{'bare': 12, 'screened': 12, 'reference': 1}`.
-- `campaign_runner.py` y `observation_assembly.py` usan `bare_profile.select_response(...).response_event` y `select_converged_screened_event(...)`, los mismos selectores que se usarán para la evidencia y la observación de U.
-- `grep` sobre la salida real mostró bloques `Occupations:`, `Mulliken Atomic Populations:` y `siesta: Fermi = -4.508514`; el parser de momentos lee la última tabla Mulliken completa.
-- El formato `.EIG` se leyó de corridas reales y se validó contra sus bloques: la segunda línea `64 2 23` significa **64 bandas, 2 espines, 23 puntos k**; cada punto contiene `64 × 2 = 128` energías. Las energías se imprimen con nueve decimales de mantisa, por lo que el quantum absoluto depende del exponente (`10^(exponente−9) eV`), no es siempre `1e-9 eV`.
+- WSL checked 25 outputs and 25 `.EIG` files in `~/.local/state/siestaflow/campaigns/nio_p5_product_2/.siestaflow/attempts`: 1 reference, 12 BARE, 12 SCREENED.
+- A read audit using the current selectors across 24 runs found that each selection corresponds to a parser event; two atoms, symmetric up/down matrices, and 25 rows per atom with five decimal places. Result: `{'bare': 12, 'screened': 12, 'reference': 1}`.
+- `campaign_runner.py` and `observation_assembly.py` use `bare_profile.select_response(...).response_event` and `select_converged_screened_event(...)`, the same selectors used for evidence and U observations.
+- `grep` of the real output showed `Occupations:`, `Mulliken Atomic Populations:`, and `siesta: Fermi = -4.508514` blocks; the moment parser reads the last complete Mulliken table.
+- The `.EIG` format was read from real runs and validated against its blocks: the second line `64 2 23` means **64 bands, 2 spins, 23 k-points**; each point contains `64 × 2 = 128` energies. Energies are printed with nine mantissa decimals, so the absolute quantum depends on the exponent (`10^(exponent−9) eV`); it is not always `1e-9 eV`.
 - `find tests/fixtures/replay_nio_p5 -name '*.EIG'` → `0`; replay espera G4 `NOT_AVAILABLE`.
 
-Tres líneas literales del `.EIG` de referencia:
+Three literal lines from the reference `.EIG`:
 
 ```text
  -0.452324875E+01
@@ -53,140 +53,140 @@ Tres líneas literales del `.EIG` de referencia:
          1  -0.108718534E+03  -0.107059529E+03  -0.691704785E+02  -0.691578668E+02  -0.691460532E+02  -0.674318434E+02  -0.674274514E+02  -0.674117503E+02  -0.240555051E+02  -0.232498013E+02
 ```
 
-### 22.3 — re-verificación ejecutada
+### 22.3 — re-verification performed
 
-| Premisa | Comando real | Resultado |
+| Premise | Actual command | Result |
 |---|---|---|
-| Cada átomo del evento seleccionado tiene 25 filas simétricas up/down con cinco decimales | WSL: lector sobre las 25 salidas de `nio_p5_product_2`, usando `parse_hubbard_population_events` y los selectores BARE/SCREENED; cuenta bloques/filas y compara matrices transpuestas | 1 referencia, 12 BARE, 12 SCREENED; cada evento seleccionado tiene 2 átomos, 25 filas por átomo, matrices simétricas. |
-| El evento de evidencia coincide con el evento de U | `rg -n 'select_response|select_converged_screened_event' src/hubbardflow/execution/campaign_runner.py src/hubbardflow/execution/observation_assembly.py` y comparación real de rangos del selector y parser | Ambos caminos llaman al selector profile BARE y al selector SCREENED convergido; los 24 eventos seleccionados coinciden con eventos parseados. |
-| Salida final contiene Mulliken, Occupations y Fermi imprimibles | WSL `grep` de `siesta.out` del producto real; `python -m pytest tests/unit/test_point_state_evidence.py -q` luego consume referencia, BARE y SCREENED reales | Tablas Mulliken, trazas `Occupations:` y `siesta: Fermi = ...` presentes. Las tres trazas de cada espín quedan a ≤`2.55e-5` de la línea impresa. |
-| El layout `.EIG` declara dimensiones y permite quantum decimal | WSL `sed -n '1,12p'` del `.EIG` real; script de conteo de inicios de bloque/energías; pruebas fixture | `64 2 23` = 64 bandas × 2 espines × 23 k; 128 energías por k. El quantum se deriva por token según el exponente. |
-| Referencia y dos corridas pueden probarse sin acceder a la campaña local | Compresión de referencia, BARE y SCREENED reales hacia `tests/fixtures/i5_eig/*.xz`; `python -m pytest tests/unit/test_point_state_evidence.py -q` | `6 passed`, incluye estado de referencia, BARE, SCREENED, EIG ausente, bloque de ocupaciones truncado y tabla Mulliken sin terminador. |
+| Each atom in the selected event has 25 symmetric up/down rows with five decimals | WSL reader over the 25 `nio_p5_product_2` outputs using `parse_hubbard_population_events` and BARE/SCREENED selectors; counts blocks/rows and compares transposed matrices | 1 reference, 12 BARE, 12 SCREENED; each selected event has 2 atoms, 25 rows per atom, and symmetric matrices. |
+| The evidence event matches the U event | `rg -n 'select_response|select_converged_screened_event' src/hubbardflow/execution/campaign_runner.py src/hubbardflow/execution/observation_assembly.py` and actual comparison of selector/parser ranges | Both paths call the BARE profile selector and converged SCREENED selector; the 24 selected events match parsed events. |
+| Final output contains printable Mulliken, Occupations, and Fermi data | WSL `grep` of real product `siesta.out`; `python -m pytest tests/unit/test_point_state_evidence.py -q` then consumes the real reference, BARE, and SCREENED outputs | Mulliken tables, `Occupations:` traces, and `siesta: Fermi = ...` are present. All three traces for each spin are within ≤`2.55e-5` of the printed line. |
+| `.EIG` layout declares dimensions and supports decimal quantum | WSL `sed -n '1,12p'` of real `.EIG`; script counts block starts/energies; fixture tests | `64 2 23` = 64 bands × 2 spins × 23 k-points; 128 energies per k-point. Quantum is derived per token from the exponent. |
+| Reference and two runs can be tested without accessing the local campaign | Compressed real reference, BARE, and SCREENED outputs in `tests/fixtures/i5_eig/*.xz`; `python -m pytest tests/unit/test_point_state_evidence.py -q` | `6 passed`, including reference state, BARE, SCREENED, missing EIG, truncated occupation block, and Mulliken table without terminator. |
 
-Decisión de dependencia para mantener compilable el ítem: `domain/state_gate.py` introduce en 22.3 únicamente los records congelados de entrada (`PointState`, `AtomPointState`, energías y disponibilidad EIG) que el parser debe retornar. La lógica de política/veredicto sigue reservada íntegramente al commit 22.4.
+Dependency decision to keep the item compilable: in 22.3, `domain/state_gate.py` introduces only the frozen input records (`PointState`, `AtomPointState`, energies, and EIG availability) that the parser must return. Policy/verdict logic remains entirely reserved for commit 22.4.
 
-Fixtures reales añadidas por 22.3 en `tests/fixtures/i5_eig/`: `.EIG.xz` y el `siesta.out.xz` correspondiente para referencia, BARE +0.04 y SCREENED −0.04; se mantienen fuera de `replay_nio_p5/`. Añadir las tres salidas comprimidas es la mínima ampliación conservadora que permite probar de forma portátil los eventos seleccionados, las trazas y el Mulliken reales junto a los `.EIG`; no altera replay ni golden. El replay fixture no recibió `.EIG`.
+Real fixtures added by 22.3 under `tests/fixtures/i5_eig/`: `.EIG.xz` and corresponding `siesta.out.xz` for the reference, BARE +0.04, and SCREENED −0.04; they remain outside `replay_nio_p5/`. Adding the three compressed outputs is the smallest conservative expansion that allows portable tests of selected events, traces, and real Mulliken data alongside `.EIG`; it does not change replay or golden. The replay fixture did not receive `.EIG` files.
 
-Revisión `verificador_luna` encontró que una última tabla Mulliken sin separador de cierre podía dejar como alternativa una tabla anterior completa. Se corrigió para rechazar esa salida y se añadió la prueba `test_unterminated_final_mulliken_table_raises_typed_error`; el verificador confirmó que la corrección cierra el hallazgo y que el log registra los seis tests focales.
+The `verificador_luna` review found that a final Mulliken table without a closing separator could leave an earlier complete table as a fallback. The parser was fixed to reject that output, and `test_unterminated_final_mulliken_table_raises_typed_error` was added; the verifier confirmed the fix closes the finding and the log records all six focused tests.
 
-### Gates de 22.3 antes del commit
+### 22.3 gates before commit
 
-- Focal: `python -m pytest tests/unit/test_point_state_evidence.py -q` → `6 passed`.
-- Replay POSIX en WSL: `PYTHONPATH=src python -m pytest tests/integration/test_runner_replay_nio_p5.py -q` → `7 passed`.
+- Focused: `python -m pytest tests/unit/test_point_state_evidence.py -q` → `6 passed`.
+- POSIX replay in WSL: `PYTHONPATH=src python -m pytest tests/integration/test_runner_replay_nio_p5.py -q` → `7 passed`.
 - Golden 20.9: `python -m pytest tests/unit/test_phase2_golden.py -q` → `4 passed`.
-- Producto: CLI, ejecución, admission, paths y plan → `110 passed`.
-- Regresiones científicas: los cuatro módulos de análisis/matriz/quantized/U → `70 passed`.
-- Arquitectura: `8 passed`.
-- Suite: `python -m pytest tests -q -rfE --continue-on-collection-errors` → `1377 passed, 27 skipped, 20 xfailed, 4 subtests passed`; sin nuevos fallos.
+- Product: CLI, execution, admission, paths, and plan → `110 passed`.
+- Scientific regressions: the four analysis/matrix/quantized/U modules → `70 passed`.
+- Architecture: `8 passed`.
+- Suite: `python -m pytest tests -q -rfE --continue-on-collection-errors` → `1377 passed, 27 skipped, 20 xfailed, 4 subtests passed`; no new failures.
 - `ruff check .` → `All checks passed!`; `ruff format --check .` → `91 files already formatted`; `MYPYPATH=src mypy` → `Success: no issues found in 91 source files`; `bash tools/check_v6_integrity.sh` → `V6 GATE OK`.
 
 
-POSIX específicos de 22.1 en WSL: `PYTHONPATH=src python -m pytest tests/unit/test_runtime_adapters.py -q` → `8 passed` (incluye SIGTERM directo y launcher 143).
+22.1 POSIX-specific tests in WSL: `PYTHONPATH=src python -m pytest tests/unit/test_runtime_adapters.py -q` → `8 passed` (includes direct SIGTERM and launcher 143).
 
-## Addendum de gates del commit 22.1 (`c397fb1`)
+## Addendum: commit 22.1 gates (`c397fb1`)
 
 - 20.9 golden: `4 passed`.
-- Tests de producto/campaña: `109 passed`.
-- 70 regresiones científicas: `70 passed`.
-- Arquitectura: `8 passed`.
-- WSL replay POSIX: `7 passed`.
-- Suite completa: `1370 passed, 27 skipped, 20 xfailed, 4 subtests passed`.
-- `ruff check .`, `ruff format --check .`, `MYPYPATH=src mypy` y V6: todos pasan (`V6 GATE OK`).
+- Product/campaign tests: `109 passed`.
+- 70 scientific regressions: `70 passed`.
+- Architecture: `8 passed`.
+- WSL POSIX replay: `7 passed`.
+- Full suite: `1370 passed, 27 skipped, 20 xfailed, 4 subtests passed`.
+- `ruff check .`, `ruff format --check .`, `MYPYPATH=src mypy`, and V6: all pass (`V6 GATE OK`).
 
-## 22.2 — verificación previa
+## 22.2 — pre-implementation verification
 
-Comando `rg -n 'campaign-planner-v3|def verify_frozen_campaign_plan' src/hubbardflow/execution/campaign_plan.py` confirmó la versión literal `campaign-planner-v3` y la función solicitada. Lectura directa de la función confirmó que `from_mapping` y el recálculo se ejecutaban dentro del `try`, cuyo `except` convertía excepciones en `cannot resume frozen campaign plan: ...`. No se requiere ni se cambia ningún golden.
+Command `rg -n 'campaign-planner-v3|def verify_frozen_campaign_plan' src/hubbardflow/execution/campaign_plan.py` confirmed the literal version `campaign-planner-v3` and requested function. Direct inspection confirmed `from_mapping` and recomputation ran inside the `try`, whose `except` converted exceptions to `cannot resume frozen campaign plan: ...`. No golden is needed or changed.
 
-Edición autorizada añadida: `tests/unit/test_campaign_plan.py::test_resume_reports_explicit_planner_version_change` cambia solo la versión del plan congelado a `campaign-planner-v2` y exige el error literal `PLANNER_VERSION_CHANGED`, ambas versiones y la instrucción de re-inicializar. No se editaron aserciones existentes.
+Authorized edit added: `tests/unit/test_campaign_plan.py::test_resume_reports_explicit_planner_version_change` changes only the frozen plan version to `campaign-planner-v2` and requires the literal error `PLANNER_VERSION_CHANGED`, both versions, and the instruction to reinitialize. No existing assertions were edited.
 
-Verificación local del ítem: `python -m pytest tests/unit/test_campaign_plan.py -q` → `28 passed`; `MYPYPATH=src mypy --strict src/hubbardflow/execution/campaign_plan.py` → `Success: no issues found in 1 source file`.
+Local item verification: `python -m pytest tests/unit/test_campaign_plan.py -q` → `28 passed`; `MYPYPATH=src mypy --strict src/hubbardflow/execution/campaign_plan.py` → `Success: no issues found in 1 source file`.
 
-## 22.4 — aclaraciones científicas pendientes para el autor
+## 22.4 — scientific clarifications pending from the author
 
-El auditor científico independiente revisó TASK 22 §22.4, D13a–c y las secciones I, J, K, M y O de la revisión. Antes de implementar 22.4, el autor debe resolver las dos reglas siguientes; no se modificó lógica de 22.4.
+The independent scientific auditor reviewed TASK 22 §22.4, D13a–c, and sections I, J, K, M, and O of the review. Before implementing 22.4, the author must resolve the following two rules; no 22.4 logic was changed.
 
-### Pregunta G2: qué margen define el k de referencia
+### G2 question: which margin defines the reference k
 
-**Texto de la especificación.** `CODEX_TASK22_I5.md:176–183` define `k` desde el espectro de referencia y pide, además de un gap único/resuelto, que “the margin ε below is < 1/2”. Pero la única fórmula de `ε`, en `:191–193`, depende de ambos `Δ_ref` y `Δ_pt`; `Δ_pt` pertenece a un punto de amplitud concreta. Luego `:184–189` vuelve a usar propiedades del punto para decidir si falla.
+**Specification text.** `CODEX_TASK22_I5.md:176–183` defines `k` from the reference spectrum and, in addition to a unique/resolved gap, requires that “the margin ε below is < 1/2”. However, the only formula for `ε`, at `:191–193`, depends on both `Δ_ref` and `Δ_pt`; `Δ_pt` belongs to a specific amplitude point. Then `:184–189` again uses point properties to decide whether it fails.
 
-**Interpretaciones posibles y cambio de veredicto.**
+**Possible interpretations and verdict change.**
 
-1. Definir `k` con un margen solo de referencia, equivalente a compararla consigo misma: `ε_ref = 2·[W/(Δ_ref−2W) + W/(Δ_ref−2W)] = 4W/(Δ_ref−2W)`. Si `ε_ref < 1/2`, se fija `k`; después se evalúa el margen completo de cada par referencia–punto. En el ejemplo auditado, el punto tiene split único en el mismo índice y bases idénticas (`c=1`), pero el margen completo supera 1/2, por lo que el resultado es `SUBSPACE_AMBIGUOUS` (fallo diagnóstico).
-2. Aplicar literalmente a la definición de `k` el `ε` completo que depende del punto. Con el mismo ejemplo, el requisito `ε<1/2` no define `k`; el resultado pasa a `NOT_DEFINED`, que la regla declara no-fallante. Esta lectura puede ocultar precisamente una ambigüedad del punto.
+1. Define `k` using a reference-only margin, equivalent to comparing the reference with itself: `ε_ref = 2·[W/(Δ_ref−2W) + W/(Δ_ref−2W)] = 4W/(Δ_ref−2W)`. If `ε_ref < 1/2`, fix `k`; then evaluate the full margin for each reference–point pair. In the audited example, the point has a unique split at the same index and identical basis (`c=1`), but the full margin exceeds 1/2, so the result is `SUBSPACE_AMBIGUOUS` (diagnostic failure).
+2. Apply the full point-dependent `ε` literally to the definition of `k`. In the same example, `ε<1/2` does not define `k`; the result becomes `NOT_DEFINED`, which the rule declares non-failing. This reading can hide exactly the point ambiguity at issue.
 
-**Ejemplo numérico verificado por el auditor:** `W=2.5e−5`, `Δ_ref=0.1`, `Δ_pt=1.1e−4`, segundo gap del punto `1e−6`, bases idénticas (`c=1`). La comparación de referencia consigo misma da `ε_ref=0.00100050025`; el margen del par da `ε=0.83383358346`. Por ello las dos lecturas producen `SUBSPACE_AMBIGUOUS` frente a `NOT_DEFINED`. Evidencia de la especificación: `CODEX_TASK22_I5.md:176–193`; el cálculo está registrado en la auditoría científica independiente de TASK 22.
+**Numerical example verified by the auditor:** `W=2.5e−5`, `Δ_ref=0.1`, `Δ_pt=1.1e−4`, point's second gap `1e−6`, identical basis (`c=1`). Comparing the reference with itself gives `ε_ref=0.00100050025`; the pair margin gives `ε=0.83383358346`. Thus, the two readings yield `SUBSPACE_AMBIGUOUS` versus `NOT_DEFINED`. Specification evidence: `CODEX_TASK22_I5.md:176–193`; the calculation is recorded in the independent TASK 22 scientific audit.
 
-**Decisión requerida:** confirmar si el criterio de definición usa `ε_ref = 4W/(Δ_ref−2W)` y si un margen completo insuficiente en un punto produce `SUBSPACE_AMBIGUOUS`, o especificar otra regla.
+**Decision required:** confirm whether the definition criterion uses `ε_ref = 4W/(Δ_ref−2W)` and whether an insufficient full margin at a point yields `SUBSPACE_AMBIGUOUS`, or specify another rule.
 
-### Pregunta G4: origen y precisión de E_F respecto a q de `.EIG`
+### G4 question: E_F source and precision relative to `.EIG` q
 
-**Texto de la especificación.** `CODEX_TASK22_I5.md:139–140` pone `E_F` en `PointState`; la premisa `:131–132` identifica el Fermi de stdout (`siesta: Fermi = ...`); pero G4 en `:202–208` compara niveles y cuenta bandas respecto al “own E_F” con umbral de un quantum de impresión `.EIG`. La especificación no dice cómo combinar la precisión, menor, del E_F de stdout con el quantum de las energías `.EIG`.
+**Specification text.** `CODEX_TASK22_I5.md:139–140` places `E_F` in `PointState`; premise `:131–132` identifies the stdout Fermi (`siesta: Fermi = ...`); but G4 at `:202–208` compares levels and counts bands relative to “own E_F” using a threshold of one `.EIG` print quantum. The specification does not say how to combine the lower precision of stdout E_F with the quantum of `.EIG` energies.
 
-**Interpretaciones posibles y cambio de veredicto.**
+**Possible interpretations and verdict change.**
 
-1. Usar el E_F de stdout (actualmente leído por `point_state_evidence.py:244–249`) y comparar la distancia con solo `q_EIG` literal de `:203` y `:207`. Esto puede considerar resuelto un nivel que en la interpretación 2 es `BAND_COUNT_AMBIGUOUS`.
-2. Usar el E_F del encabezado `.EIG` y su precisión impresa para G4; alternativamente, conservar E_F de stdout y ampliar la región ambigua para cubrir también su semiancho (`5e−7 eV` en el ejemplo). La banda fronteriza se considera `BAND_COUNT_AMBIGUOUS`, en vez de resuelta y potencialmente `PASS`/`BAND_COUNT_CHANGED`.
+1. Use stdout E_F (currently read by `point_state_evidence.py:244–249`) and compare distance using only the literal `q_EIG` from `:203` and `:207`. This can treat a level as resolved where interpretation 2 yields `BAND_COUNT_AMBIGUOUS`.
+2. Use the `.EIG` header E_F and its printed precision for G4; alternatively, keep stdout E_F and expand the ambiguous region to include its half-width (`5e−7 eV` in the example). The boundary band is considered `BAND_COUNT_AMBIGUOUS`, rather than resolved and potentially `PASS`/`BAND_COUNT_CHANGED`.
 
-**Evidencia real.** En `tests/fixtures/i5_eig/bare_p0p04.EIG.xz`, la primera línea es `-0.450851397E+01` = `−4.508513970 eV`. La salida correspondiente imprime `siesta: Fermi = -4.508514` = `−4.508514 eV`; difieren `3e−8 eV`. El semiancho de la salida es `5e−7 eV`, mayor que el quantum de un eigenvalor cercano a ese E_F, `1e−8 eV`. NiO de esta corrida tiene el gap amplio; el problema afecta la interpretación en casos frontera. Ejemplo de nivel posible con formato `.EIG`, `−0.450851396E+01` = `−4.508513960 eV`, `q_EIG=1e−8`: dista `4e−8` del stdout E_F (resuelto bajo interpretación 1), pero exactamente `1e−8` del encabezado `.EIG` (ambiguo si el límite es inclusivo). Evidencia de formato y Fermi registrados en este log; el parser actual calcula distancias con stdout E_F (`point_state_evidence.py:231, 244–249`).
+**Real evidence.** In `tests/fixtures/i5_eig/bare_p0p04.EIG.xz`, the first line is `-0.450851397E+01` = `−4.508513970 eV`. The corresponding output prints `siesta: Fermi = -4.508514` = `−4.508514 eV`; they differ by `3e−8 eV`. The output half-width is `5e−7 eV`, larger than the quantum for an eigenvalue near that E_F, `1e−8 eV`. The NiO run has a wide gap; the issue affects interpretation in boundary cases. A possible `.EIG`-formatted level, `−0.450851396E+01` = `−4.508513960 eV`, with `q_EIG=1e−8`, is `4e−8` from stdout E_F (resolved under interpretation 1), but exactly `1e−8` from the `.EIG` header (ambiguous if the boundary is inclusive). Format and Fermi evidence are recorded in this log; the current parser calculates distances using stdout E_F (`point_state_evidence.py:231, 244–249`).
 
-**Decisión requerida:** especificar si G4 toma E_F del stdout, el encabezado `.EIG`, o incluye un margen por la incertidumbre del E_F; confirmar también el tratamiento inclusivo en la frontera de un quantum.
+**Decision required:** specify whether G4 uses stdout E_F, the `.EIG` header, or includes a margin for E_F uncertainty; also confirm whether the one-quantum boundary is inclusive.
 
-No implementar G2/G4 ni avanzar a 22.5/22.6 hasta recibir estas respuestas del autor. La revisión también recalca que un `PASS` de TASK 22 solo certificará los controles implementados: G3 suavidad queda `NOT_ESTABLISHED` por D13a, y no se afirmarán exactitud SCF, histéresis ni consistencia energética.
+Do not implement G2/G4 or proceed to 22.5/22.6 until the author responds. The review also emphasizes that a TASK 22 `PASS` certifies only the implemented checks: G3 smoothness remains `NOT_ESTABLISHED` under D13a, and no claim will be made about SCF exactness, hysteresis, or energy consistency.
 
-### Resolución del autor y ejecución de 22.4
+### Author resolution and 22.4 implementation
 
-El autor resolvió ambas reglas en `AMENDMENTS_2.md` como R11 y R12 (commit `72539b8`). El auditor científico independiente confirmó que las resoluciones cierran las ambigüedades y que no queda bloqueo científico para 22.4.
+The author resolved both rules in `AMENDMENTS_2.md` as R11 and R12 (commit `72539b8`). The independent scientific auditor confirmed that these resolutions close the ambiguities and leave no scientific blocker for 22.4.
 
-- **R11/G2:** `k` depende solo de la referencia: `ε_ref = 4W/(Δ_ref−2W)`, junto con `Δ1−Δ2 > 4W`, `Δ1 > 4W` y `ε_ref < 1/2`; si falla, G2 es `NOT_DEFINED` para ese átomo/espín. En cada punto se evalúa el margen completo. `ε ≥ 1/2` o separación no única del punto produce `SUBSPACE_AMBIGUOUS`; con margen restante, los criterios estrictos de `c−ε > 1/2` y `c+ε < 1/2` definen PASS y `ORBITAL_ORDER_CHANGED`, y los demás casos son ambiguos. La prueba `test_r11_reference_defined_k_and_point_margin_is_ambiguous` incluye el ejemplo `W=2.5e−5`, `Δ_ref=0.1`, `Δ_pt=1.1e−4`, `c=1` y verifica `SUBSPACE_AMBIGUOUS`.
-- **R12/G4:** se usa el E_F y quantum del encabezado del `.EIG`; cada eigenvalor conserva su token y quantum individual. La banda es ambigua con límite inclusivo `|ε−E_F| ≤ q(ε)/2+q(E_F)/2`. La aplicabilidad de referencia usa la misma regla. El E_F de stdout solo comprueba consistencia con tolerancia semiancho(stdout)+q(E_F EIG)/2; un exceso da `NOT_ESTABLISHED:EIG_STDOUT_FERMI_MISMATCH`. Pruebas incluidas para el ejemplo fronterizo del auditor y para el chequeo de consistencia de `bare_p0p04` (diferencia `3e−8`, tolerancia `5e−7+5e−9`).
+- **R11/G2:** `k` depends only on the reference: `ε_ref = 4W/(Δ_ref−2W)`, with `Δ1−Δ2 > 4W`, `Δ1 > 4W`, and `ε_ref < 1/2`; if these fail, G2 is `NOT_DEFINED` for that atom/spin. Evaluate the full margin at each point. `ε ≥ 1/2` or a non-unique point separation yields `SUBSPACE_AMBIGUOUS`; if the margin remains valid, strict criteria `c−ε > 1/2` and `c+ε < 1/2` define PASS and `ORBITAL_ORDER_CHANGED`; all other cases are ambiguous. Test `test_r11_reference_defined_k_and_point_margin_is_ambiguous` includes `W=2.5e−5`, `Δ_ref=0.1`, `Δ_pt=1.1e−4`, `c=1` and verifies `SUBSPACE_AMBIGUOUS`.
+- **R12/G4:** use E_F and quantum from the `.EIG` header; each eigenvalue retains its token and individual quantum. A band is ambiguous at the inclusive boundary `|ε−E_F| ≤ q(ε)/2+q(E_F)/2`. Reference applicability uses the same rule. Stdout E_F only checks consistency with tolerance stdout half-width + `q(E_F EIG)/2`; an excess yields `NOT_ESTABLISHED:EIG_STDOUT_FERMI_MISMATCH`. Tests cover the auditor's boundary example and the `bare_p0p04` consistency check (difference `3e−8`, tolerance `5e−7+5e−9`).
 
-Ediciones 22.4: `domain/state_gate.py` (records de entrada/wrapper), módulos puros `domain/state_gate_eval.py` y `domain/state_gate_results.py`, parser `siesta_backend/point_state_evidence.py`, `tests/unit/test_state_gate.py` y 50 fixtures comprimidos de la campaña NiO P5 (referencia más los 24 puntos BARE/SCREENED) en `tests/fixtures/i5_real_nio/`. No se editaron golden ni fixtures del replay. No se ejecutó SIESTA como parte de 22.4.
+22.4 edits: `domain/state_gate.py` (input records/wrapper), pure modules `domain/state_gate_eval.py` and `domain/state_gate_results.py`, parser `siesta_backend/point_state_evidence.py`, `tests/unit/test_state_gate.py`, and 50 compressed fixtures from the NiO P5 campaign (reference plus 24 BARE/SCREENED points) in `tests/fixtures/i5_real_nio/`. No goldens or replay fixtures were edited. SIESTA was not run as part of 22.4.
 
-El `verificador_luna` revisó el diff 22.4. Detectó que un punto con gap máximo desplazado y ε≥1/2 en el índice de referencia debía ser `SUBSPACE_AMBIGUOUS` según R11; se corrigió la precedencia (primero split no único, después margen en k de referencia, y luego cambio de k) y se añadió `test_r11_ambiguous_reference_index_margin_precedes_moved_gap_reason`. En la segunda revisión confirmó que el defecto quedó cerrado y que las pruebas adicionales R12 del límite inclusivo de referencia y de `bare_p0p04` corresponden a la resolución del autor; sin bloqueos pendientes.
+`verificador_luna` reviewed the 22.4 diff. It found that a point with a shifted maximum gap and ε≥1/2 at the reference index must be `SUBSPACE_AMBIGUOUS` under R11; precedence was fixed (first non-unique split, then reference-k margin, then k change), and `test_r11_ambiguous_reference_index_margin_precedes_moved_gap_reason` was added. On the second review, it confirmed the defect was closed and the additional R12 tests for the inclusive reference boundary and `bare_p0p04` match the author's resolution; no blockers remain.
 
-Verificación focal final antes del commit: `python -m pytest tests/unit/test_point_state_evidence.py tests/unit/test_state_gate.py -q` → `24 passed` (2 advertencias deprecadas existentes); `ruff check` sobre los cinco archivos Python del ítem → `All checks passed!`; `ruff format --check` → `5 files already formatted`; `MYPYPATH=src mypy --strict` sobre los cuatro módulos fuente → `Success: no issues found in 4 source files`.
+Final focused verification before commit: `python -m pytest tests/unit/test_point_state_evidence.py tests/unit/test_state_gate.py -q` → `24 passed` (2 existing deprecation warnings); `ruff check` on the five item Python files → `All checks passed!`; `ruff format --check` → `5 files already formatted`; `MYPYPATH=src mypy --strict` on the four source modules → `Success: no issues found in 4 source files`.
 
-En el commit de este ítem se volverán a ejecutar y registrar todos los gates obligatorios del §0. Un `PASS` global sigue siendo diagnóstico de los controles implementados: G3 permanece `NOT_ESTABLISHED:SMOOTHNESS_REQUIRES_SCF_LADDER`; no se afirmará exactitud SCF, histéresis ni consistencia energética.
+At this item's commit, all mandatory §0 gates will be rerun and recorded. A global `PASS` remains diagnostic of the implemented checks: G3 remains `NOT_ESTABLISHED:SMOOTHNESS_REQUIRES_SCF_LADDER`; no claim will be made about SCF exactness, hysteresis, or energy consistency.
 
-### Corrección detectada por los gates post-commit 22.4
+### Correction found by post-commit 22.4 gates
 
-La primera pasada post-commit detectó que el import diferido de `state_gate_eval` aún cuenta como ciclo arquitectónico entre `domain/state_gate.py` y `domain/state_gate_eval.py`. Se separaron los records de entrada a `domain/state_gate_types.py`; el evaluador y el parser SIESTA importan esos records directamente, y `state_gate.py` conserva la fachada pública. `tests/unit/test_point_state_evidence.py tests/unit/test_state_gate.py tests/unit/test_import_architecture.py` → `32 passed`; ruff indicó solo formato/imports en los archivos reestructurados, ya corregidos. `verificador_luna` revisó esta separación y confirmó que mantiene fields/validaciones, rompe el ciclo y deja commit-ready. No se ejecutó SIESTA.
+The first post-commit pass found that the deferred import of `state_gate_eval` still counted as an architecture cycle between `domain/state_gate.py` and `domain/state_gate_eval.py`. Input records were split into `domain/state_gate_types.py`; the evaluator and SIESTA parser import those records directly, while `state_gate.py` retains the public facade. `tests/unit/test_point_state_evidence.py tests/unit/test_state_gate.py tests/unit/test_import_architecture.py` → `32 passed`; ruff reported only formatting/import issues in the restructured files, which were fixed. `verificador_luna` reviewed the split and confirmed it preserves fields/validation, breaks the cycle, and is commit-ready. SIESTA was not run.
 
-La primera invocación del replay en WSL falló por llamar `python` (no instalado allí); se verificó `/usr/bin/python3` y `/usr/bin/pytest`. Se repetirá como `python3 -m pytest` en la siguiente pasada completa; esto fue un problema de intérprete de la invocación, no una premisa falsa del ítem.
+The first WSL replay invocation failed because it called `python` (not installed there); `/usr/bin/python3` and `/usr/bin/pytest` were verified. The next full pass will use `python3 -m pytest`; this was an invocation interpreter issue, not a false item premise.
 
-## Gates completos post-commit 22.4 (punta `80e2f3b`)
+## Full post-commit 22.4 gates (tip `80e2f3b`)
 
-La primera pasada detectó y motivó la corrección arquitectónica anotada arriba. Después de enmendar el mismo commit, la pasada completa quedó limpia: replay POSIX en WSL (`PYTHONPATH=src python3 -m pytest tests/integration/test_runner_replay_nio_p5.py -q`) → `7 passed`; golden 20.9 → `4 passed`; producto → `110 passed`; regresiones científicas → `70 passed`; arquitectura → `8 passed`; `ruff check .` → `All checks passed!`; `ruff format --check .` → `91 files already formatted`; `MYPYPATH=src mypy` → `Success: no issues found in 91 source files`; V6 → `V6 GATE OK`; suite → `1395 passed, 27 skipped, 20 xfailed, 2 warnings, 4 subtests passed`. La primera llamada WSL había usado `python` no instalado; la repetición correcta fue con `python3`.
+The first pass found and prompted the architecture fix above. After amending the same commit, the full pass was clean: POSIX replay in WSL (`PYTHONPATH=src python3 -m pytest tests/integration/test_runner_replay_nio_p5.py -q`) → `7 passed`; golden 20.9 → `4 passed`; product → `110 passed`; scientific regressions → `70 passed`; architecture → `8 passed`; `ruff check .` → `All checks passed!`; `ruff format --check .` → `91 files already formatted`; `MYPYPATH=src mypy` → `Success: no issues found in 91 source files`; V6 → `V6 GATE OK`; suite → `1395 passed, 27 skipped, 20 xfailed, 2 warnings, 4 subtests passed`. The first WSL call used `python`, which was not installed; the correct repeat used `python3`.
 
-## 22.5 — premisas, cambios y verificación
+## 22.5 — premises, changes, and verification
 
-Premisas verificadas con lectura/comandos reales:
+Premises verified with actual reads/commands:
 
-- `rg -n 'def _execute_analysis|def _adaptive_final_artifacts|def render_campaign_report|write_lr_u_report|_campaign_file_manifest|_campaign_json_snapshot' ...` localizó la escritura de análisis seguida por el reporte en `_execute_analysis`, los artefactos adaptativos y el re-render del comando `hubbardflow report`.
-- `rg -n 'command.*cwd|stdout_path|def _matching_response_node|def _reference_node' src/hubbardflow/execution/campaign_runner.py` confirmó que los registros conservan `command.cwd`, paths stdout/FDF y los selectores de nodo referencia/respuesta.
-- `Get-Content src/hubbardflow/execution/campaign_shadow.py` confirmó que `_complete_state_gate()` sigue retornando `False`; `CampaignRunner` distingue `adaptive_policy` y `shadow`, permitiendo devolver `PATH_NOT_COVERED` en ambas rutas.
-- `rg -n 'lr_u_analysis.v3.json|LR_U_REPORT.v3.md' tests/integration/test_runner_replay_nio_p5.py` confirmó las entradas previas del manifest y el snapshot; el replay ya valida el golden de análisis. No hubo premisas falsas ni se regeneró el manifest.
+- `rg -n 'def _execute_analysis|def _adaptive_final_artifacts|def render_campaign_report|write_lr_u_report|_campaign_file_manifest|_campaign_json_snapshot' ...` located analysis writing followed by report generation in `_execute_analysis`, adaptive artifacts, and rerendering through `hubbardflow report`.
+- `rg -n 'command.*cwd|stdout_path|def _matching_response_node|def _reference_node' src/hubbardflow/execution/campaign_runner.py` confirmed records retain `command.cwd`, stdout/FDF paths, and reference/response node selectors.
+- `Get-Content src/hubbardflow/execution/campaign_shadow.py` confirmed `_complete_state_gate()` still returns `False`; `CampaignRunner` distinguishes `adaptive_policy` and `shadow`, allowing `PATH_NOT_COVERED` in both paths.
+- `rg -n 'lr_u_analysis.v3.json|LR_U_REPORT.v3.md' tests/integration/test_runner_replay_nio_p5.py` confirmed prior manifest and snapshot entries; replay already validates the analysis golden. No premises were false and the manifest was not regenerated.
 
-El nuevo `execution/state_gate_step.py` arma estados solo desde recibos validados, stdout/FDF y `.EIG` localizado por `SystemLabel` en el `command.cwd`. La salida I.5 se escribe en `results/i5_state_gate.json`, separada del análisis y `node-evidence.json`. Las rutas adaptativa y shadow escriben `NOT_ESTABLISHED:PATH_NOT_COVERED`; errores de lectura/evaluación/persistencia quedan como diagnóstico no establecido y no interrumpen el análisis U. El renderer consume un mapping opcional y `render_campaign_report` vuelve a leer el JSON para conservar la sección al re-renderizar.
+The new `execution/state_gate_step.py` builds states only from validated receipts, stdout/FDF, and `.EIG` located by `SystemLabel` in `command.cwd`. I.5 output is written to `results/i5_state_gate.json`, separate from analysis and `node-evidence.json`. Adaptive and shadow paths write `NOT_ESTABLISHED:PATH_NOT_COVERED`; read/evaluation/persistence errors remain an unestablished diagnostic and do not interrupt U analysis. The renderer consumes an optional mapping, and `render_campaign_report` rereads the JSON to preserve the section when rerendering.
 
-Ediciones de prueba autorizadas: `tests/integration/test_runner_replay_nio_p5.py` omite `results/i5_state_gate.json` del hash de archivos y snapshot general, lo compara mediante el comparador existente con el nuevo `replay_i5_state_gate.json`, y exige cuatro pares PASS, G4 NOT_AVAILABLE y presencia de la sección después de re-renderizar. Golden nuevo (no existía hash anterior): SHA-256 `326f5f63ecc590d27350493ed28636dfe9a6f8bceb369902124581b61f430404`; no se modificó ningún otro golden.
+Authorized test edits: `tests/integration/test_runner_replay_nio_p5.py` excludes `results/i5_state_gate.json` from the file hash and general snapshot, compares it with the new `replay_i5_state_gate.json` using the existing comparator, and requires four PASS pairs, G4 NOT_AVAILABLE, and the section to remain present after rerendering. New golden (no previous hash existed): SHA-256 `326f5f63ecc590d27350493ed28636dfe9a6f8bceb369902124581b61f430404`; no other golden was changed.
 
-Pruebas previas al commit 22.5: focal state/parser/reporte → `40 passed`; replay POSIX en WSL → `7 passed`; `ruff check .` → pasa; `ruff format --check .` → 91 archivos; `MYPYPATH=src mypy` → 91 módulos sin issues; `mypy --strict` del nuevo step y records → sin issues.
+Tests before commit 22.5: focused state/parser/report → `40 passed`; POSIX replay in WSL → `7 passed`; `ruff check .` → passed; `ruff format --check .` → 91 files; `MYPYPATH=src mypy` → 91 modules without issues; `mypy --strict` on the new step and records → no issues.
 
-Revisión independiente de 22.5 encontró que el hash del reporte registrado en `node-evidence.json` cambiaría por la nueva sección, aunque I.5 no editara ese archivo directamente. Se resolvió conservando `report_sha256` como digest del reporte analítico canónico `render_lr_u_report(analysis)` sin el apéndice diagnóstico; ese es el mismo contenido/hash previo al ítem. El archivo Markdown final sí incluye I.5, mientras que `i5_state_gate.json` sigue separado. Se añadió al replay una aserción que verifica que el campo de `matrix-analysis` corresponde al render canónico sin I.5. `verificador_luna` confirmó que el ajuste cierra el hallazgo: analysis y node-evidence permanecen comparables/cubiertos, mientras que el nuevo diagnóstico se compara con su golden separado. No se ejecutó SIESTA.
+Independent review of 22.5 found that the report hash in `node-evidence.json` would change because of the new section, even though I.5 did not edit that file directly. The fix keeps `report_sha256` as the digest of the canonical analytical report `render_lr_u_report(analysis)` without the diagnostic appendix; this is the same content/hash as before the item. The final Markdown file includes I.5, while `i5_state_gate.json` remains separate. A replay assertion was added to verify that the `matrix-analysis` field matches the canonical render without I.5. `verificador_luna` confirmed the adjustment closes the finding: analysis and node evidence remain comparable/covered, while the new diagnostic is compared against its separate golden. SIESTA was not run.
 
-## 22.6 — ejecución real y documentación
+## 22.6 — real run and documentation
 
-Premisas comprobadas con comandos WSL reales antes de ejecutar: `ls -ld` y `find` sobre `nio_p5_20261003/inputs` confirmaron el conjunto de FDF, LR config, perfil, pseudopotenciales y registro/software; `sha256sum` verificó FDF (`b4fb34e...`), PSML de Ni y O (`192eb05f...`, `224ded5c...`), compatibilidad (`5189620d...`) y texto de versión (`bb5a9b03...`). El binario `siesta --version` informó 5.4.2 y `/usr/bin/mpiexec.openmpi` existía. Se leyó Parte A directamente de `~/.local/state/siestaflow/campaigns/nio_p5_product_2/results/lr_u_analysis.v3.json`; `primary.U_by_site_eV` era 6.864267700049239 y 6.864387475210124 eV. No hubo premisas falsas.
+Premises checked with actual WSL commands before execution: `ls -ld` and `find` on `nio_p5_20261003/inputs` confirmed the FDF, LR config, profile, pseudopotentials, and software registry; `sha256sum` verified the FDF (`b4fb34e...`), Ni and O PSML files (`192eb05f...`, `224ded5c...`), compatibility registry (`5189620d...`), and version text (`bb5a9b03...`). The binary's `siesta --version` reported 5.4.2, and `/usr/bin/mpiexec.openmpi` existed. Part A was read directly from `~/.local/state/siestaflow/campaigns/nio_p5_product_2/results/lr_u_analysis.v3.json`; `primary.U_by_site_eV` was 6.864267700049239 and 6.864387475210124 eV. No premises were false.
 
-Se creó una carpeta nueva, `~/hubbardflow_validation/task22_20261003_0a8a12f`, se extrajo allí `git archive 0a8a12f2244cf217d25047ea426c9578073ca00e` y se copiaron los inputs verificados. Para mantener campaña, worker y resultados dentro de esa carpeta, solo se cambió `wsl.workspace_root` en la copia local de `execution_profile.json`; se mantuvo intacto el conjunto de entrada fuente. Esta reubicación conservadora se registra como decisión operativa. La planificación produjo 24 run specs de la cuadrícula fija. La admisión de ejecución fue `ADMISSIBLE_LEGACY_EQUIVALENT`, sin override; el plan quedó `NOT_ESTABLISHED`.
+A new directory, `~/hubbardflow_validation/task22_20261003_0a8a12f`, was created; `git archive 0a8a12f2244cf217d25047ea426c9578073ca00e` was extracted there, and the verified inputs were copied. To keep the campaign, worker, and results inside this directory, only `wsl.workspace_root` was changed in the local copy of `execution_profile.json`; the source input set remained intact. This conservative relocation is recorded as an operational decision. Planning produced 24 run specs from the fixed grid. Execution admission was `ADMISSIBLE_LEGACY_EQUIVALENT`, with no override; the plan remained `NOT_ESTABLISHED`.
 
-Se lanzó con `setsid nohup ... < /dev/null > product/run.log 2>&1 &`; una nueva invocación de WSL encontró vivo al worker PID 811, junto con `orterun` y cuatro procesos SIESTA. Campaña `nio_p5_task22_0a8a12f`, id `99494d9a-5875-40d5-9b7e-8e60d2d2f5e1`, SIESTA 5.4.2/MPI×4, completada con 27 nodos validados. El worker-state da inicio UTC `2026-10-03T22:52:53.061654Z` y final `2026-10-03T22:57:41.580628Z`. No hay `failure.json`.
+It was launched with `setsid nohup ... < /dev/null > product/run.log 2>&1 &`; a new WSL invocation found worker PID 811 alive, along with `orterun` and four SIESTA processes. Campaign `nio_p5_task22_0a8a12f`, id `99494d9a-5875-40d5-9b7e-8e60d2d2f5e1`, using SIESTA 5.4.2/MPI×4, completed with 27 validated nodes. Worker state gives UTC start `2026-10-03T22:52:53.061654Z` and end `2026-10-03T22:57:41.580628Z`. There is no `failure.json`.
 
-El JSON de I.5 real está bajo `~/hubbardflow_validation/task22_20261003_0a8a12f/campaigns/nio_p5_task22_0a8a12f/results/i5_state_gate.json`, SHA-256 `d3eb4ce6e84ee319edc1e96c9fb9d81e3c7dfb88899b0c2eecfdfb04fff83f0c`. Se resumieron desde el JSON los cuatro pares NiLR0/NiLR1 × BARE/SCREENED: los cuatro PASS, amplitudes 0.02/0.04/0.06 eV admitidas, ninguna excluida y G4 APPLICABLE/PASS en los seis puntos por par. G1/G2/G3a/G4 pasaron en cada punto. La salida completa no se copia al repo; el artefacto externo permanece en el directorio autorizado. G3 suavidad queda NOT_ESTABLISHED por D13a. No se disparó la parada por fallo de I.5.
+The real I.5 JSON is at `~/hubbardflow_validation/task22_20261003_0a8a12f/campaigns/nio_p5_task22_0a8a12f/results/i5_state_gate.json`, SHA-256 `d3eb4ce6e84ee319edc1e96c9fb9d81e3c7dfb88899b0c2eecfdfb04fff83f0c`. The JSON summarizes the four NiLR0/NiLR1 × BARE/SCREENED pairs: all four PASS, amplitudes 0.02/0.04/0.06 eV admitted, none excluded, and G4 APPLICABLE/PASS at all six points per pair. G1/G2/G3a/G4 passed at every point. The full output is not copied into the repository; the external artifact remains in the authorized directory. G3 smoothness remains NOT_ESTABLISHED under D13a. The I.5 failure stop condition did not trigger.
 
-Comparación real/Parte A: se leyó el `primary` completo de ambos análisis JSON; son idénticos. U NiLR0 es 6.864267700049239 eV y NiLR1 6.864387475210124 eV en ambos, con ΔU=0. La matriz U también es idéntica entrada por entrada. Informe reproducible: `TASK22_REAL_RUN.md`.
+Real run/Part A comparison: the complete `primary` objects from both analysis JSON files were read; they are identical. NiLR0 U is 6.864267700049239 eV and NiLR1 U is 6.864387475210124 eV in both, with ΔU=0. The U matrix is also identical entry by entry. Reproducible report: `TASK22_REAL_RUN.md`.
 
-Ediciones del ítem: solo `TASK22_REAL_RUN.md`, esta bitácora y la sección “Long campaigns from WSL” de `USER_GUIDE.md`. No se editaron pruebas ni golden en 22.6. No hubo premisas falsas.
+Item edits: only `TASK22_REAL_RUN.md`, this log, and the “Long campaigns from WSL” section of `USER_GUIDE.md`. No tests or goldens were edited in 22.6. No premises were false.
 
-Gates post-commit de 22.6 (punta documental `71471ee` antes del resumen de cierre): replay POSIX en WSL → `7 passed`; golden fase 2 / 20.9 → `4 passed`; producto/campaña → `110 passed`; regresiones científicas → `70 passed`; arquitectura → `8 passed`; `ruff check .` → `All checks passed!`; `ruff format --check .` → `91 files already formatted`; `MYPYPATH=src mypy` → `Success: no issues found in 91 source files`; `bash tools/check_v6_integrity.sh` → `V6 GATE OK`; `python -m pytest tests -q -rfE --continue-on-collection-errors` → `1395 passed, 27 skipped, 20 xfailed, 2 warnings, 4 subtests passed` en 284.28 s. No hubo nuevas fallas.
+Post-commit 22.6 gates (documentation tip `71471ee` before the closeout summary): POSIX replay in WSL → `7 passed`; Phase 2 / 20.9 golden → `4 passed`; product/campaign → `110 passed`; scientific regressions → `70 passed`; architecture → `8 passed`; `ruff check .` → `All checks passed!`; `ruff format --check .` → `91 files already formatted`; `MYPYPATH=src mypy` → `Success: no issues found in 91 source files`; `bash tools/check_v6_integrity.sh` → `V6 GATE OK`; `python -m pytest tests -q -rfE --continue-on-collection-errors` → `1395 passed, 27 skipped, 20 xfailed, 2 warnings, 4 subtests passed` in 284.28 s. There were no new failures.

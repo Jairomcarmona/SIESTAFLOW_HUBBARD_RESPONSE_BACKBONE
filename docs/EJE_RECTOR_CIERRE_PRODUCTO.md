@@ -1,28 +1,41 @@
-# Eje rector para cerrar la utilidad independiente de U con SIESTA
+# Product Charter for Completing the Standalone SIESTA U Utility
 
-**Fecha:** 2026-09-28. **Estado:** plan de ejecución; ninguna campaña nueva queda autorizada por este documento.
+**Date:** 2026-09-28. **Status:** execution plan; this document authorizes no new campaign.
 
-> **Actualización de estado (2026-09-29):** este eje conserva el alcance y las
-> puertas del plan; su tabla de línea de base no sustituye el estado posterior
-> del trabajo. La fuente de ocupación del análisis v3 quedó fijada como
-> `siesta_occupations_total` para los eventos seleccionados; `matrix_trace` se
-> conserva como comprobación/semántica histórica v2. La campaña adaptativa
-> NiO actual termina como `NUMERICAL_CANDIDATE_UNASSESSED` y
-> `physical_acceptance=NOT_ESTABLISHED`; su tolerancia de sensibilidad no se
-> había configurado. La cota cúbica de impresión reportada es 0.03436273105 eV
-> y 0.01353711826 eV es un ajuste lineal diagnóstico, no la cota primaria.
-> El objetivo posterior de ±0.02 eV es operativo, no una tolerancia física
-> universal. Para el expediente y las rutas de investigación vigentes, véase
+> **Status update (2026-09-29):** this charter retains the plan's scope and
+> gates; its baseline table does not supersede the later work status. The v3
+> analysis occupation source was fixed as `siesta_occupations_total` for the
+> selected events; `matrix_trace` remains a check / historical v2 semantics.
+> The current adaptive NiO campaign ends as `NUMERICAL_CANDIDATE_UNASSESSED`
+> with `physical_acceptance=NOT_ESTABLISHED`; its sensitivity tolerance had not
+> been configured. The reported cubic printing bound is 0.03436273105 eV, and
+> 0.01353711826 eV is a diagnostic linear fit, not the primary bound. The later
+> ±0.02 eV target is operational, not a universal physical tolerance. For the
+> current record and investigation paths, see
 > [`INFORME_CONTEXTO_CUELLO_BOTELLA_U_20260929.md`](INFORME_CONTEXTO_CUELLO_BOTELLA_U_20260929.md).
-> El [registro final P0–P6](P0_EXECUTION_20260928.md) declara
-> `PRODUCT_BLOCKED`: el flujo operativo y la campaña P5 concluyeron, pero el
-> objetivo científico de U que exige el usuario sigue sin establecerse.
+> The [final P0–P6 log](P0_EXECUTION_20260928.md) declares
+> `PRODUCT_BLOCKED`: the operational workflow and P5 campaign finished, but
+> the user's required scientific U objective remains unestablished.
 
-Este documento gobierna el trabajo **pendiente** para entregar `siestaflow_hubbard` como utilidad independiente con CLI propio. El [plan de integración anterior](PLAN_INTEGRACION_GLOBAL_DAG_U_POLINOMICO.md) registra lo que ya se implementó; sus fases terminadas no se repiten. `AGENTS.md` conserva la prioridad de lanzar los nodos SIESTA una vez autorizada una campaña.
+This document governs the **outstanding** work to deliver `siestaflow_hubbard`
+as a standalone utility with its own CLI. The [earlier integration plan](PLAN_INTEGRACION_GLOBAL_DAG_U_POLINOMICO.md)
+records what has already been implemented; completed phases are not repeated.
+`AGENTS.md` retains priority for launching SIESTA nodes once a campaign is
+authorized.
 
-## 1. Meta comprobable y límite científico
+## 1. Verifiable goal and scientific limit
 
-Una persona debe poder instalar el paquete, declarar FDF, pseudopotenciales, sitios correlacionados y perfil de ejecución, y ejecutar `init → run/status/resume → report` desde PowerShell→WSL o directamente en Linux, incluido un entorno Slurm con una asignación ya concedida, sin que un agente edite la campaña en vivo. La ruta Slurm no necesita un segundo planificador ni enviar `sbatch` desde cada nodo; usa el ejecutor de asignación existente. La política automática documentada debe completar el recorrido o devolver un estado terminal dentro de su presupuesto; una política experta puede fijar tolerancias y límites distintos antes de iniciar. El DAG debe entregar JSON versionado e informe Markdown regenerable con la respuesta completa y un resultado **por sitio**:
+A person must be able to install the package, declare an FDF, pseudopotentials,
+correlated sites, and an execution profile, then run
+`init → run/status/resume → report` from PowerShell→WSL or directly on Linux,
+including in a Slurm environment with an allocation already granted, without
+an agent editing the live campaign. The Slurm path needs neither a second
+scheduler nor an `sbatch` submission from every node; it uses the existing
+allocation executor. The documented automatic policy must complete the
+workflow or return a terminal state within its budget; an expert policy may
+set different tolerances and limits before starting. The DAG must produce
+versioned JSON and a regenerable Markdown report with the complete response
+and a result **for each site**:
 
 \[
 \chi^0_{IJ}=\left.\partial n_I^{\mathrm{BARE}}/\partial\alpha_J\right|_0,
@@ -30,104 +43,215 @@ Una persona debe poder instalar el paquete, declarar FDF, pseudopotenciales, sit
 \quad U_I=[(\chi^0)^{-1}-\chi^{-1}]_{II}.
 \]
 
-La cantidad de esta versión es `U_scalar_charge`, con la definición de ocupación y proyector declarada. El reporte **no** la convierte automáticamente en `Ueff_Dudarev`: SIESTA usa `U-J` en su implementación colineal de Dudarev y esa equivalencia requiere otro contrato físico. Tampoco se etiqueta automáticamente un elemento fuera de la diagonal como el `V` de otro funcional. La utilidad se considera terminada aunque un material particular termine como candidato sensible, sin U calculable o sin aceptación física, siempre que esa conclusión y su causa sean correctas y reproducibles. El acuerdo con gap, red o literatura puede servir de comparación independiente, nunca de selector de α, estimador o valor de U.
+The quantity in this version is `U_scalar_charge`, with its occupation
+definition and projector declared. The report does **not** automatically
+convert it to `Ueff_Dudarev`: SIESTA uses `U-J` in its collinear Dudarev
+implementation, and that equivalence requires another physical contract. Nor
+is an off-diagonal element automatically labeled the `V` of another
+functional. The utility is considered complete even if a particular material
+ends as a sensitive candidate, has no calculable U, or lacks physical
+acceptance, provided the conclusion and its cause are correct and
+reproducible. Agreement with a gap, lattice parameter, or literature may be
+used as an independent comparison, never as a selector for alpha, estimator,
+or U value.
 
-**Alcance certificado v1:** ruta SIESTA 5.4.2 y modos de espín para los que el parser y el protocolo BARE/SCREENED tengan pruebas reales. El número de sitios y el perfil MPI son parámetros de campaña. No se promete cobertura de espín no colineal, spin–orbit, un `J` calculado, ni un U físico universal. Ampliar esas capacidades sería otra versión y no bloqueará el cierre de esta utilidad.
+**Certified v1 scope:** SIESTA 5.4.2 and spin modes for which the parser and
+BARE/SCREENED protocol have real tests. Site count and MPI profile are campaign
+parameters. There is no promised coverage for non-collinear spin, spin–orbit,
+a calculated `J`, or a universal physical U. Expanding those capabilities
+would be a separate version and will not block completion of this utility.
 
-## 2. Línea de base que no se vuelve a construir
+## 2. Baseline that will not be rebuilt
 
-| Pieza | Evidencia actual | Pendiente real |
+| Component | Current evidence | Actual outstanding work |
 |---|---|---|
-| CLI y DAG | El cierre P3/P6 ejercitó `init/run/status/resume/report/stop` en PowerShell→WSL y la ruta pública de manifiesto directo para Linux/Slurm dentro de una asignación concedida. El DAG adaptativo, presupuesto y reanudación selectiva están implementados; P5 completó 25 nodos seriales y `resume` no relanzó SIESTA. | Mantener la evidencia de la ruta soportada y distinguir su cierre operativo del bloqueo científico de U. |
-| NiO PBE adaptativo | La campaña contiene 41 nodos: 1 referencia, 20 BARE y 20 SCREENED. El análisis v3 reporta `NUMERICAL_CANDIDATE_UNASSESSED` y `physical_acceptance=NOT_ESTABLISHED`, porque no había tolerancia de sensibilidad configurada. El análisis histórico v2 y la reconstrucción v3 de los mismos OUT son resultados versionados distintos; no se sobrescriben. | Usar el reanálisis v3 para el estado actual y conservar intactos los artefactos y conclusiones históricas. No interpretar `STOP_STABLE` como pase de tolerancia física. |
-| Ocupación y precisión | El análisis v3 ajusta `siesta_occupations_total`, el total seleccionado de `Occupations:`; `matrix_trace` queda como comprobación y semántica histórica v2. La precisión se propaga desde los tokens realmente seleccionados. | Mantener una única fuente por análisis/versionado y documentar por separado el intervalo de impresión, la sensibilidad del ajuste y cualquier término de repetibilidad. No exigir un ejecutable SIESTA modificado como ruta portable. |
-| Reporte | El esquema v3 y Markdown publican fuente de ocupación, respuesta por sitio, cota de impresión, diagnósticos de ajuste, SCF y estado de aceptación. Los reportes v2 históricos conservan su significado original. | Comunicar en primer plano el estado `PRODUCT_BLOCKED` del cierre P0–P6 y los límites de la afirmación numérica. |
-| Políticas | Las puertas operativas, el presupuesto, el refinamiento simétrico y los estados terminaron P0–P6; el análisis NiO original carecía de tolerancia de sensibilidad preregistrada. | Resolver prospectivamente qué garantía numérica y qué evidencia permiten declarar un U útil bajo el objetivo del usuario, sin cambiar retrospectivamente el contrato. |
+| CLI and DAG | The P3/P6 closeout exercised `init/run/status/resume/report/stop` from PowerShell→WSL and the public direct-manifest path for Linux/Slurm within an existing allocation. The adaptive DAG, budget, and selective resumption are implemented; P5 completed 25 serial nodes, and `resume` did not relaunch SIESTA. | Preserve evidence for the supported path and distinguish operational completion from the scientific U block. |
+| Adaptive PBE NiO | The campaign contains 41 nodes: 1 reference, 20 BARE, and 20 SCREENED. The v3 analysis reports `NUMERICAL_CANDIDATE_UNASSESSED` and `physical_acceptance=NOT_ESTABLISHED` because no sensitivity tolerance was configured. The historical v2 analysis and the v3 reconstruction of the same OUT files are distinct versioned results; neither is overwritten. | Use the v3 reanalysis for current status and preserve historical artifacts and conclusions intact. Do not treat `STOP_STABLE` as passing a physical tolerance. |
+| Occupation and precision | The v3 analysis fits `siesta_occupations_total`, the selected total from `Occupations:`; `matrix_trace` remains a check and historical v2 semantics. Precision is propagated from the actually selected tokens. | Keep one source per analysis/version and document the printing interval, fit sensitivity, and any repeatability term separately. Do not require a modified SIESTA executable for the portable path. |
+| Report | The v3 schema and Markdown publish occupation source, per-site response, printing bound, fit diagnostics, SCF, and acceptance state. Historical v2 reports retain their original meaning. | Foreground the `PRODUCT_BLOCKED` status of the P0–P6 closeout and the limits of the numerical claim. |
+| Policies | Operational gates, budget, symmetric refinement, and states completed P0–P6; the original NiO analysis lacked a preregistered sensitivity tolerance. | Prospectively determine what numerical guarantee and evidence allow a useful U to be declared under the user's goal, without changing the contract retroactively. |
 
-El árbol de trabajo ya contiene cambios sin consolidar en `src/siestaflow_hubbard`. El ejecutor los inspeccionará por archivo antes de editar y conservará los `.out`, los manifiestos y los reportes históricos como evidencia inmutable. No hará un inventario de hashes del repositorio.
+The working tree already contains unconsolidated changes under
+`src/siestaflow_hubbard`. Before editing, the executor will inspect affected
+files and preserve `.out` files, manifests, and historical reports as
+immutable evidence. It will not create a repository-wide hash inventory.
 
-## 3. Rutas de investigación, en orden y con salida obligatoria
+## 3. Investigation paths, in order, with required outputs
 
-### R1. Definir el observable ajustado: una sola ruta primaria
+### R1. Define the fitted observable: one primary path
 
-1. Leer el código fuente local **SIESTA 5.4.2** que acumula y escribe la matriz y `Occupations:`. Comparar el orden real de impresión con los eventos seleccionados BARE y SCREENED de los 41 `.out` NiO; incluir al menos un caso sin polarización del archivo de regresión. La documentación de otra versión no decide este contrato.
-2. **Si** el tercer número de `Occupations:` representa la misma suma interna de diagonales y cada intervalo de impresión concuerda con la traza de matriz del mismo evento, usar ese total como dato primario de referencia, BARE y SCREENED. Leer su semiancho directamente del token; conservar `trace_total` sólo como comprobación independiente. Recalcular de cero pendientes, matrices, U y cota de redondeo. Nunca aplicar el semiancho de seis decimales al U calculado con diagonales de cinco.
-3. **Si** falla esa equivalencia, mantener `trace_total` como primario con el semiancho de sus diagonales; publicar la discrepancia concreta. Si ninguna representación se puede vincular inequívocamente al evento físico, terminar la ruta como `OBSERVABLE_UNRESOLVED`, con valor previo sólo histórico. No probar observables adicionales hasta obtener una hipótesis nueva y verificable.
-4. El cambio de significado del dato ajustado exige un campo obligatorio `occupation_source` y una versión de esquema nueva si la interpretación de v2 cambia. Un lector antiguo debe seguir entendiendo un resultado v2 como histórico; `report` nunca reetiquetará sus números.
+1. Read the local **SIESTA 5.4.2** source that accumulates and writes the
+   matrix and `Occupations:`. Compare the actual print order with selected
+   BARE and SCREENED events in the 41 NiO `.out` files; include at least one
+   unpolarized case from the regression file. Documentation for another
+   version does not determine this contract.
+2. **If** the third `Occupations:` number represents the same internal sum of
+   diagonals and each print interval agrees with the matrix trace from the
+   same event, use that total as the primary reference, BARE, and SCREENED
+   datum. Read its half-width directly from the token; retain `trace_total`
+   only as an independent check. Recompute slopes, matrices, U, and the
+   rounding bound from scratch. Never apply the six-decimal half-width to U
+   computed from five-decimal diagonals.
+3. **If** that equivalence fails, retain `trace_total` as primary with the
+   half-widths of its diagonals; publish the specific discrepancy. If neither
+   representation can be unambiguously tied to the physical event, end this
+   path as `OBSERVABLE_UNRESOLVED`, with any prior value marked historical.
+   Do not test additional observables until a new, verifiable hypothesis is
+   available.
+4. Changing the meaning of the fitted datum requires a mandatory
+   `occupation_source` field and a new schema version if the interpretation of
+   v2 changes. An old reader must continue to understand a v2 result as
+   historical; `report` must never relabel its numbers.
 
-**Salida de R1:** una decisión documentada, tablas de comparación por evento, U recalculado por sitio y cota de impresión de la variable realmente usada, o un bloqueo con línea de código/`.out` que lo demuestra. Máximo una ruta primaria y una alternativa; no se elige la que acerque U a literatura.
+**R1 output:** a documented decision, event-by-event comparison tables,
+recalculated U for each site, and the printing bound for the variable actually
+used, or a block with the code line / `.out` that demonstrates it. At most one
+primary path and one alternative; do not choose the one that moves U closer to
+the literature.
 
-### R2. Distinguir fuentes de sensibilidad sin inventar una incertidumbre total
+### R2. Distinguish sensitivity sources without inventing a total uncertainty
 
-- **Impresión:** propagar los intervalos decimales del dato ajustado por el ajuste y la inversión. Si los intervalos permiten una matriz singular o la cota no puede certificarse, publicar `bound_unavailable` y su causa; mantener separado el candidato puntual.
-- **Modelo/ventana:** comparar cúbico, lineal en la misma malla y ventanas predeclaradas sólo cuando tengan rango y grados de libertad suficientes. Informar cada diferencia y el motivo de exclusión de una ventana. No promediar estimadores ni ampliar grado para mejorar R².
-- **SCF:** conservar el estado de cada referencia y SCREENED, iteraciones, último `dDmax`/`dHmax` y tolerancias. BARE de un solo paso se informa como `BARE_SINGLE_STEP`, aunque SIESTA imprima `SCF_NOT_CONV`. Un residual SCF no es una barra de error de U. La campaña NiO actual no justifica un rerun SCF más estricto por defecto.
-- **Rama electrónica, proyector y álgebra:** validar continuidad de estado, identidad del proyector entre referencia/perturbaciones, completitud de filas/columnas de χ, rango e inversión. Si falla cualquiera, el DAG emite una causa terminal, no una cifra aparente.
-- **Automatización sin umbral físico ficticio:** una política predeterminada puede elegir estimador, malla inicial y presupuesto operativo; sólo se rotula `WITHIN_TOLERANCE` cuando la tolerancia científica de U está declarada y su alcance está explicado. Sin ella, el CLI termina normalmente con `UNASSESSED`, muestra U y sensibilidades y no pide vigilancia de un agente.
+- **Printing:** propagate decimal intervals of the fitted datum through the
+  fit and inversion. If the intervals allow a singular matrix or the bound
+  cannot be certified, publish `bound_unavailable` and its cause; keep the
+  point candidate separate.
+- **Model/window:** compare cubic and linear fits on the same mesh and
+  predeclared windows only when they have sufficient rank and degrees of
+  freedom. Report each difference and why a window was excluded. Do not average
+  estimators or increase the degree to improve R².
+- **SCF:** retain the state of each reference and SCREENED calculation, number
+  of iterations, final `dDmax`/`dHmax`, and tolerances. Report one-step BARE as
+  `BARE_SINGLE_STEP`, even when SIESTA prints `SCF_NOT_CONV`. An SCF residual is
+  not an error bar on U. The current NiO campaign does not justify a stricter
+  default SCF rerun.
+- **Electronic branch, projector, and algebra:** validate state continuity,
+  projector identity across reference/perturbations, completeness of χ rows
+  and columns, rank, and inversion. If any check fails, the DAG emits a
+  terminal cause, not an apparent number.
+- **Automation without a fictitious physical threshold:** a default policy
+  may choose estimator, initial mesh, and operational budget; it is labeled
+  `WITHIN_TOLERANCE` only when the scientific U tolerance is declared and its
+  scope explained. Without it, the CLI ends normally with `UNASSESSED`, shows
+  U and sensitivities, and does not require agent supervision.
 
-**Salida de R2:** estados y causas independientes para `printing_rounding`, `fit_window`, `scf`, `magnetic_branch`, `projector` e `inversion`; ninguna suma de incertidumbres de fuentes no calibradas.
+**R2 output:** independent states and causes for `printing_rounding`,
+`fit_window`, `scf`, `magnetic_branch`, `projector`, and `inversion`; no sum of
+uncertainties from uncalibrated sources.
 
-### R3. Decidir si un cálculo nuevo puede cambiar una conclusión
+### R3. Decide whether a new calculation could change a conclusion
 
-Sólo se agregan nodos si existe una pregunta cuantitativa predeclarada cuya respuesta pueda cambiar el estado y el costo cabe en el presupuesto. Para `shrink`, la política fija par simétrico, ventana y límite antes del despacho. Para `expand`, se requieren la sonda de ruido y los predicados de señal/continuidad ya definidos por el controlador; una sonda parcial no certifica U ni autoriza ampliar las otras columnas. Un cambio de nivel SCF del **U final** requiere rehacer todos los puntos de las matrices que éste usa bajo el mismo nivel, no mezclar valores. Si falta umbral o presupuesto, el resultado termina `UNASSESSED` o `SENSITIVE` con motivo. Un valor de U “prometedor” o cercano a literatura nunca activa una ronda.
+Add nodes only if there is a predeclared quantitative question whose answer
+could change the state and whose cost fits the budget. For `shrink`, the policy
+fixes the symmetric pair, window, and limit before dispatch. For `expand`, the
+controller's already defined noise probe and signal/continuity predicates are
+required; a partial probe neither certifies U nor authorizes expansion of other
+columns. Changing the SCF level of the **final U** requires rerunning every
+point used by its matrices at that same level; values must not be mixed. If a
+threshold or budget is missing, the result ends as `UNASSESSED` or `SENSITIVE`
+with a reason. A “promising” U or one close to literature never triggers a
+round.
 
-## 4. Contrato de decisión que impide iteraciones cíclicas
+## 4. Decision contract that prevents cyclic iterations
 
-| Puerta | Para continuar o declarar candidato dentro de política | Si no se cumple |
+| Gate | To continue or declare a candidate within policy | If it fails |
 |---|---|---|
-| Entrada | FDF/funcional/pseudopotenciales/proyector/estado de referencia compatibles; α, estimador, recurso y presupuesto congelados. | `INPUT_INVALID`; corregir antes del primer SIESTA. |
-| Datos | Un evento inequívoco por sitio, α y modo, unido a salida normal y DM padre; referencia/SCREENED convergidos; BARE validado como un paso. | `DATA_INVALID` o `NO_NUMERICAL_U`; no ajustar datos incompletos. |
-| Cálculo | Diseño de ajuste con rango y DoF declarados; χ⁰ y χ utilizables; inversión reproducible; ocupaciones de una sola rama. | `NO_NUMERICAL_U` o `NO_SINGLE_STATE_U`; conservar diagnósticos. |
-| Evaluación | Umbral de sensibilidad **predeclarado**, métricas requeridas presentes y dentro de él; dos comparaciones entre rondas comparables para `STOP_STABLE` cuando se usa adaptación. | Candidato `UNASSESSED` o `SENSITIVE`; `STOP_LIMIT_SENSITIVE` al agotar rondas/presupuesto. |
-| Impresión | Cota vinculada al observable ajustado y matrices invertibles para todos los valores admitidos por esa cota. | Candidato visible con `bound_unavailable`; no certificar decimales mediante otra métrica. |
-| Publicación del resultado | JSON e informe coinciden en dato, ecuación, U por sitio, unidades, estado, costo y razones. | Fallo de reporte bloquea la entrega, no reejecuta SIESTA. |
+| Input | Compatible FDF/functional/pseudopotentials/projector/reference state; alpha, estimator, resources, and budget frozen. | `INPUT_INVALID`; fix before the first SIESTA run. |
+| Data | One unambiguous event for each site, alpha, and mode, tied to normal output and parent DM; reference/SCREENED converged; BARE validated as one step. | `DATA_INVALID` or `NO_NUMERICAL_U`; do not fit incomplete data. |
+| Calculation | Fit design with declared rank and DoF; usable χ⁰ and χ; reproducible inversion; occupations from a single branch. | `NO_NUMERICAL_U` or `NO_SINGLE_STATE_U`; retain diagnostics. |
+| Evaluation | **Predeclared** sensitivity threshold, required metrics present and within it; two comparisons between comparable rounds for `STOP_STABLE` when using adaptation. | Candidate `UNASSESSED` or `SENSITIVE`; `STOP_LIMIT_SENSITIVE` when rounds/budget are exhausted. |
+| Printing | Bound tied to the fitted observable and invertible matrices for all values admitted by that bound. | Candidate remains visible with `bound_unavailable`; do not certify decimals using another metric. |
+| Result publication | JSON and report agree on datum, equation, per-site U, units, state, cost, and reasons. | A reporting failure blocks delivery; it does not rerun SIESTA. |
 
-Se conservan los límites ya implementados: a lo sumo `max_refinement_rounds`, `max_alpha_points`, `total_siesta_node_budget` y el número de intentos del perfil. La configuración no cambia a mitad de una campaña. Un nodo terminal sólo se reabre si se identifica un error reproducible en su entrada, salida o código; se versiona la nueva campaña/análisis. **Ningún agente ajustará umbrales, α o proyector para forzar `STOP_STABLE` o un U deseado.**
+The implemented limits remain: at most `max_refinement_rounds`,
+`max_alpha_points`, `total_siesta_node_budget`, and the number of profile
+attempts. Configuration does not change mid-campaign. A terminal node is
+reopened only when a reproducible error is identified in its input, output, or
+code; the new campaign/analysis is versioned. **No agent may adjust
+thresholds, alpha, or projector to force `STOP_STABLE` or a desired U.**
 
-Por puerta de software se permiten dos correcciones localizadas con repetición de la prueba que falló, y como máximo doce correcciones localizadas en toda la ejecución P1–P6; los contadores no se reinician al cambiar de agente o fase. Si aparece la misma falla una tercera vez, o se agota el límite global, la ejecución one shot termina `BLOCKED` con archivo, comando, salida y causa probable; no empieza otra exploración abierta. Un bloqueo crítico impide declarar terminado el producto. Un material `SENSITIVE` con método válido **no** bloquea el producto.
+By software gate, two localized corrections are allowed with a rerun of the
+failed test, and at most twelve localized corrections across the entire P1–P6
+execution; counters do not reset when the agent or phase changes. If the same
+failure appears a third time, or the global limit is exhausted, the one-shot
+execution ends `BLOCKED` with file, command, output, and likely cause; it does
+not begin another open-ended investigation. A critical block prevents product
+completion. A `SENSITIVE` material with a valid method does **not** block the
+product.
 
-## 5. Secuencia de implementación y pruebas de la ejecución one shot
+## 5. Implementation and test sequence for the one-shot execution
 
-| Fase | Trabajo concreto | Evidencia de salida y condición de avance |
+| Phase | Concrete work | Output evidence and advancement condition |
 |---|---|---|
-| P0. Congelar contrato | Revisar sólo los archivos afectados, fijar fuente SIESTA 5.4.2, versiones de esquema, dos conjuntos reales archivados (NiO multisite y la campaña Cu1 en `docs/evidence/siesta542_openmpi_slurm_full_campaign_20260920_run2_wheel`, si sus salidas pasan el control de integridad; si falla, dejar la selección de otro conjunto documentada antes de P1), política de prueba y límite de recursos. | Lista corta de archivos/decisiones y costos. No se recalculan hashes históricos en masa. |
-| P1. Fuente de ocupación | Ejecutar R1 sobre los `.out` existentes; implementar un adaptador único de ocupación con fuente explícita y verificación cruzada; migrar análisis sin mutar v2. | Cada vector ajustado corresponde a su token y evento; recomputación independiente de χ, inversas, U y cota. |
-| P2. Decisiones matemáticas | Revisar estados, ventana, impresión, rama, SCF y matriz; adaptar sólo los predicados que no representen el contrato de §4. | Pruebas con datos sintéticos de U conocido y casos adversos; cada caso termina en estado único dentro del presupuesto. |
-| P3. DAG, CLI e informe | Conectar P1–P2 al cierre común de `run/resume/report`, tanto fijo como adaptativo; añadir resumen SCF y tabla por nodo en JSON/Markdown; conservar trazabilidad automática acotada. Enrutar el CLI público según el perfil: puntero y supervisor para PowerShell→WSL; manifiesto directo para Linux y asignación Slurm, sin duplicar el analizador ni implantar un nuevo envío `sbatch`. Quitar la restricción `local_wsl` sólo donde el adaptador existente y una prueba la respalden. | El mismo análisis produce el mismo JSON/reporte al reanudar; `report` no invoca SIESTA; el usuario ve causa y valor cuando existe; CLI Linux/Slurm controla el DAG por la ruta pública documentada. |
-| P4. Regresión sin cómputo SIESTA | Reprocesar los 41 `.out` NiO y otro conjunto real archivado; cubrir modo de espín admitido, varios sitios, BARE/SCREENED, matrices singulares, resolución limitada, cambio de rama, presupuesto, `resume` y la ruta **pública** Linux/Slurm con fixtures y evidencia Slurm real archivada. Correr una vez la suite pública y clasificar fallos vigentes/obsoletos. | Las pruebas pertinentes al producto pasan; todo fallo de la suite queda reparado o explícitamente retirado con razón. La evidencia antigua conserva su semántica y el nuevo resultado lleva versión propia. |
-| P5. Prueba real final | Una campaña **nueva y pequeña**, con FDF y PSML auditados antes de empezar, controlada enteramente por el CLI desde PowerShell→WSL. Ruta primaria: un sitio correlacionado y seis α no nulas simétricas, `1 + 2×1×6 = 13` nodos. Si ningún FDF de un sitio pasa P0, elegir **antes de calcular** el NiO PBE de dos sitios ya conocido con las mismas seis α: `1 + 2×2×6 = 25` nodos. Es una sola campaña elegida en P0, nunca dos intentos por preferencia de U. Hasta cuatro rangos MPI de la laptop y un SIESTA simultáneo. `status/resume/report` se ejercitan sin editar FDF a mano. La campaña NiO archivada cubre la regresión adaptativa multisite. | Termina como resultado numérico o diagnóstico científico honesto; conteo ≤13 en la ruta primaria o ≤25 en la alternativa, sin nodos duplicados ni intervención agentica durante transiciones normales. Un fallo posterior al lanzamiento se corrige/reanuda en la misma campaña, sin cambiar material. |
-| P6. Entrega | Instalar el paquete construido en entorno limpio, ejecutar el quickstart real para PowerShell y el comando público en Linux dentro de WSL, alinear README/manual/políticas con CLI y límites certificados; fijar versión de entrega y notas de cambios. | Artefacto instalable, comandos reproducibles en ambas superficies, JSON e informe profesional, matriz de capacidades soportadas y pendientes sin prometer Ueff. |
+| P0. Freeze contract | Review only affected files; fix SIESTA 5.4.2 source, schema versions, two archived real datasets (multisite NiO and the Cu1 campaign in `docs/evidence/siesta542_openmpi_slurm_full_campaign_20260920_run2_wheel`, if its outputs pass integrity checks; if not, document another dataset selection before P1), test policy, and resource limit. | Short list of files/decisions and costs. Do not recompute historical hashes in bulk. |
+| P1. Occupation source | Run R1 on existing `.out` files; implement one occupation adapter with explicit source and cross-check; migrate analysis without mutating v2. | Every fitted vector maps to its token and event; independently recompute χ, inverses, U, and bound. |
+| P2. Mathematical decisions | Review states, window, printing, branch, SCF, and matrix; adapt only predicates that do not represent the §4 contract. | Tests with synthetic known U and adverse cases; every case ends in one state within budget. |
+| P3. DAG, CLI, and report | Connect P1–P2 to the shared `run/resume/report` closeout for fixed and adaptive paths; add SCF summary and per-node table in JSON/Markdown; retain bounded automatic provenance. Route the public CLI by profile: pointer and supervisor for PowerShell→WSL; direct manifest for Linux and a Slurm allocation, without duplicating the parser or adding a new `sbatch` submission. Remove the `local_wsl` restriction only where the existing adapter and a test support it. | The same analysis yields the same JSON/report on resume; `report` does not invoke SIESTA; the user sees a cause and value when available; Linux/Slurm CLI controls the DAG through the documented public path. |
+| P4. Regression without SIESTA compute | Reprocess the 41 NiO `.out` files and another archived real dataset; cover supported spin mode, multiple sites, BARE/SCREENED, singular matrices, limited resolution, branch change, budget, `resume`, and the **public** Linux/Slurm path with fixtures and archived real Slurm evidence. Run the public suite once and classify current/obsolete failures. | Product-relevant tests pass; every suite failure is fixed or explicitly retired with a reason. Old evidence retains its semantics and the new result has its own version. |
+| P5. Final real test | One **new, small** campaign, with FDF and PSML audited beforehand and controlled entirely through the CLI from PowerShell→WSL. Primary path: one correlated site and six symmetric nonzero alpha values, `1 + 2×1×6 = 13` nodes. If no one-site FDF passes P0, choose the already known two-site PBE NiO with the same six alpha values **before calculating**: `1 + 2×2×6 = 25` nodes. Select exactly one campaign at P0, never two attempts based on U preference. Up to four laptop MPI ranks and one concurrent SIESTA run. Exercise `status/resume/report` without manually editing the FDF. Archived NiO covers the multisite adaptive regression. | Ends with a numerical result or honest scientific diagnosis; count ≤13 on the primary path or ≤25 on the alternative, without duplicate nodes or agent intervention during normal transitions. A post-launch failure is fixed/resumed in the same campaign without changing the material. |
+| P6. Delivery | Install the built package in a clean environment; run the real quickstart for PowerShell and the public command on Linux within WSL; align README/manual/policies with the CLI and certified limits; set delivery version and change notes. | Installable artifact, reproducible commands on both surfaces, professional JSON and report, and a matrix of supported and pending capabilities without promising Ueff. |
 
-Las pruebas de P4 pueden ser numerosas porque son locales y repetibles; P5 está acotada y es una prueba de producto, no una campaña de búsqueda de U. El CLI Slurm nuevo se prueba contra el ejecutor ya existente y salidas reales archivadas. Una prueba Slurm **nueva** con SIESTA sólo se incluye si P4 descubre un defecto que la evidencia archivada no puede resolver; se declara antes su propio presupuesto y no se carga a P5. Ninguna fase usa parámetros de red, gap o U de literatura como valor esperado del algoritmo.
+P4 tests may be numerous because they are local and repeatable; P5 is bounded
+and is a product test, not a search campaign for U. The new Slurm CLI is tested
+against the existing executor and archived real outputs. A **new** Slurm test
+with SIESTA is included only if P4 finds a defect that archived evidence
+cannot resolve; its own budget is declared beforehand and is not charged to
+P5. No phase uses lattice parameters, gaps, or literature U as an algorithm's
+expected value.
 
-### Mapa de integración y prueba
+### Integration and test map
 
-| Contrato | Módulos que se revisan y modifican sólo si hace falta | Comprobación decisiva |
+| Contract | Modules reviewed and modified only if needed | Decisive check |
 |---|---|---|
-| Fuente de ocupación y precisión | `siesta_backend/occupation_precision.py`, parser de ocupaciones y `domain/quantized_response.py` | La observación ajustada, su token fuente y su intervalo corresponden al mismo evento; prueba unitaria y reproceso NiO/Cu1. |
-| Ajuste y decisiones | `domain/matrix_response_acceptance.py`, `domain/adaptive_alpha.py`, `domain/adaptive_alpha_control.py` | Datos sintéticos conocidos y casos singulares/sensibles terminan con causa única; ningún bucle supera los límites. |
-| DAG y perfiles | `execution/campaign_runner.py`, `execution/campaign_v2.py`, `execution/slurm_foreground.py`, `cli.py` | `run/resume` reusan nodos válidos y ejercen el mismo cierre en WSL, Linux y Slurm; sólo un SIESTA activo en la laptop. |
-| Entrega científica | `reporting/lr_u_report.py`, exportador JSON y esquema versionado | `report` regenera tablas y diagnósticos sin ejecutar SIESTA; JSON y Markdown coinciden y v2 histórico sigue interpretable. |
+| Occupation source and precision | `siesta_backend/occupation_precision.py`, occupation parser, and `domain/quantized_response.py` | Fitted observation, source token, and interval map to the same event; unit test and NiO/Cu1 reprocessing. |
+| Fit and decisions | `domain/matrix_response_acceptance.py`, `domain/adaptive_alpha.py`, `domain/adaptive_alpha_control.py` | Known synthetic data and singular/sensitive cases end with one cause; no loop exceeds its limits. |
+| DAG and profiles | `execution/campaign_runner.py`, `execution/campaign_v2.py`, `execution/slurm_foreground.py`, `cli.py` | `run/resume` reuse valid nodes and exercise the same closeout in WSL, Linux, and Slurm; only one active SIESTA run on the laptop. |
+| Scientific delivery | `reporting/lr_u_report.py`, JSON exporter, and versioned schema | `report` regenerates tables and diagnostics without running SIESTA; JSON and Markdown agree, and historical v2 remains interpretable. |
 
-Los nombres son puntos de inspección, no una orden de reescribir todos esos archivos. Los tests existentes `tests/unit/test_occupation_precision.py`, `tests/unit/test_quantized_response.py`, `tests/unit/test_matrix_response_acceptance.py`, `tests/unit/test_adaptive_alpha_dag_resume.py`, `tests/unit/test_campaign_runner_synthetic.py`, `tests/unit/test_slurm_foreground.py` y `tests/test_cli_and_manifest.py` sirven de base; se añaden sólo los casos que cubren contratos nuevos. La política automática predeterminada, sus unidades, límites y el significado de `UNASSESSED` deben quedar probados como parte de P2 y documentados en P6.
+These names are inspection points, not an instruction to rewrite every file.
+Existing tests `tests/unit/test_occupation_precision.py`,
+`tests/unit/test_quantized_response.py`,
+`tests/unit/test_matrix_response_acceptance.py`,
+`tests/unit/test_adaptive_alpha_dag_resume.py`,
+`tests/unit/test_campaign_runner_synthetic.py`,
+`tests/unit/test_slurm_foreground.py`, and `tests/test_cli_and_manifest.py` are
+the starting point; add only cases covering new contracts. The default
+automatic policy, its units and limits, and the meaning of `UNASSESSED` must
+be tested as part of P2 and documented in P6.
 
-## 6. Criterio final de producto y reporte de cierre
+## 6. Final product criterion and closeout report
 
-Se declara `PRODUCT_READY` sólo cuando P1–P6 cumplen sus puertas, el CLI completa la prueba real dentro del presupuesto, el resultado versionado se regenera desde datos guardados y no queda un defecto crítico abierto en el camino soportado. El cierre entregará:
+Declare `PRODUCT_READY` only when P1–P6 pass their gates, the CLI completes the
+real test within budget, the versioned result regenerates from saved data, and
+no critical defect remains in the supported path. The closeout will deliver:
 
-1. Comando de instalación y ejemplo mínimo de `init/run/status/resume/report` probado.
-2. JSON + Markdown de una campaña real con la definición exacta de ocupación, χ⁰, χ, U por sitio, diagnósticos, estado y costo.
-3. Tabla de regresiones: NiO archivado, material independiente archivado, campaña nueva, fixture Slurm y fallos adversos.
-4. Lista breve de capacidades fuera de v1 (`Ueff_Dudarev` automático, J, V funcional, spin–orbit/no colineal, presets universales) sin disfrazarlas como defectos del cálculo de carga.
+1. Tested installation command and minimal `init/run/status/resume/report` example.
+2. JSON + Markdown from a real campaign with the exact occupation definition,
+   χ⁰, χ, per-site U, diagnostics, state, and cost.
+3. Regression table: archived NiO, archived independent material, new campaign,
+   Slurm fixture, and adverse cases.
+4. Brief list of v1 capabilities out of scope (`Ueff_Dudarev` automatic, J,
+   functional V, spin–orbit/non-collinear, universal presets), without
+   disguising them as charge-calculation defects.
 
-Si una puerta obligatoria no pasa después de las correcciones acotadas, el estado final será `PRODUCT_BLOCKED`, con un único bloqueo reproducible y el mínimo trabajo necesario para reabrirlo. Nunca se anunciará `PRODUCT_READY` porque se agotó el tiempo o porque un U coincidió con literatura.
+If a mandatory gate still fails after bounded corrections, the final state is
+`PRODUCT_BLOCKED`, with one reproducible blocker and the minimum work needed
+to reopen it. Never announce `PRODUCT_READY` because time ran out or because a
+U matched the literature.
 
-### Encargo único para los agentes después de autorizar ejecución
+### Single assignment to agents after execution is authorized
 
-> Ejecuten P0→P6 de este documento. Luna controla los cambios y la única campaña SIESTA; Sol hace una auditoría puntual del contrato científico y del diff correspondiente, con esfuerzo conforme a la instrucción vigente del usuario. Cada auditoría devuelve `APTO`, `CORRECCIÓN LOCAL` o `BLOQUEO` con evidencia y no se repite si el contrato no cambió. Respeten las puertas, dos correcciones por falla, el presupuesto de 13 nodos en la ruta primaria o 25 en la alternativa de P5 y los estados terminales. No amplíen el alcance para perseguir un U concreto. Entreguen `PRODUCT_READY` o `PRODUCT_BLOCKED` con evidencia verificable.
+> Execute P0→P6 in this document. Luna controls the changes and the only SIESTA
+> campaign; Sol performs a focused audit of the scientific contract and
+> corresponding diff, with effort matching the user's current instruction.
+> Each audit returns `READY`, `LOCAL_CORRECTION`, or `BLOCKED` with evidence and
+> is not repeated if the contract has not changed. Respect the gates, two
+> corrections per failure, the 13-node budget on the primary path or 25-node
+> budget on the P5 alternative, and terminal states. Do not expand scope to
+> pursue a particular U. Deliver `PRODUCT_READY` or `PRODUCT_BLOCKED` with
+> verifiable evidence.
 
-## Fuentes metodológicas del contrato
+## Methodological sources for the contract
 
-- [Cococcioni y de Gironcoli, método de respuesta lineal](https://arxiv.org/abs/cond-mat/0405160): exige coherencia entre respuesta y definición de la ocupación localizada.
-- [Manual SIESTA 5.4, DFT+U](https://docs.siesta-project.org/projects/siesta/en/5.4/reference/siesta.html): define proyectores y el uso de `Ueff=U-J` en la ruta colineal.
-- [Tutorial oficial ABINIT LRUJ](https://docs.abinit.org/tutorial/lruj/): muestra comparación de regresiones lineales/polinómicas y sus residuos; no fija umbrales universales para SIESTA.
+- [Cococcioni and de Gironcoli, linear-response method](https://arxiv.org/abs/cond-mat/0405160): requires consistency between response and the definition of localized occupation.
+- [SIESTA 5.4 Reference Manual, DFT+U](https://docs.siesta-project.org/projects/siesta/en/5.4/reference/siesta.html): defines projectors and use of `Ueff=U-J` on the collinear path.
+- [Official ABINIT LRUJ tutorial](https://docs.abinit.org/tutorial/lruj/): shows comparison of linear/polynomial fits and their residuals; it does not set universal thresholds for SIESTA.

@@ -1,50 +1,50 @@
-# Matriz de compatibilidad de backend
+# Backend compatibility matrix
 
-Una campaña no autoriza una semántica BARE por el nombre de un módulo, una
-ruta institucional o un código de salida. La admisión es una función pura de:
+A campaign does not authorize BARE semantics based on a module name, an
+institutional path, or an exit code. Admission is a pure function of:
 
 \[
 (\mathrm{backend\_id},\ \mathrm{version},\ \mathrm{SHA256(executable)},\
  \mathrm{scientific\ profile}) .
 \]
 
-`BackendCompatibilityRegistry` almacena esa matriz en JSON canónico con
-esquema `backend_compatibility_v1`. Una entrada debe ser creada mediante una
-revisión científica/documental del backend identificado; no se crean entradas
-al observar una corrida ordinaria.
+`BackendCompatibilityRegistry` stores this matrix as canonical JSON using the
+`backend_compatibility_v1` schema. An entry must be created through a
+scientific/documentary review of the identified backend; entries are not
+created by observing an ordinary run.
 
-El flujo portátil es:
+The portable workflow is:
 
-1. El plugin privado selecciona explícitamente el ejecutable y obtiene texto
-   de versión por su mecanismo local.
-2. `identify_backend` calcula el SHA-256 sin buscar `PATH`, cargar módulos ni
-   lanzar SIESTA.
-3. `admit_siesta542_potential_shift_hamiltonian` exige una coincidencia exacta
-   con la matriz.
-4. Sólo una admisión válida permite usar el perfil
-   `siesta-5.4.2-potential-shift-hamiltonian-v1` en el materializador y el
-   validador BARE.
+1. The private plugin explicitly selects the executable and obtains version
+   text through its local mechanism.
+2. `identify_backend` computes the SHA-256 without searching `PATH`, loading
+   modules, or launching SIESTA.
+3. `admit_siesta542_potential_shift_hamiltonian` requires an exact match with
+   the matrix.
+4. Only a valid admission allows the
+   `siesta-5.4.2-potential-shift-hamiltonian-v1` profile to be used by the
+   materializer and BARE validator.
 
-La ausencia de coincidencia, una versión distinta, un hash distinto o una
-entrada bloqueada detienen la campaña antes de que se acepte evidencia BARE.
-Esto no exige repetir una validación física por clúster: el mismo backend
-identificado reutiliza la misma entrada explícita. Un binario distinto es una
-combinación nueva y permanece bloqueado hasta recibir una decisión trazable.
+No match, a different version, a different hash, or a blocked entry stops the
+campaign before BARE evidence is accepted. This does not require repeating a
+physical validation for each cluster: the same identified backend reuses the
+same explicit entry. A different binary is a new combination and remains
+blocked until it receives a traceable decision.
 
-## Registro de una combinación revisada
+## Registering a reviewed combination
 
-El plugin privado captura su banner de versión en un archivo de texto y pasa
-el ejecutable que realmente declarará al lanzador. Desde la raíz del proyecto:
+The private plugin captures its version banner in a text file and passes the
+executable it will actually declare to the launcher. From the project root:
 
 ```bash
 PYTHONPATH=src python tools/register_siesta542_backend.py \
   --registry private/backend_compatibility.json \
-  --executable /ruta/explicita/a/siesta \
+  --executable /path/to/siesta \
   --version-text private/siesta-version.txt \
-  --reason 'revisión documentada del backend y perfil científico' \
+  --reason 'documented review of the backend and scientific profile' \
   --write
 ```
 
-La herramienta sólo lee el ejecutable para calcular su SHA-256 y el texto ya
-capturado; no ejecuta SIESTA ni carga módulos. Sin `--write` imprime el JSON
-canónico como vista previa y no modifica nada.
+The tool only reads the executable to calculate its SHA-256 and reads the
+already captured text; it does not execute SIESTA or load modules. Without
+`--write`, it prints canonical JSON as a preview and changes nothing.

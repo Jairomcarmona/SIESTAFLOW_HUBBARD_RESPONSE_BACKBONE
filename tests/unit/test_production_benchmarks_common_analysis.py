@@ -60,20 +60,33 @@ def _state_for(records):
     for record in records:
         mode = record["mode"]
         receipt = {
-            field: record.get(field) for field in (
-                "identity_key", "candidate_id", "response_mode", "alpha", "perturbed_site",
-                "stdout_sha256", "fdf_sha256", "selected_occurrence_index",
-                "selected_scf_iteration", "selection_role", "selection_evidence",
-                "parent_dm_sha256", "canonical_dm_sha256", "observation_payload_sha256",
+            field: record.get(field)
+            for field in (
+                "identity_key",
+                "candidate_id",
+                "response_mode",
+                "alpha",
+                "perturbed_site",
+                "stdout_sha256",
+                "fdf_sha256",
+                "selected_occurrence_index",
+                "selected_scf_iteration",
+                "selection_role",
+                "selection_evidence",
+                "parent_dm_sha256",
+                "canonical_dm_sha256",
+                "observation_payload_sha256",
             )
         }
-        receipt.update({
-            "return_code": 0,
-            "semantic_validation": "PASSED",
-            "response_mode": mode,
-            "alpha": float(record["alpha"]),
-            "perturbed_site": int(record.get("perturbed_site", 0)),
-        })
+        receipt.update(
+            {
+                "return_code": 0,
+                "semantic_validation": "PASSED",
+                "response_mode": mode,
+                "alpha": float(record["alpha"]),
+                "perturbed_site": int(record.get("perturbed_site", 0)),
+            }
+        )
         completed[record["identity_key"]] = receipt
     return SimpleNamespace(completed=completed)
 
@@ -84,7 +97,8 @@ def test_legacy_rows_expand_shared_zero_and_match_common_analyzer_for_n1_and_n2(
         (
             np.array([[-0.25, 0.02], [0.01, -0.24]]),
             np.array([[-0.10, 0.01], [0.02, -0.09]]),
-            [-0.02, -0.01, 0.0, 0.01, 0.02], True,
+            [-0.02, -0.01, 0.0, 0.01, 0.02],
+            True,
         ),
     ]
     for chi0, chi, alphas, five_point in scenarios:
@@ -92,7 +106,9 @@ def test_legacy_rows_expand_shared_zero_and_match_common_analyzer_for_n1_and_n2(
         verified_receipts = _state_for(rows)
         observations = response_observations_from_records(rows, n_sites=len(chi0))
         assert len(observations) == len(chi0) * len(alphas)
-        assert sorted(item.perturbation_site for item in observations if item.alpha == 0.0) == list(range(len(chi0)))
+        assert sorted(item.perturbation_site for item in observations if item.alpha == 0.0) == list(
+            range(len(chi0))
+        )
         expected = analyze_verified_lr(
             observations,
             LRAnalysisPolicy(estimator="linear"),
@@ -104,16 +120,21 @@ def test_legacy_rows_expand_shared_zero_and_match_common_analyzer_for_n1_and_n2(
         monkeypatch.setattr(controller, "CampaignState", lambda *_args: verified_receipts)
         monkeypatch.setattr(controller.Path, "mkdir", lambda *_args, **_kwargs: None)
         monkeypatch.setattr(
-            controller, "write_lr_analysis_v2",
+            controller,
+            "write_lr_analysis_v2",
             lambda path, result: outputs["json"].append((Path(path), result)) or Path(path),
         )
         monkeypatch.setattr(
-            controller, "write_lr_u_report",
+            controller,
+            "write_lr_u_report",
             lambda path, result: outputs["markdown"].append((Path(path), result)) or Path(path),
         )
 
         legacy_path = controller.matrix_analysis(
-            "synthetic-campaign", "NiO", "candidate-test", len(chi0),
+            "synthetic-campaign",
+            "NiO",
+            "candidate-test",
+            len(chi0),
             mode_5point=five_point,
         )
 
@@ -130,7 +151,7 @@ def test_legacy_rows_expand_shared_zero_and_match_common_analyzer_for_n1_and_n2(
         assert outputs["markdown"][0][0].name == "LR_U_REPORT.md"
         assert outputs["markdown"][0][1] == actual
         rendered = render_lr_u_report(actual)
-        assert "Informe de respuesta lineal de Hubbard" in rendered
+        assert "Hubbard Linear-Response Report" in rendered
         assert expected["numerical_status"] in rendered
 
 
@@ -160,7 +181,8 @@ def test_controller_rejects_rows_without_a_matching_completion_receipt(monkeypat
 def test_controller_rejects_edited_semantic_event_even_when_file_hashes_are_unchanged(monkeypatch, field):
     rows = _synthetic_records(
         np.array([[-0.25, 0.02], [0.01, -0.24]]),
-        np.array([[-0.10, 0.01], [0.02, -0.09]]), [-0.01, 0.0, 0.01],
+        np.array([[-0.10, 0.01], [0.02, -0.09]]),
+        [-0.01, 0.0, 0.01],
     )
     receipts = _state_for(rows)
     tampered = copy.deepcopy(rows)
@@ -172,7 +194,10 @@ def test_controller_rejects_edited_semantic_event_even_when_file_hashes_are_unch
     else:
         selected[field] += 1
     monkeypatch.setattr(controller, "CampaignState", lambda *_args: receipts)
-    with pytest.raises(ValueError, match="receipt field observation_payload_sha256|receipt field selected_occurrence_index|semantic payload digest"):
+    with pytest.raises(
+        ValueError,
+        match="receipt field observation_payload_sha256|receipt field selected_occurrence_index|semantic payload digest",
+    ):
         controller._verified_candidate_records("synthetic-campaign", "NiO", "candidate-test", tampered)
 
 
@@ -238,7 +263,9 @@ def test_persist_observation_is_idempotent_by_identity_before_completion(monkeyp
     assert len(atomic_writes) == 3
 
     main_log = next(value for key, value in MemoryPath.files.items() if key.endswith("candidate-test.jsonl"))
-    archive_log = next(value for key, value in MemoryPath.files.items() if key.endswith("candidate-test.orphaned.jsonl"))
+    archive_log = next(
+        value for key, value in MemoryPath.files.items() if key.endswith("candidate-test.orphaned.jsonl")
+    )
     archived_lines = archive_log.splitlines()
     assert len(archived_lines) == 1
     assert json.loads(archived_lines[0])["occupation_vector"] == [10.5]
@@ -248,9 +275,11 @@ def test_persist_observation_is_idempotent_by_identity_before_completion(monkeyp
     assert json.loads(stored_lines[0])["observation_payload_sha256"] == changed_digest
 
     # Once completion is durable, only the digest in that receipt is allowed.
-    completed_state = SimpleNamespace(completed={
-        record["identity_key"]: {"observation_payload_sha256": changed_digest},
-    })
+    completed_state = SimpleNamespace(
+        completed={
+            record["identity_key"]: {"observation_payload_sha256": changed_digest},
+        }
+    )
     monkeypatch.setattr(controller, "CampaignState", lambda *_args: completed_state)
     controller.persist_observation("memory-campaign", copy.deepcopy(changed_retry))
     assert len(atomic_writes) == 3
@@ -264,9 +293,11 @@ def test_persist_observation_is_idempotent_by_identity_before_completion(monkeyp
 
 
 def test_common_analyzer_reports_singular_response_without_fabricating_u():
-    rows = _synthetic_records(np.array([[-0.25, -0.50], [-0.50, -1.00]]),
-                              np.array([[-0.10, -0.20], [-0.20, -0.40]]),
-                              [-0.01, 0.0, 0.01])
+    rows = _synthetic_records(
+        np.array([[-0.25, -0.50], [-0.50, -1.00]]),
+        np.array([[-0.10, -0.20], [-0.20, -0.40]]),
+        [-0.01, 0.0, 0.01],
+    )
     observations = response_observations_from_records(rows, n_sites=2)
     result = analyze_verified_lr(observations, LRAnalysisPolicy(estimator="linear"))
     assert result["primary"]["matrix_status"] == "RANK_DEFICIENT"

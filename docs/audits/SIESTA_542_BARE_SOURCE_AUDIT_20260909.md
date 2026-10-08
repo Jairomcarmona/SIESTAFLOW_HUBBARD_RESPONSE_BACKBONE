@@ -1,88 +1,87 @@
-# Auditoría fuente de la rama BARE: SIESTA 5.4.2
+# Source Audit of the BARE Branch: SIESTA 5.4.2
 
-## Alcance y trazabilidad
+## Scope and provenance
 
-Se inspeccionó de forma estática la etiqueta oficial `5.4.2` del repositorio
-SIESTA, clonada en `third_party/siesta-5.4.2-source-audit`, con `HEAD`
-`e486d12067b96ff688179f0496d0ec21b6fae0ab`. No se compiló ni ejecutó
-SIESTA, MPI, Hydra o Slurm durante esta auditoría.
+The official SIESTA repository tag `5.4.2`, cloned at
+`third_party/siesta-5.4.2-source-audit`, was inspected statically at `HEAD`
+`e486d12067b96ff688179f0496d0ec21b6fae0ab`. SIESTA, MPI, Hydra, and Slurm
+were not built or run during this audit.
 
-Este documento describe la semántica de la fuente publicada. Aún debe
-compararse el binario institucional con esa versión mediante su versión,
-hash/receta de build y un control pequeño; no se presupone identidad perfecta
-de un binario modificado por un administrador.
+This document describes the semantics of the published source. The
+institutional binary must still be compared with this version by checking its
+version, hash/build recipe, and a small control; perfect identity with a
+binary modified by an administrator is not assumed.
 
-## Hechos verificables en la fuente
+## Verifiable facts in the source
 
-1. `SCF.MustConverge` se lee en `Src/read_options.F90` y sólo decide si una
-   falta de convergencia al final del bucle provoca `ABNORMAL_TERMINATION`.
-   No congela Hartree--XC ni transforma por sí misma un cálculo en BARE.
-2. `DFTU.PotentialShift=true` fuerza `DFTU.FirstIteration=true` en
-   `Src/dftu_specs.f`. El manual de 5.4.2 declara que el desplazamiento local
-   permite registrar el cambio de poblaciones y obtener `U` siguiendo
+1. `SCF.MustConverge` is read in `Src/read_options.F90` and only decides
+   whether lack of convergence at the end of the loop causes
+   `ABNORMAL_TERMINATION`. It does not freeze Hartree--XC or by itself turn a
+   calculation into BARE.
+2. `DFTU.PotentialShift=true` forces `DFTU.FirstIteration=true` in
+   `Src/dftu_specs.f`. The 5.4.2 manual states that the local shift allows
+   recording the population change and obtaining `U` following
    Cococcioni--de Gironcoli.
-3. La mezcla Hamiltoniana es el valor predeterminado (`Src/read_options.F90`).
-   Con ella `Src/siesta_forces.F90` realiza una preparación
-   `setup_hamiltonian(0)` antes del bucle SCF. En el primer paso real ejecuta
-   `compute_DM(1)` y después `setup_hamiltonian(1)`.
-4. `setup_hamiltonian` llama `hubbard_term` con `Dscf`. En la ruta de
-   `PotentialShift`, esa rutina construye el desplazamiento local y emite las
-   poblaciones proyectadas (`Src/dftu.F`). Por tanto, con mezcla Hamiltoniana,
-   la población emitida durante `setup_hamiltonian(1)` se calcula desde la DM
-   producida por la diagonalización del Hamiltoniano preparado con la DM padre
-   y el desplazamiento. La reconstrucción del Hamiltoniano ocurre después de
-   esa diagonalización.
+3. Hamiltonian mixing is the default (`Src/read_options.F90`). With it,
+   `Src/siesta_forces.F90` performs a `setup_hamiltonian(0)` preparation
+   before the SCF loop. On the first actual step it runs `compute_DM(1)` and
+   then `setup_hamiltonian(1)`.
+4. `setup_hamiltonian` calls `hubbard_term` with `Dscf`. On the
+   `PotentialShift` path, that routine constructs the local shift and emits
+   projected populations (`Src/dftu.F`). Therefore, with Hamiltonian mixing,
+   the population emitted during `setup_hamiltonian(1)` is calculated from
+   the DM produced by diagonalizing the Hamiltonian prepared with the parent
+   DM and the shift. The Hamiltonian is rebuilt after that diagonalization.
 
-## Consecuencia para la selección BARE
+## Consequence for BARE selection
 
-La ocupación candidata a \(n^{(0)}\) en esta ruta es la **segunda** impresión
-inicial de `hubbard_term` con contador `1`: la que aparece después de
-`stepf: Fermi-Dirac step function` y antes de la primera línea `scf: 1`.
-La primera impresión con contador `1` pertenece al prepaso `iscf=0` y refleja
-la DM padre. El contador DFT+U no identifica por sí solo el paso SCF porque se
-reinicia para `iscf <= 1`.
+The candidate occupation for \(n^{(0)}\) on this path is the **second**
+initial `hubbard_term` print with counter `1`: the one that appears after
+`stepf: Fermi-Dirac step function` and before the first `scf: 1` line. The
+first print with counter `1` belongs to the `iscf=0` pre-step and reflects the
+parent DM. The DFT+U counter alone does not identify the SCF step because it
+resets for `iscf <= 1`.
 
-En contraste, bajo `SCF.Mix density`, la fuente ejecuta
-`setup_hamiltonian(iscf)` antes de `compute_DM(iscf)`. La primera población
-perturbada imprimible aparece en el siguiente armado de Hamiltoniano, cuando
-la ruta ya ha incorporado la DM de respuesta. Esa configuración no debe
-promoverse automáticamente como \(\chi^0\) mediante la regla anterior.
+By contrast, under `SCF.Mix density`, the source runs
+`setup_hamiltonian(iscf)` before `compute_DM(iscf)`. The first printable
+perturbed population appears at the next Hamiltonian setup, when the path has
+already incorporated the response DM. That configuration must not be
+automatically promoted to \(\chi^0\) using the rule above.
 
-## Hallazgo sobre el código actual
+## Finding about the current code
 
-El constructor histórico materializa BARE con `SCF.Mix density`, dos pasos y
-el selector histórico busca una pseudo-`scf_iteration == 2`. Esa regla no se
-deduce de la fuente 5.4.2 y no puede certificarse como BARE Cococcioni bajo el
-perfil de mezcla Hamiltoniana descrito aquí.
+The historical builder materializes BARE with `SCF.Mix density`, two steps,
+and the historical selector looks for a pseudo-`scf_iteration == 2`. This
+rule is not derived from 5.4.2 source and cannot be certified as Cococcioni
+BARE under the Hamiltonian-mixing profile described here.
 
-Esto no demuestra que los números previos sean físicamente inútiles; sí
-significa que deben clasificarse como resultados de la **semántica histórica**
-hasta que se haga la comparación controlada. No se debe reutilizar la etiqueta
-`VERIFIED_BARE` para ellos.
+This does not show that previous numbers are physically useless; it does mean
+they must be classified as results under **historical semantics** until a
+controlled comparison is done. Do not reuse the label `VERIFIED_BARE` for
+them.
 
-## Perfil correctivo integrado de forma aislada
+## Corrective profile integrated in isolation
 
-Se incorporó el perfil
-`siesta-5.4.2-potential-shift-hamiltonian-v1` en
-`src/siestaflow_hubbard/siesta_backend/siesta542_bare_profile.py`. Exige:
+The profile `siesta-5.4.2-potential-shift-hamiltonian-v1` was added in
+`src/siestaflow_hubbard/siesta_backend/siesta542_bare_profile.py`. It requires:
 
 - `DFTU.PotentialShift true`, `DFTU.FirstIteration true`;
-- `DM.UseSaveDM true` y DM padre con hash coincidente;
-- `SCF.Mix Hamiltonian` explícito (sin depender del valor predeterminado);
-- un único paso SCF útil para el BARE; `SCF.MustConverge false` sólo permite
-  terminar el control no autoconsistente, no es evidencia de congelamiento;
-- un parser de contexto que seleccione el bloque posterior a `stepf` y previo
-  a `scf: 1`, no un contador genérico de DFT+U;
-- una prueba de regresión sobre salida real conservada y un control local/HPC
-  mínimo con el módulo institucional.
+- `DM.UseSaveDM true` and a parent DM with a matching hash;
+- explicit `SCF.Mix Hamiltonian` (not relying on the default);
+- one useful SCF step for BARE; `SCF.MustConverge false` only allows the
+  non-self-consistent control to terminate; it is not evidence of freezing;
+- a context parser that selects the block after `stepf` and before `scf: 1`,
+  not a generic DFT+U counter;
+- a regression test on retained real output and a minimal local/HPC control
+  with the institutional module.
 
-El perfil selecciona únicamente el bloque de población situado estrictamente
-entre esos dos marcadores, y rechaza los resultados sin la firma de mezcla
-Hamiltoniana. Sus pruebas focalizadas cubren la salida real conservada de MnO,
-la materialización explícita de FDF, mezcla de densidad y marcadores ausentes.
+The profile selects only the population block strictly between those two
+markers and rejects results without the Hamiltonian-mixing signature. Its
+focused tests cover retained real MnO output, explicit FDF materialization,
+density mixing, and missing markers.
 
-La integración al ejecutor de producción permanece intencionalmente separada:
-el validador BARE histórico sigue fallando cerrado. Antes de autorizar una
-campaña nueva, debe enlazarse este perfil a una receta/versión verificable del
-binario institucional y hacer un control pequeño que demuestre esa firma.
-Eso evita tanto alterar SCREENED como reinterpretar campañas archivadas.
+Integration with the production executor remains intentionally separate: the
+historical BARE validator still fails closed. Before authorizing a new
+campaign, this profile must be linked to a verifiable recipe/version of the
+institutional binary and a small control must demonstrate that signature.
+This avoids both altering SCREENED and reinterpreting archived campaigns.

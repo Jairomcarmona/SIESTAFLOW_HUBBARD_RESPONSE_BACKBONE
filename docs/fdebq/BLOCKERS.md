@@ -1,8 +1,8 @@
 # FD-EBQ phase 2 blockers
 
-## TASK 10 — Coverage qualification and diagnostic mode (RESUELTO)
+## TASK 10 — Coverage qualification and diagnostic mode (RESOLVED)
 
-The specification blockers are RESUELTO by author amendments D1/D2 in
+The specification blockers were resolved by author amendments D1/D2 in
 `9a60d78` (`docs/fdebq/AMENDMENTS_2.md`). The implementation provides a pure
 `CoverageQualification`, a single-output reference-admission adapter, diagnostic
 JSON/Markdown reports, and deterministic golden contracts in `task10_reports/`.
@@ -35,12 +35,12 @@ Two archived-data limitations remain explicit rather than blocking the module:
   `SPECIES_IDENTITY_NOT_ESTABLISHED`. The 16->2 / 16->1 candidate cases are
   covered by the TASK 9 geometry/state toy with flags off / spin flip on.
 
-These are **decisión del implementador (conservadora)** under the general
+These are a **conservative implementer decision** under the general
 principle of AMENDMENTS_2.md. Archived inputs/outputs and TASK 7–9 behavior are
 unchanged. Full diagnostic reports are delivered in
 `C:\Users\Jairo\work\fdebq_pr_notes\r2-task10-reports`.
 
-## TASK 12 — Resolved perturbation plan (RESUELTO)
+## TASK 12 — Resolved perturbation plan (RESOLVED)
 
 Resolved on `fdebq/r2-task12-plan`; implementation commit: **6f970bb**.
 The pure planner embeds the complete TASK 10 qualification, projector inventory,
@@ -53,15 +53,15 @@ Candidate translations retain compulsory shadows and state REVIEW until proven;
 missing inventory/reference/parent-DM evidence lowers the plan to NOT_ESTABLISHED
 while declared fixed experiments remain inspectable. CALIBRATED_GRID emits
 CALIBRATION_NOT_ENABLED with no executable runs. Spin flip/rotations expand to
-explicit columns at this task boundary. These are **decisión del implementador
-(conservadora)** under AMENDMENTS_2.md. The fixed production path, certification,
+explicit columns at this task boundary. These are **implementer decision
+(conservative)** under AMENDMENTS_2.md. The fixed production path, certification,
 TASK 10 code, archived evidence and frozen V6 artifacts are unchanged.
 
-## TASK 13 — campaign_v2 integration (RESUELTO: inventory/lock; ABIERTA: runtime pilot reuse)
+## TASK 13 — campaign_v2 integration (RESOLVED: inventory/lock; OPEN: runtime pilot reuse)
 
 Inventory/lock integration resolved on `fdebq/r2-task13-campaign-v2`;
 implementation commit: **b66e370**. TASK 13 remains partial while the
-runtime pilot-reuse connection below is ABIERTA.
+runtime pilot-reuse connection below remains OPEN.
 Campaign initialization uses the TASK 7 inventory to fill optional sites and
 reject explicit atom/species mismatches. DISABLED, DIAGNOSTIC (default), and
 TRANSLATION_SHADOWED are recorded alongside a frozen TASK 12 plan and
@@ -78,14 +78,14 @@ Pilot reuse has a complete versioned identity and a deterministic execution
 selector bound to unchanged output and validation-receipt bytes. The selector
 is intentionally not consumed by init/runner: the existing campaign contract
 has no declared pilot source or producer of the required complete reuse receipt.
-That runtime connection is **ABIERTA** and pilot provenance remains
+That runtime connection is **OPEN** and pilot provenance remains
 **NOT_ESTABLISHED**, with **no reuse**. A filename or legacy response-ID match
 cannot supply the missing evidence. The API also binds
 reference-node, observable, semantic species and MPI layout as required by the
 FD-EBQ review §I.9. Missing reference output remains explicitly incomplete;
 the empty-output digest is an absence marker with REFERENCE_NOT_ADMISSIBLE,
 never evidence. Fixed legacy execution remains available with that conservative
-qualification. This is **decisión del implementador (conservadora)** under
+qualification. This is a **conservative implementer decision** under
 AMENDMENTS_2.md.
 
 TASK 14 now supplies the shadow barrier and explicit expansion. The runtime
@@ -102,7 +102,7 @@ AGENTS.md rule 8 applies; the test and historical data were not changed.
 
 ## TASK 14 — Translation reduction with mandatory shadow
 
-**RESUELTO: software shadow loop; commit 5038065**, branch
+**RESOLVED: software shadow loop; commit 5038065**, branch
 `fdebq/r2-task14-shadow`. The runner consumes the frozen TASK 12/13 plan only
 for `TRANSLATION_SHADOWED`. TASK 2's declared estimator and additive print
 BOUND determine each comparison `|direct-reconstructed| <= B_dir+B_rep`.
@@ -114,18 +114,18 @@ Resume verifies frozen plan identity, revalidates runs and replays the barrier.
 DISABLED/DIAGNOSTIC continue through their original all-column path. The legacy
 tolerance API remains isolated for compatibility and does not qualify this path.
 
-**ABIERTA / NOT_ESTABLISHED: complete production state gate.** The existing
+**OPEN / NOT_ESTABLISHED: complete production state gate.** The existing
 runtime verifies SCF and magnetic moment continuity, but lacks the occupation
 spectra/occupied-subspace, gap/Fermi and smoothness gates required by FDRC I.5.
 Therefore no production class may become PROVEN: even a passing print shadow
 expands explicitly, with its comparisons retained and
 `SCIENTIFIC_STATE_NOT_ESTABLISHED` recorded. No production flag bypasses this
 gate. Synthetic tests inject a complete known state oracle and exercise both
-PROVEN reconstruction and REJECTED_EXPANDED behavior. This is **decisión del
-implementador (conservadora)** under AMENDMENTS_2's general principle, expressly
+PROVEN reconstruction and REJECTED_EXPANDED behavior. This is a **conservative
+implementer decision** under AMENDMENTS_2's general principle, expressly
 confirmed by the orchestrator. Missing parent-DM identity, precision or magnetic
 continuity also expands; legacy adaptive rounds remain NOT_ESTABLISHED for this
-route. TASK 13 operational pilot reuse remains ABIERTA / NOT_ESTABLISHED.
+route. TASK 13 operational pilot reuse remains OPEN / NOT_ESTABLISHED.
 
 The certification module and downstream rank/condition/direct-inversion gates
 remain intact. TASK 14 introduces no MatrixBox, SCF ESTIMATE, calibrated READY
@@ -133,7 +133,7 @@ claim, numerical threshold, SIESTA campaign or real-data validation claim.
 
 ## TASK 15 — Automatic species splitting admission
 
-**RESUELTO: D6 software staging/admission; commit `f79ef42`**, on
+**RESOLVED: D6 software staging/admission; commit `f79ef42`**, on
 `fdebq/r2-task15-species-split` based on TASK19. `lr-config.auto_split_species`
 is now wired to campaign initialization and product planning, default false.
 Explicit true stages shared DFTU labels with full basis/projector/PP input
@@ -152,7 +152,7 @@ read-only real archive negatives satisfy D6; a positive real FDF is no longer
 a software prerequisite. See `SPECIES_SPLIT_RUNBOOK.md` for the exact command,
 removal of copied ions from the user's separate run directory, and provenance.
 
-**ABIERTO: validación real / admisión de ejecución.** No SIESTA generation was
+**OPEN: real validation / execution admission.** No SIESTA generation was
 performed or invented. Copied reference ions and canonical label equality
 cannot demonstrate actual generated exact identity; ordinary renamed ion
 bytes fail the raw comparison even if the canonical diagnostics agree. A
@@ -161,7 +161,7 @@ TASK19 production boundaries. There is no receipt-to-production override.
 
 ## TASK 16 — Calibrated amplitudes and deterministic rounds
 
-**RESUELTO: D3/D4 software core; commit 8e44282**, on
+**RESOLVED: D3/D4 software core; commit 8e44282**, on
 `fdebq/r2-task16-calibrated-rounds`. `MatrixBox` already accepts one independent
 `Interval` per element; the certification module is unchanged. The versioned
 protocol records the common representable lattice, seeds of at least four
@@ -179,21 +179,21 @@ maximum over K of its first-order influence contribution, separately for BARE
 and SCREENED; ties use site and mode order. The next unused permitted lattice
 level is requested in ascending lattice order. Missing common candidates are
 unresolved; without an estimated full matrix their influence cannot be computed,
-so sorted unresolved-column order is the **decisión del implementador
-(conservadora)**. The round count is derived from the cumulative completed seed
+so sorted unresolved-column order is the **implementer decision
+(conservative)**. The round count is derived from the cumulative completed seed
 plus one new column-level per subsequent round, rather than success counters.
 Exhausted lattice gives NOT_ESTABLISHED; exhausted protocol rounds gives REVIEW.
 
 D4 acceptance requires both strict spectral beta gates and exact existing U
 interval evaluation on the full elementwise print+truncation+SCF box, with each
 U diagonal half width at most the declared tau. The artifact label is exactly
-"calificación condicional al modelo de error". Missing/under-resolved SCF,
+"qualification conditional on the error model". Missing/under-resolved SCF,
 incomplete scientific state or absent T0–T4 digest caps REVIEW. Reciprocal-budget
 falsification also caps REVIEW, retaining raw selected matrix entries.
 Synthetic known-state/SCF models exercise QUALIFIED with an explicitly synthetic
 validation digest; no archived or prospective SIESTA validation is claimed.
 
-**ABIERTA / NOT_ESTABLISHED: production evidence producer and dynamic wiring.**
+**OPEN / NOT_ESTABLISHED: production evidence producer and dynamic wiring.**
 The runtime lacks the complete I.5 state gate (occupation spectra/subspaces,
 gap/Fermi, smoothness); TASK17 must supply the SCF model/envelope and user-run
 T0–T4 evidence. CALIBRATED/CALIBRATED_GRID config admission validates the explicit
@@ -201,7 +201,7 @@ protocol, then fails with SCIENTIFIC_STATE_NOT_ESTABLISHED before the legacy
 U-stability controller. Pure planner callers can inject a resolved qualification
 and protocol, which are frozen into the plan digest, but the executable plan
 remains REVIEW pending production validation. No production flag promotes READY.
-This boundary is the **decisión del implementador (conservadora)**, confirmed by
+This boundary is the **conservative implementer decision**, confirmed by
 the orchestrator. The fixed/explicit production paths and frozen V6 remain intact.
 
 TASK17 candidate providers must distinguish SCF ESTIMATE from print BOUND and
@@ -211,7 +211,7 @@ and tail using print-only decompositions; the TASK17 integration must retain
 REVIEW unless its complete SCF-aware model is established. No hidden numerical
 threshold, pseudoinverse, regularization or SIESTA campaign was introduced.
 
-## TASK 17 — SCF tolerance ladder (D5 blockers RESUELTOS)
+## TASK 17 — SCF tolerance ladder (D5 blockers RESOLVEDS)
 
 Branch: `fdebq/r2-task17-scf-ladder`. Commit: e2a7a88.
 The author resolves the two scientific gaps in `AMENDMENTS_2.md` D5. The
@@ -222,8 +222,8 @@ NOISE_FLOOR_NOT_ESTABLISHED and REVIEW. Theta, rho_max and every SCF tolerance
 are explicit versioned/digest-bound protocol values, with no production profile.
 
 Two endpoints supply the explicit absolute/relative envelope; no extrapolation
-is allowed. The maximum endpoint rho scales both components: **decisión del
-implementador (conservadora)**. Uncovered order/tail evidence is also rejected
+is allowed. The maximum endpoint rho scales both components: **conservative
+implementer decision**. Uncovered order/tail evidence is also rejected
 conservatively. TASK2's API and phase-one models are unchanged; the adapter
 feeds their R0/R1/R2 and neighbour gates the complete print+SCF intervals, then
 separates the pure print BOUND from the SCF ESTIMATE. TASK16 consumes one
@@ -243,7 +243,7 @@ holdout and digest requirements. Synthetic tests include 400 noisy known-truth
 responses per absolute, relative and mixed regime; they are not prospective
 SIESTA validation. T4 remains explicitly optional per the scientific review.
 
-**ABIERTA / NOT_ESTABLISHED: production state and prospective T0–T4 evidence.**
+**OPEN / NOT_ESTABLISHED: production state and prospective T0–T4 evidence.**
 The runtime I.5 state-evidence producer remains unavailable and is outside this
 task. No real result file/hash is manufactured; CALIBRATED admission and the
 existing planner REVIEW cap remain intact. Pure model qualification does not
@@ -251,7 +251,7 @@ claim production READY. Frozen V6 and direct-inversion certification are intact.
 
 ## TASK 18 — Spin flip, rotations, and V3 controls
 
-**RESUELTO: implementation gaps under AMENDMENTS_2 D7. Commit `81b5f85` on `fdebq/r2-task18-spin-rotations`.**
+**RESOLVED: implementation gaps under AMENDMENTS_2 D7. Commit `81b5f85` on `fdebq/r2-task18-spin-rotations`.**
 
 Both flags now traverse config normalization, CoveragePolicy, diagnostic
 coverage, the frozen plan/digest and campaign locks. They default false;
@@ -264,10 +264,10 @@ environment. Plan v1 records `egg_box_quantification=NOT_QUANTIFIED`; old v1
 snapshots read conservatively but their locks invalidate because provenance
 changed. No thresholds or fictitious result hashes were introduced.
 
-**ABIERTA / NOT_ESTABLISHED: prospective V2, real V3, V4 and runtime I.5.**
+**OPEN / NOT_ESTABLISHED: prospective V2, real V3, V4 and runtime I.5.**
 `VALIDATION_GATES.md` records the exact scientific gates and artifact/digest
-requirements. Their production admission API is incomplete. **decisión del
-implementador (conservadora)**: explicit true permits diagnostic candidates,
+requirements. Their production admission API is incomplete. **Conservative
+implementer decision**: explicit true permits diagnostic candidates,
 expands feature classes in the plan and caps the enabled policy at REVIEW;
 incomplete reference evidence remains NOT_ESTABLISHED. Passing a synthetic
 shadow does not establish real validation or grant PROVEN for these features.
@@ -276,7 +276,7 @@ existing fail-closed admission. No SIESTA campaigns were started.
 
 ## TASK 19 — Product CLI and execution admission
 
-**RESUELTO: product CLI core; commit `74ea767`**, branch
+**RESOLVED: product CLI core; commit `74ea767`**, branch
 `fdebq/r2-task19-product-cli`. AMENDMENTS_2 D8 is implemented:
 `hubbardflow plan`, `run system.fdf` and `submit system.fdf --partition ...`
 exist and reach the available contract boundary. Planning delegates to TASK
@@ -294,15 +294,15 @@ directories, `FINAL_SIESTA_VALIDATION_REPORT_V6.md`, and
 `production_benchmarks_v6.zip*` roots/descendants. Canonical sidecars cannot
 collide with a manifest file; unavailable or malformed manifests fail closed.
 
-**ABIERTA / NOT_ESTABLISHED: upstream production dependencies.** The complete
+**OPEN / NOT_ESTABLISHED: upstream production dependencies.** The complete
 I.5 runtime producer (occupation spectra/subspace, gap/Fermi, smoothness) is
 absent; TASK 13 has no operational pilot source/complete reuse receipt;
 CALIBRATED lacks admitted runtime evidence and recorded T0–T4 validation;
 TASK 15 requires generated alias species identity. Product execution therefore
 stops before materialization/DAG/local-MPI/SLURM launch with explicit reasons,
 even for a static READY plan or a recorded non-READY override. No override
-manufactures scientific evidence. This boundary is **decisión del implementador
-(conservadora)** under AMENDMENTS_2 D8/general principle.
+manufactures scientific evidence. This boundary is **implementer decision
+(conservative)** under AMENDMENTS_2 D8/general principle.
 
 Reports expose inventory, F1–F8 evidence and mandatory shadows, candidate and
 execution coverage, per-(column, mode) alpha/estimator/SCF protocol and all plan
@@ -313,15 +313,15 @@ identity invalidation and simulator prohibition. Full fake-SIESTA execution
 and kill/restart are deferred with the unavailable production chain. No
 SIESTA campaigns were started.
 
-## Phase 2 close — deuda preexistente de análisis estático
+## Phase 2 close — pre-existing static-analysis debt
 
-`src/hubbardflow/execution/campaign_runner.py` no pertenece a los archivos configurados en `pyproject.toml`. En `84b8eb6` y después del cambio 20.1 mantiene 23 violaciones Ruff, 1 archivo no formateado y 24 errores mypy strict. La tarea no reformateará ni limpiará este módulo completo; esta deuda queda para Fase 3. No aumentó ningún conteo y las líneas modificadas no tienen diagnósticos Ruff ni mypy.
+`src/hubbardflow/execution/campaign_runner.py` is not among the files configured in `pyproject.toml`. At `84b8eb6` and after change 20.1 it retains 23 Ruff violations, 1 unformatted file, and 24 mypy strict errors. The task will not reformat or clean up this entire module; this debt is deferred to Phase 3. No count increased, and the changed lines have no Ruff or mypy diagnostics.
 
-`src/hubbardflow/cli.py` también queda como deuda preexistente para Fase 3. Está fuera de los archivos configurados en `pyproject.toml`; antes y después de TASK 21 conserva 2 diagnósticos Ruff y 7 errores mypy strict, sin diagnósticos en las líneas de argumentos añadidas. No se reformateó ni limpió el módulo completo.
+`src/hubbardflow/cli.py` also remains as pre-existing debt for Phase 3. It is outside the files configured in `pyproject.toml`; before and after TASK 21 it retains 2 Ruff diagnostics and 7 mypy strict errors, with no diagnostics on the added argument lines. The full module was not reformatted or cleaned up.
 
 ## Phase 2 close — RISK_UNCOVERED en 20.2
 
-**Bloqueo inicial resuelto por R1 (`AMENDMENTS_2.md`, commit `e4d9029`).** El autor aclaró que “is read” significa reconocida antes del rechazo. 20.2 se reabre bajo la prueba positiva unmanaged `Long_Output` registrada en `PHASE2_CLOSE_LOG.md`; el auditor científico emitió `RISK_COVERED` sujeto a las condiciones de orden de duplicados, contenido de bloques y censo FDF allí anotadas. La auditoría inicial y su evidencia se conservan como historial, no como bloqueo vigente.
+**Initial blocker resolved by R1 (`AMENDMENTS_2.md`, commit `e4d9029`).** The author clarified that “is read” means recognized before rejection. 20.2 is reopened under the positive unmanaged `Long_Output` test recorded in `PHASE2_CLOSE_LOG.md`; the scientific auditor issued `RISK_COVERED`, subject to the duplicate ordering, block content, and FDF census conditions recorded there. The initial audit and its evidence remain as history, not as a current blocker.
 
 ## Phase 2 close — 20.4 existing fixture conflict (resolved by R8)
 
@@ -331,18 +331,18 @@ R8 authorized repairing the alias fixture and asserting `MISMATCH` for raw-ident
 
 R3(a) resolves the specific existing F8-test conflict and authorizes its named test edit. R3(b) resolves the rotation enumeration issue as a known Phase 3 limitation. The active stop is the independent translation-loss counterexample: without spglib, the internal candidate search drops a valid t=0.25 translation within the declared geometry tolerance. Details and the auditor's exact evidence are in `PHASE2_CLOSE_LOG.md`. No 20.5 implementation was made.
 
-## Phase 2 close — intento inicial de 20.9 superseded by R10
+## Phase 2 close — initial 20.9 attempt superseded by R10
 
-El bloqueo R4 reportado inicialmente comparaba ids del plan base 0 con etiquetas de manifiesto base 1. R10 define que esos son espacios distintos; la verificación exacta en espacio de manifiesto y de node-evidence queda registrada abajo y resolvió esa diferencia. CoO, MnO y Cu3N permanecen `NOT_COVERED`.
+The initially reported R4 blocker compared plan IDs indexed from 0 with manifest labels indexed from 1. R10 defines these as distinct namespaces; the exact verification in manifest and node-evidence space is recorded below and resolved that discrepancy. CoO, MnO, and Cu3N remain `NOT_COVERED`.
 
 
 ## Phase 2 close — 20.11 dependency
 
-20.11 no se implementó: su golden exige un plan `TRANSLATION_SHADOWED` y `campaign-planner-v2`, cambio que depende de 20.5. 20.5 está detenido por `RISK_UNCOVERED`; por eso no se fijó un digest ni se cambió la versión.
+20.11 was not implemented: its golden requires a plan `TRANSLATION_SHADOWED` y `campaign-planner-v2`, a change that depends on 20.5. 20.5 is stopped by `RISK_UNCOVERED`; so no digest was fixed and the version was not changed.
 
 ## Phase 2 close — 20.10 dependency
 
-20.10 no se implementó: su aceptación requiere retirar el import opcional de `spglib` como parte de 20.5. Como 20.5 está detenido, no se movió el resolver de includes ni se fijó una allowlist de arquitectura dependiente de ese cambio.
+20.10 was not implemented: acceptance requires removing the optional import of `spglib` como parte de 20.5. Since 20.5 is stopped, the include resolver was not moved and no architecture allowlist dependent on that change was fixed.
 
 ## 20.3 resolved under R5–R7
 
@@ -363,19 +363,19 @@ other fixture/test is not authorized by R2. The item stopped before source/test 
 implementation commit. This records an existing-gate/specification conflict, not a scientific
 `RISK_UNCOVERED` verdict. Exact commands/output are in PHASE2_CLOSE_LOG.md.
 
-## Phase 2 close — limitaciones conocidas de simetría para Fase 3
+## Phase 2 close — known symmetry limitations for Phase 3
 
-- Enumeración de rotaciones independiente de spglib para redes no ortogonales.
-- **Detección de casi-simetrías sin spglib**: una casi-simetría trasladada 0.75·τ puede no ser enumerada por el buscador interno; esto solo elimina un disparador de expansión `AMBIGUOUS`. Debe resolverse antes de habilitar reducciones (TASK 22).
+- Rotation enumeration independent of spglib for non-orthogonal lattices.
+- **Near-symmetry detection without spglib**: a translated near-symmetry of 0.75·τ may not be enumerated by the internal search; this only removes an `AMBIGUOUS` expansion trigger. It must be resolved before enabling reductions (TASK 22).
 
-R9 acepta estas limitaciones conservadoras porque toda reducción futura exige una operación exacta y una sombra obligatoria. R9 exige mantener todas las traslaciones exactas conmensurables; los anillos k/4 y k/8 se verificaron sin spglib. La antigua detención por este contraejemplo queda resuelta; no es `RISK_UNCOVERED`.
+R9 accepts these conservative limitations because every future reduction requires an exact operation and mandatory shadow. R9 requires retaining all exact commensurate translations; the k/4 and k/8 rings were verified without spglib. The former stop due to this counterexample is resolved; it is not `RISK_UNCOVERED`.
 
 
 ## Phase 2 close — RISK_UNCOVERED en 20.8
 
-La auditoría científica posterior encontró que `select_column` puede seleccionar y presupuestar de forma distinta con la misma evidencia cuando `ColumnEvidence` contiene tanto envelopes SCF como estimaciones suministradas. La rama `if envelopes and not evidence.scf_estimates` omite `scf_element_report` si existen estimates; usa entonces el radio de truncamiento/impresión y agrega el radio SCF al final, de modo que las comprobaciones de orden y cola no incorporan el SCF. Con `tau=0.01`, el probe reproducible dio `supplied QUALIFIED [] (0.0066253689633718384, 0.0066253689633718384)` al elegir `CENTRAL(0.04)`, pero `adapter CONTINUE ['REQUIREMENT_NOT_MET'] (0.018207714201150686, 0.018207714201150686)` al quitar estimates y recalcular desde los mismos envelopes/observaciones, eligiendo `CENTRAL(0.02)`. El comando y script exactos están en `PHASE2_CLOSE_LOG.md`.
+A later scientific audit found that `select_column` can select and budget differently from the same evidence when `ColumnEvidence` contains both SCF envelopes and supplied estimates. The `if envelopes and not evidence.scf_estimates` branch omits `scf_element_report` when estimates exist; it then uses the truncation/print radius and adds the SCF radius at the end, so order and tail checks do not include SCF. With `tau=0.01`, the reproducible probe returned `supplied QUALIFIED [] (0.0066253689633718384, 0.0066253689633718384)` when selecting `CENTRAL(0.04)`, but `adapter CONTINUE ['REQUIREMENT_NOT_MET'] (0.018207714201150686, 0.018207714201150686)` when estimates were removed and recalculated from the same envelopes/observations, selecting `CENTRAL(0.02)`. The exact command and script are in `PHASE2_CLOSE_LOG.md`.
 
-Por §0 y la instrucción del usuario, 20.8 se detiene como `RISK_UNCOVERED`: no se crea commit. El código y fixtures provisionales se retiraron; se conservan en `PHASE2_CLOSE_LOG.md` las premisas, el inventario R5 y la evidencia de auditoría. Este resultado reemplaza el antiguo bloqueo de dependencia de 20.8.
+Under §0 and the user instruction, 20.8 stops as `RISK_UNCOVERED`: no commit is created. The provisional code and fixtures were removed; the premises, R5 inventory, and audit evidence are retained in `PHASE2_CLOSE_LOG.md`. This result supersedes the former 20.8 dependency blocker.
 
 
 ## Historical full-suite delta after R1–R4 (resolved by R6)
@@ -403,6 +403,6 @@ R10 leaves only the NiO P5 archive chain in 20.9's compatible golden; CoO, MnO a
 
 The 20.5 prerequisite was implemented in `b6a85d1`: optional `spglib` enumeration is absent and the current planner version is `campaign-planner-v2`. Continue with 20.10's premise checks and architecture work.
 
-## TASK 22 — premisa de referencia Git resuelta
+## TASK 22 — Git reference premise resolved
 
-La referencia local `codex/hubbardflow-rename` estaba en `241d009b92d39519b9a308284c783add94849625`, así que la premisa sobre ese nombre local era falsa. `git fetch` actualizó `origin/codex/hubbardflow-rename` a `299b8f0db44ba385c36d7b0fcef54639f1bcffb7` (merge del PR #8). La rama `fdebq/r6-task22-i5` se creó desde ese hash remoto exacto; por eso el trabajo no quedó bloqueado. La referencia local preexistente no se movió.
+The local ref `codex/hubbardflow-rename` was at `241d009b92d39519b9a308284c783add94849625`, so the premise about that local name was false. `git fetch` updated `origin/codex/hubbardflow-rename` a `299b8f0db44ba385c36d7b0fcef54639f1bcffb7` (merge of PR #8). The `fdebq/r6-task22-i5` branch was created from that exact remote hash, so work was not blocked. The pre-existing local ref was not moved.

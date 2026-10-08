@@ -1,76 +1,76 @@
-R0 — ORDEN DEL TÉRMINO DOMINANTE (sobre la secuencia de pendientes centrales s_k)
-- Diferencias d_k = s_{k+1} − s_k, con ruido δ_k = ν_k + ν_{k+1}.
-- Para cada terna consecutiva de escalas: razón teórica ρ_p = (a_{k+2}^p − a_{k+1}^p) / (a_{k+1}^p − a_k^p) para p = 1 y p = 2. En V6: ρ_1 = 1 y ρ_2 = 5/3, exactos con fracciones.
-- Si |d_k| ≤ δ_k o |d_{k+1}| ≤ δ_{k+1} (deriva no resuelta sobre el ruido): UNRESOLVED.
-- Si ambas están resueltas pero con signos opuestos: INCONSISTENT.
-- Si no: intervalo observado [lo, hi] con lo = (|d_{k+1}| − δ_{k+1}) / (|d_k| + δ_k) y hi = (|d_{k+1}| + δ_{k+1}) / (|d_k| − δ_k).
-  - VERIFIED_2 si ρ_2 ∈ [lo, hi] y ρ_1 ∉ [lo, hi].
-  - VERIFIED_1 si ρ_1 ∈ [lo, hi] y ρ_2 ∉ [lo, hi].
-  - UNRESOLVED si ambas están dentro.
-  - INCONSISTENT solo si hi < ρ₁.
-  - UNRESOLVED en cualquier otro caso (incluye quedar entre ρ₁ y ρ₂ o por encima de ρ₂).
-    Con datos precisos, los términos de orden superior pueden desplazar la razón observada;
-    eso indica comportamiento preasintótico, no inconsistencia. Se usa p_used = 1, conservador.
-- Si hay varias ternas, el estado de la familia es el más conservador, con este orden: INCONSISTENT > UNRESOLVED > VERIFIED_1 > VERIFIED_2. Determinista y sin depender de U.
+R0 — DOMINANT-TERM ORDER (over the sequence of central slopes s_k)
+- Differences d_k = s_{k+1} − s_k, with noise δ_k = ν_k + ν_{k+1}.
+- For each consecutive triple of scales: theoretical ratio ρ_p = (a_{k+2}^p − a_{k+1}^p) / (a_{k+1}^p − a_k^p) for p = 1 and p = 2. In V6: ρ_1 = 1 and ρ_2 = 5/3, exact as fractions.
+- If |d_k| ≤ δ_k or |d_{k+1}| ≤ δ_{k+1} (drift unresolved relative to noise): UNRESOLVED.
+- If both are resolved but have opposite signs: INCONSISTENT.
+- Otherwise, the observed interval is [lo, hi], where lo = (|d_{k+1}| − δ_{k+1}) / (|d_k| + δ_k) and hi = (|d_{k+1}| + δ_{k+1}) / (|d_k| − δ_k).
+  - VERIFIED_2 if ρ_2 ∈ [lo, hi] and ρ_1 ∉ [lo, hi].
+  - VERIFIED_1 if ρ_1 ∈ [lo, hi] and ρ_2 ∉ [lo, hi].
+  - UNRESOLVED if both are inside.
+  - INCONSISTENT only if hi < ρ₁.
+  - UNRESOLVED in every other case (including intervals between ρ₁ and ρ₂ or above ρ₂).
+    With precise data, higher-order terms can shift the observed ratio;
+    this indicates pre-asymptotic behavior, not inconsistency. Use p_used = 1, conservatively.
+- If there are multiple triples, the family status is the most conservative, in this order: INCONSISTENT > UNRESOLVED > VERIFIED_1 > VERIFIED_2. This is deterministic and does not depend on U.
 
-ORDEN USADO Y VARIABLE DE MOMENTOS
-- p_used = 2 solo si el estado es VERIFIED_2. Con VERIFIED_1 o UNRESOLVED, p_used = 1 (conservador). Con INCONSISTENT, todos los candidatos del elemento quedan excluidos con código de razón ORDER_INCONSISTENT; si no queda ninguno, el elemento queda NOT_ESTABLISHED.
-- R1 y R2 se aplican con la variable u = a^{p_used} en lugar de t = a²:
-  - Momento principal: N = Σ w_k a_k^{p_used} (exacto con fracciones).
+ORDER USED AND MOMENT VARIABLE
+- p_used = 2 only if the status is VERIFIED_2. For VERIFIED_1 or UNRESOLVED, p_used = 1 (conservative). For INCONSISTENT, exclude all candidates for the element with reason code ORDER_INCONSISTENT; if none remain, the element is NOT_ESTABLISHED.
+- Apply R1 and R2 using the variable u = a^{p_used} instead of t = a²:
+  - Leading moment: N = Σ w_k a_k^{p_used} (exact as fractions).
   - q = N^(k+1) / N^(k).
-  - Las diferencias divididas de R2 se toman sobre u.
-  Con p_used = 2 esto coincide exactamente con R1/R2 tal como están.
-  Con p_used = 1 en V6: central (0.02 vs 0.04) da q = 2; central (0.04 vs 0.06) da q = 3/2.
-- Comprobación obligatoria: con n = n0 + χa + k·a|a| y ruido cero, la pendiente central a=0.02 da τ = 0.02|k| y la de a=0.04 da τ = 0.04|k|, iguales al sesgo verdadero (cobertura exacta en el límite sin ruido).
+  - Compute R2 divided differences over u.
+  With p_used = 2 this matches R1/R2 exactly as currently defined.
+  With p_used = 1 in V6: central (0.02 vs 0.04) gives q = 2; central (0.04 vs 0.06) gives q = 3/2.
+- Mandatory check: with n = n0 + χa + k·a|a| and zero noise, the central slope at a=0.02 gives τ = 0.02|k| and the one at a=0.04 gives τ = 0.04|k|, equal to the true bias (exact coverage in the zero-noise limit).
 
-ESTIMADORES QUE ANULAN EL TÉRMINO EN t (M_1 = 0: Richardson, cúbico de mínimos cuadrados y cualquier j0 ≥ 2)
-- Solo son candidatos si el estado es VERIFIED_2. En cualquier otro estado se excluyen con el código ORDER_NOT_VERIFIED_FOR_ESTIMATOR. Motivo: no cancelan un término k·a; por ejemplo, Richardson deja un sesgo k·a1·a2/(a1+a2).
-- La regla TAIL_UNRESOLVED de R2 sigue aplicándose solo a estos estimadores (j0 ≥ 2), no a los centrales ni a los lineales.
+ESTIMATORS THAT CANCEL THE TERM IN t (M_1 = 0: Richardson, cubic least squares, and any j0 ≥ 2)
+- These are candidates only if the status is VERIFIED_2. In every other status, exclude them with reason code ORDER_NOT_VERIFIED_FOR_ESTIMATOR. Reason: they do not cancel a k·a term; for example, Richardson leaves a bias k·a1·a2/(a1+a2).
+- The R2 TAIL_UNRESOLVED rule continues to apply only to these estimators (j0 ≥ 2), not to central or linear estimators.
 
-CLASIFICACIÓN
-- VERIFIED_1 y UNRESOLVED NO limitan por sí solos el estado final: el candidato sigue elegible con p_used = 1. Registra los códigos de razón ORDER_1_VERIFIED u ORDER_UNRESOLVED_CONSERVATIVE_P1 como diagnóstico.
-- El resto de la clasificación (QUALIFIED, REVIEW, etc.) sigue las secciones J y K de la revisión.
+CLASSIFICATION
+- VERIFIED_1 and UNRESOLVED do not by themselves limit the final status: the candidate remains eligible with p_used = 1. Record reason codes ORDER_1_VERIFIED or ORDER_UNRESOLVED_CONSERVATIVE_P1 as diagnostics.
+- The rest of the classification (QUALIFIED, REVIEW, etc.) remains as specified in sections J and K of the review.
 
-TESTS ADICIONALES
-1. k·a|a| sin ruido → VERIFIED_1, nunca VERIFIED_2; τ igual al sesgo verdadero; Richardson y cúbico excluidos.
-2. b1·a³ sin ruido → VERIFIED_2, p_used = 2.
-3. Mezcla b1·a³ + k·a|a| que dé una razón fuera de ambos ρ → INCONSISTENT y exclusión (fail-closed).
-4. Deriva por debajo del ruido → UNRESOLVED, p_used = 1, candidato elegible.
-5. Cobertura ≥ 99% en 400 ensayos con semilla para el caso no analítico con ruido, sobre los casos aceptados.
+ADDITIONAL TESTS
+1. k·a|a| with zero noise → VERIFIED_1, never VERIFIED_2; τ equals the true bias; Richardson and cubic estimators are excluded.
+2. b1·a³ with zero noise → VERIFIED_2, p_used = 2.
+3. A mixture b1·a³ + k·a|a| yielding a ratio outside both ρ values → INCONSISTENT and exclusion (fail-closed).
+4. Drift below the noise level → UNRESOLVED, p_used = 1, candidate remains eligible.
+5. Coverage ≥ 99% in 400 seeded trials for the non-analytic case with noise, over accepted cases.
 
-LIMITACIÓN CONOCIDA
+KNOWN LIMITATION
 
-Con 3 amplitudes, una mezcla de un término no analítico k·a|a| con un término analítico
-de signo opuesto puede cancelar en la razón observada y no queda cubierta por este
-diagnóstico (cobertura sintética de alrededor de 0.84; con 5 amplitudes, alrededor de
-0.92). El protocolo calibrado de fase 2 deberá usar al menos 4 amplitudes.
+With 3 amplitudes, a mixture of a non-analytic k·a|a| term and an analytic term
+of opposite sign can cancel in the observed ratio and is not covered by this
+diagnostic (synthetic coverage of about 0.84; about 0.92 with 5 amplitudes).
+The calibrated Phase 2 protocol must use at least 4 amplitudes.
 
-NOTACIÓN. Escalas t_k = a_k² (eV²), k=1..K crecientes. Pendientes centrales s_k = [n(+a_k) − n(−a_k)] / (2 a_k), con radio de ruido ν_k (cota). Modelo: s_k = χ + Σ_{j≥1} b_j t_k^j. Todo estimador de la familia es E = Σ w_k s_k con Σ w_k = 1. Momentos M_j = Σ w_k t_k^j, calculados con fracciones exactas (fractions.Fraction), sin tolerancias. Sesgo de truncamiento = Σ_j b_j M_j. j0 = primer j con M_j ≠ 0 (comparación exacta). Ruido propagado: ν_E = Σ |w_k| ν_k.
+NOTATION. Scales t_k = a_k² (eV²), k=1..K in ascending order. Central slopes s_k = [n(+a_k) − n(−a_k)] / (2 a_k), with noise radius ν_k (bound). Model: s_k = χ + Σ_{j≥1} b_j t_k^j. Every estimator in the family is E = Σ w_k s_k with Σ w_k = 1. Moments M_j = Σ w_k t_k^j, computed exactly with fractions (fractions.Fraction), without tolerances. Truncation bias = Σ_j b_j M_j. j0 = first j with M_j ≠ 0 (exact comparison). Propagated noise: ν_E = Σ |w_k| ν_k.
 
-REGLA R1 (hay un estimador vecino de la misma familia). Sean E_k y E_{k+1} consecutivos, con el mismo j0 y M^(k)_{j0}, M^(k+1)_{j0} del mismo signo. Sea q = M^(k+1)_{j0} / M^(k)_{j0}. Si q ≤ 1, el candidato no es utilizable (código de razón explícito). Si q > 1:
+RULE R1 (there is a neighboring estimator in the same family). Let E_k and E_{k+1} be consecutive, with the same j0 and M^(k)_{j0}, M^(k+1)_{j0} having the same sign. Let q = M^(k+1)_{j0} / M^(k)_{j0}. If q ≤ 1, the candidate is unusable (explicit reason code). If q > 1:
   Δ = E_k − E_{k+1}
-  τ_k = ( |Δ| + ν_{E_k} + ν_{E_{k+1}} ) / (q − 1)   [ESTIMATE de truncamiento, no BOUND]
-Ejemplos exactos en la malla V6 (a = 0.02, 0.04, 0.06; t = 4e-4, 16e-4, 36e-4):
-  - central a=0.02 vs 0.04: q = 4 (denominador 3).
-  - central a=0.04 vs 0.06: q = 9/4 (denominador 5/4).
-  - Richardson(0.02,0.04) vs Richardson(0.04,0.06): M_2 = −t1·t2 y −t2·t3, q = 9 (denominador 8, NO 15 ni r⁴−1 con r=2).
-En una malla geométrica de razón r, Richardson da q = r⁴ y reproduce el r⁴−1 antiguo: añade ese caso como test de regresión.
+  τ_k = ( |Δ| + ν_{E_k} + ν_{E_{k+1}} ) / (q − 1)   [truncation ESTIMATE, not BOUND]
+Exact examples on the V6 grid (a = 0.02, 0.04, 0.06; t = 4e-4, 16e-4, 36e-4):
+  - central a=0.02 vs 0.04: q = 4 (denominator 3).
+  - central a=0.04 vs 0.06: q = 9/4 (denominator 5/4).
+  - Richardson(0.02,0.04) vs Richardson(0.04,0.06): M_2 = −t1·t2 and −t2·t3, q = 9 (denominator 8, NOT 15 or r⁴−1 with r=2).
+On a geometric grid with ratio r, Richardson gives q = r⁴ and reproduces the old r⁴−1; add this case as a regression test.
 
-REGLA R2 (sin vecino, o el estimador usa todas las escalas, por ejemplo el lineal por OLS o el cúbico por mínimos cuadrados del protocolo). Sea D_j(ventana) la diferencia dividida de orden j de las s_k sobre j+1 escalas consecutivas, con radio de ruido δ_j propagado con los valores absolutos de sus coeficientes. Entonces:
-  τ = |M_{j0}| · max_{ventanas} ( |D_{j0}| + δ_{j0} )   [ESTIMATE]
-Tomar el máximo sobre todas las ventanas disponibles es una regla determinista y conservadora; no depende del valor de U ni de ninguna selección.
-Si no existen K ≥ j0+2 escalas para contrastar el orden, marca el candidato con el código de razón TAIL_UNRESOLVED (diagnóstico). Un candidato con TAIL_UNRESOLVED NO puede llegar a QUALIFIED; como máximo REVIEW. Decisión explícita mía, reversible por el usuario.
-Ejemplos en V6:
-  - Lineal OLS de 6 puntos: j0 = 1, M_1 = (0.02⁴+0.04⁴+0.06⁴)/(0.02²+0.04²+0.06²) = 0.0028 eV² exactamente (verifícalo con fracciones). Para n(a) = n0 + χ a + b1 a³ el sesgo es M_1·b1, y la cota NUNCA puede ser cero cuando M_1 ≠ 0.
-  - Cúbico del protocolo (mínimos cuadrados con base {a, a³}): M_1 = 0 exacto (reproduce a³), j0 = 2. Calcula y reporta M_2 con fracciones.
+RULE R2 (no neighbor, or the estimator uses all scales, e.g. linear OLS or the protocol's cubic least squares). Let D_j(window) be the order-j divided difference of s_k over j+1 consecutive scales, with noise radius δ_j propagated using the absolute values of its coefficients. Then:
+  τ = |M_{j0}| · max_{windows} ( |D_{j0}| + δ_{j0} )   [ESTIMATE]
+Taking the maximum over all available windows is a deterministic, conservative rule; it does not depend on U or any selection.
+If there are no K ≥ j0+2 scales to verify the order, mark the candidate with reason code TAIL_UNRESOLVED (diagnostic). A candidate with TAIL_UNRESOLVED cannot reach QUALIFIED; at most it can reach REVIEW. This is my explicit decision, reversible by the user.
+Examples on V6:
+  - Linear OLS of 6 points: j0 = 1, M_1 = (0.02⁴+0.04⁴+0.06⁴)/(0.02²+0.04²+0.06²) = 0.0028 eV² exactly (verify using fractions). For n(a) = n0 + χ a + b1 a³ the bias is M_1·b1, and the bound can NEVER be zero when M_1 ≠ 0.
+  - Protocol cubic (least squares with basis {a, a³}): M_1 = 0 exactly (it reproduces a³), j0 = 2. Calculate and report M_2 using fractions.
 
-TESTS OBLIGATORIOS ADICIONALES para TASK 2:
-  1. Datos sintéticos n = n0 + χ a + b1 a³: el lineal OLS debe dar una cota ≥ |M_1·b1| y cubrir la verdad; el cúbico y Richardson deben dar M_1 = 0 exacto.
-  2. Richardson V6 con datos sintéticos con b2 conocido: q = 9 y la estimación debe quedar dentro de la tolerancia de la propia fórmula frente al sesgo verdadero.
-  3. Regresión con malla geométrica (q = r⁴).
-  4. Detección exacta de j0 con fracciones, sin tolerancias numéricas.
-  5. Invarianza al orden de entrada y rechazo de datos no finitos, como el resto de tests.
+ADDITIONAL REQUIRED TESTS for TASK 2:
+  1. Synthetic data n = n0 + χ a + b1 a³: linear OLS must give a bound ≥ |M_1·b1| and cover the truth; cubic and Richardson must give M_1 = 0 exactly.
+  2. Richardson V6 with synthetic data and known b2: q = 9 and the estimate must lie within the tolerance of its own formula relative to the true bias.
+  3. Regression on a geometric grid (q = r⁴).
+  4. Exact detection of j0 using fractions, without numerical tolerances.
+  5. Input-order invariance and rejection of non-finite data, as in the other tests.
 
-ACLARACIÓN SUPLEMENTARIA — TAIL_UNRESOLVED
+SUPPLEMENTAL CLARIFICATION — TAIL_UNRESOLVED
 
-Los candidatos con TAIL_UNRESOLVED se conservan visibles en el reporte con su τ y su código de razón, pero NO son admisibles para `best` mientras exista al menos un candidato admisible sin TAIL_UNRESOLVED. Si NO queda ningún candidato admisible sin TAIL_UNRESOLVED, se elige `best` entre los TAIL_UNRESOLVED con la misma regla determinista de siempre, y el resultado del elemento queda como máximo en REVIEW, con el código TAIL_UNRESOLVED. Añadir candidatos TAIL_UNRESOLVED nunca puede empeorar el estado de un elemento que sin ellos sería QUALIFIED: añade un test de esta monotonicidad.
+Candidates with TAIL_UNRESOLVED remain visible in the report with their τ and reason code, but are NOT eligible for `best` while at least one eligible candidate without TAIL_UNRESOLVED exists. If NO eligible candidate without TAIL_UNRESOLVED remains, choose `best` among the TAIL_UNRESOLVED candidates using the same deterministic rule as always, and the element result is at most REVIEW, with reason code TAIL_UNRESOLVED. Adding TAIL_UNRESOLVED candidates can never worsen an element status that would otherwise be QUALIFIED: add a test for this monotonicity.

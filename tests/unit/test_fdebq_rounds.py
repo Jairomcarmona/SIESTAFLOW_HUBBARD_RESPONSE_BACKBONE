@@ -430,3 +430,15 @@ def test_round_evidence_digest_is_optional_without_changing_qualification(digest
     assert restored.columns == original.columns
     assert restored.matrix == original.matrix
     assert restored.reasons == original.reasons
+
+
+def test_round_evidence_reads_legacy_spanish_display_label() -> None:
+    from hubbardflow.domain.fdebq_models import CalibrationQualification
+
+    original = decide(columns(scf=True), protocol()).qualification
+    raw = original.to_mapping()
+    raw["label"] = "calificación condicional al modelo de error"
+
+    restored = CalibrationQualification.from_mapping(raw)
+
+    assert restored.label == LABEL
