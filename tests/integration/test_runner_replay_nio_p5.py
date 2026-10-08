@@ -274,7 +274,9 @@ def test_nio_p5_runner_replay_matches_part_a_and_resumes(
     assert completed["status"] == "COMPLETED"
     assert len(completed["completed_nodes"]) == 27
 
-    actual_analysis = json.loads((manifest.parent / "results" / ANALYSIS).read_text(encoding="utf-8"))
+    actual_analysis = json.loads(
+        (manifest.parent / "results" / "data" / ANALYSIS).read_text(encoding="utf-8")
+    )
     part_a_analysis = json.loads((REAL_FIXTURE / ANALYSIS).read_text(encoding="utf-8"))
     projector_diagnostics = actual_analysis["projector_diagnostics"]
     assert projector_diagnostics["decision_role"] == "RECORD_ONLY"
@@ -295,6 +297,7 @@ def test_nio_p5_runner_replay_matches_part_a_and_resumes(
     assert occupation_summary["status"] == provenance["status"]
     assert occupation_summary["record_count"] == len(provenance["records"])
     assert occupation_summary["hash_policy"] == provenance["hash_policy"]
+    assert occupation_summary["path"] == "results/data/occupation_provenance.v1.json"
     records = provenance["records"]
     assert records
     for record in records:
@@ -319,10 +322,13 @@ def test_nio_p5_runner_replay_matches_part_a_and_resumes(
     _assert_replay_equivalent(actual_view, expected_view)
     _assert_part_a_u_within_rounding_bound(actual_analysis, part_a_analysis)
 
-    analysis_path = manifest.parent / "results" / ANALYSIS
+    analysis_path = manifest.parent / "results" / "data" / ANALYSIS
     report_path = manifest.parent / "results" / "HUBBARDFLOW.out"
     assert analysis_path.is_file() and analysis_path.stat().st_size > 0
     assert report_path.is_file() and report_path.stat().st_size > 0
+    results_root = manifest.parent / "results"
+    assert {item.name for item in results_root.iterdir()} == {"HUBBARDFLOW.out", "data", "runs"}
+    assert (results_root / "runs" / "attempts").is_dir()
     rendered_lr_report = report_path.read_text(encoding="ascii")
     assert "[12] DIAGNOSTICS" in rendered_lr_report
     assert "SIESTA_METHOD_2_ATOMIC_NONORTHOGONALIZED_PROJECTOR" in rendered_lr_report
@@ -331,7 +337,7 @@ def test_nio_p5_runner_replay_matches_part_a_and_resumes(
     replay_golden_view = _analysis_comparison_view(replay_golden, manifest.parent.parent.parent)
     _assert_replay_equivalent(replay_view, replay_golden_view)
 
-    state_gate_path = manifest.parent / "results" / "i5_state_gate.json"
+    state_gate_path = manifest.parent / "results" / "data" / "i5_state_gate.json"
     assert state_gate_path.is_file()
     actual_state_gate = json.loads(state_gate_path.read_text(encoding="utf-8"))
     state_gate_golden = json.loads(REPLAY_STATE_GATE.read_text(encoding="utf-8"))
@@ -357,7 +363,7 @@ def test_nio_p5_runner_replay_matches_part_a_and_resumes(
     actual_manifest = _campaign_file_manifest(manifest.parent)
     expected_manifest = json.loads(GOLDEN_MANIFEST.read_text(encoding="utf-8"))
     for analysis_artifact in (
-        "results/lr_u_analysis.v3.json",
+        "results/data/lr_u_analysis.v3.json",
         "results/LR_U_REPORT.v3.md",
         "results/HUBBARDFLOW.out",
         "results/data/hubbardflow_report_source.v1.json",
@@ -365,7 +371,7 @@ def test_nio_p5_runner_replay_matches_part_a_and_resumes(
         "results/data/u_by_site.csv",
         "results/data/chi0_matrix.csv",
         "results/data/chi_matrix.csv",
-        "results/i5_state_gate.json",
+        "results/data/i5_state_gate.json",
     ):
         assert analysis_artifact not in actual_manifest
         assert analysis_artifact not in expected_manifest
@@ -472,7 +478,10 @@ def _comparison_view(value: Any, removed: dict[str, str], path: str) -> Any:
     if isinstance(value, list):
         return [_comparison_view(child, removed, f"{path}[{index}]") for index, child in enumerate(value)]
     if isinstance(value, str):
-        return _normalize_attempt_path(value)
+        normalized = _normalize_attempt_path(value)
+        # TASK 34c stores new node runs under results/runs; archived Part A
+        # analysis retains the previous .siestaflow/attempts path.
+        return normalized.replace(".siestaflow/attempts/", "results/runs/attempts/")
     return value
 
 
@@ -595,7 +604,7 @@ def _campaign_file_manifest(root: Path) -> dict[str, str]:
     for path in sorted(item for item in root.rglob("*") if item.is_file()):
         relative = _normalize_attempt_path(path.relative_to(root).as_posix())
         if relative in {
-            "results/lr_u_analysis.v3.json",
+            "results/data/lr_u_analysis.v3.json",
             "results/LR_U_REPORT.v3.md",
             "results/HUBBARDFLOW.out",
             "results/data/hubbardflow_report_source.v1.json",
@@ -605,7 +614,7 @@ def _campaign_file_manifest(root: Path) -> dict[str, str]:
             "results/data/u_by_site.csv",
             "results/data/chi0_matrix.csv",
             "results/data/chi_matrix.csv",
-            "results/i5_state_gate.json",
+            "results/data/i5_state_gate.json",
         }:
             continue
         raw = path.read_bytes()
@@ -641,7 +650,7 @@ def _campaign_json_snapshot(root: Path) -> dict[str, Any]:
     result: dict[str, Any] = {}
     for path in sorted(item for item in root.rglob("*") if item.is_file()):
         relative = _normalize_attempt_path(path.relative_to(root).as_posix())
-        if relative in {"results/lr_u_analysis.v3.json", "results/i5_state_gate.json"}:
+        if relative in {"results/data/lr_u_analysis.v3.json", "results/data/i5_state_gate.json"}:
             continue
         try:
             value = json.loads(path.read_bytes())

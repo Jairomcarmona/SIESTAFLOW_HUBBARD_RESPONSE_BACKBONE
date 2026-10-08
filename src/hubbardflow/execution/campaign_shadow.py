@@ -32,6 +32,7 @@ from hubbardflow.domain.symmetry_reduction import ResponseMode
 from hubbardflow.execution.campaign_shadow_inputs import build_shadow_dag, observation_series
 from hubbardflow.execution.generic_executor import ExecutionContractError, GenericDagExecutor
 from hubbardflow.execution.lr_dag import LRDagNode
+from hubbardflow.execution.result_paths import state_gate_output_path
 from hubbardflow.execution.state_gate_step import (
     failed_state_gate_mapping,
     shadow_state_gate_passed,
@@ -247,7 +248,7 @@ class CampaignShadow:
     def persist_rejection(self, runner: CampaignRunner, outcomes: Sequence[ShadowOutcome]) -> None:
         """Persist a STOP decision and its exact I.5 evidence without changing the DAG."""
         self._persist(outcomes)
-        state_gate_path = runner.root / "results" / "i5_state_gate.json"
+        state_gate_path = state_gate_output_path(runner.root / "results")
         write_state_gate_file(state_gate_path, self._state_gate_evidence(runner))
 
     def _data(

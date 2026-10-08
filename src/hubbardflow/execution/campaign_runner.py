@@ -68,6 +68,13 @@ from hubbardflow.execution.occupation_provenance import (
     rebuild_campaign_occupation_provenance,
     write_occupation_provenance,
 )
+from hubbardflow.execution.result_paths import (
+    analysis_output_path,
+    data_directory,
+    find_analysis_path,
+    find_state_gate_path,
+    state_gate_output_path,
+)
 from hubbardflow.execution.campaign_report_artifacts import write_campaign_report_artifacts
 from hubbardflow.execution.response_grid_context import response_grid_source_campaign_context
 from hubbardflow.execution.reference_reproduction_step import check_reference_reproduction
@@ -217,15 +224,15 @@ class _Heartbeat:
 class _AttemptingFactory:
     """Reuse the production factory while assigning a unique attempt root."""
 
-    def __init__(self, factory: Any, control: Path, state: _Heartbeat):
-        self.factory, self.control, self.state = factory, control, state
+    def __init__(self, factory: Any, control: Path, runs_directory: Path, state: _Heartbeat):
+        self.factory, self.control, self.runs_directory, self.state = factory, control, runs_directory, state
         self.base_layout = factory.layout
         self.active_attempt_root: Path | None = None
         self.reference_dms: dict[str, Path] = {}
 
     def prepare(self, node: LRDagNode) -> None:
         node_key = sha256(node.node_id.encode()).hexdigest()[:20]
-        node_root = self.control / "attempts" / node_key
+        node_root = self.runs_directory / "attempts" / node_key
         node_root.mkdir(parents=True, exist_ok=True)
         attempt_root = node_root / f"attempt-{time.time_ns()}-{uuid.uuid4().hex[:8]}"
         attempt_root.mkdir()
@@ -268,7 +275,10 @@ class CampaignRunner:
         }
         self.control = self.root / ".siestaflow"
         self.control.mkdir(parents=True, exist_ok=True)
+        (self.control / "attempts").mkdir(parents=True, exist_ok=True)
         self.results = self.root / "results"
+        self.runs = self.results / "runs"
+        self.runs.mkdir(parents=True, exist_ok=True)
         self.profile: ExecutionProfile = self.campaign["_profile"]
         self.profile.require_submission_evidence()
         if self.profile.target == "local_wsl" and self.profile.wsl is None:
@@ -368,7 +378,7 @@ class CampaignRunner:
                 raise CampaignV2Error(f"static artifact collides with pseudopotential filename {destination}")
             static_artifacts[destination] = Path(path)
         self.layout = SiestaCampaignLayout(
-            reference_fdf=self.reference_fdf, run_root=self.control / "attempts" / "initial",
+            reference_fdf=self.reference_fdf, run_root=self.runs / "attempts" / "initial",
             reference_dm=None, reference_dm_name=self.reference_dm_name, static_artifacts=static_artifacts,
             scf_level_overrides=(
                 {str(self.adaptive_policy.scf_probe_level["level_id"]): self.adaptive_policy.scf_probe_level["fdf_overrides"]}
@@ -381,7 +391,12 @@ class CampaignRunner:
             executable_path=self.profile.runtime.siesta_executable, profile=self.profile,
             hosts=self.hosts, layout=self.layout,
         )
-        self.factory = _AttemptingFactory(self.admitted.factory, self.control, _Heartbeat(self.control / "worker-state.json", campaign_id=self.campaign["campaign_id"]))
+        self.factory = _AttemptingFactory(
+            self.admitted.factory,
+            self.control,
+            self.runs,
+            _Heartbeat(self.control / "worker-state.json", campaign_id=self.campaign["campaign_id"]),
+        )
         self.analysis_policy = LRAnalysisPolicy(**self.config["analysis_policy"])
         self.analysis_policy.validate()
         self._minimum_occupation_decimal_places = None
@@ -770,11 +785,13 @@ class CampaignRunner:
                 self.factory.reference_completed(dm, reference_node.scf_level_id or "base")
 
     def _archive_unvalidated_attempts(self, node_ids: set[str]) -> None:
-        self.store.archive_unvalidated_attempts(self.control, node_ids)
+        runs_directory = getattr(self, "runs", None)
+        self.store.archive_unvalidated_attempts(self.control, node_ids, runs_directory=runs_directory)
 
     def _archive_orphaned_attempts(self, receipts: Mapping[str, NodeReceipt]) -> None:
         self.store.records = self.records
-        self.store.archive_orphaned_attempts(self.control, receipts)
+        runs_directory = getattr(self, "runs", None)
+        self.store.archive_orphaned_attempts(self.control, receipts, runs_directory=runs_directory)
 
     def _record_receipt(self, node: LRDagNode, receipt: NodeReceipt, extra: Mapping[str, Any] | None = None) -> None:
         self.store.records = self.records
@@ -1139,10 +1156,13 @@ class CampaignRunner:
         result["scf_probe_interpretation"] = "empirical SCF sensitivity; not a rigorous error bound for U"
         result["noise_not_quantified"] = not bool(decision.get("scf_probe_metrics"))
         is_v3 = result.get("schema_version") == "siestaflow.lr_u_analysis.v3"
-        final_path = self.results / ("lr_u_analysis.v3.json" if is_v3 else "lr_u_analysis.v2.json")
+        final_path = analysis_output_path(
+            self.results,
+            "siestaflow.lr_u_analysis.v3" if is_v3 else "siestaflow.lr_u_analysis.v2",
+        )
         write_lr_analysis_v2(final_path, result)
         state_gate = self._read_state_gate_for_report()
-        occupation_path = self.results / "data" / "occupation_provenance.v1.json"
+        occupation_path = data_directory(self.results) / "occupation_provenance.v1.json"
         rebuild_campaign_occupation_provenance(final_path, campaign_root=self.root)
         admission = getattr(self.admitted, "admission", None)
         observed = getattr(admission, "observed", None)
@@ -1165,7 +1185,9 @@ class CampaignRunner:
         )
 
     def _read_state_gate_for_report(self) -> Mapping[str, Any] | None:
-        path = self.results / "i5_state_gate.json"
+        path = find_state_gate_path(self.results)
+        if path is None:
+            return None
         try:
             value = json.loads(path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
@@ -1811,7 +1833,7 @@ class CampaignRunner:
         report_path = self.results / "HUBBARDFLOW.out"
         if adaptive:
             round_state, fit_state, round_index, level_id, is_rerun = self._adaptive_analysis_context(node)
-            evidence_path = self.results / "alpha_rounds" / f"round-{round_index:02d}" / (
+            evidence_path = data_directory(self.results) / "alpha_rounds" / f"round-{round_index:02d}" / (
                 "scf-rerun-analysis.v3.json" if is_rerun else "analysis.v3.json"
             )
             fit = fit_state.get("fit_policy", fit_state.get("analysis_policy", {}))
@@ -1830,7 +1852,7 @@ class CampaignRunner:
             round_index = -1
             level_id = "base"
             is_rerun = False
-            evidence_path = self.results / "lr_u_analysis.v3.json"
+            evidence_path = analysis_output_path(self.results, "siestaflow.lr_u_analysis.v3")
             round_policy = self.analysis_policy
             alpha_grid = self.alpha_grid
             active_window = None
@@ -1932,7 +1954,7 @@ class CampaignRunner:
                 "diagnostic_error": f"{type(exc).__name__}: {exc}",
             }
         write_lr_analysis_v2(evidence_path, analysis)
-        state_gate_path = self.results / "i5_state_gate.json"
+        state_gate_path = state_gate_output_path(self.results)
         try:
             state_gate = state_gate_mapping(
                 dag=self.dag,
@@ -1976,7 +1998,7 @@ class CampaignRunner:
             analysis_path=evidence_path,
             analysis=analysis,
             state_gate=report_state_gate,
-            occupation_provenance_path=self.results / "data" / "occupation_provenance.v1.json",
+            occupation_provenance_path=data_directory(self.results) / "occupation_provenance.v1.json",
             runtime={
                 "version": getattr(runtime_observed, "version", None),
                 "binary_sha256": getattr(runtime_observed, "executable_sha256", None),
@@ -2163,13 +2185,12 @@ def request_campaign_stop(manifest_path: str | Path) -> dict[str, Any]:
 def render_campaign_report(manifest_path: str | Path) -> str:
     campaign = load_campaign_v2(manifest_path)
     root = Path(campaign["_campaign_root"])
-    analysis_path = root / "results" / "lr_u_analysis.v3.json"
-    if not analysis_path.is_file():
-        analysis_path = root / "results" / "lr_u_analysis.v2.json"
-    if analysis_path.is_file():
+    results_directory = root / "results"
+    analysis_path = find_analysis_path(results_directory)
+    if analysis_path is not None:
         analysis = json.loads(analysis_path.read_text(encoding="utf-8"))
         rebuild_campaign_occupation_provenance(analysis_path, campaign_root=root)
-        report_source_path = root / "results" / "data" / "hubbardflow_report_source.v1.json"
+        report_source_path = data_directory(results_directory) / "hubbardflow_report_source.v1.json"
         report_warnings: list[Any] | None = None
         if not report_source_path.is_file():
             report_warnings = list(campaign.get("_input_traceability_warnings", []))
@@ -2183,8 +2204,10 @@ def render_campaign_report(manifest_path: str | Path) -> str:
                     report_warnings.extend(saved_records["traceability_warnings"])
             except (OSError, json.JSONDecodeError):
                 pass
-        state_gate_path = root / "results" / "i5_state_gate.json"
+        state_gate_path = find_state_gate_path(results_directory)
         try:
+            if state_gate_path is None:
+                raise FileNotFoundError("state-gate JSON is absent")
             state_gate = json.loads(state_gate_path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
             state_gate = None
@@ -2195,7 +2218,7 @@ def render_campaign_report(manifest_path: str | Path) -> str:
             analysis_path=analysis_path,
             analysis=analysis,
             state_gate=state_gate if isinstance(state_gate, Mapping) else None,
-            occupation_provenance_path=root / "results" / "data" / "occupation_provenance.v1.json",
+            occupation_provenance_path=data_directory(results_directory) / "occupation_provenance.v1.json",
             traceability_warnings=report_warnings,
         )
     try:
@@ -2209,7 +2232,7 @@ def render_campaign_report(manifest_path: str | Path) -> str:
             traceability_warnings.extend(records["traceability_warnings"])
     except (OSError, json.JSONDecodeError):
         pass
-    placeholder_analysis = root / "results" / "lr_u_analysis.v2.json"
+    placeholder_analysis = analysis_output_path(results_directory, "siestaflow.lr_u_analysis.v2")
     return write_campaign_report_artifacts(
         campaign_root=root,
         manifest_path=manifest_path,
@@ -2217,7 +2240,7 @@ def render_campaign_report(manifest_path: str | Path) -> str:
         analysis_path=placeholder_analysis,
         analysis={},
         state_gate=None,
-        occupation_provenance_path=root / "results" / "data" / "occupation_provenance.v1.json",
+        occupation_provenance_path=data_directory(results_directory) / "occupation_provenance.v1.json",
         traceability_warnings=traceability_warnings,
         workflow_state=status if isinstance(status, Mapping) else None,
     )

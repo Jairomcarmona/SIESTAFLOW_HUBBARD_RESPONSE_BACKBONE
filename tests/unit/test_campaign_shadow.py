@@ -234,7 +234,7 @@ def _runner(
 
 
 def _analysis(root: Path) -> dict[str, Any]:
-    return json.loads((root / "results" / "lr_u_analysis.v3.json").read_text(encoding="utf-8"))  # type: ignore[no-any-return]
+    return json.loads((root / "results" / "data" / "lr_u_analysis.v3.json").read_text(encoding="utf-8"))  # type: ignore[no-any-return]
 
 
 def test_runner_all_pass_reconstructs_raw_matrices_and_preserves_direct_shadow(
@@ -547,7 +547,7 @@ def test_stop_policy_rejects_shadow_without_installing_expansion(
     assert (
         json.loads((runner.control / "state.json").read_text(encoding="utf-8"))["reason"] == "SHADOW_REJECTED"
     )
-    gate = json.loads((runner.results / "i5_state_gate.json").read_text(encoding="utf-8"))
+    gate = json.loads((runner.results / "data" / "i5_state_gate.json").read_text(encoding="utf-8"))
     assert gate["schema_version"] == "hubbardflow.i5_state_gate.v1"
     state = json.loads((runner.control / "translation-shadow-state.json").read_text(encoding="utf-8"))
     assert state["outcomes"][0]["status"] == "REJECTED_EXPANDED"
@@ -764,7 +764,7 @@ def test_disabled_and_diagnostic_analysis_bytes_and_dag_identity_unchanged(
         runner, executed, heartbeat = _runner(tmp_path / mode, monkeypatch, _plan(), coverage=mode)
         assert runner.advance("run", heartbeat) == 0
         assert len(executed) == 33
-        outputs.append((runner.results / "lr_u_analysis.v3.json").read_bytes())
+        outputs.append((runner.results / "data" / "lr_u_analysis.v3.json").read_bytes())
         digests.append(dag_digest(runner.dag))
     assert outputs[0] == outputs[1]
     assert digests[0] == digests[1]
