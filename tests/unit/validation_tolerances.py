@@ -14,6 +14,7 @@ class ToleranceStatus(str, Enum):
     PROVISIONAL = "PROVISIONAL"
     PENDING_ARTIFACT = "PENDING_ARTIFACT"
     NOT_NUMERIC = "NOT_NUMERIC"
+    DECLARED_BY_OWNER = "DECLARED_BY_OWNER"
 
 
 @dataclass(frozen=True)
@@ -22,6 +23,8 @@ class ValidationTolerance:
     unit: str
     status: ToleranceStatus
     justification: str
+    declaration_date: str | None = None
+    scope: str | None = None
 
 
 MNO_LAPTOP_U_TOLERANCE = ValidationTolerance(
@@ -71,4 +74,13 @@ SIGNAL_RESTART_TOLERANCE = ValidationTolerance(
     "state",
     ToleranceStatus.NOT_NUMERIC,
     "Restart correctness is an exact state/receipt assertion, not a numerical comparison; no archived end-to-end signal-interrupted campaign is present.",
+)
+
+TOL_SENSIBILIDAD_EV = ValidationTolerance(
+    0.01,
+    "eV",
+    ToleranceStatus.DECLARED_BY_OWNER,
+    "Declared by the project owner on 2026-10-07; applied only to the measured M1 supercell-series effects in size, vacuum, and k-grid.",
+    declaration_date="2026-10-07",
+    scope="M1, projector generation method 2, CutoffNorm 0.90; cell-size, vacuum, and k-grid effects only. Does not cover projector dependence.",
 )

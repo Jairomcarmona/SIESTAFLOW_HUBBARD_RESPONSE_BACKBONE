@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "title": "Measured M1 supercell series",
+  "source": {
+    "generator": "bin/supercell_quicklook.py",
+    "campaign": "M1_SUPERCELL_YOLTLA",
+    "job_id": 794120,
+    "siesta_version": "5.4.2",
+    "profile": "siesta-5.4.2-potential-shift-hamiltonian-v1",
+    "projector": {
+      "generation_method": 2,
+      "cutoff_norm": 0.90,
+      "rc_bohr": 0.0,
+      "omega": 0.05
+    },
+    "eight_by_eight_input_archive": {
+      "name": "LR14_CELL8_n192.tar.gz",
+      "sha256": "f429dd1d5f2cd104d5e5ef1264a726b9d40f425a5419069fda2f1719522a57bb",
+      "members": {
+        "cells/n8_k3x3_v35/probe.fdf": "20b5750bcfb866b8282fc267ffafa0e832b326544543c1c60e54feb8584c50d9",
+        "cells/n8_k3x3_v35/probe-lr-config.json": "83d14f7fdfd5dcbb65be934eb62dde32d9255fec0f4a0e7a2e0045357b094f13"
+      }
+    },
+    "steps_file": {
+      "name": "supercell_steps.tsv",
+      "status": "PENDING_ARTIFACT",
+      "k_grid_effect_sign_status": "PENDING_ARTIFACT",
+      "note": "The source TSV was not available for this repository update; the listed U values are the values supplied for the audit."
+    }
+  },
+  "value_precision": "U values are reported to four decimal places in eV.",
+  "points": [
+    {
+      "cell": "4x4",
+      "atoms": 48,
+      "k_grid": [4, 4, 1],
+      "vacuum_angstrom": 35,
+      "image_distance_angstrom": 11.408,
+      "u_ev": 10.6681
+    },
+    {
+      "cell": "4x4",
+      "atoms": 48,
+      "k_grid": [4, 4, 1],
+      "vacuum_angstrom": 45,
+      "image_distance_angstrom": 11.408,
+      "u_ev": 10.6680
+    },
+    {
+      "cell": "4x4",
+      "atoms": 48,
+      "k_grid": [5, 5, 1],
+      "vacuum_angstrom": 35,
+      "image_distance_angstrom": 11.408,
+      "u_ev": 10.6681
+    },
+    {
+      "cell": "6x6",
+      "atoms": 108,
+      "k_grid": [3, 3, 1],
+      "vacuum_angstrom": 33,
+      "image_distance_angstrom": 17.112,
+      "u_ev": 10.6622,
+      "role": "anchor"
+    },
+    {
+      "cell": "8x8",
+      "atoms": 192,
+      "k_grid": [3, 3, 1],
+      "vacuum_angstrom": 35,
+      "image_distance_angstrom": 22.816,
+      "u_ev": 10.6675
+    }
+  ]
+}
