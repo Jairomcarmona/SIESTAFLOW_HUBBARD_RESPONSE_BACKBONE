@@ -1,0 +1,13 @@
+cff-version: 1.2.0
+message: >-
+  If you use this software, cite it as requested by the copyright holder. Author,
+  contributor roles, affiliations, ORCID identifiers, and license are
+  PENDIENTE_AUTOR and must be completed before public release.
+title: HubbardFlow
+version: 0.1.2
+license: PENDIENTE_AUTOR
+authors:
+  - family-names: PENDIENTE_AUTOR
+    given-names: PENDIENTE_AUTOR
+    affiliation: PENDIENTE_AUTOR
+    orcid: PENDIENTE_AUTOR
