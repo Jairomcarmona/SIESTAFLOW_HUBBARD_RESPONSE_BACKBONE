@@ -9,6 +9,7 @@ from pathlib import Path
 from hubbardflow.domain.projector_compatibility import compare_projector_definitions
 from hubbardflow.domain.projector_compatibility_models import (
     ProjectorCompatibilityError,
+    ProjectorCompatibilityReasonCode,
     ProjectorCompatibilityResult,
     ProjectorCompatibilityStatus,
 )
@@ -43,12 +44,21 @@ class ProjectorCompatibilityReport:
     def application_permitted(self) -> bool:
         return self.status is ProjectorCompatibilityStatus.MATCH or self.force_requested
 
+    @property
+    def reason_code(self) -> ProjectorCompatibilityReasonCode:
+        if self.status is ProjectorCompatibilityStatus.MISMATCH:
+            return ProjectorCompatibilityReasonCode.MANIFOLD_MISMATCH
+        if self.status is ProjectorCompatibilityStatus.INCOMPLETE:
+            return ProjectorCompatibilityReasonCode.EVIDENCE_INCOMPLETE
+        return ProjectorCompatibilityReasonCode.MATCH
+
     def to_mapping(self) -> dict[str, object]:
         return {
             "schema": "hubbardflow.projector_compatibility.v1",
             "campaign": self.campaign_path,
             "target_fdf": self.target_fdf_path,
             "status": self.status.value,
+            "reason_code": self.reason_code.value,
             "force_requested": self.force_requested,
             "application_permitted": self.application_permitted,
             "comparisons": [item.to_mapping() for item in self.results],
@@ -76,6 +86,9 @@ class ProjectorCompatibilityReport:
                 raise ProjectorCompatibilityInputError("report status disagrees with its comparisons")
             if value.get("application_permitted") is not report.application_permitted:
                 raise ProjectorCompatibilityInputError("report permission disagrees with status and force")
+            reason_code = value.get("reason_code")
+            if reason_code is not None and reason_code != report.reason_code.value:
+                raise ProjectorCompatibilityInputError("report reason code disagrees with status")
             return report
         except (KeyError, TypeError, ValueError) as exc:
             raise ProjectorCompatibilityInputError(f"invalid projector report: {exc}") from exc
@@ -95,12 +108,14 @@ def check_campaign_projectors(
     force: bool = False,
     artifact_dirs: Sequence[str | Path] = (),
 ) -> ProjectorCompatibilityReport:
-    """Compare explicitly mapped campaign species against a DFT+U FDF.
+    """Preflight explicitly mapped campaign species against a DFT+U FDF.
 
     Campaign numeric evidence is sourced from the frozen resolved plan and
     checked against its saved reference FDF. File digests are collected from
     the reference and target artifact directories, but the domain comparison
-    treats them only as warnings.
+    treats them only as warnings. This is a standalone preflight; HubbardFlow
+    currently has no downstream route that applies a calculated U to a target
+    FDF and executes that DFT+U calculation.
     """
     if not label_mappings:
         raise ProjectorCompatibilityInputError("at least one explicit --map LR_LABEL=DFTU_LABEL is required")

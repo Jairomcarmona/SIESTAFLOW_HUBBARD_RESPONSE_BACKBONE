@@ -17,6 +17,7 @@ def render_projector_compatibility_report(report: ProjectorCompatibilityReport) 
         f"Campaign : {report.campaign_path}",
         f"Target   : {report.target_fdf_path}",
         f"Result   : {report.status.value}",
+        f"Reason   : {report.reason_code.value}",
     ]
     if report.force_requested:
         lines.extend(
@@ -28,6 +29,7 @@ def render_projector_compatibility_report(report: ProjectorCompatibilityReport) 
     lines.append("")
     for comparison in report.results:
         lines.append(f"{comparison.lr_label} -> {comparison.dftu_label}  [{comparison.status.value}]")
+        lines.append(f"  Reason code: {comparison.reason_code.value}")
         if comparison.differences:
             rows = [
                 (item.field, _value(item.lr_value), _value(item.dftu_value))
