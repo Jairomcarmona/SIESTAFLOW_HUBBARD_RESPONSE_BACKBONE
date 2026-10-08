@@ -342,9 +342,11 @@ def render_hubbardflow_out(source: Mapping[str, Any]) -> str:
             and index < len(inverse_chi[index])
             else None
         )
+        lines.append(f"  {names.get(index, str(key))}:")
+        lines.append(f"    [inverse(CHI0)]_ii = {_fixed_decimal(chi0_ii)} eV")
+        lines.append(f"    [inverse(CHI)]_ii = {_fixed_decimal(chi_ii)} eV")
         lines.append(
-            f"  {names.get(index, str(key))}: [inverse(CHI0)]_ii = {_fixed_decimal(chi0_ii)} eV; "
-            f"[inverse(CHI)]_ii = {_fixed_decimal(chi_ii)} eV; U_i = {_fixed_decimal(value)} eV"
+            f"    U_i = {_fixed_decimal(chi0_ii)} - {_fixed_decimal(chi_ii)} = {_fixed_decimal(value)} eV"
         )
 
     lines.extend(_section_header("[11] SYMMETRY"))

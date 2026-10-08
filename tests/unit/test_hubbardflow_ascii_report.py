@@ -146,6 +146,10 @@ def test_wrapping_preserves_indivisible_tokens_and_matrix_precision_is_uniform()
     assert "[inverse(CHI0)]_ii =" in report
     assert "[inverse(CHI)]_ii =" in report
     assert "U_i =" in report
+    assert any(
+        re.fullmatch(r"    U_i =\s+-?\d+\.\d{8} -\s+-?\d+\.\d{8} =\s+-?\d+\.\d{8} eV", line)
+        for line in lines[inversion_start:]
+    )
     assert all(re.search(r"-?\d+\.\d{8}", line) for line in lines[inversion_start:] if "[inverse(" in line)
 
 
