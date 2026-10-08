@@ -28,146 +28,736 @@ testpaths = ["tests"]
 [tool.ruff]
 line-length = 110
 target-version = "py312"
-include = [
-    "src/hubbardflow/execution/campaign_split.py",
-    "src/hubbardflow/siesta_backend/split_generated_identity.py",
-    "tools/hubbardflow_verify_split_identity.py",
-    "tests/unit/test_campaign_split.py",
-    "tests/unit/test_split_generated_identity.py",
-    "src/hubbardflow/product_cli.py",
-    "src/hubbardflow/execution/product_*.py",
-    "src/hubbardflow/reporting/product_report.py",
-    "tests/unit/test_product_*.py",
-    "src/hubbardflow/siesta_backend/scf_ladder_inputs.py",
-    "src/hubbardflow/domain/scf_*.py",
-    "src/hubbardflow/domain/projector_plateau.py",
-    "src/hubbardflow/domain/projector_compatibility.py",
-    "src/hubbardflow/domain/projector_compatibility_models.py",
-    "src/hubbardflow/siesta_backend/projector_compatibility.py",
-    "src/hubbardflow/siesta_backend/projector_compatibility_inputs.py",
-    "src/hubbardflow/reporting/projector_compatibility_report.py",
-    "tests/unit/test_projector_compatibility.py",
-    "tests/unit/test_projector_compatibility_cli.py",
-    "src/hubbardflow/siesta_backend/projector_scan_inputs.py",
-    "tests/unit/test_projector_plateau.py",
-    "tests/unit/test_projector_scan_inputs.py",
-    "tests/unit/test_scf_*.py",
-    "src/hubbardflow/domain/validation.py",
-    "src/hubbardflow/domain/reference_reproduction.py",
-    "src/hubbardflow/siesta_backend/reference_reproduction_evidence.py",
-    "src/hubbardflow/execution/reference_reproduction_step.py",
-    "tests/unit/test_reference_reproduction.py",
-    "src/hubbardflow/domain/fdebq_*.py",
-    "tests/unit/test_fdebq_*.py",
-    "src/hubbardflow/domain/response_*.py",
-    "src/hubbardflow/domain/subspace_inventory.py",
-    "src/hubbardflow/domain/state_evidence.py",
-    "src/hubbardflow/domain/coverage.py",
-    "src/hubbardflow/domain/coverage_models.py",
-    "src/hubbardflow/domain/perturbation_plan*.py",
-    "src/hubbardflow/execution/campaign_plan.py",
-    "src/hubbardflow/execution/campaign_coverage_policy.py",
-    "tests/unit/test_coverage_features.py",
-    "tests/science/test_coverage_negative_controls.py",
-    "src/hubbardflow/execution/campaign_pilot_reuse.py",
-    "src/hubbardflow/execution/campaign_shadow*.py",
-    "tests/unit/test_campaign_shadow.py",
-    "tests/unit/test_campaign_plan.py",
-    "tests/unit/test_campaign_manifest_plan.py",
-    "tests/unit/test_perturbation_plan*.py",
-    "src/hubbardflow/domain/symmetry_operation_models.py",
-    "src/hubbardflow/domain/symmetry_operations.py",
-    "src/hubbardflow/domain/symmetry_geometry.py",
-    "src/hubbardflow/domain/symmetry_groups.py",
-    "src/hubbardflow/siesta_backend/fdf_model.py",
-    "src/hubbardflow/siesta_backend/semantic_species_split.py",
-    "src/hubbardflow/siesta_backend/semantic_ion_identity.py",
-    "src/hubbardflow/siesta_backend/semantic_split_models.py",
-    "tests/unit/test_semantic_species_split.py",
-    "src/hubbardflow/siesta_backend/reference_state_evidence.py",
-    "src/hubbardflow/siesta_backend/coverage_reference.py",
-    "tools/hubbardflow_plan_diagnose.py",
-    "tests/unit/test_coverage.py",
-    "tests/unit/test_response_*.py",
-    "tests/unit/test_subspace_inventory.py",
-    "tests/unit/test_state_evidence.py",
-    "tests/unit/test_symmetry_operations.py",
-    "tests/unit/test_fdf_model.py",
-    "tests/unit/test_validation.py",
-    "tools/fdebq_*.py",
-    "tools/v1_retrospective.py",
+include = ["src/*.py", "src/**/*.py", "tests/*.py", "tests/**/*.py"]
+exclude = [
+    # Exclude existing lint debt (3 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/cli.py",
+    # Exclude existing lint debt (1 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/domain/adaptive_alpha.py",
+    # Exclude existing lint debt (7 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/domain/adaptive_alpha_control.py",
+    # Exclude existing lint debt (3 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/domain/alpha_grid.py",
+    # Exclude existing lint debt (2 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/domain/alpha_selection.py",
+    # Exclude existing lint debt (4 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/domain/backend_compatibility.py",
+    # Exclude existing lint debt (9 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/domain/campaign_manifest.py",
+    # Exclude existing lint debt (3 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/domain/cardinals.py",
+    # Exclude existing lint debt (7 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/domain/convergence_engine.py",
+    # Exclude existing lint debt (2 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/domain/hubbard_parameter_semantics.py",
+    # Exclude existing lint debt (6 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/domain/interfaces.py",
+    # Exclude existing lint debt (4 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/domain/kgrid_builder.py",
+    # Exclude existing lint debt (2 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/domain/lr_analysis_v2.py",
+    # Exclude existing lint debt (3 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/domain/lr_campaign_contract.py",
+    # Exclude existing lint debt (13 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/domain/matrix_lr.py",
+    # Exclude existing lint debt (1 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/domain/matrix_pipeline.py",
+    # Exclude existing lint debt (2 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/domain/observation_provenance.py",
+    # Exclude existing lint debt (2 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/domain/occupation_noise_calibration.py",
+    # Exclude existing lint debt (13 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/domain/provenance.py",
+    # Exclude existing lint debt (16 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/domain/scalar_lr.py",
+    # Exclude existing lint debt (1 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/domain/scientific_profile.py",
+    # Exclude existing lint debt (6 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/domain/semantic_validation.py",
+    # Exclude existing lint debt (2 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/domain/symmetry_reduction.py",
+    # Exclude existing lint debt (4 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/domain/u_certification.py",
+    # Exclude existing lint debt (10 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/domain/u_matrix.py",
+    # Exclude existing lint debt (1 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/domain/u_repeatability.py",
+    # Exclude existing lint debt (2 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/execution/__init__.py",
+    # Exclude existing lint debt (25 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/execution/campaign_runner.py",
+    # Exclude existing lint debt (1 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/execution/campaign_software_lock.py",
+    # Exclude existing lint debt (2 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/execution/campaign_v2.py",
+    # Exclude existing lint debt (11 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/execution/checkpoint_manager.py",
+    # Exclude existing lint debt (2 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/execution/downstream_u_admission.py",
+    # Exclude existing lint debt (3 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/execution/execution_profile.py",
+    # Exclude existing lint debt (2 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/execution/lr_dag.py",
+    # Exclude existing lint debt (2 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/execution/response_grid_context.py",
+    # Exclude existing lint debt (2 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/execution/slurm_environment.py",
+    # Exclude existing lint debt (1 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/execution/slurm_foreground.py",
+    # Exclude existing lint debt (4 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/execution/source_evidence.py",
+    # Exclude existing lint debt (6 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/execution/u_certification_node.py",
+    # Exclude existing lint debt (3 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/execution/u_release_gate.py",
+    # Exclude existing lint debt (3 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/execution/wsl_campaign_init.py",
+    # Exclude existing lint debt (4 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/execution/wsl_supervisor.py",
+    # Exclude existing lint debt (5 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/reporting/evidence_exporter.py",
+    # Exclude existing lint debt (7 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/reporting/lr_u_report.py",
+    # Exclude existing lint debt (2 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/siesta_backend/__init__.py",
+    # Exclude existing lint debt (4 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/siesta_backend/adapter.py",
+    # Exclude existing lint debt (3 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/siesta_backend/backend_admission.py",
+    # Exclude existing lint debt (4 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/siesta_backend/backend_admission_plugin.py",
+    # Exclude existing lint debt (2 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/siesta_backend/backend_identity.py",
+    # Exclude existing lint debt (2 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/siesta_backend/bare_semantics_evidence.py",
+    # Exclude existing lint debt (1 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/siesta_backend/bare_trace_provider.py",
+    # Exclude existing lint debt (3 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/siesta_backend/command_factory.py",
+    # Exclude existing lint debt (4 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/siesta_backend/dftu_models.py",
+    # Exclude existing lint debt (13 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/siesta_backend/event_parser.py",
+    # Exclude existing lint debt (44 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/siesta_backend/fdf_builder.py",
+    # Exclude existing lint debt (2 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/siesta_backend/fdf_symmetry_adapter.py",
+    # Exclude existing lint debt (9 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/siesta_backend/fdf_validator.py",
+    # Exclude existing lint debt (8 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/siesta_backend/observation_selector.py",
+    # Exclude existing lint debt (1 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/siesta_backend/occupation_precision.py",
+    # Exclude existing lint debt (5 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/siesta_backend/output_validator.py",
+    # Exclude existing lint debt (22 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/siesta_backend/parser_models.py",
+    # Exclude existing lint debt (1 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/siesta_backend/production_runtime.py",
+    # Exclude existing lint debt (1 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/siesta_backend/reference_magnetic_evidence.py",
+    # Exclude existing lint debt (3 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/siesta_backend/response_grid_semantics.py",
+    # Exclude existing lint debt (25 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/siesta_backend/siesta542_bare_profile.py",
+    # Exclude existing lint debt (4 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/siesta_backend/siesta542_screened_selection.py",
+    # Exclude existing lint debt (1 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/siesta_backend/symmetry_materializer.py",
+    # Exclude existing lint debt (19 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/synthetic_backend/fit_engine.py",
+    # Exclude existing lint debt (2 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/synthetic_backend/fit_strategies.py",
+    # Exclude existing lint debt (14 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/synthetic_backend/matrix_assembler.py",
+    # Exclude existing lint debt (1 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/synthetic_backend/noise_injection.py",
+    # Exclude existing lint debt (9 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/synthetic_backend/population_generator.py",
+    # Exclude existing lint debt (3 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/synthetic_backend/recovery.py",
+    # Exclude existing lint debt (5 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/hubbardflow/synthetic_backend/u_calculator.py",
+    # Exclude existing lint debt (1 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "src/symmetry_reduction_proposal.py",
+    # Exclude existing lint debt (2 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/adversarial/test_bare_unresolved.py",
+    # Exclude existing lint debt (2 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/adversarial/test_cardinal_p_neq_n.py",
+    # Exclude existing lint debt (5 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/adversarial/test_fdf_semantics.py",
+    # Exclude existing lint debt (2 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/adversarial/test_human_decision_types.py",
+    # Exclude existing lint debt (2 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/adversarial/test_ill_conditioned_matrix.py",
+    # Exclude existing lint debt (1 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/adversarial/test_install_scientific_dag_atomicity.py",
+    # Exclude existing lint debt (2 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/adversarial/test_lstsq_zone.py",
+    # Exclude existing lint debt (2 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/adversarial/test_method2_preflight_cache_identity.py",
+    # Exclude existing lint debt (10 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/adversarial/test_method2_reference.py",
+    # Exclude existing lint debt (2 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/adversarial/test_methodology_lock.py",
+    # Exclude existing lint debt (2 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/adversarial/test_missing_lock.py",
+    # Exclude existing lint debt (2 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/adversarial/test_observation_selection.py",
+    # Exclude existing lint debt (2 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/adversarial/test_phase4_alpha0_control.py",
+    # Exclude existing lint debt (2 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/adversarial/test_pinv_prohibition.py",
+    # Exclude existing lint debt (7 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/adversarial/test_rc3_mutations.py",
+    # Exclude existing lint debt (3 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/adversarial/test_recommended_u_null.py",
+    # Exclude existing lint debt (2 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/adversarial/test_record_completeness.py",
+    # Exclude existing lint debt (2 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/adversarial/test_rectangular_primary.py",
+    # Exclude existing lint debt (2 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/adversarial/test_reference_dm_chaining.py",
+    # Exclude existing lint debt (2 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/adversarial/test_relaxed_geometry.py",
+    # Exclude existing lint debt (5 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/adversarial/test_scientific_dag_analysis_contract.py",
+    # Exclude existing lint debt (2 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/adversarial/test_sign_convention.py",
+    # Exclude existing lint debt (2 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/adversarial/test_singular_matrix.py",
+    # Exclude existing lint debt (2 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/adversarial/test_swap_chi0_chi.py",
+    # Exclude existing lint debt (2 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/adversarial/test_zero_alpha_consistency.py",
+    # Exclude existing lint debt (1 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/algebraic/test_matrix_constraints.py",
+    # Exclude existing lint debt (2 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/algebraic/test_phase6_matrices.py",
+    # Exclude existing lint debt (3 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/algebraic/test_phase7_u_matrix.py",
+    # Exclude existing lint debt (3 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/algebraic/test_synthetic_recovery.py",
+    # Exclude existing lint debt (2 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/backend/test_fdf_builder.py",
+    # Exclude existing lint debt (2 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/execution/test_execution_contract.py",
+    # Exclude existing lint debt (2 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/package/test_verify_backbone.py",
+    # Exclude existing lint debt (2 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/schemas/test_example_validation.py",
+    # Exclude existing lint debt (2 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/schemas/test_schema_validity.py",
+    # Exclude existing lint debt (1 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/science/test_nio_core_real_baseline.py",
+    # Exclude existing lint debt (5 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/test_adversarial_core_audit.py",
+    # Exclude existing lint debt (2 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/test_cli_and_manifest.py",
+    # Exclude existing lint debt (1 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/test_fdf_builder_safe_materialization.py",
+    # Exclude existing lint debt (3 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/test_fdf_validation.py",
+    # Exclude existing lint debt (3 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/test_fit_engine.py",
+    # Exclude existing lint debt (2 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/test_hubbard_event_parser.py",
+    # Exclude existing lint debt (2 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/test_nio_polynomial_analysis.py",
+    # Exclude existing lint debt (1 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/test_nio_shared_lru_regression.py",
+    # Exclude existing lint debt (3 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/test_population_generator.py",
+    # Exclude existing lint debt (1 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/test_symmetry_reduction_proposal.py",
+    # Exclude existing lint debt (2 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/unit/test_adaptive_alpha_dag_resume.py",
+    # Exclude existing lint debt (2 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/unit/test_alpha_grid.py",
+    # Exclude existing lint debt (1 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/unit/test_backend_admission_plugin.py",
+    # Exclude existing lint debt (2 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/unit/test_bare_semantics_evidence.py",
+    # Exclude existing lint debt (1 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/unit/test_bare_trace_provider.py",
+    # Exclude existing lint debt (25 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/unit/test_campaign_production.py",
+    # Exclude existing lint debt (2 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/unit/test_campaign_runner_execution_identity.py",
+    # Exclude existing lint debt (2 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/unit/test_campaign_runner_synthetic.py",
+    # Exclude existing lint debt (1 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/unit/test_capabilities.py",
+    # Exclude existing lint debt (2 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/unit/test_convergence_engine.py",
+    # Exclude existing lint debt (2 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/unit/test_cu1_archived_occupation_v3.py",
+    # Exclude existing lint debt (2 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/unit/test_cu3n_symmetry_shadow_package.py",
+    # Exclude existing lint debt (2 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/unit/test_cu_one_atom_noise_calibrated_campaign.py",
+    # Exclude existing lint debt (1 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/unit/test_fdf_symmetry_adapter.py",
+    # Exclude existing lint debt (1 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/unit/test_hubbard_parameter_semantics.py",
+    # Exclude existing lint debt (1 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/unit/test_install_scientific_dag_profiles.py",
+    # Exclude existing lint debt (2 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/unit/test_interfaces.py",
+    # Exclude existing lint debt (2 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/unit/test_local_lr_gate_smoke.py",
+    # Exclude existing lint debt (1 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/unit/test_lr_campaign_contract.py",
+    # Exclude existing lint debt (1 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/unit/test_lr_dag.py",
+    # Exclude existing lint debt (13 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/unit/test_matrix_lr.py",
+    # Exclude existing lint debt (1 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/unit/test_matrix_pipeline.py",
+    # Exclude existing lint debt (1 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/unit/test_matrix_response_acceptance.py",
+    # Exclude existing lint debt (3 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/unit/test_method2_effective_fdf.py",
+    # Exclude existing lint debt (8 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/unit/test_method2_projector_audit.py",
+    # Exclude existing lint debt (1 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/unit/test_mno_foreground_preflight.py",
+    # Exclude existing lint debt (4 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/unit/test_mno_independent_audit_regressions.py",
+    # Exclude existing lint debt (1 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/unit/test_mno_response_recovery.py",
+    # Exclude existing lint debt (1 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/unit/test_observation_provenance_integration.py",
+    # Exclude existing lint debt (1 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/unit/test_occupation_noise_calibration.py",
+    # Exclude existing lint debt (1 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/unit/test_occupation_precision.py",
+    # Exclude existing lint debt (2 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/unit/test_parametrized_cardinals.py",
+    # Exclude existing lint debt (6 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/unit/test_production_benchmarks_common_analysis.py",
+    # Exclude existing lint debt (1 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/unit/test_reference_magnetic_evidence.py",
+    # Exclude existing lint debt (1 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/unit/test_runtime_adapters.py",
+    # Exclude existing lint debt (3 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/unit/test_scalar_lr.py",
+    # Exclude existing lint debt (1 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/unit/test_scientific_dag_gate.py",
+    # Exclude existing lint debt (1 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/unit/test_scientific_profile.py",
+    # Exclude existing lint debt (2 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/unit/test_semantic_validation.py",
+    # Exclude existing lint debt (4 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/unit/test_siesta542_bare_profile.py",
+    # Exclude existing lint debt (1 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/unit/test_siesta_output_validator.py",
+    # Exclude existing lint debt (1 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/unit/test_siesta_production_runtime.py",
+    # Exclude existing lint debt (1 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/unit/test_source_evidence.py",
+    # Exclude existing lint debt (2 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/unit/test_symmetry_materializer.py",
+    # Exclude existing lint debt (1 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/unit/test_symmetry_reduction_plan.py",
+    # Exclude existing lint debt (1 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/unit/test_u_certification.py",
+    # Exclude existing lint debt (1 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/unit/test_u_certification_generalization.py",
+    # Exclude existing lint debt (8 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/unit/test_u_certification_pipeline.py",
+    # Exclude existing lint debt (1 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/unit/test_u_release_gate.py",
+    # Exclude existing lint debt (2 findings); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "tests/unit/test_units.py",
+]
+
+[tool.ruff.format]
+# Formatter-only legacy debt; keep lint coverage, defer format-only churn; see docs/LINT_MIGRATION_BASELINE.md.
+exclude = [
+    # Pre-existing formatting debt; keep included in ruff check.
+    "src/hubbardflow/domain/capabilities.py",
+    # Pre-existing formatting debt; keep included in ruff check.
+    "src/hubbardflow/domain/exceptions.py",
+    # Pre-existing formatting debt; keep included in ruff check.
+    "src/hubbardflow/domain/matrix_response_acceptance.py",
+    # Pre-existing formatting debt; keep included in ruff check.
+    "src/hubbardflow/domain/quantized_response.py",
+    # Pre-existing formatting debt; keep included in ruff check.
+    "src/hubbardflow/execution/campaign_store.py",
+    # Pre-existing formatting debt; keep included in ruff check.
+    "src/hubbardflow/execution/dag_contract.py",
+    # Pre-existing formatting debt; keep included in ruff check.
+    "src/hubbardflow/execution/hydra_launcher.py",
+    # Pre-existing formatting debt; keep included in ruff check.
+    "src/hubbardflow/execution/observation_assembly.py",
+    # Pre-existing formatting debt; keep included in ruff check.
+    "src/hubbardflow/execution/orchestrator.py",
+    # Pre-existing formatting debt; keep included in ruff check.
+    "src/hubbardflow/siesta_backend/symmetry_evidence.py",
+    # Pre-existing formatting debt; keep included in ruff check.
+    "tests/__init__.py",
+    # Pre-existing formatting debt; keep included in ruff check.
+    "tests/conftest.py",
+    # Pre-existing formatting debt; keep included in ruff check.
+    "tests/integration/test_runner_replay_nio_p5.py",
+    # Pre-existing formatting debt; keep included in ruff check.
+    "tests/support.py",
+    # Pre-existing formatting debt; keep included in ruff check.
+    "tests/unit/test_adaptive_alpha_control.py",
+    # Pre-existing formatting debt; keep included in ruff check.
+    "tests/unit/test_alpha_selection_integration.py",
+    # Pre-existing formatting debt; keep included in ruff check.
+    "tests/unit/test_backend_admission.py",
+    # Pre-existing formatting debt; keep included in ruff check.
+    "tests/unit/test_lr_analysis_v2.py",
+    # Pre-existing formatting debt; keep included in ruff check.
+    "tests/unit/test_siesta_command_factory.py",
+    # Pre-existing formatting debt; keep included in ruff check.
+    "tests/unit/test_symmetry_evidence_contract.py",
 ]
 
 [tool.mypy]
 strict = true
-files = [
-    "src/hubbardflow/execution/campaign_split.py",
-    "src/hubbardflow/siesta_backend/split_generated_identity.py",
-    "tools/hubbardflow_verify_split_identity.py",
-    "tests/unit/test_campaign_split.py",
-    "tests/unit/test_split_generated_identity.py",
-    "src/hubbardflow/product_cli.py",
-    "src/hubbardflow/execution/product_*.py",
-    "src/hubbardflow/reporting/product_report.py",
-    "tests/unit/test_product_*.py",
-    "src/hubbardflow/siesta_backend/scf_ladder_inputs.py",
-    "src/hubbardflow/domain/scf_*.py",
-    "src/hubbardflow/domain/projector_plateau.py",
-    "src/hubbardflow/domain/projector_compatibility.py",
-    "src/hubbardflow/domain/projector_compatibility_models.py",
-    "src/hubbardflow/siesta_backend/projector_compatibility.py",
-    "src/hubbardflow/siesta_backend/projector_compatibility_inputs.py",
-    "src/hubbardflow/reporting/projector_compatibility_report.py",
-    "tests/unit/test_projector_compatibility.py",
-    "tests/unit/test_projector_compatibility_cli.py",
-    "src/hubbardflow/siesta_backend/projector_scan_inputs.py",
-    "tests/unit/test_projector_plateau.py",
-    "tests/unit/test_projector_scan_inputs.py",
-    "tests/unit/test_scf_*.py",
-    "src/hubbardflow/domain/validation.py",
-    "src/hubbardflow/domain/reference_reproduction.py",
-    "src/hubbardflow/siesta_backend/reference_reproduction_evidence.py",
-    "src/hubbardflow/execution/reference_reproduction_step.py",
-    "tests/unit/test_reference_reproduction.py",
-    "src/hubbardflow/domain/fdebq_*.py",
-    "tests/unit/test_fdebq_*.py",
-    "src/hubbardflow/domain/response_*.py",
-    "src/hubbardflow/domain/subspace_inventory.py",
-    "src/hubbardflow/domain/state_evidence.py",
-    "src/hubbardflow/domain/coverage.py",
-    "src/hubbardflow/domain/coverage_models.py",
-    "src/hubbardflow/domain/perturbation_plan*.py",
-    "src/hubbardflow/execution/campaign_plan.py",
-    "src/hubbardflow/execution/campaign_coverage_policy.py",
-    "tests/unit/test_coverage_features.py",
-    "tests/science/test_coverage_negative_controls.py",
-    "src/hubbardflow/execution/campaign_pilot_reuse.py",
-    "src/hubbardflow/execution/campaign_shadow*.py",
-    "tests/unit/test_campaign_shadow.py",
-    "tests/unit/test_campaign_plan.py",
-    "tests/unit/test_campaign_manifest_plan.py",
-    "tests/unit/test_perturbation_plan*.py",
-    "src/hubbardflow/domain/symmetry_operation_models.py",
-    "src/hubbardflow/domain/symmetry_operations.py",
-    "src/hubbardflow/domain/symmetry_geometry.py",
-    "src/hubbardflow/domain/symmetry_groups.py",
-    "src/hubbardflow/siesta_backend/fdf_model.py",
-    "src/hubbardflow/siesta_backend/semantic_species_split.py",
-    "src/hubbardflow/siesta_backend/semantic_ion_identity.py",
-    "src/hubbardflow/siesta_backend/semantic_split_models.py",
-    "tests/unit/test_semantic_species_split.py",
-    "src/hubbardflow/siesta_backend/reference_state_evidence.py",
-    "src/hubbardflow/siesta_backend/coverage_reference.py",
-    "tools/hubbardflow_plan_diagnose.py",
-    "tests/unit/test_coverage.py",
-    "tests/unit/test_response_*.py",
-    "tests/unit/test_subspace_inventory.py",
-    "tests/unit/test_state_evidence.py",
-    "tests/unit/test_symmetry_operations.py",
-    "tests/unit/test_fdf_model.py",
-    "tests/unit/test_validation.py",
-    "tools/fdebq_*.py",
-    "tools/v1_retrospective.py",
+files = ["src", "tests"]
+follow_imports = "silent"
+exclude = [
+    # Exclude existing typing debt (7 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^src/hubbardflow/cli[.]py$",
+    # Exclude existing typing debt (2 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^src/hubbardflow/domain/adaptive_alpha_control[.]py$",
+    # Exclude existing typing debt (1 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^src/hubbardflow/domain/alpha_grid[.]py$",
+    # Exclude existing typing debt (3 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^src/hubbardflow/domain/alpha_selection[.]py$",
+    # Exclude existing typing debt (9 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^src/hubbardflow/domain/campaign_manifest[.]py$",
+    # Exclude existing typing debt (4 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^src/hubbardflow/domain/cardinals[.]py$",
+    # Exclude existing typing debt (6 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^src/hubbardflow/domain/convergence_engine[.]py$",
+    # Exclude existing typing debt (2 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^src/hubbardflow/domain/kgrid_builder[.]py$",
+    # Exclude existing typing debt (9 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^src/hubbardflow/domain/lr_analysis_v2[.]py$",
+    # Exclude existing typing debt (21 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^src/hubbardflow/domain/matrix_lr[.]py$",
+    # Exclude existing typing debt (10 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^src/hubbardflow/domain/matrix_pipeline[.]py$",
+    # Exclude existing typing debt (6 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^src/hubbardflow/domain/matrix_response_acceptance[.]py$",
+    # Exclude existing typing debt (2 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^src/hubbardflow/domain/occupation_noise_calibration[.]py$",
+    # Exclude existing typing debt (12 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^src/hubbardflow/domain/provenance[.]py$",
+    # Exclude existing typing debt (15 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^src/hubbardflow/domain/quantized_response[.]py$",
+    # Exclude existing typing debt (8 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^src/hubbardflow/domain/scalar_lr[.]py$",
+    # Exclude existing typing debt (1 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^src/hubbardflow/domain/semantic_validation[.]py$",
+    # Exclude existing typing debt (4 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^src/hubbardflow/domain/symmetry_reduction[.]py$",
+    # Exclude existing typing debt (14 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^src/hubbardflow/domain/u_certification[.]py$",
+    # Exclude existing typing debt (5 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^src/hubbardflow/domain/u_matrix[.]py$",
+    # Exclude existing typing debt (26 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^src/hubbardflow/execution/campaign_runner[.]py$",
+    # Exclude existing typing debt (2 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^src/hubbardflow/execution/campaign_software_lock[.]py$",
+    # Exclude existing typing debt (2 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^src/hubbardflow/execution/checkpoint_manager[.]py$",
+    # Exclude existing typing debt (2 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^src/hubbardflow/execution/execution_profile[.]py$",
+    # Exclude existing typing debt (1 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^src/hubbardflow/execution/lr_dag[.]py$",
+    # Exclude existing typing debt (1 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^src/hubbardflow/execution/source_evidence[.]py$",
+    # Exclude existing typing debt (4 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^src/hubbardflow/execution/u_certification_node[.]py$",
+    # Exclude existing typing debt (1 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^src/hubbardflow/execution/wsl_campaign_init[.]py$",
+    # Exclude existing typing debt (7 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^src/hubbardflow/execution/wsl_supervisor[.]py$",
+    # Exclude existing typing debt (1 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^src/hubbardflow/reporting/evidence_exporter[.]py$",
+    # Exclude existing typing debt (3 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^src/hubbardflow/siesta_backend/adapter[.]py$",
+    # Exclude existing typing debt (4 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^src/hubbardflow/siesta_backend/backend_admission_plugin[.]py$",
+    # Exclude existing typing debt (3 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^src/hubbardflow/siesta_backend/backend_identity[.]py$",
+    # Exclude existing typing debt (11 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^src/hubbardflow/siesta_backend/event_parser[.]py$",
+    # Exclude existing typing debt (12 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^src/hubbardflow/siesta_backend/fdf_builder[.]py$",
+    # Exclude existing typing debt (4 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^src/hubbardflow/siesta_backend/fdf_symmetry_adapter[.]py$",
+    # Exclude existing typing debt (1 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^src/hubbardflow/siesta_backend/observation_selector[.]py$",
+    # Exclude existing typing debt (2 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^src/hubbardflow/siesta_backend/output_validator[.]py$",
+    # Exclude existing typing debt (3 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^src/hubbardflow/siesta_backend/parser_models[.]py$",
+    # Exclude existing typing debt (1 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^src/hubbardflow/siesta_backend/production_runtime[.]py$",
+    # Exclude existing typing debt (2 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^src/hubbardflow/siesta_backend/reference_magnetic_evidence[.]py$",
+    # Exclude existing typing debt (2 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^src/hubbardflow/siesta_backend/siesta542_bare_profile[.]py$",
+    # Exclude existing typing debt (1 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^src/hubbardflow/siesta_backend/siesta542_screened_selection[.]py$",
+    # Exclude existing typing debt (5 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^src/hubbardflow/synthetic_backend/fit_engine[.]py$",
+    # Exclude existing typing debt (9 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^src/hubbardflow/synthetic_backend/fit_strategies[.]py$",
+    # Exclude existing typing debt (6 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^src/hubbardflow/synthetic_backend/population_generator[.]py$",
+    # Exclude existing typing debt (1 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^src/hubbardflow/synthetic_backend/recovery[.]py$",
+    # Exclude existing typing debt (1 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^src/hubbardflow/synthetic_backend/u_calculator[.]py$",
+    # Exclude existing typing debt (13 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^src/symmetry_reduction_proposal[.]py$",
+    # Exclude existing typing debt (2 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/adversarial/test_bare_unresolved[.]py$",
+    # Exclude existing typing debt (2 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/adversarial/test_cardinal_p_neq_n[.]py$",
+    # Exclude existing typing debt (25 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/adversarial/test_fdf_semantics[.]py$",
+    # Exclude existing typing debt (6 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/adversarial/test_human_decision_types[.]py$",
+    # Exclude existing typing debt (2 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/adversarial/test_ill_conditioned_matrix[.]py$",
+    # Exclude existing typing debt (1 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/adversarial/test_install_scientific_dag_atomicity[.]py$",
+    # Exclude existing typing debt (6 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/adversarial/test_lstsq_zone[.]py$",
+    # Exclude existing typing debt (10 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/adversarial/test_method2_preflight_cache_identity[.]py$",
+    # Exclude existing typing debt (29 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/adversarial/test_method2_reference[.]py$",
+    # Exclude existing typing debt (2 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/adversarial/test_methodology_lock[.]py$",
+    # Exclude existing typing debt (2 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/adversarial/test_missing_lock[.]py$",
+    # Exclude existing typing debt (29 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/adversarial/test_observation_selection[.]py$",
+    # Exclude existing typing debt (5 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/adversarial/test_phase4_alpha0_control[.]py$",
+    # Exclude existing typing debt (3 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/adversarial/test_pinv_prohibition[.]py$",
+    # Exclude existing typing debt (12 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/adversarial/test_rc3_mutations[.]py$",
+    # Exclude existing typing debt (2 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/adversarial/test_recommended_u_null[.]py$",
+    # Exclude existing typing debt (6 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/adversarial/test_record_completeness[.]py$",
+    # Exclude existing typing debt (2 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/adversarial/test_rectangular_primary[.]py$",
+    # Exclude existing typing debt (2 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/adversarial/test_reference_dm_chaining[.]py$",
+    # Exclude existing typing debt (2 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/adversarial/test_relaxed_geometry[.]py$",
+    # Exclude existing typing debt (20 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/adversarial/test_scientific_dag_analysis_contract[.]py$",
+    # Exclude existing typing debt (4 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/adversarial/test_sign_convention[.]py$",
+    # Exclude existing typing debt (2 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/adversarial/test_singular_matrix[.]py$",
+    # Exclude existing typing debt (1 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/adversarial/test_swap_chi0_chi[.]py$",
+    # Exclude existing typing debt (2 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/adversarial/test_zero_alpha_consistency[.]py$",
+    # Exclude existing typing debt (3 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/algebraic/test_matrix_constraints[.]py$",
+    # Exclude existing typing debt (13 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/algebraic/test_phase6_matrices[.]py$",
+    # Exclude existing typing debt (6 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/algebraic/test_phase7_u_matrix[.]py$",
+    # Exclude existing typing debt (2 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/algebraic/test_synthetic_recovery[.]py$",
+    # Exclude existing typing debt (2 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/backend/test_fdf_builder[.]py$",
+    # Exclude existing typing debt (1 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/backend/test_siesta_adapter[.]py$",
+    # Exclude existing typing debt (6 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/conftest[.]py$",
+    # Exclude existing typing debt (22 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/execution/test_execution_contract[.]py$",
+    # Exclude existing typing debt (1 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/integration/test_runner_replay_nio_p5[.]py$",
+    # Exclude existing typing debt (2 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/package/test_verify_backbone[.]py$",
+    # Exclude existing typing debt (2 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/schemas/test_example_validation[.]py$",
+    # Exclude existing typing debt (2 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/schemas/test_schema_validity[.]py$",
+    # Exclude existing typing debt (4 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/science/test_nio_core_real_baseline[.]py$",
+    # Exclude existing typing debt (6 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/support[.]py$",
+    # Exclude existing typing debt (15 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/test_adversarial_core_audit[.]py$",
+    # Exclude existing typing debt (34 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/test_cli_and_manifest[.]py$",
+    # Exclude existing typing debt (5 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/test_fdf_builder_safe_materialization[.]py$",
+    # Exclude existing typing debt (5 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/test_fdf_validation[.]py$",
+    # Exclude existing typing debt (10 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/test_fit_engine[.]py$",
+    # Exclude existing typing debt (8 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/test_hubbard_event_parser[.]py$",
+    # Exclude existing typing debt (14 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/test_nio_polynomial_analysis[.]py$",
+    # Exclude existing typing debt (2 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/test_nio_shared_lru_regression[.]py$",
+    # Exclude existing typing debt (5 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/test_population_generator[.]py$",
+    # Exclude existing typing debt (32 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/test_symmetry_reduction_proposal[.]py$",
+    # Exclude existing typing debt (6 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_adaptive_alpha[.]py$",
+    # Exclude existing typing debt (68 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_adaptive_alpha_control[.]py$",
+    # Exclude existing typing debt (38 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_adaptive_alpha_dag_resume[.]py$",
+    # Exclude existing typing debt (2 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_alpha_grid[.]py$",
+    # Exclude existing typing debt (9 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_alpha_selection_integration[.]py$",
+    # Exclude existing typing debt (3 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_backend_admission[.]py$",
+    # Exclude existing typing debt (6 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_backend_admission_plugin[.]py$",
+    # Exclude existing typing debt (22 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_backend_compatibility[.]py$",
+    # Exclude existing typing debt (9 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_backend_identity[.]py$",
+    # Exclude existing typing debt (7 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_bare_semantics_evidence[.]py$",
+    # Exclude existing typing debt (27 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_bare_trace_adversarial_audit[.]py$",
+    # Exclude existing typing debt (4 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_bare_trace_provider[.]py$",
+    # Exclude existing typing debt (124 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_campaign_production[.]py$",
+    # Exclude existing typing debt (9 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_campaign_runner_execution_identity[.]py$",
+    # Exclude existing typing debt (34 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_campaign_runner_synthetic[.]py$",
+    # Exclude existing typing debt (6 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_campaign_software_lock[.]py$",
+    # Exclude existing typing debt (2 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_capabilities[.]py$",
+    # Exclude existing typing debt (16 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_convergence_engine[.]py$",
+    # Exclude existing typing debt (6 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_cu1_archived_occupation_v3[.]py$",
+    # Exclude existing typing debt (3 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_cu3n_symmetry_shadow_package[.]py$",
+    # Exclude existing typing debt (30 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_cu_one_atom_noise_calibrated_campaign[.]py$",
+    # Exclude existing typing debt (5 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_elementwise_rounding[.]py$",
+    # Exclude existing typing debt (3 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_fdf_symmetry_adapter[.]py$",
+    # Exclude existing typing debt (3 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_feo_band_postprocessor[.]py$",
+    # Exclude existing typing debt (14 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_generic_executor[.]py$",
+    # Exclude existing typing debt (1 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_hash_traceability[.]py$",
+    # Exclude existing typing debt (4 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_hubbard_parameter_semantics[.]py$",
+    # Exclude existing typing debt (2 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_install_scientific_dag_profiles[.]py$",
+    # Exclude existing typing debt (2 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_interfaces[.]py$",
+    # Exclude existing typing debt (2 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_local_lr_gate_smoke[.]py$",
+    # Exclude existing typing debt (39 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_lr_analysis_v2[.]py$",
+    # Exclude existing typing debt (17 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_lr_campaign_contract[.]py$",
+    # Exclude existing typing debt (10 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_lr_dag[.]py$",
+    # Exclude existing typing debt (63 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_matrix_lr[.]py$",
+    # Exclude existing typing debt (5 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_matrix_pipeline[.]py$",
+    # Exclude existing typing debt (3 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_matrix_response_acceptance[.]py$",
+    # Exclude existing typing debt (7 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_method2_effective_fdf[.]py$",
+    # Exclude existing typing debt (7 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_method2_projector_audit[.]py$",
+    # Exclude existing typing debt (2 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_mno_foreground_preflight[.]py$",
+    # Exclude existing typing debt (22 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_mno_independent_audit_regressions[.]py$",
+    # Exclude existing typing debt (7 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_mno_response_recovery[.]py$",
+    # Exclude existing typing debt (12 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_observation_provenance_integration[.]py$",
+    # Exclude existing typing debt (15 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_occupation_noise_calibration[.]py$",
+    # Exclude existing typing debt (13 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_occupation_precision[.]py$",
+    # Exclude existing typing debt (1 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_orchestrator[.]py$",
+    # Exclude existing typing debt (2 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_parametrized_cardinals[.]py$",
+    # Exclude existing typing debt (36 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_production_benchmarks_common_analysis[.]py$",
+    # Exclude existing typing debt (13 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_provenance_alpha_gate_integration[.]py$",
+    # Exclude existing typing debt (6 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_quantized_response[.]py$",
+    # Exclude existing typing debt (5 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_reference_magnetic_evidence[.]py$",
+    # Exclude existing typing debt (28 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_scalar_lr[.]py$",
+    # Exclude existing typing debt (3 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_scientific_dag_gate[.]py$",
+    # Exclude existing typing debt (7 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_scientific_profile[.]py$",
+    # Exclude existing typing debt (6 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_semantic_validation[.]py$",
+    # Exclude existing typing debt (7 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_siesta542_bare_profile[.]py$",
+    # Exclude existing typing debt (5 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_siesta_command_factory[.]py$",
+    # Exclude existing typing debt (18 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_siesta_output_validator[.]py$",
+    # Exclude existing typing debt (17 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_siesta_production_runtime[.]py$",
+    # Exclude existing typing debt (1 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_slurm_foreground[.]py$",
+    # Exclude existing typing debt (20 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_source_evidence[.]py$",
+    # Exclude existing typing debt (1 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_stage_ub_baseline_summary[.]py$",
+    # Exclude existing typing debt (1 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_state_gate[.]py$",
+    # Exclude existing typing debt (12 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_symmetry_evidence_contract[.]py$",
+    # Exclude existing typing debt (18 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_symmetry_materializer[.]py$",
+    # Exclude existing typing debt (18 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_symmetry_reduction_plan[.]py$",
+    # Exclude existing typing debt (20 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_u_certification[.]py$",
+    # Exclude existing typing debt (35 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_u_certification_generalization[.]py$",
+    # Exclude existing typing debt (13 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_u_certification_pipeline[.]py$",
+    # Exclude existing typing debt (25 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_u_release_gate[.]py$",
+    # Exclude existing typing debt (2 errors); defer cleanup; see docs/LINT_MIGRATION_BASELINE.md.
+    "^tests/unit/test_units[.]py$",
 ]
 
 [tool.setuptools]
