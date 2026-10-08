@@ -37,14 +37,11 @@ def test_projector_electron_references_are_optional_validated_and_frozen(tmp_pat
     stored = json.loads((campaign_root / "lr_config.json").read_text(encoding="utf-8"))
     assert stored["projector_diagnostic_references"] == with_references["projector_diagnostic_references"]
     preanalysis_report = render_campaign_report(result["manifest_path"])
-    report_lines = preanalysis_report.splitlines()
-    json_start = report_lines.index("```json") + 1
-    json_end = report_lines.index("```", json_start)
-    warning_report = json.loads("\n".join(report_lines[json_start:json_end]))
-    assert warning_report["projector_diagnostics"]["method2_warning"]["code"] == (
-        "SIESTA_METHOD_2_ATOMIC_NONORTHOGONALIZED_PROJECTOR"
-    )
-    assert "not comparable to U values from orthogonalized projector schemes" in preanalysis_report
+    assert "[01] HEADER" in preanalysis_report
+    assert "[13] FILE MAP" in preanalysis_report
+    assert "SIESTA_METHOD_2_ATOMIC_NONORTHOGONALIZED_PROJECTOR" in preanalysis_report
+    assert "not comparable" in preanalysis_report
+    assert (campaign_root / "results" / "HUBBARDFLOW.out").is_file()
 
 
 @pytest.mark.parametrize(

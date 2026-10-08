@@ -171,7 +171,7 @@ def test_mno_translation_shadowed_replay_proves_shadows_and_reconstructs(
     assert (
         reproduction["planning_parent_dm_sha256"] != reproduction["campaign_parent_dm_sha256"]
     ) is reference_dm_varies
-    report = (manifest.parent / "results/LR_U_REPORT.v3.md").read_text(encoding="utf-8")
+    report = (manifest.parent / "results/HUBBARDFLOW.out").read_text(encoding="ascii")
     assert reproduction["planning_parent_dm_sha256"] in report
     assert reproduction["campaign_parent_dm_sha256"] in report
     assert dataset["reference_source"]["dm_sha256"] == reproduction["campaign_parent_dm_sha256"]

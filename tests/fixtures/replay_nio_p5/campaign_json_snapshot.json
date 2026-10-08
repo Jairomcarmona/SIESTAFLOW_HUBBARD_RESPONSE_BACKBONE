@@ -142,7 +142,7 @@
         "evidence_path": "$CAMPAIGN_ROOT/nio_p5_runner_replay/results/lr_u_analysis.v3.json",
         "kind": "analysis",
         "numerical_status": "NUMERICAL_CANDIDATE_UNASSESSED",
-        "report_path": "$CAMPAIGN_ROOT/nio_p5_runner_replay/results/LR_U_REPORT.v3.md",
+        "report_path": "$CAMPAIGN_ROOT/nio_p5_runner_replay/results/HUBBARDFLOW.out",
         "state": "VALIDATED"
       },
       "reference": {
