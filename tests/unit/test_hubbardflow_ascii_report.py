@@ -2,10 +2,13 @@ from __future__ import annotations
 
 import csv
 import json
+import re
+from copy import deepcopy
 from pathlib import Path
 
 from hubbardflow.execution.campaign_report_artifacts import write_campaign_report_artifacts
 from hubbardflow.execution.report_csv_exports import export_report_csv
+from hubbardflow.reporting.hubbardflow_ascii_formatting import wrap_lines
 from hubbardflow.reporting.hubbardflow_ascii_report import render_hubbardflow_out
 from hubbardflow.siesta_backend.fdf_model import parse_effective_fdf
 
@@ -19,6 +22,7 @@ def _assert_report_shape(report: str) -> None:
     raw = report.encode("ascii")
     assert all(byte <= 127 for byte in raw)
     assert all(len(line) <= 80 for line in report.splitlines())
+    headings = []
     for index, heading in enumerate(
         (
             "HEADER",
@@ -37,8 +41,26 @@ def _assert_report_shape(report: str) -> None:
         ),
         start=1,
     ):
-        assert f"[{index:02d}] {heading}" in report
+        title = f"[{index:02d}] {heading}"
+        assert title in report
+        headings.append(title)
     assert report.index("RESULT SUMMARY") < report.index("[01] HEADER")
+    headings.extend(
+        (
+            "RESULT SUMMARY",
+            "QUALITY CHECKS",
+            "HOW TO USE THIS U",
+            "APPLICABILITY",
+            "NOT ASSESSED / NOT CLAIMED",
+            "REPRODUCIBILITY",
+            "CONVENTIONS",
+            "REFERENCES AND CITATION",
+        )
+    )
+    report_lines = report.splitlines()
+    for heading in headings:
+        index = report_lines.index(heading)
+        assert report_lines[index + 1] == "-" * len(heading)
 
 
 def test_report_is_ascii_fixed_width_and_has_all_numbered_sections() -> None:
@@ -61,6 +83,83 @@ def test_report_is_ascii_fixed_width_and_has_all_numbered_sections() -> None:
     assert "CHI RAW (e/eV)" in report
     assert "NOT_ASSESSED" in report
     assert "Pointwise state gate" in report
+
+
+def test_inventory_paths_wrap_only_at_slashes_and_keep_node_fields_together() -> None:
+    analysis = deepcopy(json.loads(ANALYSIS_FIXTURE.read_text(encoding="utf-8")))
+    dataset = analysis["response_observation_dataset"]
+    long_component = "campaign-" + "x" * 45
+    dataset["reference_source"] = {
+        "node_id": "reference-long-path",
+        "out_path": f"C:\\validation\\{long_component}\\attempts\\reference-run\\outputs\\siesta.out",
+        "state": "COMPLETED",
+    }
+    source = {"analysis": analysis, "occupation_provenance": {"records": []}}
+
+    report = render_hubbardflow_out(source)
+    lines = report.splitlines()
+    node_line = next(i for i, line in enumerate(lines) if line.startswith("  reference-long-path |"))
+    assert lines[node_line] == "  reference-long-path | REFERENCE_SCREENED | NOT_APPLICABLE | COMPLETED"
+    assert lines[node_line + 1].startswith("    PATH: ")
+    assert all(len(line) <= 80 for line in lines)
+
+    path_lines = [lines[node_line + 1]]
+    index = node_line + 2
+    while index < len(lines) and lines[index].startswith("          "):
+        path_lines.append(lines[index])
+        index += 1
+    assert len(path_lines) >= 2
+    rendered_folder = "".join(line.strip().removeprefix("PATH: ") for line in path_lines)
+    assert rendered_folder == f"C:/validation/{long_component}/attempts/reference-run/outputs"
+    assert long_component in rendered_folder
+    assert any(long_component in line for line in path_lines)
+    assert "reference-run" in rendered_folder
+
+
+def test_wrapping_preserves_indivisible_tokens_and_matrix_precision_is_uniform() -> None:
+    token = "node_" + "x" * 68
+    wrapped = wrap_lines(["  PREFIX " + token + " suffix"])
+    assert all(len(line) <= 80 for line in wrapped)
+    assert any(token in line for line in wrapped)
+
+    analysis = json.loads(ANALYSIS_FIXTURE.read_text(encoding="utf-8"))
+    state_gate = json.loads(STATE_GATE_FIXTURE.read_text(encoding="utf-8"))
+    report = render_hubbardflow_out(
+        {
+            "analysis": analysis,
+            "context": {},
+            "state_gate": state_gate,
+            "occupation_provenance": {"records": []},
+            "quality_checks": {},
+            "file_map": {},
+        }
+    )
+    lines = report.splitlines()
+    matrix_start = lines.index("[09] MATRICES")
+    inversion_start = lines.index("[10] INVERSION")
+    matrix_values = []
+    for line in lines[matrix_start:inversion_start]:
+        if "|" in line and line.lstrip().startswith(tuple(str(i) for i in range(10))):
+            matrix_values.extend(re.findall(r"-?\d+\.\d+", line.split("|", 1)[1]))
+    assert matrix_values
+    assert all(re.fullmatch(r"-?\d+\.\d{8}", value) for value in matrix_values)
+    assert "[inverse(CHI0)]_ii =" in report
+    assert "[inverse(CHI)]_ii =" in report
+    assert "U_i =" in report
+    assert any(
+        re.fullmatch(r"    U_i =\s+-?\d+\.\d{8} -\s+-?\d+\.\d{8} =\s+-?\d+\.\d{8} eV", line)
+        for line in lines[inversion_start:]
+    )
+    assert all(re.search(r"-?\d+\.\d{8}", line) for line in lines[inversion_start:] if "[inverse(" in line)
+
+
+def test_diagnostics_has_only_one_not_assessed_line_without_projector_sites() -> None:
+    analysis = json.loads(ANALYSIS_FIXTURE.read_text(encoding="utf-8"))
+    analysis["projector_diagnostics"] = {"sites": []}
+    report = render_hubbardflow_out({"analysis": analysis})
+    diagnostics = report.split("[12] DIAGNOSTICS", 1)[1].split("[13] FILE MAP", 1)[0]
+    assert diagnostics.count("Occupation/formal/free-atom and U*abs(CHI0):") == 1
+    assert "Occupation/formal/free-atom and U*abs(CHI0): NOT_ASSESSED" in diagnostics
 
 
 def test_saved_json_is_the_only_report_and_csv_source(tmp_path: Path) -> None:
