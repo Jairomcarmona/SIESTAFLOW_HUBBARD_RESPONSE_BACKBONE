@@ -73,3 +73,8 @@ Thumbs.db
 
 # Root-level temporary SIESTA INPUT_TMP files are retained locally, not versioned.
 /INPUT_TMP.*
+
+# Root-level empty SIESTA logs and allocation marker recreated during local runs.
+/fdf.*.log
+/cu_test.alloc
+/test_ua.alloc
