@@ -12,10 +12,16 @@ from hubbardflow.reporting.hubbardflow_ascii_formatting import (
     alpha_key,
 )
 from hubbardflow.reporting.hubbardflow_ascii_formatting import (
+    fixed_decimal as _fixed_decimal,
+)
+from hubbardflow.reporting.hubbardflow_ascii_formatting import (
     mapping as _map,
 )
 from hubbardflow.reporting.hubbardflow_ascii_formatting import (
     matrix_lines as _matrix_lines,
+)
+from hubbardflow.reporting.hubbardflow_ascii_formatting import (
+    path_lines as _path_lines,
 )
 from hubbardflow.reporting.hubbardflow_ascii_formatting import (
     quality_check_lines as _quality_check_lines,
@@ -28,6 +34,9 @@ from hubbardflow.reporting.hubbardflow_ascii_formatting import (
 )
 from hubbardflow.reporting.hubbardflow_ascii_formatting import (
     run_inventory as _run_inventory,
+)
+from hubbardflow.reporting.hubbardflow_ascii_formatting import (
+    section_header as _section_header,
 )
 from hubbardflow.reporting.hubbardflow_ascii_formatting import (
     site_names as _site_names,
@@ -54,9 +63,7 @@ def render_hubbardflow_out(source: Mapping[str, Any]) -> str:
     lines: list[str] = [
         "HUBBARDFLOW LINEAR-RESPONSE REPORT",
         "Generated from saved JSON evidence; this text file is a rendered view.",
-        "",
-        "RESULT SUMMARY",
-        "-------------",
+        *_section_header("RESULT SUMMARY"),
     ]
     u_by_site = _map(primary.get("U_by_site_eV"))
     fit_rows = primary.get("fit_diagnostics")
@@ -88,7 +95,7 @@ def render_hubbardflow_out(source: Mapping[str, Any]) -> str:
         "rc and omega as listed below, atomic non-orthogonalized; not comparable with "
         "orthogonalized-atomic literature values."
     )
-    lines.extend(["", "[01] HEADER", "----------------"])
+    lines.extend(_section_header("[01] HEADER"))
     version = _map(context.get("hubbardflow"))
     siesta = _map(context.get("siesta"))
     lines.extend(
@@ -110,7 +117,7 @@ def render_hubbardflow_out(source: Mapping[str, Any]) -> str:
     geometry = _map(system.get("geometry"))
     basis = _map(system.get("basis"))
     k_grid = _map(system.get("k_grid"))
-    lines.extend(["", "[02] SYSTEM", "----------------"])
+    lines.extend(_section_header("[02] SYSTEM"))
     lines.append(
         f"  Material: {_value(campaign.get('material'))}; functional: {_value(system.get('functional'))}"
     )
@@ -159,7 +166,7 @@ def render_hubbardflow_out(source: Mapping[str, Any]) -> str:
     else:
         lines.append("  Pseudopotentials: NOT_ASSESSED")
 
-    lines.extend(["", "[03] PROJECTOR", "----------------"])
+    lines.extend(_section_header("[03] PROJECTOR"))
     lines.append(
         f"  Method: {_value(projector.get('method'))}; CutoffNorm: {_value(projector.get('cutoff_norm'))}"
     )
@@ -182,7 +189,7 @@ def render_hubbardflow_out(source: Mapping[str, Any]) -> str:
 
     protocol = _map(context.get("protocol"))
     estimator = _map(protocol.get("estimator"))
-    lines.extend(["", "[04] PROTOCOL", "----------------"])
+    lines.extend(_section_header("[04] PROTOCOL"))
     protocol_sites = protocol.get("sites")
     if isinstance(protocol_sites, list) and protocol_sites:
         labels = [str(item.get("site_id")) for item in protocol_sites if isinstance(item, Mapping)]
@@ -196,14 +203,15 @@ def render_hubbardflow_out(source: Mapping[str, Any]) -> str:
         f"window (eV)={_value(primary.get('alpha_window_ev'))}"
     )
 
-    lines.extend(["", "[05] RUN INVENTORY", "----------------"])
-    lines.append("  NODE | ORIGINAL RUN FOLDER | MODE | ALPHA (eV) | STATE")
+    lines.extend(_section_header("[05] RUN INVENTORY"))
+    lines.append("  NODE | MODE | ALPHA (eV) | STATE")
     for node, folder, mode, alpha, state in _run_inventory(dataset):
-        lines.append(f"  {node} | {folder} | {mode} | {alpha} | {state}")
+        lines.append(f"  {node} | {mode} | {alpha} | {state}")
+        lines.extend(_path_lines(folder))
     if not dataset:
         lines.append("  NOT_ASSESSED: response observation dataset is unavailable.")
 
-    lines.extend(["", "[06] REFERENCE STATE", "----------------"])
+    lines.extend(_section_header("[06] REFERENCE STATE"))
     reference = dataset.get("reference_reproduction")
     if isinstance(reference, Mapping):
         lines.append(
@@ -253,7 +261,7 @@ def render_hubbardflow_out(source: Mapping[str, Any]) -> str:
     else:
         lines.append("  Parent and child occupations: NOT_ASSESSED")
 
-    lines.extend(["", "[07] RESPONSE DATA", "----------------"])
+    lines.extend(_section_header("[07] RESPONSE DATA"))
     if isinstance(rows, list):
         for row in rows:
             if not isinstance(row, Mapping):
@@ -278,7 +286,7 @@ def render_hubbardflow_out(source: Mapping[str, Any]) -> str:
     if not rows:
         lines.append("  NOT_ASSESSED: response occupations are unavailable.")
 
-    lines.extend(["", "[08] FITS", "----------------"])
+    lines.extend(_section_header("[08] FITS"))
     alpha_values = _list(analysis.get("analysis_alpha_grid_eV"))
     if isinstance(fit_rows, list) and fit_rows:
         for row in fit_rows:
@@ -298,11 +306,11 @@ def render_hubbardflow_out(source: Mapping[str, Any]) -> str:
         lines.append("  Fit diagnostics: NOT_ASSESSED")
     lines.append("  chi0_IJ / chi_IJ uses the derivative at alpha=0 of the declared fitted model.")
 
-    lines.extend(["", "[09] MATRICES", "----------------"])
+    lines.extend(_section_header("[09] MATRICES"))
     lines.extend(_matrix_lines("  CHI0 RAW (e/eV)", primary.get("chi0_raw"), names))
     lines.extend(_matrix_lines("  CHI RAW (e/eV)", primary.get("chi_raw"), names))
 
-    lines.extend(["", "[10] INVERSION", "----------------"])
+    lines.extend(_section_header("[10] INVERSION"))
     for key, label in (("chi0_diagnostics", "CHI0"), ("chi_diagnostics", "CHI")):
         diagnostic = _map(primary.get(key))
         shape = diagnostic.get("shape")
@@ -314,12 +322,32 @@ def render_hubbardflow_out(source: Mapping[str, Any]) -> str:
         )
     estimator_policy = _map(analysis.get("estimator_policy"))
     lines.append(f"  Matrix policy: {_value(estimator_policy.get('matrix_for_inversion'))}")
-    lines.append("  U_i = [inverse(CHI0) - inverse(CHI)]_ii (eV)")
+    inverse_chi0 = primary.get("chi0_inverse_eV")
+    inverse_chi = primary.get("chi_inverse_eV")
     for key, value in sorted(u_by_site.items(), key=lambda item: str(item[0])):
         index = int(key) if str(key).isdigit() else -1
-        lines.append(f"  {names.get(index, str(key))}: {_value(value)}")
+        chi0_ii = (
+            inverse_chi0[index][index]
+            if isinstance(inverse_chi0, list)
+            and 0 <= index < len(inverse_chi0)
+            and isinstance(inverse_chi0[index], list)
+            and index < len(inverse_chi0[index])
+            else None
+        )
+        chi_ii = (
+            inverse_chi[index][index]
+            if isinstance(inverse_chi, list)
+            and 0 <= index < len(inverse_chi)
+            and isinstance(inverse_chi[index], list)
+            and index < len(inverse_chi[index])
+            else None
+        )
+        lines.append(
+            f"  {names.get(index, str(key))}: [inverse(CHI0)]_ii = {_fixed_decimal(chi0_ii)} eV; "
+            f"[inverse(CHI)]_ii = {_fixed_decimal(chi_ii)} eV; U_i = {_fixed_decimal(value)} eV"
+        )
 
-    lines.extend(["", "[11] SYMMETRY", "----------------"])
+    lines.extend(_section_header("[11] SYMMETRY"))
     shadow = _map(dataset.get("translation_shadow"))
     outcomes = shadow.get("outcomes")
     if isinstance(outcomes, list) and outcomes:
@@ -341,11 +369,11 @@ def render_hubbardflow_out(source: Mapping[str, Any]) -> str:
         lines.append("  Calculated versus reconstructed columns: NOT_ASSESSED")
     lines.append(f"  Complete state gate: {_value(shadow.get('complete_state_gate'))}")
 
-    lines.extend(["", "[12] DIAGNOSTICS", "----------------"])
-    lines.append("  Occupation/formal/free-atom and U*abs(CHI0): see per-site values below.")
+    lines.extend(_section_header("[12] DIAGNOSTICS"))
     projector_diagnostics = _map(analysis.get("projector_diagnostics"))
     projector_sites = projector_diagnostics.get("sites")
     if isinstance(projector_sites, list) and projector_sites:
+        lines.append("  Occupation/formal/free-atom and U*abs(CHI0): see per-site values below.")
         for item in projector_sites:
             if isinstance(item, Mapping):
                 lines.append(
@@ -358,7 +386,7 @@ def render_hubbardflow_out(source: Mapping[str, Any]) -> str:
     else:
         lines.append("  Occupation/formal/free-atom and U*abs(CHI0): NOT_ASSESSED")
 
-    lines.extend(["", "[13] FILE MAP", "----------------"])
+    lines.extend(_section_header("[13] FILE MAP"))
     file_map = _map(source.get("file_map"))
     for label, value in sorted(file_map.items()):
         if isinstance(value, list):
