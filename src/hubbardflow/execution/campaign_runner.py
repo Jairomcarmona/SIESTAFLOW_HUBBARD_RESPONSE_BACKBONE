@@ -61,6 +61,13 @@ from hubbardflow.execution.campaign_store import CampaignStore, atomic_json as _
 from hubbardflow.execution.dag_contract import NodeState
 from hubbardflow.execution.execution_profile import ExecutionProfile
 from hubbardflow.execution.observation_assembly import ObservationAssembler
+from hubbardflow.execution.occupation_provenance import (
+    OccupationProvenance,
+    OccupationProvenanceStatus,
+    reconstruct_occupation_provenance,
+    rebuild_campaign_occupation_provenance,
+    write_occupation_provenance,
+)
 from hubbardflow.execution.response_grid_context import response_grid_source_campaign_context
 from hubbardflow.execution.reference_reproduction_step import check_reference_reproduction
 from hubbardflow.execution.state_gate_step import (
@@ -1859,6 +1866,27 @@ class CampaignRunner:
             analysis["scf_and_magnetic_diagnostics"]["magnetic_branch_evidence"] = magnetic
             analysis["provenance"]["campaign_inputs"] = self._analysis_input_provenance()
             analysis["response_observation_dataset"] = verified_dataset
+            provenance_output = self.results / "data" / "occupation_provenance.v1.json"
+            try:
+                occupation_provenance = reconstruct_occupation_provenance(
+                    verified_dataset,
+                    campaign_root=self.root,
+                    bare_profile=self.admitted.factory.bare_profile,
+                )
+            except (OSError, ValueError, TypeError, KeyError, IndexError) as exc:
+                occupation_provenance = OccupationProvenance(
+                    OccupationProvenanceStatus.NOT_ASSESSED,
+                    str(self.root),
+                    (),
+                    (f"RECONSTRUCTION_FAILED:{type(exc).__name__}",),
+                )
+            write_occupation_provenance(provenance_output, occupation_provenance)
+            analysis["occupation_provenance"] = {
+                "status": occupation_provenance.status.value,
+                "path": provenance_output.relative_to(self.root).as_posix(),
+                "record_count": len(occupation_provenance.records),
+                "hash_policy": "WARN_ONLY",
+            }
             if adaptive:
                 analysis["adaptive_round"] = {
                     "round_index": round_index, "direction": round_state.get("direction"),
@@ -2107,6 +2135,7 @@ def render_campaign_report(manifest_path: str | Path) -> str:
         analysis_path = root / "results" / "lr_u_analysis.v2.json"
     if analysis_path.is_file():
         analysis = json.loads(analysis_path.read_text(encoding="utf-8"))
+        rebuild_campaign_occupation_provenance(analysis_path, campaign_root=root)
         state_gate_path = root / "results" / "i5_state_gate.json"
         try:
             state_gate = json.loads(state_gate_path.read_text(encoding="utf-8"))
