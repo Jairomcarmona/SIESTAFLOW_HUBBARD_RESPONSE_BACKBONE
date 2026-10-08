@@ -18,7 +18,7 @@ from .response_error_budget import u_influence
 from .u_certification import CertificationError, Interval, certify_u_matrices
 from .validation import require_finite, require_positive_finite
 
-LABEL = "calificación condicional al modelo de error"
+LABEL = "conditional qualification under the error model"
 
 
 def full_budget_box(

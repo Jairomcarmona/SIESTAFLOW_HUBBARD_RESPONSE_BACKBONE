@@ -54,7 +54,7 @@ numbers are approximate (±15) and refer to `84b8eb6`.
    - `bash tools/check_v6_integrity.sh`;
    - from 20.10 on, `tests/unit/test_import_architecture.py`.
 8. **Fail closed.** Where this file is silent, choose the conservative option and record it as
-   **decisión del implementador (conservadora)**.
+   **conservative implementer decision**.
 
 ### 0.2 Baseline (first, before any item)
 
@@ -676,7 +676,7 @@ Do not change `campaign_runner.py`, `campaign_v2.py`, `wsl_campaign_init.py`, `l
   - auditor verdict;
   - tests added;
   - test edits made under an explicit exception;
-  - decisions taken as **decisión del implementador (conservadora)**.
+  - decisions taken as **conservative implementer decision**.
 - Include the final failing set compared with `BASELINE_FAILURES`.
 - No PRs, no SIESTA runs.
 

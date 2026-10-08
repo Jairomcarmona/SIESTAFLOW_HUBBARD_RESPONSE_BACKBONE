@@ -1,39 +1,37 @@
-# Luna A — auditoría del adaptador de salida SIESTA
+# Luna A — SIESTA output adapter audit
 
-## Alcance
+## Scope
 
-Esta entrega añade únicamente un validador de artefactos para nodos SIESTA.
-No ejecuta SIESTA, MPI, Hydra ni Slurm y no modifica lanzadores, campañas,
-materializadores ni perfiles de sitio.
+This change adds only an artifact validator for SIESTA nodes. It does not run
+SIESTA, MPI, Hydra, or Slurm and does not modify launchers, campaigns,
+materializers, or site profiles.
 
-## Candados implementados
+## Implemented safeguards
 
-- El nodo debe tener un contrato explícito de FDF, salida y DM, con rutas
-  relativas al directorio del nodo.
-- Las rutas absolutas, escapes mediante `..`, archivos ausentes y archivos
-  vacíos se rechazan.
-- Una salida normal sin evidencia científica no autoriza el nodo.
-- Las salidas SCREENED con `SCF_NOT_CONV`, terminación anormal, `MPI_Abort`,
-  errores de pseudopotencial o `FATAL` se rechazan. Un marcador
-  `SCF_NOT_CONV` sólo puede aparecer en BARE si el sidecar semántico demuestra
-  que corresponde a la terminación intencional de Hxc fijo; no se acepta por sí
-  solo.
-- Una referencia exige evidencia magnética ya validada por el parser existente
-  de SIESTA 5.4 o una declaración explícita y comprobada de estado no
-  polarizado.
-- Un nodo SCREENED exige terminación normal, ausencia de marcadores de SCF no
-  convergida y DM no vacía.
-- Un nodo BARE exige el sidecar semántico versionado existente, ligado por
-  SHA-256 al ejecutable, DM de referencia, FDF, salida y traza nativa. No se
-  infiere BARE a partir de `MaxSCFIterations`.
-- Modos desconocidos, incluidos SOC, no colinealidad y variantes no
-  certificadas, se rechazan.
-- El recibo contiene un digest de nodo, comando lógico y hashes de artefactos;
-  el validador expone además la procedencia estructurada para el runtime.
+- The node must have an explicit FDF, output, and DM contract, with paths
+  relative to the node directory.
+- Absolute paths, `..` escapes, missing files, and empty files are rejected.
+- A normal output without scientific evidence does not authorize the node.
+- SCREENED outputs with `SCF_NOT_CONV`, abnormal termination, `MPI_Abort`,
+  pseudopotential errors, or `FATAL` are rejected. `SCF_NOT_CONV` may appear in
+  BARE only if the semantic sidecar proves it corresponds to intentional
+  termination with fixed Hxc; the marker alone is not accepted.
+- A reference requires magnetic evidence already validated by the existing
+  SIESTA 5.4 parser, or an explicit and verified declaration of a
+  non-polarized state.
+- A SCREENED node requires normal termination, no unconverged-SCF markers, and
+  a nonempty DM.
+- A BARE node requires the existing versioned semantic sidecar, bound by
+  SHA-256 to the executable, reference DM, FDF, output, and native trace. BARE
+  is not inferred from `MaxSCFIterations`.
+- Unknown modes, including SOC, non-collinearity, and uncertified variants,
+  are rejected.
+- The receipt contains a node digest, logical command, and artifact hashes;
+  the validator also exposes structured provenance to the runtime.
 
-## Pruebas focalizadas
+## Focused tests
 
-Ejecutadas sin SIESTA/MPI/Slurm:
+Executed without SIESTA/MPI/Slurm:
 
 ```text
 python -m pytest tests/unit/test_siesta_output_validator.py \
@@ -43,14 +41,14 @@ python -m pytest tests/unit/test_siesta_output_validator.py \
 18 passed
 ```
 
-Las pruebas cubren salida SCREENED válida, DM ausente, referencia no polarizada
-explícita, modo desconocido y sidecar BARE inválido, además de las regresiones
-de los parsers y adaptadores existentes.
+Tests cover valid SCREENED output, missing DM, explicit non-polarized
+reference, unknown mode, and invalid BARE sidecar, as well as regressions for
+existing parsers and adapters.
 
-## Límites deliberados
+## Deliberate limitations
 
-Esto no constituye todavía un ejecutor de producción completo: el
-`CommandFactory` debe ser implementado por el runtime y debe producir los
-artefactos declarados. Tampoco activa SOC, no colinealidad, múltiples
-subespacios ni (U+V). La prueba en Yoltla sólo podrá autorizarse después de
-que Terra integre este validador en un perfil aislado y revise el diff.
+This is not yet a complete production executor: the runtime must implement
+`CommandFactory` and produce the declared artifacts. It also does not enable
+SOC, non-collinearity, multiple subspaces, or (U+V). The Yoltla test can only
+be authorized after Terra integrates this validator into an isolated profile
+and reviews the diff.

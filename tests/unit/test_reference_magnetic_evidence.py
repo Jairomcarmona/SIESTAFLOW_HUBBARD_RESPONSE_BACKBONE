@@ -57,10 +57,13 @@ def test_builds_hash_bound_evidence_and_audits_real_afm_output(monkeypatch):
     assert audit.reduction_enabled is False
 
 
-@pytest.mark.parametrize("mutator, message", [
-    (lambda text: text.replace("Job completed", "job not completed"), "terminación normal"),
-    (lambda text: text + "\nSCF_NOT_CONV: SCF did not converge\n", "SCF no convergida"),
-])
+@pytest.mark.parametrize(
+    "mutator, message",
+    [
+        (lambda text: text.replace("Job completed", "job not completed"), "normal SIESTA termination"),
+        (lambda text: text + "\nSCF_NOT_CONV: SCF did not converge\n", "unconverged SCF"),
+    ],
+)
 def test_rejects_incomplete_or_nonconverged_output(mutator, message):
     with pytest.raises(ReferenceMagneticEvidenceError, match=message):
         parse_final_collinear_mulliken_sz(mutator(OUT.read_text(encoding="utf-8")), 4)

@@ -66,7 +66,7 @@ included.
    reads the runner's current attribute.
 7. **Reviews.** Use `verificador_luna` on each diff. `auditor_cientifico` is not required, because
    the goldens are the check. Ambiguity that cannot change results: choose the conservative option,
-   log it as **decisión del implementador (conservadora)**, and continue.
+   log it as **conservative implementer decision**, and continue.
 8. **Static debt.** For pre-existing files outside the lint list, counts must not increase and
    touched lines must be clean.
 9. Always run `pytest tests`, never the repository root.

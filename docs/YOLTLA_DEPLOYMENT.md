@@ -1,89 +1,99 @@
-# Guía de Despliegue y Ejecución en el Cluster Yoltla (UAM)
+# Deployment and execution guide for the Yoltla cluster (UAM)
 
-> **Archivo histórico:** esta guía describe la interfaz y los scripts directos
-> de la versión 0.1.0. Sus comandos `siestaflow` no son la interfaz vigente.
-> Para instalaciones y campañas nuevas, sigue [`USER_MANUAL.md`](USER_MANUAL.md)
-> y [`CLI_LOCAL_WSL_QUICKSTART.md`](CLI_LOCAL_WSL_QUICKSTART.md), que usan el
-> CLI actual `hubbardflow`. Las rutas y los registros de este documento se
-> conservan como referencia histórica.
+> **Historical file:** this guide describes the interface and direct scripts
+> from version 0.1.0. Its `siestaflow` commands are not the current interface.
+> For new installations and campaigns, follow [`USER_MANUAL.md`](USER_MANUAL.md)
+> and [`CLI_LOCAL_WSL_QUICKSTART.md`](CLI_LOCAL_WSL_QUICKSTART.md), which use
+> the current `hubbardflow` CLI. The paths and records in this document are
+> preserved as historical reference.
 
-Esta guía explica paso a paso cómo subir y ejecutar **SIESTAFLOW (v0.1.0)** en la supercomputadora **Yoltla**, utilizando el gestor de colas **SLURM**.
-
----
-
-## 1. Arquitectura de Ejecución en Yoltla
-
-SIESTAFLOW cuenta con el adaptador `SiestaLRAdapter` preparado para generar scripts de trabajo nativos para **SLURM**. 
-
-### Parámetros Configurados para Yoltla:
-* **Planificador:** SLURM (`sbatch`)
-* **Módulo/Executable:** `siesta` (cargado vía `module load siesta` o ruta al ejecutable compilado con OpenMPI / ScaLAPACK)
-* **Paralelización:** 16 a 32 tareas MPI por nodo (`#SBATCH --ntasks=16`)
-* **Partición:** `batch` (o la partición asignada a tu usuario en Yoltla)
+This guide explains how to upload and run **SIESTAFLOW (v0.1.0)** on the
+**Yoltla** supercomputer using the **SLURM** queue manager.
 
 ---
 
-## 2. Preparación y Subida al Cluster
+## 1. Execution architecture on Yoltla
 
-### Paso A: Descargar o Clonar el Repositorio Privado en Yoltla
-En la terminal de Yoltla (vía SSH):
+SIESTAFLOW includes the `SiestaLRAdapter`, which is prepared to generate native
+**SLURM** job scripts.
+
+### Parameters configured for Yoltla
+
+* **Scheduler:** SLURM (`sbatch`)
+* **Module/executable:** `siesta` (loaded with `module load siesta` or by using
+  the path to an executable compiled with OpenMPI / ScaLAPACK)
+* **Parallelization:** 16 to 32 MPI tasks per node (`#SBATCH --ntasks=16`)
+* **Partition:** `batch` (or the partition assigned to your Yoltla account)
+
+---
+
+## 2. Prepare and upload to the cluster
+
+### Step A: Download or clone the private repository on Yoltla
+
+In a Yoltla terminal (over SSH):
 
 ```bash
-# 1. Conectarse a Yoltla
-ssh usuario@yoltla.uam.mx
+# 1. Connect to Yoltla
+ssh user@yoltla.uam.mx
 
-# 2. Clonar el repositorio privado
+# 2. Clone the private repository
 git clone https://github.com/Jairomcarmona/SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE.git
 cd SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE
 ```
 
-*(Alternativamente, puedes subir el paquete ZIP comprimido `SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0.zip` vía SCP/SFTP).*
+*(Alternatively, upload the compressed ZIP package
+`SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE_V0_1_0.zip` using SCP/SFTP.)*
 
 ---
 
-## 3. Instalación de Dependencias en Yoltla
+## 3. Install dependencies on Yoltla
 
 ```bash
-# Cargar módulos del cluster
-module load python/3.10  # O la versión de Python 3 disponible
-module load siesta       # O cargar OpenMPI / HDF5 / NetCDF
+# Load cluster modules
+module load python/3.10  # Or the available Python 3 version
+module load siesta       # Or load OpenMPI / HDF5 / NetCDF
 
-# Crear entorno virtual liviano
+# Create a lightweight virtual environment
 python3 -m venv venv
 source venv/bin/activate
 
-# Instalar SIESTAFLOW en modo editable
+# Install SIESTAFLOW in editable mode
 pip install -e .
 ```
 
 ---
 
-## 4. Ejecución del Cálculo de Producción ($\text{Cu}_3\text{N}$)
+## 4. Run the production calculation ($\text{Cu}_3\text{N}$)
 
-Para correr la prueba de producción con la malla convergida $8\times 8\times 8$ y grilla asimétrica de $\alpha$:
+To run the production test with the converged $8\times 8\times 8$ mesh and an
+asymmetric $\alpha$ grid:
 
-### Opción 1: Vía CLI (Automatizado)
+### Option 1: Via the CLI (automated)
+
 ```bash
-# 1. Inspección previa del FDF
+# 1. Inspect the FDF first
 siestaflow audit-fdf examples/tmo_campaigns/Cu3N_ref.fdf
 
-# 2. Inicializar la campaña
+# 2. Initialize the campaign
 siestaflow init examples/tmo_campaigns/Cu3N_ref.fdf --name Cu3N_Yoltla
 
-# 3. Lanzar la campaña en Slurm
+# 3. Launch the campaign on Slurm
 siestaflow run campaign.json --hpc-scheduler slurm --ntasks 16
 ```
 
-### Opción 2: Vía Script de Lanzamiento (`examples/tmo_campaigns/run_yoltla_campaign.py`)
+### Option 2: Via the launch script (`examples/tmo_campaigns/run_yoltla_campaign.py`)
+
 ```bash
 python examples/tmo_campaigns/run_yoltla_campaign.py
 ```
 
 ---
 
-## 5. Script de Entrega a Slurm (`yoltla_submit.sh`)
+## 5. Slurm submission script (`yoltla_submit.sh`)
 
-SIESTAFLOW genera automáticamente scripts `submit.sh` por cada perturbación, o puedes enviar la campaña completa con el siguiente script maestro:
+SIESTAFLOW automatically generates `submit.sh` scripts for each perturbation,
+or you can submit the full campaign with this master script:
 
 ```bash
 #!/bin/bash
@@ -95,30 +105,35 @@ SIESTAFLOW genera automáticamente scripts `submit.sh` por cada perturbación, o
 #SBATCH --time=02:00:00
 #SBATCH --partition=batch
 
-# Cargar entorno
+# Load the environment
 source venv/bin/activate
 
-# Ejecutar campaña de producción de Cu3N
+# Run the Cu3N production campaign
 python examples/tmo_campaigns/run_yoltla_campaign.py
 ```
 
-Para enviarlo a la cola de Yoltla:
+Submit it to the Yoltla queue with:
+
 ```bash
 sbatch yoltla_submit.sh
 ```
 
-Para monitorear el estado:
+Monitor its status with:
+
 ```bash
 squeue -u $USER
 ```
 
 ---
 
-## 6. Tolerancia a Fallos y Reanudación
+## 6. Fault tolerance and resuming
 
-Si el trabajo en Yoltla se interrumpe por límite de tiempo de Slurm, **no perderás nada**. Simplemente ejecuta:
+If the Yoltla job is interrupted because it reached the Slurm time limit, **no
+data will be lost**. Simply run:
 
 ```bash
 siestaflow resume campaign.json
 ```
-SIESTAFLOW verificará las firmas SHA-256 de las matrices de densidad `.DM` completadas y reanudará exactamente en la perturbación pendiente.
+
+SIESTAFLOW checks the SHA-256 signatures of completed `.DM` density matrices
+and resumes at the pending perturbation.

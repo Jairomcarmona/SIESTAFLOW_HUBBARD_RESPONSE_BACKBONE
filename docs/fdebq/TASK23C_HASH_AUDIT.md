@@ -1,18 +1,18 @@
-# TASK 23c — auditoría de hashes y estado D16.1
+# TASK 23c — Hash Audit and D16.1 State
 
-## Cierre de la decisión energética recibida
+## Closure of the Received Fermi-Energy Decision
 
-La decisión del usuario implementa `tol_Fermi_eV` sin default y separa los
-estados de ocupación/Fermi. Las pruebas cubren registro sin declaración, límite
-inclusivo, exceso físico con motivo propio, declaración inferior al radio de
-impresión combinado con advertencia, serialización/reporte, `RECORD_ONLY`, DM
-de bytes distintos y referencia MnO archivada. El replay MnO declara factor
-`1.0` exclusivamente en su config de fixture; no se agregó default productivo.
-La incorporación inicial no cambió goldens ni ejecutó SIESTA real. La corrección
-posterior de CI actualiza únicamente los dos goldens de procedencia detallados
-en la sección R5 siguiente.
+The user's decision implements `tol_Fermi_eV` without a default and separates
+occupation/Fermi states. Tests cover recording without a declaration, the
+inclusive boundary, physical excess with its own reason code, a declaration
+below the combined print radius with a warning, serialization/reporting,
+`RECORD_ONLY`, different DM bytes, and the archived MnO reference. The MnO
+replay declares factor `1.0` only in its fixture config; no production default
+was added. The initial implementation changed no goldens and ran no real
+SIESTA. A later CI correction updates only the two provenance goldens detailed
+in the following R5 section.
 
-Salidas literales finales de esta pasada (PYTHONPATH=src):
+Literal final outputs from this pass (PYTHONPATH=src):
 
 ```text
 python -m pytest -q tests/unit/test_reference_reproduction.py tests/unit/test_hash_traceability.py
@@ -31,44 +31,44 @@ wsl.exe bash -lc 'cd /mnt/c/Users/Jairo/work/hf_task23c && PYTHONPATH=src python
 2 passed, 2 warnings in 135.59s (0:02:15)
 ```
 
-La primera suite conjunta de referencia/config/CLI informó `1 failed, 132 passed`
-por un import omitido de `planning_config_digest` en la prueba nueva. Se añadió
-el import, sin modificar ninguna aserción; la suite completa de configuración
-y los casos CLI nuevos pasaron después. Las dos advertencias son de deprecación
-histórica de `adaptive_alpha`/`alpha_selection`.
+The first combined reference/config/CLI suite reported `1 failed, 132 passed`
+because the new test omitted an import of `planning_config_digest`. The import
+was added without changing any assertion; the full configuration suite and new
+CLI cases passed afterward. Both warnings are historical deprecations of
+`adaptive_alpha`/`alpha_selection`.
 
 ```text
-python -m ruff check <referencia, backend, step, CLI, product_plan, shadow y pruebas afectadas>
+python -m ruff check <reference, backend, step, CLI, product_plan, shadow, and affected tests>
 All checks passed!
-python -m ruff format --check <los diez módulos/pruebas de referencia, CLI, configuración y shadow>
+python -m ruff format --check <the ten reference, CLI, configuration, and shadow modules/tests>
 10 files already formatted
-python -m mypy --strict --follow-imports=silent <los nueve módulos/pruebas de referencia, CLI, product_plan y shadow>
+python -m mypy --strict --follow-imports=silent <the nine reference, CLI, product_plan, and shadow modules/tests>
 Success: no issues found in 9 source files
 bash tools/check_v6_integrity.sh
 V6 GATE OK
 git -c core.whitespace=cr-at-eol diff --check
 ```
 
-El último comando termina sin salida; se preserva CRLF histórico en
+The last command exits without output; historical CRLF is preserved in
 `tests/unit/test_campaign_plan.py`.
 
-**Auditoría adicional cerrada:** los vetos de `product_cli._verify_campaign_inputs`
-por digest declarado/almacenado distinto, ausente o malformado son clase (a)
-y se convirtieron a `DigestWarning`. Cada copia requerida se lee y se contrasta
-con ambas procedencias solamente para registrar `ARTIFACT_DIGEST_ABSENT`,
-`ARTIFACT_DIGEST_MALFORMED` o `ARTIFACT_DIGEST_MISMATCH`. El digest de config
-congelada ausente tampoco veta. Archivos realmente ausentes/ilegibles, paths que
-escapan de la campaña y validación estructural/física siguen fallando por su causa.
-Las advertencias se deduplican, ordenan y persisten en
-`product-input-traceability.json` dentro de la campaña, antes del arranque del
-worker; también se retienen en links/receipt de ejecución de producto/referencia.
+**Additional audit closed:** blocks in `product_cli._verify_campaign_inputs`
+for a declared/stored digest that differs, is absent, or malformed are class (a)
+and were converted to `DigestWarning`. Each required copy is read and compared
+with both provenance records only to record `ARTIFACT_DIGEST_ABSENT`,
+`ARTIFACT_DIGEST_MALFORMED` or `ARTIFACT_DIGEST_MISMATCH`. An absent
+frozen-config digest also does not block. Truly absent/unreadable files,
+paths escaping the campaign, and structural/physical validation still fail for
+their actual causes. Warnings are deduplicated, sorted, and persisted in
+`product-input-traceability.json` inside the campaign, before the worker starts;
+they are also retained in product/reference execution links/receipts.
 
-Pruebas adicionales verifican metadatos distintos, ausentes incluso sin claves,
-malformados, bytes de FDF alterados por un comentario inocuo, copias idénticas sin
-warnings y archivos obligatorios ausentes o sustituidos por un directorio. Las
-primeras fixtures Windows escribían la copia de config con CRLF y originaron
-dos fallos por una advertencia adicional legítima; se corrigió la fixture para
-copiar los bytes congelados exactos, conservando las aserciones exactas.
+Additional tests verify differing metadata, metadata absent even when keys are
+missing, malformed values, FDF bytes changed by an innocuous comment, identical
+copies without warnings, and required files absent or replaced by a directory.
+The first Windows fixtures wrote the config copy with CRLF and caused two
+failures due to an additional legitimate warning; the fixture was corrected to
+copy the exact frozen bytes while preserving the exact assertions.
 
 ```text
 python -m pytest -q tests/unit/test_product_cli.py -k 'fermi or digest_metadata or changed_copy or required_real_input or unchanged_product' --show-capture=no
@@ -86,68 +86,68 @@ V6 GATE OK
 git -c core.whitespace=cr-at-eol diff --check
 ```
 
-El último comando termina sin salida; no se modificó golden.
+The last command exits without output; no golden was modified.
 
-## Corrección de CI y golden R5 de procedencia
+## CI Correction and R5 Provenance Golden
 
-La autorización del orquestador limita esta actualización a los efectos nuevos
-de trazabilidad de 23c. Los serializers de dataset verificado y receipts omiten
-`traceability_warnings` cuando está vacío y conservan toda advertencia real.
-Ninguna aserción del replay se relajó y no se cambiaron sus resultados físicos,
-el golden de análisis, el golden de I.5 ni el checkpoint normalizado. Se cambian
-sólo los siguientes goldens:
+The orchestrator's authorization limits this update to the new traceability
+effects of 23c. Verified-dataset and receipt serializers omit
+`traceability_warnings` when empty and preserve every real warning. No replay
+assertion was relaxed, and physical results, the analysis golden, the I.5
+golden, and the normalized checkpoint were unchanged. Only the following
+goldens change:
 
-| Archivo | SHA256 anterior | SHA256 nuevo |
+| File | Previous SHA256 | New SHA256 |
 |---|---|---|
 | `tests/fixtures/replay_nio_p5/campaign_json_snapshot.json` | `5fa071aef8590afb309a2e1c1ddadcc5a53fafbd2656f08aba24860e5501a758` | `95940b5f8932e4816e6357bd0d82af9bdff50e6a81c007592a93e283dc966545` |
 | `tests/fixtures/replay_nio_p5/campaign_manifest.sha256.json` | `af86fdfa99c330548b9729ccc4f7533f60f594068dbd0dcd61c17e9906e55cbf` | `9fb5894ff3a1c8534b09f6c44663506a737dbc706a4c9fdc4e8ed16049eb9374` |
 
-El diff JSON exacto tiene **8 rutas** del snapshot y **3 entradas** derivadas
-del manifest. El generador externo comprueba una allowlist de esas rutas y
-rechaza cualquier cambio ajeno antes de escribir:
+The exact JSON diff has **8 snapshot paths** and **3 manifest-derived entries**.
+The external generator checks an allowlist of those paths and rejects any
+unrelated change before writing:
 
-| Ruta del snapshot | Antes → después |
+| Snapshot path | Before → after |
 |---|---|
-| `campaign.lock.coverage_qualification.traceability_warnings` | Ausente → dos `ARTIFACT_DIGEST_ABSENT` para `reference.echoed_input_sha256` y `reference.parent_dm_sha256`, con recorded/observed null. |
+| `campaign.lock.coverage_qualification.traceability_warnings` | Absent → two `ARTIFACT_DIGEST_ABSENT` warnings for `reference.echoed_input_sha256` and `reference.parent_dm_sha256`, with recorded/observed null. |
 | `campaign.lock.plan_digest` | `184359604f69ab92d9e39d2d7f23eefe0d4656657386d8a83ccf4a502d3b271d` → `ac361235e8776bdec3e2a74a9ad56b0287a3ba373be3f87df1affe6601eb6a17`. |
 | `campaign.v2.json.input_files[1].sha256` (`campaign.lock`) | `d86108fbcf1d6e5d3206b98b512209e7c300368469c9fcbf750bb123d7588951` → `8f3638ecf293b2022a6924fced7b3bf89e802e02098be562d3f61b7860024754`. |
 | `campaign.v2.json.input_files[10].sha256` (`resolved_perturbation_plan.json`) | `5814e24672c352e79a4f0808249cf1aa7e3a0072326ad77ee27817ee241458bb` → `80250feb2f911d017ef3177efe6939686c1f3a8fcac4294db63712605b544ff3`. |
 | `campaign.v2.json.resolved_perturbation_plan_digest` | `184359604f69ab92d9e39d2d7f23eefe0d4656657386d8a83ccf4a502d3b271d` → `ac361235e8776bdec3e2a74a9ad56b0287a3ba373be3f87df1affe6601eb6a17`. |
-| `resolved_perturbation_plan.json.coverage.traceability_warnings` | Ausente → las dos advertencias de reference anteriores. |
-| `resolved_perturbation_plan.json.reason_codes` | `[DISABLED_OR_FIXED, PARENT_DM_NOT_ESTABLISHED, REFERENCE_NOT_ADMISSIBLE]` → `[DISABLED_OR_FIXED, REFERENCE_NOT_ADMISSIBLE]`. Sólo se retira el motivo de digest ausente; la ausencia de evidencia física sigue registrada. |
-| `resolved_perturbation_plan.json.traceability_warnings` | Ausente → cuatro `ARTIFACT_DIGEST_ABSENT` para `echoed_input_sha256`, `parent_dm_sha256`, `reference.echoed_input_sha256` y `reference.parent_dm_sha256`, todos con recorded/observed null. |
+| `resolved_perturbation_plan.json.coverage.traceability_warnings` | Absent → the two preceding reference warnings. |
+| `resolved_perturbation_plan.json.reason_codes` | `[DISABLED_OR_FIXED, PARENT_DM_NOT_ESTABLISHED, REFERENCE_NOT_ADMISSIBLE]` → `[DISABLED_OR_FIXED, REFERENCE_NOT_ADMISSIBLE]`. Only the missing-digest reason is removed; missing physical evidence remains recorded. |
+| `resolved_perturbation_plan.json.traceability_warnings` | Absent → four `ARTIFACT_DIGEST_ABSENT` warnings for `echoed_input_sha256`, `parent_dm_sha256`, `reference.echoed_input_sha256`, and `reference.parent_dm_sha256`, all with recorded/observed null. |
 
-Entradas normalizadas del manifest:
+Normalized manifest entries:
 
-| Entrada | Hash anterior → nuevo |
+| Entry | Previous hash → new hash |
 |---|---|
 | `campaign.lock` | `d86108fbcf1d6e5d3206b98b512209e7c300368469c9fcbf750bb123d7588951` → `8f3638ecf293b2022a6924fced7b3bf89e802e02098be562d3f61b7860024754` |
 | `campaign.v2.json` | `561fb80c765aaa58c2c938710688b853ca2f5a091d824f6697f9c06020265f08` → `3edfba852e4fb1119611891d83ae9b5112c0b34277d6caf6e5b750f62edef194` |
 | `resolved_perturbation_plan.json` | `96ed7660e4f951114e8b9dcd292ea822e10619dd962d2ad257e5ae5fa3893726` → `61ade263afb04e93cd32e15bcd746f0c18b35c9be98818694b0209f2bd38368c` |
 
-Adaptaciones de pruebas autorizadas por el cambio de criterio:
+Test adaptations authorized by the criterion change:
 
-- `test_campaign_production` y `test_matrix_lr`: un digest DM declarado distinto
-  exige warning `PARENT_DM_DIGEST_MISMATCH`, bytes copiados exactos y digest
-  observado, reemplazando el veto por SHA.
-- `test_product_execution`: comentario FDF/espacio psml sólo cambian bytes;
-  el worker simulado prosigue, las run-specs y la copia del config congelado se
-  mantienen exactas y la advertencia aparece en link/archivo persistido.
-- `test_symmetry_operations`: el cambio aislado de `input_fdf_sha256` se separa
-  de los negativos físicos. La clasificación conserva la simetría y
-  `CoverageQualification` retiene `ARTIFACT_DIGEST_MISMATCH` con ambos digests.
-  Este SHA de FDF es clase (a), exclusivamente procedencia. Los
-  `identity_digest` por especie/subespacio siguen clase (b): identifican el
-  pseudopotencial/basis/radiales que exige F2, y las pruebas de basis/ligando/
-  entornos diferentes continúan rechazando `ConditionStatus.DIFFERENT` en F2.
-- Nuevas regresiones demuestran omisión de warnings vacíos y persistencia de
-  warnings reales tanto en dataset como checkpoint. Otra prueba elimina un DM
-  de planificación real: el archivo staged o source ausente falla por
-  `FileNotFoundError`; con archivo legible y sólo digest ausente produce warning.
-  La eliminación de `PARENT_DM_NOT_ESTABLISHED` nunca elimina esa lectura real
-  obligatoria ni el requisito de DM generado por el validador del nodo.
+- `test_campaign_production` and `test_matrix_lr`: a differing declared DM
+  digest now requires warning `PARENT_DM_DIGEST_MISMATCH`, exact copied bytes,
+  and the observed digest, replacing the SHA-based block.
+- `test_product_execution`: an FDF comment/PSML whitespace changes only bytes;
+  the simulated worker proceeds, run specs and the frozen-config copy remain
+  exact, and the warning appears in the persisted link/file.
+- `test_symmetry_operations`: an isolated `input_fdf_sha256` change is separated
+  from physical negative cases. Classification preserves the symmetry and
+  `CoverageQualification` retains `ARTIFACT_DIGEST_MISMATCH` with both digests.
+  This FDF SHA is class (a), provenance only. The
+  `identity_digest` per species/subspace remains class (b): it identifies the
+  pseudopotential/basis/radials required by F2, and tests with different
+  basis/ligand/environments still reject `ConditionStatus.DIFFERENT` in F2.
+- New regressions demonstrate omission of empty warnings and persistence of
+  real warnings in both dataset and checkpoint. Another test removes a real
+  planning DM: a missing staged or source file fails with `FileNotFoundError`;
+  a readable file with only its digest missing produces a warning. Removing
+  `PARENT_DM_NOT_ESTABLISHED` never removes the required real file read or the
+  node validator's generated-DM requirement.
 
-Salidas finales de esta corrección:
+Final outputs for this correction:
 
 ```text
 python -m pytest -q tests/unit/test_campaign_production.py tests/unit/test_matrix_lr.py tests/unit/test_product_execution.py tests/unit/test_symmetry_operations.py tests/unit/test_observation_assembly.py
@@ -158,228 +158,231 @@ python -m pytest -q tests/unit/test_product_cli.py -k missing_real_planning_refe
 1 passed, 55 deselected, 2 warnings in 1.48s
 wsl.exe bash -lc 'cd /mnt/c/Users/Jairo/work/hf_task23c && PYTHONPATH=src python3 -m pytest -q tests/integration/test_runner_replay_nio_p5.py'
 7 passed, 2 warnings in 11.82s
-ruff check <campaign_files/generic_executor y pruebas afectadas de producto/simetría/assembly/CLI>
+ruff check <campaign_files/generic_executor and affected product/symmetry/assembly/CLI tests>
 All checks passed!
-ruff format --check <los siete archivos de código/pruebas de la corrección>
+ruff format --check <the seven code/test files in this correction>
 7 files already formatted
-mypy --strict --follow-imports=silent <los seis archivos de código/pruebas tipados de la corrección>
+mypy --strict --follow-imports=silent <the six typed code/test files in this correction>
 Success: no issues found in 6 source files
 bash tools/check_v6_integrity.sh
 V6 GATE OK
 git -c core.whitespace=cr-at-eol diff --check
 ```
 
-El último comando termina sin salida. Ruff `--select F` sobre los dos módulos
-de pruebas históricas `test_campaign_production.py`/`test_matrix_lr.py` informa
-10 hallazgos previos: imports unused (`tempfile`, `assign_afm_ordering`, cuatro
-tipos matrix LR) y cuatro imports redefinidos de production_benchmarks. No se
-modificaron ni se suprimieron esos hallazgos ajenos.
+The last command exits without output. Ruff `--select F` on the two historical
+test modules `test_campaign_production.py`/`test_matrix_lr.py` reports 10 prior
+findings: unused imports (`tempfile`, `assign_afm_ordering`, four matrix LR
+types) and four redefined imports from production_benchmarks. Those unrelated
+findings were neither modified nor suppressed.
 
-## Regla de decisión
+## Decision Rule
 
-Los SHA-256 de DM, salidas y evidencia describen archivos o sirven para recuperar
-registros. Un desacuerdo de digest se persiste como advertencia y nunca declara
-una diferencia física. La ruta, existencia, formato/parseo, convergencia y las
-identidades semánticas siguen siendo condiciones propias y pueden fallar por su
-causa real. Los hashes de nodos/reutilización solo recuperan identidades de
-ejecución; la igualdad de bytes no demuestra equivalencia de estado.
+DM, output, and evidence SHA-256 values describe files or help retrieve records.
+A digest disagreement is persisted as a warning and never declares a physical
+difference. Path, existence, format/parsing, convergence, and semantic
+identities remain independent conditions and can fail for their actual causes.
+Node/reuse hashes only retrieve execution identities; byte equality does not
+prove state equivalence.
 
 ## Usos de `parent_dm_sha256` y digests relacionados
 
-| Ubicación / uso | Clase | Tratamiento |
+| Location / use | Class | Handling |
 |---|---|---|
-| `execution/campaign_plan.py`, `execution/product_plan.py`: capturan el SHA del DM padre | (a) procedencia de archivo | Solo se registra; la ausencia del digest no impide planificar una referencia admisible. |
-| `domain/coverage_models.py`, `domain/perturbation_plan.py`, `domain/perturbation_planner.py`: transporte/validación de digest padre | (a) procedencia | No se usa para admitir ni rechazar el plan. La admisibilidad aún depende de convergencia, inventario e identidades físicas observadas. |
-| `execution/product_admission.py`: presencia del digest | (a) procedencia | Se eliminó `PARENT_DM_REQUIRED` como bloqueo. |
-| `product_cli._verify_campaign_inputs`: digests de copias fuente/config/pseudopotenciales/estáticos/perfil y manifest | (a) procedencia | Mismatch/ausencia/formato sólo advierte; campos ausentes se leen con `.get`. Se verifica la existencia/lectura real y confinamiento del path. Warnings persistidos en archivo de trazabilidad y links/receipt. |
-| `execution/campaign_runner.py`: DM del plan frente a DM observado | (b) estado recalculado | BITWISE eliminado. Deciden las ocupaciones parseadas y, solo si se declara, la tolerancia energética propia de Fermi; siempre se conservan ambos digests. |
-| `execution/campaign_shadow.py`, `execution/observation_assembly.py`: DM de referencia frente al digest heredado por observaciones | (a) trazabilidad | Diferencias generan `PARENT_DM_DIGEST_MISMATCH` / `PARENT_DM_IDENTITY_MISMATCH`; ya no vetan una sombra ni una matriz. |
-| `execution/campaign_files.py`: FDF, OUT, DM y copia del DM padre frente a provenance | (a) identidad de archivos | Archivos ausentes o rutas inseguras siguen fallando. Hash distinto se devuelve como `hash_warnings` (`ARTIFACT_DIGEST_MISMATCH`, `PARENT_DM_DIGEST_MISMATCH`). |
-| `execution/source_evidence.py`: hashes de OUT, DM, recibos, manifest e identidad canónica | (a) trazabilidad | Mismatch se añade a `traceability_warnings`. La lectura, JSON, selección de evento y extracción numérica siguen validándose; datos ilegibles o respuestas que no se pueden reextraer fallan explícitamente. |
-| `execution/campaign_runner.py::_revalidate_reuse` y `_analysis_execution_identity` | (a) digest de evidencia almacenada | Los mismatches se registran como advertencias; estado del nodo, paths dentro de la campaña/attempt, modos y artefactos existentes siguen validándose. |
-| `domain/lr_analysis_v2.py`, `domain/matrix_lr.py`, `domain/scalar_lr.py`, `domain/observation_provenance.py` | (a) transporte/reporte/reuso | Los hashes aparecen como procedencia; la física usa ocupaciones y respuestas parseadas. No se usan como criterio de equivalencia física. |
-| `reporting/lr_u_report.py`, `reporting/product_report.py` | (a) reporte | Presentan SHA de planificación/campaña como evidencia, no como aceptación. |
-| `domain/response_grid_reproducibility.py`: hashes de DM, OUT/FDF, recibos, análisis, lock y dataset | (a) trazabilidad/reconstrucción | Mismatch se conserva en `traceability_warnings`; existencia/path y reextracción semántica se validan por separado. Contexto, receipt, dataset y comparación numérica siguen su propio contrato. |
-| `domain/response_reuse.py`: identidad de padre, FDF, perfil, proyector, especie, magnetismo y MPI | (a) procedencia; contexto físico no representado | Hash igual/distinto/ausente/malformado produce la misma decisión `NOT_ESTABLISHED` cuando coinciden las claves semánticas disponibles; `PHYSICAL_CONTEXT_NOT_ESTABLISHED` exige recalcular directo. Las diferencias de claves semánticas se clasifican aparte como `PHYSICAL_IDENTITY_MISMATCH`. La identidad v1 solo contiene hashes para los valores físicos que faltan. |
-| `execution/campaign_pilot_reuse.py`: output/receipt/identidad | (a) procedencia | Revalida lectura, esquema y estado del receipt; registra advertencias de todos los digests. No reusa un piloto sin valores físicos suficientes, independientemente de SHA. Selector independiente, todavía no conectado a init/runner. |
-| `siesta_backend/observation_selector.py`, `bare_semantics_evidence.py`, `bare_trace_provider.py`: referencia/ejecutable/FDF/OUT/traza | (a) procedencia | Hash ausente/malformado/distinto se registra con `ARTIFACT_DIGEST_ABSENT`, `ARTIFACT_DIGEST_MALFORMED`, `ARTIFACT_DIGEST_MISMATCH` y continúa parseo. Los marcadores auditados, orden, unicidad, intervalo, versión y terminación siguen siendo condiciones semánticas. El contexto/receipt transporta las advertencias. |
+| `execution/campaign_plan.py`, `execution/product_plan.py`: capture the parent DM SHA | (a) file provenance | Recorded only; a missing digest does not prevent planning an admissible reference. |
+| `domain/coverage_models.py`, `domain/perturbation_plan.py`, `domain/perturbation_planner.py`: transport/validation of parent digest | (a) provenance | Not used to admit or reject the plan. Admissibility still depends on convergence, inventory, and observed physical identities. |
+| `execution/product_admission.py`: digest presence | (a) provenance | `PARENT_DM_REQUIRED` was removed as a blocker. |
+| `product_cli._verify_campaign_inputs`: digests for source/config/pseudopotential/static/profile copies and manifest | (a) provenance | Mismatch/absence/format only warns; missing fields are read with `.get`. Actual file existence/readability and path confinement are verified. Warnings persist in the traceability file and links/receipt. |
+| `execution/campaign_runner.py`: planned DM compared with observed DM | (b) recalculated state | BITWISE removed. Parsed occupations decide, as does Fermi's own energy tolerance only when declared; both digests are always retained. |
+| `execution/campaign_shadow.py`, `execution/observation_assembly.py`: reference DM compared with digest inherited by observations | (a) traceability | Differences produce `PARENT_DM_DIGEST_MISMATCH` / `PARENT_DM_IDENTITY_MISMATCH`; they no longer veto a shadow or matrix. |
+| `execution/campaign_files.py`: FDF, OUT, DM, and parent-DM copy compared with provenance | (a) file identity | Missing files or unsafe paths still fail. A different hash is returned as `hash_warnings` (`ARTIFACT_DIGEST_MISMATCH`, `PARENT_DM_DIGEST_MISMATCH`). |
+| `execution/source_evidence.py`: hashes of OUT, DM, receipts, manifest, and canonical identity | (a) traceability | Mismatch is added to `traceability_warnings`. Reading, JSON, event selection, and numerical extraction remain validated; unreadable data or responses that cannot be re-extracted fail explicitly. |
+| `execution/campaign_runner.py::_revalidate_reuse` and `_analysis_execution_identity` | (a) stored-evidence digest | Mismatches are recorded as warnings; node state, paths within the campaign/attempt, modes, and existing artifacts remain validated. |
+| `domain/lr_analysis_v2.py`, `domain/matrix_lr.py`, `domain/scalar_lr.py`, `domain/observation_provenance.py` | (a) transport/report/reuse | Hashes appear as provenance; physics uses parsed occupations and responses. They are not used as physical-equivalence criteria. |
+| `reporting/lr_u_report.py`, `reporting/product_report.py` | (a) reporting | Present planning/campaign SHA values as evidence, not acceptance criteria. |
+| `domain/response_grid_reproducibility.py`: hashes of DM, OUT/FDF, receipts, analysis, lock, and dataset | (a) traceability/reconstruction | Mismatch remains in `traceability_warnings`; existence/path and semantic re-extraction are validated separately. Context, receipt, dataset, and numerical comparison retain their own contracts. |
+| `domain/response_reuse.py`: parent, FDF, profile, projector, species, magnetism, and MPI identity | (a) provenance; physical context not represented | Equal/different/absent/malformed hashes yield the same `NOT_ESTABLISHED` decision when available semantic keys match; `PHYSICAL_CONTEXT_NOT_ESTABLISHED` requires direct recalculation. Semantic-key differences are classified separately as `PHYSICAL_IDENTITY_MISMATCH`. Identity v1 contains hashes only for missing physical values. |
+| `execution/campaign_pilot_reuse.py`: output/receipt/identity | (a) provenance | Revalidates receipt readability, schema, and state; records warnings for all digests. A pilot is not reused without sufficient physical values, regardless of SHA. The independent selector is not yet connected to init/runner. |
+| `siesta_backend/observation_selector.py`, `bare_semantics_evidence.py`, `bare_trace_provider.py`: reference/executable/FDF/OUT/trace | (a) provenance | Missing/malformed/different hashes are recorded as `ARTIFACT_DIGEST_ABSENT`, `ARTIFACT_DIGEST_MALFORMED`, `ARTIFACT_DIGEST_MISMATCH`, and parsing continues. Audited markers, ordering, uniqueness, interval, version, and termination remain semantic conditions. Context/receipt carries the warnings. |
 
-## Otros hashes revisados
+## Other Hashes Reviewed
 
-Los digests de FDF/configuración/perfil/pseudopotenciales son identidad de
-entrada/procedencia. Los de reportes, locks, receipts y datasets son identidad de
-archivos almacenados. Ninguno demuestra igualdad física; sus discrepancias no se
-deben convertir en `PARENT_STATE_NOT_EQUIVALENT`. Los identificadores de campaña,
-nodo, attempt, ruta y modo se mantienen como invariantes estructurales (no SHA).
-Hashes canónicos de matrices/planes recuperan compromisos deterministas; donde
-alimentan una decisión física deben reemplazarse por el valor/estado observado,
-con el digest retenido como referencia.
+FDF/config/profile/pseudopotential digests identify inputs and provenance.
+Digests of reports, locks, receipts, and datasets identify stored files. None
+proves physical equality; their discrepancies must not become
+`PARENT_STATE_NOT_EQUIVALENT`. Campaign, node, attempt, path, and mode identifiers
+remain structural invariants (not SHA values). Canonical matrix/plan hashes
+retrieve deterministic commitments; wherever they feed a physical decision,
+they must be replaced by the observed value/state, while retaining the digest
+as a reference.
 
-## D16.1 y decisión dimensional de Fermi
+## D16.1 and the Dimensional Fermi Decision
 
-`BITWISE` se eliminó del enum y de la configuración; la alternativa `RECORD_ONLY`
-no concede equivalencia, pero conserva el rechazo por diferencia física real o identidad incompleta. `PRINT_EQUIVALENT` necesita un factor
-`parent_reproduction_factor` explícito y `SCF.DM.Tolerance` única, positiva y
-declarada en el FDF para formar el radio de ocupación
-`max(semianchos de impresión sumados, factor × SCF.DM.Tolerance)`. Sin cualquiera
-de esos elementos se emite `EQUIVALENCE_NOT_ASSESSED` y no se rechaza por SHA.
+`BITWISE` was removed from the enum and configuration; the `RECORD_ONLY`
+alternative does not grant equivalence, but retains rejection for a real
+physical difference or incomplete identity. `PRINT_EQUIVALENT` requires an
+explicit `parent_reproduction_factor` and a unique, positive `SCF.DM.Tolerance`
+declared in the FDF to form the occupation radius
+`max(sum of print half-widths, factor × SCF.DM.Tolerance)`. If either is
+missing, `EQUIVALENCE_NOT_ASSESSED` is emitted and SHA does not cause rejection.
 
-La tolerancia de density matrix no se aplica a eV. La política `tol_Fermi_eV`
-es opcional, declarada y no tiene default. La CLI de producto `--tol-fermi-ev`
-sobrescribe la configuración y registra fuente `cli`; la declaración por JSON
-registra fuente `config`. Si está ausente se conserva diferencia, unidades y
-semianchos bajo `fermi_equivalence=RECORDED_NOT_ASSESSED`; no cambia la decisión
-de ocupación. Si está declarada se compara con el máximo de su valor y la suma
-de ambos semianchos de impresión: los dos datos redondeados aportan radios
-aditivos. Una declaración menor emite la advertencia tipada
-`FERMI_TOLERANCE_BELOW_PRINT_HALF_WIDTH`, conserva el valor declarado y registra
-el radio efectivo. Un exceso físico emite `PARENT_FERMI_NOT_EQUIVALENT`, distinto
-del motivo de ocupación, y calcula directamente todas las clases que usan ese
-padre. `occupation_equivalence` y `fermi_equivalence` se serializan y presentan
-por separado. `RECORD_ONLY` nunca concede equivalencia y conserva los rechazos
-físicos ya evaluados. Parseo no disponible produce
-`EQUIVALENCE_NOT_ASSESSED`; identidad de átomo/proyector incompleta usa
-`PARENT_IDENTITY_NOT_ESTABLISHED` y el fallback directo queda limitado a la clase
-de ese átomo (o todas las clases si la diferencia es global).
+The density-matrix tolerance is not applied to eV. Policy `tol_Fermi_eV` is
+optional, explicitly declared, and has no default. Product CLI option
+`--tol-fermi-ev` overrides configuration and records source `cli`; a JSON
+declaration records source `config`. If absent, the difference, units, and
+half-widths are retained under `fermi_equivalence=RECORDED_NOT_ASSESSED`; this
+does not change the occupation decision. If declared, it is compared against
+the maximum of its value and the sum of both print half-widths: the two rounded
+data values contribute additive radii. A declaration below that sum emits typed
+warning `FERMI_TOLERANCE_BELOW_PRINT_HALF_WIDTH`, preserves the declared value,
+and records the effective radius. A physical excess emits
+`PARENT_FERMI_NOT_EQUIVALENT`, distinct from the occupation reason, and directly
+calculates all classes using that parent. `occupation_equivalence` and
+`fermi_equivalence` are serialized and presented separately. `RECORD_ONLY` never
+grants equivalence and retains already evaluated physical rejections.
+Unavailable parsing produces `EQUIVALENCE_NOT_ASSESSED`; incomplete
+atom/projector identity uses `PARENT_IDENTITY_NOT_ESTABLISHED`, and direct
+fallback is limited to that atom's class (or all classes if the difference is
+global).
 
 
-## Correcciones y pruebas de esta pasada
+## Corrections and Tests in This Pass
 
-Una diferencia de ocupación mayor que el radio declarado invalida la reducción
-con `PARENT_STATE_NOT_EQUIVALENT` aunque la tolerancia energética de Fermi siga
-sin evaluarse. El detalle identifica átomo, spin, elemento, diferencia y radio;
-las comparaciones pendientes se registran aparte. No se aplica tolerancia de DM
-a energía; una equivalencia de ocupación sí puede establecer el veredicto global
-sin declaración energética, con el estado Fermi record-only visible.
+A difference in occupation greater than the declared radius invalidates the
+reduction with `PARENT_STATE_NOT_EQUIVALENT`, even if Fermi's energy tolerance
+remains unevaluated. Details identify atom, spin, element, difference, and
+radius; pending comparisons are recorded separately. No DM tolerance is applied
+to energy; occupation equivalence can establish the overall verdict without an
+energy declaration, with the record-only Fermi state visible.
 
-### Ediciones de assertions autorizadas por el steering y el orquestador
+### Assertion Edits Authorized by the Steering and Orchestrator
 
-| Prueba/caso | Antes | Ahora | Motivo |
+| Test/case | Before | Now | Reason |
 |---|---|---|---|
-| `test_reference_reproduction`: diferencia de dos cuantos | NOT_ASSESSED por Fermi ausente | Rechazo físico detallado aunque Fermi falte | Corregir masking de una diferencia de ocupación ya evaluable; se fortalece el invariante. |
-| `test_response_reuse`: roundtrip y nueve dimensiones hash | EXACT_MATCH o IDENTITY_MISMATCH por SHA | NOT_ESTABLISHED, warning para SHA distinto; roundtrip y claves físicas siguen verificadas | Hash no contiene valores físicos suficientes. |
-| `test_response_reuse`: output alterado y pilotos conflictivos | Excepción por SHA/bytes | Advertencias registradas, selección determinista, ningún piloto reusado | Recalcular directo sin bloquear campaña. |
-| `test_response_reuse`: receipt alterado | Excepción por digest de receipt/identidad | Advertencias explícitas y NOT_ESTABLISHED; nuevos casos FAILED/None mantienen rechazo de estado de receipt | SHA es trazabilidad; esquema/estado siguen revalidados. |
-| `test_bare_trace_provider`: executable sustituido | Excepción por SHA | Receipt VERIFIED con advertencia explícita; sidecar ausente y falta de collector siguen fallando | Trazabilidad separada de contrato semántico. |
-| `test_bare_trace_adversarial_audit`: append inocuo a artefactos/traza | Excepción por SHA | Advertencia con campo, reason y digest observado | Cambiar bytes no demuestra diferencia física. |
-| `test_bare_trace_adversarial_audit`: orden, marker duplicado/ausente, salida abortada, versión/revisión, vocabulario forjado, esquema incompleto | Error semántico | Mismas aserciones de error semántico | No se modificó el criterio físico/estructural. |
+| `test_reference_reproduction`: two-quantum difference | `NOT_ASSESSED` because Fermi is absent | Detailed physical rejection even when Fermi is absent | Fix masking of an already assessable occupation difference; strengthens the invariant. |
+| `test_response_reuse`: roundtrip and nine hash dimensions | `EXACT_MATCH` or `IDENTITY_MISMATCH` by SHA | `NOT_ESTABLISHED`, warning for different SHA; roundtrip and physical keys remain verified | Hash lacks sufficient physical values. |
+| `test_response_reuse`: changed output and conflicting pilots | Exception for SHA/bytes | Warnings recorded, deterministic selection, no pilot reused | Recalculate directly without blocking the campaign. |
+| `test_response_reuse`: changed receipt | Exception for receipt/identity digest | Explicit warnings and `NOT_ESTABLISHED`; new `FAILED`/`None` cases retain receipt-state rejection | SHA is traceability; schema/state are still revalidated. |
+| `test_bare_trace_provider`: substituted executable | Exception for SHA | `VERIFIED` receipt with explicit warning; missing sidecar and collector still fail | Traceability is separate from the semantic contract. |
+| `test_bare_trace_adversarial_audit`: innocuous append to artifacts/trace | Exception for SHA | Warning with field, reason, and observed digest | Changing bytes does not prove a physical difference. |
+| `test_bare_trace_adversarial_audit`: order, duplicate/missing marker, aborted output, version/revision, forged vocabulary, incomplete schema | Semantic error | Same semantic-error assertions | Physical/structural criteria were unchanged. |
 
-Se añadieron casos de hash ausente/malformado en los cinco campos BARE y piloto,
-ruido de ocupación menor que el radio explícito, DM diferente con mismos números,
-caso adversarial MnO archivado y serialización de warnings. No se cambió golden.
+Cases were added for missing/malformed hashes in the five BARE and pilot fields,
+occupation noise below the explicit radius, different DM with identical
+numbers, the archived MnO adversarial case, and warning serialization. No golden
+was changed.
 
-Verificación focalizada (PYTHONPATH del worktree):
+Focused verification (worktree PYTHONPATH):
 
 ```
 python -m pytest -q tests/unit/test_hash_traceability.py tests/unit/test_reference_reproduction.py tests/unit/test_response_reuse.py tests/unit/test_bare_semantics_evidence.py tests/unit/test_bare_trace_adversarial_audit.py tests/unit/test_import_architecture.py
 103 passed, 2 warnings in 3.04s
 ```
 
-## Estado de cierre de esta pasada
+## Closure Status for This Pass
 
-La decisión del usuario cierra la política energética: las ocupaciones deciden
-y Fermi participa solo con tolerancia eV declarada. Se cerraron los TODO de
-trazabilidad de inventario/source/effective FDF y evidencia de calibración.
+The user's decision closes the energy policy: occupations decide, and Fermi
+participates only with a declared eV tolerance. The inventory/source/effective
+FDF traceability and calibration-evidence TODOs were closed.
 
-### Tabla adicional por callsite decisorio
+### Additional Table by Decision Call Site
 
-`(a)` identifica procedencia de DM/archivo/evidencia y solo advierte. `(b)`
-identifica la especie canónica necesaria para F2: representa pseudopotencial y
-radiales, no etiqueta ni elemento. `(c)` es contrato operativo/protocolo fuera
-del juicio de equivalencia de un padre; se mantiene por alcance confirmado por
-el orquestador. Estos últimos pueden invalidar resume si cambia el contrato
-congelado; no se presentan como diferencias físicas D16.
+`(a)` identifies DM/file/evidence provenance and only warns. `(b)` identifies
+the canonical species required by F2: it represents the pseudopotential and
+radials, not the label or element. `(c)` is an operational/protocol contract
+outside parent-equivalence assessment; it is retained within the scope confirmed
+by the orchestrator. These latter checks may invalidate resume if the frozen
+contract changes; they are not presented as D16 physical differences.
 
-| Callsite | Clase | Tratamiento / justificación |
+| Call site | Class | Handling / rationale |
 |---|---|---|
-| `perturbation_plan_evidence.freeze_inventory`: inventory/effective-FDF SHA | a | No exige formato/presencia; conserva atom/site únicos y ProjectorEvidence completo. |
-| `freeze_inventory`: species identity | b | Identidad canónica del pseudopotencial/subespacio usada para F2; se conserva require_sha256 cuando se aporta. |
-| `coverage.qualify_coverage`: inventory/source/OUT SHA | a | Se retiraron validadores que impedían clasificar evidencia física ya parseada. |
-| `CoverageQualification.__post_init__/from_mapping`: inventory/effective-FDF SHA | a | Opcionales; warnings computados y serializados cuando existen. Clases, índices de operación y partición se validan. |
-| `symmetry_operations.classify`: input/effective-FDF SHA | a | Diferencia advierte en qualification; ya no produce EVIDENCE_BINDING_MISMATCH ni expansión por digest. |
-| `symmetry_operations.classify`, `SymmetryAtom`, `SymmetryModel`: species identity y contrato canónico del modelo | b/c | Mantienen F2 exacta de especie/pseudopotencial y esquema del modelo. No se infiere equivalencia por etiqueta. |
-| `ResolvedPerturbationPlan._validate`: source/effective/inventory binding | a | Warning; compara referencia física de coverage por valores y verifica protocolos, run_specs, omisiones y reconstrucciones. |
-| `ResolvedPerturbationPlan.from_mapping`: metadatos SHA y campos derivados | a/c | SHA opcionales; igualdad de campos semánticos/bands/pesos sigue requerida. |
-| `CalibrationQualification` del plan: evidence SHA y digest protocol observado | a | Warning en plan; tau, columnas, estimador y matriz conservan su contrato físico. |
-| `perturbation_planner.resolve_perturbation_plan`: protocol_sha256 de qualification | a | Mismatch solo advertencia en plan; sigue comprobando tau y columnas/amplitudes declaradas. |
-| `fdebq_models.CalibrationQualification`: evidence_sha256 | a | Optional/malformed permitido como metadata, warning serializado; estado/calificación, columnas y matriz sin cambios. Protocol SHA es contrato c separado. |
-| `ProductSnapshot.__post_init__/from_mapping`: inventory/source/input/FDF SHA | a | Compara inventario/coverage por valores semánticos; ausencia/formato no decide. frozen-config hash discrepancy se registra en detail. |
-| `product_admission.execution_admission/_translation_shadowed_admission`: inventory.digest | a | Warnings en admission; estado, inventario físico, sites, grid, reduction/shadow y reference flags siguen evaluándose. |
-| `campaign_v2.load_campaign_v2/verify_campaign_inventory`: input-files SHA/input_identity | a | Hash opcional, mismatch/formato/ausencia warning; archivos reales, rutas seguras y estructura de manifiesto se conservan. Runner persiste warnings y reporte los muestra. |
-| `campaign_runner._analysis_execution_identity`: evidence_digest obligatorio | a | Node ID y VALIDATED son obligatorios; evidence_digest ausente/malformado solo advierte. |
-| `generic_executor.NodeReceipt/JsonDagCheckpoint`: evidence_digest | a | Metadata opcional y warnings serializados; node_id/state/duplicados y DAG operativo siguen exigidos. |
-| `response_grid_reproducibility._fields/_digest/_validate_reference_execution`: SHA de DM/OUT/FDF/recibos | a | Campos SHA opcionales, formato/mismatch warnings; mapas de hashes ausentes no impiden reextraer archivos reales. Intentos independientes, modos, átomos, parseo y datos físicos se verifican. |
-| `source_evidence.validate_source_manifest/extract_verified_response_tokens` y schema | a | SHA opcionales; formato/ausencia/mismatch warning; JSON finito, schema semántico, archivo/ruta, nodos VALIDATED, parser y numerics siguen requeridos. |
-| `observation_provenance.validate_observation/validate_response_lot`: parent-DM/FDF/output/SCF-evidence SHA | a | No deciden aceptación; warnings en lote. Cartesian grid, roles, retorno cero, SCF y DM-read positivo siguen requeridos. |
-| `observation_provenance`: pseudo/subspace/projector/physical-model/runtime/selector/magnetic canonical identities | b/c | Representan identidad física o contrato de selección declarado; fuera del gate D16 de estado recalculado. |
-| `occupation_noise_calibration.validate_calibration_result`: result esperado/DM/receipts/replica-result SHA | a | SHA de evidencia opcionales y warnings; se rederiva el estadístico, conserva política, independencia jobs, rutas y count. |
-| `occupation_noise_calibration`: frozen lock/result-lock SHA | c | Compromiso de receta preregistrada; cambio de receta no admite el resultado con otra política. |
-| `adapter.prepare_canonical_dm` | a | Devuelve digest observado; mismatch solo RuntimeWarning con reason code; copy2/file existence conserva errores reales. Ruta retirada, no autoriza ejecución. |
-| `campaign_plan.verify_frozen_campaign_plan` | c | Locks canónicos de plan/config/planner version para resume, separados del gate físico D16. Conservados. |
-| `campaign_shadow` journal plan digest | c | Journal debe pertenecer al mismo plan operativo; conserva gate de asociación del registro. |
-| `campaign_v2` resolved plan digest, `product_plan` lock, `ProductBoundary` receipt identity, `generic_executor` DAG digest | c | Contratos canónicos de plan/runtime; preservados, no equivalencia física. |
-| `campaign_software_lock`, `backend_admission` | c | Garantizan ejecución con software realmente admitido/instalado; no se sustituyen por equivalencia D16. |
-| `campaign_split`, `semantic_split_models`, `split_generated_identity`, `scf_ladder_inputs` | b/c | Identidad semántica/protocolo de materialización de entradas generadas; fuera del juicio D16 de DM/evidencia observada. |
-| `fdf_symmetry_adapter`: symmetry certificate binding | b/c | Certificado de operación ligado al modelo físico declarado; no evidencia de reproducción del padre. |
-| `scf_validation`: T0–T4 protocol/evidence commitment | c | Validación formal del protocolo científico independiente; no admite padres ni sombras D16. Conservado por alcance. |
-| `u_certification_node`, `u_release_gate`, `downstream_u_admission`, `domain/u_certification.py` | c / protegido | Certificación/release científicos históricos; no se editaron. El nodo migrado forma parte del baseline V6 y está protegido. |
-| `reporting/lr_u_report`, `reporting/product_report`, `domain/lr_analysis_v2`, `matrix_lr`, `scalar_lr` | a | Solo transportan/renderizan digests; no deciden por ellos. |
+| `perturbation_plan_evidence.freeze_inventory`: inventory/effective-FDF SHA | a | Does not require format/presence; retains unique atom/site values and complete `ProjectorEvidence`. |
+| `freeze_inventory`: species identity | b | Canonical pseudopotential/subspace identity used by F2; `require_sha256` remains when supplied. |
+| `coverage.qualify_coverage`: inventory/source/OUT SHA | a | Validators that prevented classification of already-parsed physical evidence were removed. |
+| `CoverageQualification.__post_init__/from_mapping`: inventory/effective-FDF SHA | a | Optional; warnings are computed and serialized when present. Classes, operation indices, and partition are validated. |
+| `symmetry_operations.classify`: input/effective-FDF SHA | a | A difference warns in qualification; it no longer produces `EVIDENCE_BINDING_MISMATCH` or digest-based expansion. |
+| `symmetry_operations.classify`, `SymmetryAtom`, `SymmetryModel`: species identity and canonical model contract | b/c | Preserve exact F2 species/pseudopotential identity and model schema. Equivalence is not inferred from labels. |
+| `ResolvedPerturbationPlan._validate`: source/effective/inventory binding | a | Warning; compares the physical coverage reference by values and verifies protocols, run_specs, omissions, and reconstructions. |
+| `ResolvedPerturbationPlan.from_mapping`: SHA metadata and derived fields | a/c | SHA values are optional; equality of semantic fields/bands/weights remains required. |
+| Plan `CalibrationQualification`: evidence SHA and observed protocol digest | a | Warning in plan; tau, columns, estimator, and matrix retain their physical contract. |
+| `perturbation_planner.resolve_perturbation_plan`: qualification protocol_sha256 | a | Mismatch only warns in plan; tau and declared columns/amplitudes are still checked. |
+| `fdebq_models.CalibrationQualification`: evidence_sha256 | a | Optional/malformed values are allowed as metadata, with serialized warning; status/qualification, columns, and matrix are unchanged. Protocol SHA is a separate class (c) contract. |
+| `ProductSnapshot.__post_init__/from_mapping`: inventory/source/input/FDF SHA | a | Compares inventory/coverage by semantic values; absence/format does not decide. Frozen-config hash discrepancy is recorded in detail. |
+| `product_admission.execution_admission/_translation_shadowed_admission`: inventory.digest | a | Warnings in admission; status, physical inventory, sites, grid, reduction/shadow, and reference flags are still evaluated. |
+| `campaign_v2.load_campaign_v2/verify_campaign_inventory`: input-files SHA/input_identity | a | Hash is optional; mismatch/format/absence warns. Real files, safe paths, and manifest structure are retained. Runner persists warnings and the report displays them. |
+| `campaign_runner._analysis_execution_identity`: required evidence_digest | a | Node ID and `VALIDATED` are required; absent/malformed evidence_digest only warns. |
+| `generic_executor.NodeReceipt/JsonDagCheckpoint`: evidence_digest | a | Optional metadata and serialized warnings; node_id/state/duplicates and operational DAG remain required. |
+| `response_grid_reproducibility._fields/_digest/_validate_reference_execution`: DM/OUT/FDF/receipt SHA | a | SHA fields are optional; format/mismatch warn. Missing hash maps do not prevent re-extraction of real files. Independent attempts, modes, atoms, parsing, and physical data are verified. |
+| `source_evidence.validate_source_manifest/extract_verified_response_tokens` and schema | a | SHA is optional; format/absence/mismatch warns. Finite JSON, semantic schema, file/path, `VALIDATED` nodes, parser, and numerics remain required. |
+| `observation_provenance.validate_observation/validate_response_lot`: parent-DM/FDF/output/SCF-evidence SHA | a | Do not decide acceptance; warnings are recorded in the lot. Cartesian grid, roles, zero return code, SCF, and positive DM-read remain required. |
+| `observation_provenance`: pseudo/subspace/projector/physical-model/runtime/selector/magnetic canonical identities | b/c | Represent physical identity or declared selection contract; outside the D16 recalculated-state gate. |
+| `occupation_noise_calibration.validate_calibration_result`: expected-result/DM/receipt/replica-result SHA | a | Evidence SHA values are optional and warn; the statistic is re-derived while policy, independent jobs, paths, and count are retained. |
+| `occupation_noise_calibration`: frozen lock/result-lock SHA | c | Preregistered recipe commitment; a recipe change does not admit a result under a different policy. |
+| `adapter.prepare_canonical_dm` | a | Returns the observed digest; mismatch only triggers `RuntimeWarning` with reason code; `copy2`/file existence retain real errors. Retired path; does not authorize execution. |
+| `campaign_plan.verify_frozen_campaign_plan` | c | Canonical plan/config/planner-version locks for resume, separate from the D16 physical gate. Retained. |
+| `campaign_shadow` journal plan digest | c | Journal must belong to the same operational plan; retains the record-association gate. |
+| `campaign_v2` resolved plan digest, `product_plan` lock, `ProductBoundary` receipt identity, `generic_executor` DAG digest | c | Canonical plan/runtime contracts; preserved, not physical equivalence. |
+| `campaign_software_lock`, `backend_admission` | c | Ensure execution uses actually admitted/installed software; not replaced with D16 equivalence. |
+| `campaign_split`, `semantic_split_models`, `split_generated_identity`, `scf_ladder_inputs` | b/c | Semantic identity/protocol for materializing generated inputs; outside the D16 judgment of observed DM/evidence. |
+| `fdf_symmetry_adapter`: symmetry certificate binding | b/c | Operation certificate bound to the declared physical model; not evidence of parent reproduction. |
+| `scf_validation`: T0–T4 protocol/evidence commitment | c | Formal validation of the independent scientific protocol; does not admit D16 parents or shadows. Retained in scope. |
+| `u_certification_node`, `u_release_gate`, `downstream_u_admission`, `domain/u_certification.py` | c / protected | Historical scientific certification/release; not edited. The migrated node is part of the protected V6 baseline. |
+| `reporting/lr_u_report`, `reporting/product_report`, `domain/lr_analysis_v2`, `matrix_lr`, `scalar_lr` | a | Only transport/render digests; they do not decide based on them. |
 
-Los usos de los módulos parent/shadow/reuse/backend BARE de la tabla inicial
-se mantienen advertencia-only. El escaneo se hizo con rg sobre `sha256`,
-`digest`, comparaciones y `require_sha256` en domain/execution/backend/reporting.
-No se editó V6 ni un gate de certificación/release.
+The uses of the parent/shadow/reuse/BARE backend modules in the initial table
+remain warning-only. The scan used `rg` for `sha256`, `digest`, comparisons,
+and `require_sha256` in domain/execution/backend/reporting. V6 and certification/
+release gates were not edited.
 
-### Ediciones adicionales de pruebas
+### Additional Test Edits
 
-| Caso | Antes | Ahora / razón |
+| Case | Before | Now / reason |
 |---|---|---|
-| `test_coverage`: binding effective-FDF SHA | ALL_SUBSPACES/EVIDENCE_BINDING_MISMATCH | Misma estrategia/classes/computed_columns que evidencia idéntica; warning. Fallbacks de evidencia ausente, perturbación, especie/operación y syntax permanecen. |
-| `test_perturbation_plan`: source/effective/inventory SHA | Error | Mismos status/runs/reconstrucciones y warnings; alteración bands/pesos aún error. |
-| `test_product_admission`: snapshot digest | Bloqueo por digest | Caso físico preservado alterando atomic_number; nuevos casos SHA solo advierten. Fixture usa ProjectorEvidence/CorrelatedSubspace completos para comparar por valores. |
-| `test_perturbation_planner`: parent-DM SHA ausente | NOT_ESTABLISHED | READY directo con warning; referencia realmente inadmisible sigue NOT_ESTABLISHED y runs completos. |
-| `test_observation_provenance_integration`: parent SHA distinto | Error mixtures | compatible_for_analysis con warning; grid incompleto y estado SCF incorrecto siguen error. |
-| Nuevos casos en `test_source_evidence`, `test_campaign_plan`, `test_generic_executor`, `test_fdebq_rounds`, `test_occupation_noise_calibration`, `test_hash_traceability` | Sin cobertura absence/malformed | Reextracción idéntica/estado físico idéntico para SHA ausente/malformado y errores reales por archivo ausente, recibo sin node ID, ocupación/identidad canónica cambiada o estadístico alterado. |
+| `test_coverage`: effective-FDF SHA binding | `ALL_SUBSPACES`/`EVIDENCE_BINDING_MISMATCH` | Same strategy/classes/computed_columns as identical evidence; warning. Fallbacks for missing evidence, perturbation, species/operation, and syntax remain. |
+| `test_perturbation_plan`: source/effective/inventory SHA | Error | Same statuses/runs/reconstructions and warnings; changed bands/weights still error. |
+| `test_product_admission`: snapshot digest | Digest-based block | Physical case retained by changing `atomic_number`; new SHA cases only warn. Fixture uses complete `ProjectorEvidence`/`CorrelatedSubspace` to compare values. |
+| `test_perturbation_planner`: parent-DM SHA absent | `NOT_ESTABLISHED` | Direct `READY` with warning; a truly inadmissible reference remains `NOT_ESTABLISHED` with full runs. |
+| `test_observation_provenance_integration`: different parent SHA | Mixtures error | `compatible_for_analysis` with warning; incomplete grid and incorrect SCF state still error. |
+| New cases in `test_source_evidence`, `test_campaign_plan`, `test_generic_executor`, `test_fdebq_rounds`, `test_occupation_noise_calibration`, `test_hash_traceability` | No absence/malformed coverage | Identical re-extraction/physical state for absent/malformed SHA; real errors for missing file, receipt without node ID, changed occupation/canonical identity, or altered statistic. |
 
-No se cambió timeout ni límite Hypothesis. Una ejecución intermedia excedió el
-deadline de 200 ms por construir warnings del plan recorriendo dos veces todo
-el modelo; se optimizó el código a inspeccionar solo metadata y se reran los
-15 tests del plan: `15 passed, 2 warnings in 4.65s`.
+The timeout and Hypothesis limit were unchanged. An intermediate run exceeded
+the 200 ms deadline because plan warnings traversed the entire model twice; the
+code was optimized to inspect metadata only, and the 15 plan tests were rerun:
+`15 passed, 2 warnings in 4.65s`.
 
-Pasada ampliada final (incluye provider y los consumidores modificados antes):
+Final expanded pass (including the provider and previously modified consumers):
 
 ```
 python -m pytest -q tests/unit/test_hash_traceability.py tests/unit/test_reference_reproduction.py tests/unit/test_response_reuse.py tests/unit/test_bare_semantics_evidence.py tests/unit/test_bare_trace_adversarial_audit.py tests/unit/test_bare_trace_provider.py tests/unit/test_import_architecture.py tests/unit/test_observation_assembly.py tests/unit/test_product_admission.py tests/unit/test_campaign_shadow.py tests/unit/test_source_evidence.py
 170 passed, 4 skipped, 2 warnings in 16.45s
 ```
 
-Salida literal de gates finales:
+Literal output from final gates:
 
 ```
 git diff --check
-# sin salida, exit 0
+# no output, exit 0
 bash tools/check_v6_integrity.sh
 V6 GATE OK
 ruff check --isolated --target-version py312 --line-length 110 <hash_traceability, response_reuse, campaign_pilot_reuse y sus tests editados>
 All checks passed!
-ruff format --isolated --line-length 110 --check <mismos seis archivos>
+ruff format --isolated --line-length 110 --check <same six files>
 6 files already formatted
 mypy --strict --follow-imports=silent src/hubbardflow/domain/hash_traceability.py src/hubbardflow/domain/response_reuse.py src/hubbardflow/execution/campaign_pilot_reuse.py
 Success: no issues found in 3 source files
 ```
 
-Los cuatro skipped pertenecen a las pruebas POSIX/integración condicionadas en
-Windows de la suite de source_evidence; no se ejecutó SIESTA. Los warnings son
-las dos deprecaciones existentes de alpha_selection/adaptive_alpha. No se hizo
-commit, push, PR ni cambio de rama en esta pasada.
+The four skipped tests are POSIX/integration tests conditioned on Windows in
+the source_evidence suite; SIESTA was not run. The warnings are the two existing
+deprecations of alpha_selection/adaptive_alpha. No commit, push, PR, or branch
+change was made in this pass.
 
 
-## Evidencia final de la ampliación
+## Final Evidence for the Expansion
 
 ```
 # source_evidence + perturbation_plan_evidence + response_grid_reproducibility_independence
 20 passed, 4 skipped, 2 warnings in 2.08s
-# observation_provenance + occupation_noise_calibration (incluye fixture receipt DM/evidence opcionales)
+# observation_provenance + occupation_noise_calibration (includes optional DM/evidence receipt fixture)
 16 passed in 0.71s
 # fdebq_rounds + hash_traceability + generic_executor
 43 passed, 2 warnings in 7.07s
@@ -387,43 +390,43 @@ commit, push, PR ni cambio de rama en esta pasada.
 123 passed, 4 skipped, 2 warnings in 67.54s
 ```
 
-La suite amplia inicial de doce módulos tenía assertions hash antiguas y fue
-interrumpida tras difundir los resultados focalizados, a petición del
-orquestador. Otra corrida coverage/plan/planner llegó a `70 passed` antes de la
-aserción histórica parent-DM ausente (ya adaptada y documentada). La última
-repetición de esos tres módulos se interrumpió para liberar escritor, sin
-nuevos fallos impresos. No se declara suite amplia completa verde.
+The initial broad suite of twelve modules had old hash assertions and was
+interrupted after focused results were shared, at the orchestrator's request.
+Another coverage/plan/planner run reached `70 passed` before the historical
+missing parent-DM assertion (since adapted and documented). The last rerun of
+those three modules was interrupted to free the writer, with no new failures
+printed. The broad suite is not declared fully green.
 
 
-## Correcciones de la auditoría final de D16.1
+## Corrections from the Final D16.1 Audit
 
-- La comparación de ocupaciones calcula para cada elemento el radio como la
-  suma de los semianchos de sus dos tokens decimales. Aplica a ese elemento
-  `max(radio_impresion_elemento, factor * SCF.DM.Tolerance)`. Un token de menor
-  precisión en otro elemento o átomo nunca amplía la tolerancia de éste.
-  `occupation_tolerance_e` conserva el máximo sólo como resumen informativo;
-  `occupation_tolerances_e` registra todos los radios efectivos usados.
-- `affected_atom_indices` conserva todos los átomos con diferencias físicas;
-  la expansión usa ese campo tipado. No interpreta el primer átomo de una
-  cadena de diagnóstico. Identidad global incompleta, datos heredados sin
-  alcance tipado o índices que no se pueden localizar hacen calcular
-  directamente todas las clases reducidas de ese padre.
-- El reporte muestra ambos digests, diferencias máximas, radios efectivos de
-  ocupación, tolerancia SCF declarada y factor. Fermi registra su propio estado,
-  diferencia, semianchos de impresión, tolerancia declarada/efectiva, fuente y
-  advertencias. Sin declaración usa `RECORDED_NOT_ASSESSED` y no cambia el padre.
-- Revalidar un resume guarda `node-evidence.json` aun cuando todos los nodos
-  siguen validados: las advertencias de hash no dependen de una invalidación
-  para persistirse.
+- Occupation comparison calculates the radius for each element as the
+  sum of the half-widths of its two decimal tokens. For that element it applies
+  `max(element_print_radius, factor * SCF.DM.Tolerance)`. Lower precision in
+  another element or atom never expands this element's tolerance.
+  `occupation_tolerance_e` retains the maximum only as an informational summary;
+  `occupation_tolerances_e` records every effective radius used.
+- `affected_atom_indices` retains all atoms with physical differences; expansion
+  uses this typed field. It does not parse the first atom from a diagnostic
+  string. Incomplete global identity, legacy data without typed scope, or
+  unlocatable indices cause direct calculation of all reduced classes for that
+  parent.
+- The report shows both digests, maximum differences, effective occupation
+  radii, declared SCF tolerance, and factor. Fermi records its own state,
+  difference, print half-widths, declared/effective tolerance, source, and
+  warnings. Without a declaration it uses `RECORDED_NOT_ASSESSED` and does not
+  change the parent verdict.
+- Revalidating a resume saves `node-evidence.json` even when all nodes remain
+  validated: hash warnings do not depend on invalidation to persist.
 
-Pruebas nuevas: precisiones heterogéneas en un mismo átomo (un token `0.5`
-no oculta la diferencia `0.00002` en otro elemento); registro de dos átomos
-físicamente distintos; expansión de dos clases y expansión global por
-identidad incompleta; tolerancias y Fermi no evaluado en Markdown; advertencias
-persistidas sin invalidaciones. La prueba adversarial de MnO archivado y las
-pruebas de ruido y DM distinto permanecen activas. No se actualizó ningún golden.
+New tests: heterogeneous precision within one atom (a `0.5` token does not hide
+the `0.00002` difference in another element); recording two physically distinct
+atoms; expansion of two classes and global expansion for incomplete identity;
+unevaluated tolerances and Fermi in Markdown; warnings persisted without
+invalidations. The archived MnO adversarial test and noise/different-DM tests
+remain active. No golden was updated.
 
-Salida literal de verificación enfocada:
+Literal output from focused verification:
 
 ```text
 70 passed, 2 warnings in 18.90s
@@ -434,39 +437,37 @@ Success: no issues found in 5 source files
 V6 GATE OK
 ```
 
-Comandos: pytest con rutas explícitas para `test_reference_reproduction.py`,
+Commands: pytest with explicit paths for `test_reference_reproduction.py`,
 `test_campaign_shadow.py`, `test_campaign_runner_execution_identity.py` y
 `test_import_architecture.py`; ruff check y format de referencia y adaptador;
-ruff check de las pruebas de shadow; mypy strict con follow-imports=silent
-para los cinco módulos/pruebas de referencia y shadow. Ruff F del runner
-legado informa once hallazgos preexistentes (imports históricos y un f-string);
-no se alteran sus APIs ni se eliminan esos imports en esta corrección.
+ruff check for shadow tests; mypy strict with follow-imports=silent for the five
+reference and shadow modules/tests. Ruff F on the legacy runner reports eleven
+pre-existing findings (historical imports and one f-string); its APIs were not
+changed and those imports were not removed in this correction.
 
 
-La revisión final corrige `RECORD_ONLY`: nunca concede equivalencia, pero una
-ocupación que excede la tolerancia efectiva y una identidad incompleta siguen
-invalidando la reducción del padre con su reason code físico. Las pruebas
-cubren ambas vías (comparador de dominio y parser), y mantienen la ausencia
-de rechazo por ruido dentro de tolerancia o DM de bytes distintos. Se actualiza
-`CODEX_TASK23_TS.md` para retirar la opción bitwise y el reason code de DM,
-documentar cálculo directo por alcance físico y la decisión dimensional Fermi
-recibida del usuario.
+The final review corrects `RECORD_ONLY`: it never grants equivalence, but an
+occupation exceeding the effective tolerance and an incomplete identity still
+invalidate the parent's reduction with the physical reason code. Tests cover
+both paths (domain comparator and parser) and retain no rejection for noise
+within tolerance or different DM bytes. `CODEX_TASK23_TS.md` is updated to
+remove the bitwise option and DM reason code, document direct calculation by
+physical scope, and record the user's dimensional decision for Fermi.
 
-### TASK 23c-bis — aclaración aceptada de `RECORD_ONLY`
+### TASK 23c-bis — Accepted Clarification of `RECORD_ONLY`
 
-La redacción inicial de la tarea (“registra sin decidir”) se matiza de forma
-intencional en este modo: `RECORD_ONLY` nunca declara equivalencia física ni
-aprueba una reducción TS. Sí conserva el rechazo y el cálculo directo cuando
-hay una diferencia física medida fuera de tolerancia o una identidad de
-átomo/proyector incompleta. Se acepta esta interpretación como el criterio más
-seguro porque el modo no debe convertir evidencia física negativa en permiso
-para reducir. Esta decisión depende de ocupaciones e identidad física, nunca
-de SHA/digests; los hashes siguen siendo advertencias y trazabilidad solamente.
+The task's initial wording (“record without deciding”) is intentionally refined
+for this mode: `RECORD_ONLY` never declares physical equivalence or approves a
+TS reduction. It does retain rejection and direct calculation when a measured
+physical difference is outside tolerance or atom/projector identity is
+incomplete. This interpretation is accepted as the safer criterion because
+the mode must not turn negative physical evidence into permission to reduce.
+This decision depends on occupations and physical identity, never SHA/digests;
+hashes remain warnings and traceability only.
 
 
-Salida literal después de corregir RECORD_ONLY (pytest con los cinco módulos
-explícitos de referencia, shadow, identidad del runner, hash traceability y
-arquitectura):
+Literal output after correcting RECORD_ONLY (pytest with five explicit modules
+for reference, shadow, runner identity, hash traceability, and architecture):
 
 ```text
 89 passed, 2 warnings in 16.73s
@@ -476,11 +477,11 @@ Success: no issues found in 5 source files
 V6 GATE OK
 ```
 
-`git diff --check` termina sin salida. El diff de `test_campaign_plan.py` se
-minimiza preservando los bytes de las líneas históricas y agregando sólo los
-casos de configuración/trazabilidad ya presentes; no se debilitan aserciones.
+`git diff --check` exits without output. The `test_campaign_plan.py` diff is
+minimized by preserving the bytes of historical lines and adding only the
+existing configuration/traceability cases; no assertions are weakened.
 
-La suite explícita `tests/unit/test_campaign_plan.py` pasó:
+The explicit suite `tests/unit/test_campaign_plan.py` passed:
 
 ```text
 39 passed, 2 warnings in 45.33s

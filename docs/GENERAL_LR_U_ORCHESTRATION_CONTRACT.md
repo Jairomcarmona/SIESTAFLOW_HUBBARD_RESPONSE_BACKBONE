@@ -1,139 +1,136 @@
-# Contrato general de orquestación LR-U
+# General LR-U Orchestration Contract
 
-## Propósito
+## Purpose
 
-Este proyecto implementa un flujo de respuesta lineal de diferencias finitas
-para un backend SIESTA. No es una colección de campañas por material. El
-núcleo científico recibe una estructura FDF, subespacios DFT+U, evidencia del
-estado de referencia y una política declarada; el perfil de ejecución aporta
-el planificador y el entorno de cómputo sin entrar en la matemática.
+This project implements a finite-difference linear-response workflow for a
+SIESTA backend. It is not a collection of material-specific campaigns. The
+scientific core receives an FDF structure, DFT+U subspaces, evidence for the
+reference state, and a declared policy; the execution profile supplies the
+scheduler and compute environment without entering the mathematics.
 
-## Flujo y puertas científicas
+## Workflow and scientific gates
 
 ```text
-entrada FDF + PSML
-  -> auditor de subespacio / procedencia
-  -> referencia SIESTA convergida y estado magnético evidenciado
-  -> plan de simetría provisional
-  -> perturbaciones BARE y SCREENED con +/- alpha
-  -> sombras directas de las clases reducibles
-  -> autorización o expansión explícita
-  -> chi0, chi, inversión directa, U y evidencia final
+FDF + PSML input
+  -> subspace / provenance audit
+  -> converged SIESTA reference and evidenced magnetic state
+  -> provisional symmetry plan
+  -> BARE and SCREENED perturbations with +/- alpha
+  -> direct shadows of reducible classes
+  -> authorization or explicit expansion
+  -> chi0, chi, direct inversion, U, and final evidence
 ```
 
-Ninguna puerta puede ser sustituida por un valor por defecto, por un promedio
-ni por una pseudoinversa. Un fallo o evidencia incompleta produce una campaña
-explícita, no una reducción silenciosa.
+No gate can be replaced by a default value, an average, or a pseudoinverse.
+Failure or incomplete evidence produces an explicit campaign outcome, never a
+silent reduction.
 
-## Núcleo independiente del backend y del clúster
+## Core independent of backend and cluster
 
-`domain.symmetry_reduction` define:
+`domain.symmetry_reduction` defines:
 
-- `SymmetryReductionPolicy`: amplitud de perturbación y tolerancias fijadas
-  **antes** de ejecutar;
-- `SymmetryReductionPlan`: representantes, sombras y las cuatro respuestas
-  BARE/SCREENED con signos opuestos para cada sitio requerido;
-- `ShadowObservation`: comparación completa de ocupaciones, columnas
-  `chi0` y `chi` frente a la transformación predicha;
-- `ReductionAuthorization`: autorización de reducción o expansión de las
-  órbitas rechazadas a perturbaciones explícitas.
+- `SymmetryReductionPolicy`: perturbation amplitude and tolerances fixed
+  **before** execution;
+- `SymmetryReductionPlan`: representatives, shadows, and the four BARE/SCREENED
+  responses with opposite signs for every required site;
+- `ShadowObservation`: complete comparison of occupations, `chi0` and `chi`
+  columns against the predicted transformation;
+- `ReductionAuthorization`: authorization to reduce or expand rejected orbits
+  into explicit perturbations.
 
-No contiene símbolos químicos, nombres de materiales, rutas, comandos MPI,
-particiones Slurm ni supuestos de supercelda. La misma lógica puede usarse
-con cualquier adaptador que entregue una geometría canónica, ocupaciones y
-una evidencia magnética verificable.
+It contains no chemical symbols, material names, paths, MPI commands, Slurm
+partitions, or supercell assumptions. The same logic can be used with any
+adapter that supplies canonical geometry, occupations, and verifiable magnetic
+evidence.
 
-## Adaptador SIESTA
+## SIESTA adapter
 
-El adaptador FDF valida la geometría, los campos `DFTU.Proj` y los índices de
-sitio. La evidencia magnética se extrae de la salida final de SIESTA, no de
-`DM.InitSpin`. Si no existe evidencia de referencia unida al hash exacto de
-la FDF, el adaptador genera un plan explícito.
+The FDF adapter validates geometry, `DFTU.Proj` fields, and site indices.
+Magnetic evidence is extracted from the final SIESTA output, not from
+`DM.InitSpin`. If there is no reference evidence tied to the exact FDF hash,
+the adapter generates an explicit plan.
 
-Por defecto sólo se permiten operaciones con rotación identidad. Una
-rotación orbital no se deduce de coordenadas: requiere que el backend
-certifique que el subespacio y la ocupación escalar son invariantes.
+By default, only operations with identity rotation are allowed. An orbital
+rotation is not inferred from coordinates: the backend must certify that the
+subspace and scalar occupation are invariant.
 
-## Reducción y prueba sombra
+## Reduction and shadow test
 
-Una clase de equivalencia es provisional. Para cada clase reducible, el
-planificador selecciona determinísticamente un representante y un miembro
-distinto unido por una operación permitida. Ejecuta ambos con BARE/SCREENED y
-`+/- alpha`.
+An equivalence class is provisional. For every reducible class, the scheduler
+deterministically selects a representative and a distinct member linked by an
+allowed operation. It runs both with BARE/SCREENED and `+/- alpha`.
 
-La reducción se autoriza únicamente si las cuatro salidas son científicamente
-válidas y si los residuales de ocupación, `chi0` y `chi` quedan bajo los
-umbrales publicados. Una sombra fallida no se promedia: toda su órbita pasa a
-expansión explícita.
+Reduction is authorized only if all four outputs are scientifically valid and
+the occupation, `chi0`, and `chi` residuals fall below the published
+thresholds. A failed shadow is not averaged: its entire orbit is explicitly
+expanded into perturbations.
 
-## Ejecución y reanudación
+## Execution and resumption
 
-El plan no presupone Slurm. Un adaptador de ejecución materializa FDFs,
-ordena nodos del DAG y registra cada resultado validado. Un perfil privado de
-clúster puede ejecutar las tareas secuencialmente dentro de una asignación
-grande o con otro modelo de recursos. La reanudación debe reutilizar sólo
-resultados cuya procedencia y validación sigan siendo válidas.
+The plan does not assume Slurm. An execution adapter materializes FDFs, orders
+DAG nodes, and records each validated result. A private cluster profile can
+run tasks sequentially within a large allocation or use another resource
+model. Resumption may reuse only results whose provenance and validation
+remain valid.
 
-## Estado de implementación
+## Implementation status
 
-El núcleo de planificación, autorización y expansión explícita está
-implementado y probado localmente. El materializador SIESTA consume ahora un
-`PerturbationSpec` y preserva la FDF auditada mientras cambia sólo el sitio
-objetivo y los controles BARE/SCREENED. El DAG científico neutral representa
-referencia, respuestas, compuerta de sombras y expansión posterior a un
-rechazo.
+The planning, authorization, and explicit expansion core is implemented and
+tested locally. The SIESTA materializer now consumes a `PerturbationSpec` and
+preserves the audited FDF while changing only the target site and BARE/SCREENED
+controls. The backend-neutral scientific DAG represents the reference,
+responses, shadow gate, and expansion after rejection.
 
-## Candados de implementación y alcance
+## Implementation constraints and scope
 
-El núcleo incorpora ahora un ejecutor reanudable neutral al planificador. Un
-adaptador privado de ejecución (`local` o `Slurm`) recibe un nodo listo y debe
-devolver una evidencia validada; el núcleo conserva un *checkpoint* JSON
-ligado al hash exacto del DAG. Un DAG distinto no puede reutilizarlo. Un nodo
-hijo nunca inicia hasta que todos sus padres estén validados y la primera
-salida terminal inválida detiene el avance. Esto permite reutilizar una
-referencia o una perturbación certificada sin reutilizar resultados de otra
-política científica.
+The core now includes a resumable executor that is neutral to the scheduler. A
+private execution adapter (`local` or `Slurm`) receives a ready node and must
+return validated evidence; the core retains a JSON checkpoint tied to the
+exact DAG hash. A different DAG cannot reuse it. A child node never starts
+until all its parents are validated, and the first invalid terminal output
+stops progress. This allows reuse of a reference or certified perturbation
+without reusing results from another scientific policy.
 
-El adaptador SIESTA dispone de un `SiestaCommandFactory` que materializa cada
-referencia o perturbación en un directorio nuevo, copia exclusivamente los
-artefactos estáticos declarados, preserva la FDF de referencia y construye un
-comando Hydra desde un perfil ya validado. El comando usa entrada, salida y
-error explícitos, sin *shell* ni un `sbatch` por nodo. El *wrapper* privado de
-la asignación sigue siendo responsable de cargar módulos; el núcleo no ejecuta
-comandos de módulo ni conoce el sitio.
+The SIESTA adapter has a `SiestaCommandFactory` that materializes each
+reference or perturbation in a new directory, copies only declared static
+artifacts, preserves the reference FDF, and builds a Hydra command from an
+already validated profile. The command uses explicit input, output, and error
+paths, without a *shell* or one `sbatch` per node. The private allocation
+wrapper remains responsible for loading modules; the core runs no module
+commands and knows no cluster site.
 
-El factory y el validador no autorizan todavía una campaña BARE de producción
-por sí solos: un certificado BARE debe ligarse a la salida y traza nativa
-producidas **después** de esa ejecución. Si no existe tal sidecar verificable,
-el nodo BARE falla cerrado. La implementación pendiente es un proveedor de
-evidencia BARE que reciba una traza nativa sancionada; no se debe reemplazar
-por heurísticas sobre el número de iteraciones SCF.
+The factory and validator do not yet authorize a production BARE campaign on
+their own: a BARE certificate must be tied to the native output and trace
+produced **after** that execution. Without a verifiable sidecar, the BARE node
+fails closed. The outstanding implementation is a BARE evidence provider
+that receives an approved native trace; it must not be replaced by heuristics
+based on the number of SCF iterations.
 
-La selección adaptativa de amplitud está representada por un DAG alternativo
-explícito. Para una amplitud nominal \(h\), éste materializa
-\(\{-2h,-h,-h/2,0,h/2,h,2h\}\): el punto cero es la referencia y cada punto
-no nulo contiene sus ramas BARE y SCREENED. La compuerta de linealidad admite
-únicamente una ventana común que conserve el estado magnético, tenga señal
-resuelta y pase los criterios predeclarados de residuo y deriva de pendiente.
-Un fin normal de SIESTA no autoriza por sí solo la inversión de matrices.
+Adaptive amplitude selection is represented by an explicit alternative DAG.
+For nominal amplitude \(h\), it materializes
+\(\{-2h,-h,-h/2,0,h/2,h,2h\}\): zero is the reference, and every nonzero
+point contains its BARE and SCREENED branches. The linearity gate admits only
+a common window that preserves the magnetic state, has resolved signal, and
+passes the predeclared residual and slope-drift criteria. A normal SIESTA exit
+alone does not authorize matrix inversion.
 
-La capacidad certificada actual del adaptador es **DFT+U escalar, colineal y
-un subespacio correlacionado por sitio**. Las solicitudes no colineales, con
-SOC, varios subespacios por sitio, transformaciones orbitales covariantes o
-DFT+U+V se rechazan antes de materializar una FDF. Esta limitación evita el
-resultado aparentemente exitoso pero físicamente mal interpretado.
+The adapter's currently certified capability is **scalar, collinear DFT+U
+with one correlated subspace per site**. Non-collinear, SOC, multiple
+subspaces per site, covariant orbital transformations, and DFT+U+V requests
+are rejected before an FDF is materialized. This limitation prevents an
+apparently successful result from being physically misinterpreted.
 
-Para ampliar esas capacidades hacen falta adaptadores específicos y pruebas
-con evidencia real:
+Expanding these capabilities requires dedicated adapters and tests with real
+evidence:
 
-1. simetría cristalográfica mediante una librería canónica y simetría
-   magnética basada en la salida de referencia, incluyendo la representación
-   del orbital bajo cada rotación;
-2. extracción de matrices espinoriales complejas para no colinealidad/SOC y
-   pruebas de covariancia;
-3. definición, perturbación y ensamblaje de pares intersitio para \(U+V\);
-4. un plugin de ejecución local y otro Slurm que materialicen FDF, lancen el
-   backend y construyan `NodeReceipt` sólo después de validar outputs.
+1. crystallographic symmetry through a canonical library and magnetic symmetry
+   based on the reference output, including representation of the orbital under
+   each rotation;
+2. extraction of complex spinor matrices for non-collinearity/SOC and
+   covariance tests;
+3. definition, perturbation, and assembly of intersite pairs for \(U+V\);
+4. one local and one Slurm execution plugin to materialize FDFs, run the
+   backend, and construct `NodeReceipt` only after validating outputs.
 
-Los ZIP de campañas históricas permanecen como fixtures de integración y
-evidencia, no como reglas del software ni como perfiles públicos de clúster.
+Historical campaign ZIPs remain integration fixtures and evidence, not
+software rules or public cluster profiles.

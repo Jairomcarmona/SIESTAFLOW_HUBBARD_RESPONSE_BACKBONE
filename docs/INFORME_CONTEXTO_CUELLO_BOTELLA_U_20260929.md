@@ -1,435 +1,448 @@
-# Informe de contexto: cuello de botella para obtener y reportar U con SIESTAFLOW
+# Context Report: Bottleneck in Obtaining and Reporting U with SIESTAFLOW
 
-**Fecha:** 2026-09-29  
-**Propósito:** entregar a otro asistente un estado técnico suficientemente completo para razonar sobre rutas de investigación, cuestionar las hipótesis actuales y proponer el siguiente paso que más información aporte.  
-**Alcance de este informe:** síntesis y análisis de evidencia ya existente. No autoriza una campaña nueva, ejecución de SIESTA, cambios a código de SIESTA, cambios a datos históricos ni modificaciones de tolerancias.
+**Date:** 2026-09-29
+**Purpose:** provide another assistant with a sufficiently complete technical status to reason about investigation paths, challenge current hypotheses, and propose the next step that would add the most information.
+**Scope of this report:** synthesis and analysis of existing evidence. It does not authorize a new campaign, SIESTA execution, changes to SIESTA code, changes to historical data, or tolerance changes.
 
-**Estado terminal del cierre P0–P6 registrado el 2026-09-28:** `PRODUCT_BLOCKED`.
-Las puertas operativas P0–P6 pasaron y se construyó el wheel 0.1.2, pero el
-resultado P5 quedó como `NUMERICAL_CANDIDATE_UNASSESSED` / `NOT_ESTABLISHED`.
-Según el [registro final de ejecución](P0_EXECUTION_20260928.md), eso no
-satisface el objetivo científico que el usuario exige para considerar listo el
-producto. Este informe busca una vía para resolver ese bloqueo; no reclasifica
-el estado terminal.
+**Terminal state of the P0–P6 closeout recorded on 2026-09-28:** `PRODUCT_BLOCKED`.
+Operational gates P0–P6 passed and wheel 0.1.2 was built, but P5 remained
+`NUMERICAL_CANDIDATE_UNASSESSED` / `NOT_ESTABLISHED`. According to the
+[final execution log](P0_EXECUTION_20260928.md), this does not meet the
+scientific objective the user requires to consider the product ready. This
+report seeks a way to resolve that block; it does not reclassify the terminal
+state.
 
-**Disponibilidad del repositorio:** la implementación 0.1.2, varios módulos
-v3, pruebas y documentos de cierre están en la rama publicada
+**Repository availability:** implementation 0.1.2, several v3 modules, tests,
+and closeout documents are on published branch
 `codex/sync-product-20260929` y en el
 [PR borrador #4](https://github.com/Jairomcarmona/SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE/pull/4).
-La rama `main` conserva una versión anterior. Véase
-el [inventario de sincronización](ESTADO_REPOSITORIO_Y_PUBLICACION_20260929.md)
-antes de atribuir a la rama remota el estado de este expediente.
+Branch `main` retains an earlier version. See the
+[synchronization inventory](ESTADO_REPOSITORIO_Y_PUBLICACION_20260929.md)
+before attributing this record's status to the remote branch.
 
 ---
 
-## 1. Resumen ejecutivo
+## 1. Executive summary
 
-El problema que se quiere resolver no es simplemente “hacer que el reporte diga que U sirve” ni “conseguir más decimales”. La necesidad central es que SIESTAFLOW pueda producir una respuesta de Hubbard U que sea **numéricamente útil, reproducible bajo un protocolo explícito y presentada con una interpretación honesta**, usando instalaciones de SIESTA soportadas sin modificarlas.
+The problem to solve is not simply “make the report say U is useful” or “get more decimals.” The core need is for SIESTAFLOW to produce a Hubbard U response that is **numerically useful, reproducible under an explicit protocol, and presented with an honest interpretation**, using supported SIESTA installations without modifying them.
 
-El cierre ejecutado de P0–P6 entregó el flujo operativo y una campaña P5 de
-25 nodos, pero terminó en **`PRODUCT_BLOCKED`** por el objetivo científico de
-U pendiente. `0.1.2` identifica el paquete construido y probado; no debe
-interpretarse como declaración de `PRODUCT_READY`.
+The completed P0–P6 closeout delivered the operational workflow and a 25-node
+P5 campaign, but ended as **`PRODUCT_BLOCKED`** because the scientific U goal
+remains unresolved. `0.1.2` identifies the built and tested package; it must
+not be
+interpreted as a declaration of `PRODUCT_READY`.
 
-Hoy hay una diferencia fundamental entre dos preguntas:
+There is a fundamental difference between two questions:
 
-1. **¿El software funciona como herramienta?** Puede recibir una estructura/configuración, preparar y ejecutar el protocolo soportado, registrar procedencia, analizar la respuesta y generar resultados reproducibles o un estado terminal informativo.
-2. **¿Está establecida la aceptación numérica o física de un U concreto para NiO?** Eso requiere criterios y evidencia adicionales. Un candidato numérico puede ser útil sin que la aceptación física esté establecida.
+1. **Does the software work as a tool?** It can receive a structure/configuration, prepare and run the supported protocol, record provenance, analyze the response, and generate reproducible results or an informative terminal state.
+2. **Is numerical or physical acceptance established for a particular NiO U?** That requires additional criteria and evidence. A numerical candidate can be useful without physical acceptance being established.
 
-El reporte actual de la campaña adaptativa NiO comunica `NUMERICAL_CANDIDATE_UNASSESSED` y `NOT_ESTABLISHED` para aceptación física porque no había una tolerancia de sensibilidad declarada antes de esa campaña. El algoritmo `STOP_STABLE` indica que se cumplió su regla de parada de refinamiento adaptativo; **no** convierte por sí solo esa regla en una garantía de exactitud física.
+The current adaptive NiO campaign report gives `NUMERICAL_CANDIDATE_UNASSESSED` and `NOT_ESTABLISHED` for physical acceptance because no sensitivity tolerance was declared before that campaign. `STOP_STABLE` means its adaptive-refinement stopping rule was met; **it does not** by itself turn that rule into a guarantee of physical accuracy.
 
-El objetivo operativo que el usuario escogió después es ±0.02 eV por sitio para `U_scalar_charge`. Es un objetivo de ingeniería/aceptación numérica para investigar, no una constante física universal ni un umbral reconocido automáticamente por todos los métodos. El hecho de que una cota determinista conservadora exceda 0.02 eV significa que **el procedimiento actual no certifica ese objetivo bajo esa cota**. No prueba que el error real de U exceda 0.02 eV, que U sea inútil, ni que el método de respuesta lineal haya fallado.
+The operational target the user later selected is ±0.02 eV per site for `U_scalar_charge`. It is an engineering/numerical-acceptance target to investigate, not a universal physical constant or a threshold automatically recognized by all methods. A conservative deterministic bound exceeding 0.02 eV means **the current procedure does not certify that target under that bound**. It does not prove that actual U error exceeds 0.02 eV, that U is useless, or that the linear-response method failed.
 
-La cota cúbica primaria que aparece en el resultado adaptativo es **0.03436273105 eV**. La cifra **0.01353711826 eV** corresponde a un ajuste lineal diagnóstico. No deben intercambiarse: provienen de estimadores distintos. Para otra malla/campaña fija P5, la cota determinista de impresión v3 reportada es aproximadamente **0.01183306193 eV** por sitio. Las magnitudes difieren porque la propagación depende de la malla, de las observaciones usadas y del estimador.
+The primary cubic bound in the adaptive result is **0.03436273105 eV**. The value **0.01353711826 eV** is from a diagnostic linear fit. They must not be interchanged: they use different estimators. For the separate fixed-mesh P5 campaign, the reported v3 deterministic printing bound is approximately **0.01183306193 eV** per site. These magnitudes differ because propagation depends on the mesh, observations used, and estimator.
 
-La evidencia ya descarta una atribución simple de una diferencia entre campañas al ruido SCF: al releer con el mismo analizador v3, la distancia P5–adaptive ronda 10.22 meV por sitio y queda dentro de las cotas deterministas de impresión de ambas. En cambio, aplicar v2 y v3 a los mismos archivos adaptativos cambia U en aproximadamente 30.5–31.6 meV, lo que demuestra que cambiar la fuente/semántica de ocupación y el analizador puede mover el resultado más que la diferencia entre campañas. Esa incompatibilidad histórica ya está identificada y no debe mezclarse con repetibilidad SCF.
+Evidence already rules out a simple attribution of the between-campaign difference to SCF noise: rereading with the same v3 analyzer gives a P5–adaptive distance around 10.22 meV per site, within the deterministic printing bounds for both. By contrast, applying v2 and v3 to the same adaptive files shifts U by approximately 30.5–31.6 meV, showing that changing occupation source/semantics and analyzer can move the result more than the between-campaign difference. This historical incompatibility is identified and must not be conflated with SCF repeatability.
 
-La comparación pública con otros códigos da contexto, no un criterio de aceptación: Quantum ESPRESSO muestra U diagonal con cuatro decimales en su salida normal y matrices con seis decimales en salida más detallada; su documentación configura por separado umbrales de convergencia. Un correo de desarrolladores explica un formato de 15 decimales para una matriz y una corrección de ancho de campo para evitar que números negativos queden pegados. VASP presenta ocupaciones con tres decimales en un tutorial. Ninguno de esos decimales demuestra por sí mismo exactitud de U, y sus algoritmos/observables pueden no ser comparables con SIESTAFLOW.
+Public comparison with other codes provides context, not an acceptance criterion: Quantum ESPRESSO shows diagonal U to four decimal places in normal output and matrices to six decimals in more detailed output; its documentation sets convergence thresholds separately. A developers' email describes a 15-decimal matrix format and a field-width adjustment to prevent adjacent negative numbers from running together. VASP shows occupations to three decimals in a tutorial. None of these decimal counts proves U accuracy by itself, and their algorithms/observables may not be comparable to SIESTAFLOW.
 
-Por ello, las rutas prometedoras no deben presuponer que el cuello de botella es `f12.6`, ni que el umbral ±0.02 es físicamente obligatorio, ni que el análisis actual sea necesariamente demasiado estricto. Primero hay que localizar qué componente consume el margen y qué afirmación se desea garantizar: resolución de impresión, robustez del estimador, repetibilidad SCF, estabilidad del protocolo o concordancia con un valor físico independiente. Estas son afirmaciones diferentes y requieren pruebas distintas.
+Therefore, promising paths must not assume that `f12.6` is the bottleneck, that ±0.02 is physically mandatory, or that the current analysis is necessarily too strict. First identify which component consumes the margin and which claim should be guaranteed: print resolution, estimator robustness, SCF repeatability, protocol stability, or agreement with an independent physical value. These are different claims and require different tests.
 
 ---
 
-## 2. Qué es el proyecto y qué se quiere entregar
+## 2. What the project is and what it should deliver
 
-`siestaflow_hubbard` es una utilidad independiente para calcular y reportar la respuesta de carga asociada a perturbaciones locales de tipo Hubbard en SIESTA. Automatiza el protocolo de campaña y conserva la relación entre entradas, nodos, salidas y análisis, en vez de exigir que una persona coordine manualmente cada cálculo y reconstruya después la procedencia.
+`siestaflow_hubbard` is a standalone utility for calculating and reporting the charge response associated with local Hubbard-type perturbations in SIESTA. It automates the campaign protocol and preserves the relationship between inputs, nodes, outputs, and analysis, rather than requiring a person to coordinate each calculation manually and reconstruct provenance afterward.
 
-El flujo de usuario previsto es, en términos generales:
+The intended user workflow is generally:
 
 ```text
-configurar entradas y sitios
+configure inputs and sites
         ↓
 init → run / status / resume → report
         ↓
-campaña trazable → respuesta por sitio → JSON versionado + informe Markdown
+traceable campaign → per-site response → versioned JSON + Markdown report
 ```
 
-El CLI contempla los comandos `init`, `run`, `status`, `resume`, `report` y `stop`. La operación objetivo incluye PowerShell→WSL y ejecución Linux; existe además una ruta para usar una asignación Slurm ya concedida. La herramienta no debe depender de una recompilación privada de SIESTA: la portabilidad a instalaciones soportadas de SIESTA es parte del valor del producto.
+The CLI includes commands `init`, `run`, `status`, `resume`, `report`, and `stop`. The target operation includes PowerShell→WSL and Linux execution; there is also a path for using an already granted Slurm allocation. The tool must not depend on a private SIESTA rebuild: portability to supported SIESTA installations is part of the product's value.
 
-El eje rector vigente es [`docs/EJE_RECTOR_CIERRE_PRODUCTO.md`](EJE_RECTOR_CIERRE_PRODUCTO.md). Define la utilidad independiente como producto y distingue el cierre del producto de la aceptación física de cada material. El plan documenta límites del alcance, puertas, rutas de investigación y estados terminales. No autoriza por sí mismo una campaña adicional.
+The current product charter is [`docs/EJE_RECTOR_CIERRE_PRODUCTO.md`](EJE_RECTOR_CIERRE_PRODUCTO.md). It defines the standalone utility as the product and distinguishes product closeout from physical acceptance for each material. The plan documents scope limits, gates, investigation paths, and terminal states. It does not itself authorize another campaign.
 
-### 2.1 Observable reportado
+### 2.1 Reported observable
 
-El método estima las matrices de respuesta sin pantalla y apantallada:
+The method estimates the unscreened and screened response matrices:
 
 \[
 \chi^0_{IJ}=\left.\frac{\partial n_I^{\mathrm{BARE}}}{\partial\alpha_J}\right|_{0},\qquad
 \chi_{IJ}=\left.\frac{\partial n_I^{\mathrm{SCREENED}}}{\partial\alpha_J}\right|_{0}.
 \]
 
-La cantidad implementada como `U_scalar_charge` es:
+The quantity implemented as `U_scalar_charge` is:
 
 \[
 U_I=\left[(\chi^0)^{-1}-\chi^{-1}\right]_{II}.
 \]
 
-Aquí `I` identifica el sitio y `J` el sitio perturbado. La ocupación proyectada depende de la definición de orbitales/proyector y de la forma en que se extrae de la salida. `U_scalar_charge` no es automáticamente `Ueff_Dudarev`; SIESTA aplica en su implementación colineal de Dudarev una combinación `U-J`, y una equivalencia requeriría un contrato físico separado. Tampoco se debe etiquetar automáticamente un elemento fuera de la diagonal como el parámetro V de otro funcional.
+Here, `I` identifies the site and `J` the perturbed site. Projected occupation depends on the orbital/projector definition and how it is extracted from output. `U_scalar_charge` is not automatically `Ueff_Dudarev`; SIESTA applies a `U-J` combination in its collinear Dudarev implementation, and equivalence would require a separate physical contract. Nor should an off-diagonal element automatically be labeled as parameter V from another functional.
 
-### 2.2 Alcance científico/técnico
+### 2.2 Scientific/technical scope
 
-El alcance certificado de la versión se centra en SIESTA 5.4.2 y en los modos de espín con protocolo y parser probados. No promete un U material universal, ni cobertura automática de SOC, espín no colineal o cálculo separado de J. La aceptación de la herramienta no se decide comparando U con literatura, gaps, parámetros de red ni el valor esperado para NiO. Esas comparaciones pueden describirse como contexto externo, pero no usarse para elegir α, ventana, estimador o valor de U.
+The version's certified scope centers on SIESTA 5.4.2 and spin modes with tested protocols and parsers. It does not promise a universal material U or automatic support for SOC, non-collinear spin, or separately calculated J. Tool acceptance is not determined by comparing U with literature, gaps, lattice parameters, or an expected NiO value. Such comparisons may be described as external context, but not used to select alpha, window, estimator, or U.
 
 ---
 
-## 3. El caso que origina el cuello de botella: NiO
+## 3. Case behind the bottleneck: NiO
 
-El caso central es NiO antiferromagnético tipo II con PBE y dos sitios correlacionados inequivalentes en el modelo de respuesta, reportados como `NiLR0` y `NiLR1`. El método aplica perturbaciones locales α, realiza cálculos BARE y SCREENED según el protocolo y reconstruye las respuestas para calcular U por sitio.
+The central case is type-II antiferromagnetic NiO with PBE and two inequivalent correlated sites in the response model, reported as `NiLR0` and `NiLR1`. The method applies local alpha perturbations, runs BARE and SCREENED calculations according to protocol, and reconstructs responses to calculate U per site.
 
-Hay más de una generación de campaña y análisis. Es esencial no tratarlas como si fueran una serie homogénea:
+There is more than one campaign and analysis generation. They must not be treated as a homogeneous series:
 
-| Elemento | Contexto | Lo que significa |
+| Item | Context | Meaning |
 |---|---|---|
-| Campaña adaptativa histórica/v2 | 41 nodos en total: 1 referencia, 20 BARE y 20 SCREENED a través de rondas adaptativas | Registró el protocolo adaptativo y análisis inicial; parte del resultado quedó ligada a la fuente de ocupación/semántica v2. |
-| Reanálisis de los mismos OUT adaptativos con v3 | Usa el mismo material producido, pero selector/parser/análisis actuales | Permite comparar método de extracción de forma controlada; no es una nueva campaña SIESTA. |
-| Cierre fijo P5/v3 | Malla fija de 25 nodos documentada para el cierre anterior | Resultado de otro protocolo/malla; no es una réplica certificada de la campaña adaptativa. |
-| Posible calibración futura | Contrato separado propone tres réplicas completas y una primaria preregistrada | Un diseño prospectivo de hasta 100 nodos (25 + 3×25); es propuesta, no autorización ni ejecución pendiente automática. |
+| Historical/adaptive v2 campaign | 41 nodes total: 1 reference, 20 BARE, and 20 SCREENED across adaptive rounds | Recorded the adaptive protocol and initial analysis; part of the result is tied to v2 occupation source/semantics. |
+| Reanalysis of the same adaptive OUT files with v3 | Uses the same generated material, but current selector/parser/analysis | Allows a controlled comparison of extraction method; it is not a new SIESTA campaign. |
+| Fixed P5/v3 closeout | Fixed mesh of 25 nodes documented for the previous closeout | Result from another protocol/mesh; not a certified replicate of the adaptive campaign. |
+| Possible future calibration | Separate contract proposes three full replicas and one preregistered primary | Prospective design of up to 100 nodes (25 + 3×25); a proposal, not an authorization or automatically pending execution. |
 
-La ruta P5 previa tuvo un límite de campaña de hasta 25 nodos para la alternativa NiO seleccionada. Ese límite no debe confundirse con el diseño prospectivo de 100 nodos de calibración: son objetivos y contratos distintos. No hay autorización vigente para iniciar otra campaña.
+The previous P5 path had a campaign limit of up to 25 nodes for the selected NiO alternative. This limit must not be confused with the prospective 100-node calibration design: these are different goals and contracts. There is no current authorization to start another campaign.
 
-### 3.1 Valores y reportes adaptativos actuales
+### 3.1 Current adaptive values and reports
 
-El reporte adaptativo v3 asociado a la campaña UUID `99d5ee67-d9cf-41f1-9f8f-39315c6e81fd` identifica el material `NiO-AFMII-PBE`, SIESTA 5.4.2, analizador v0.1.2 y esquema v3. Informa, aproximadamente:
+The v3 adaptive report associated with campaign UUID `99d5ee67-d9cf-41f1-9f8f-39315c6e81fd` identifies material `NiO-AFMII-PBE`, SIESTA 5.4.2, analyzer v0.1.2, and schema v3. It reports approximately:
 
-| Magnitud | NiLR0 | NiLR1 |
+| Quantity | NiLR0 | NiLR1 |
 |---|---:|---:|
-| `U_scalar_charge` en el análisis adaptativo v3 | 6.86706412 eV | 6.86623404 eV |
-| Diagnóstico de sensibilidad al estimador | 0.00604 eV | 0.00534 eV |
-| Diagnóstico de sensibilidad a ventana | 0.004777 eV | 0.004359 eV |
-| Condición de χ⁰ | rango 2/2; condición ≈1.745 | rango 2/2; condición ≈1.745 |
-| Condición de χ | rango 2/2; condición ≈1.024 | rango 2/2; condición ≈1.024 |
+| `U_scalar_charge` in adaptive v3 analysis | 6.86706412 eV | 6.86623404 eV |
+| Estimator-sensitivity diagnostic | 0.00604 eV | 0.00534 eV |
+| Window-sensitivity diagnostic | 0.004777 eV | 0.004359 eV |
+| χ⁰ condition | rank 2/2; condition ≈1.745 | rank 2/2; condition ≈1.745 |
+| χ condition | rank 2/2; condition ≈1.024 | rank 2/2; condition ≈1.024 |
 
-Las cifras de sensibilidad son diagnósticos empíricos entre decisiones de análisis consideradas; no son automáticamente errores estándar, intervalos de confianza ni cotas del error verdadero. Los valores de condición sugieren que las matrices de este reporte no son severamente mal condicionadas en el sentido numérico habitual. Eso reduce la plausibilidad de que una singularidad obvia sea el único cuello de botella, pero no reemplaza una inspección completa de propagación de perturbaciones ni prueba la calidad física del proyector.
+Sensitivity figures are empirical diagnostics across considered analysis choices; they are not automatically standard errors, confidence intervals, or bounds on true error. Condition values suggest these report matrices are not severely ill-conditioned in the usual numerical sense. This makes an obvious singularity as the sole bottleneck less plausible, but does not replace a complete perturbation-propagation inspection or prove the projector's physical quality.
 
-El algoritmo adaptativo registró decisiones de refinamiento en las rondas anteriores y `STOP_STABLE` al final, tras dos comparaciones consecutivas equivalentes que pasaron su regla interna. La ventana activa reportada y el conjunto final de α forman parte del protocolo analizado. `STOP_STABLE` expresa estabilidad respecto de esa regla; no equivale a “la sensibilidad física está bajo ±0.02 eV”, porque en esa campaña `sensitivity_tolerance_eV` quedó sin configurar.
+The adaptive algorithm recorded refinement decisions in earlier rounds and ended with `STOP_STABLE` after two consecutive equivalent comparisons passed its internal rule. The reported active window and final alpha set are part of the analyzed protocol. `STOP_STABLE` expresses stability relative to that rule; it does not mean “physical sensitivity is below ±0.02 eV,” because `sensitivity_tolerance_eV` was not configured for that campaign.
 
-### 3.2 Campañas no equivalentes: comparación cuantitativa
+### 3.2 Non-equivalent campaigns: quantitative comparison
 
-El contrato de precisión registra una reconstrucción v3 comparable de dos fuentes existentes:
+The precision contract records a comparable v3 reconstruction from two existing sources:
 
-| Fuente/método de análisis | NiLR0 (eV) | NiLR1 (eV) |
+| Analysis source/method | NiLR0 (eV) | NiLR1 (eV) |
 |---|---:|---:|
-| Adaptive round-00, análisis histórico v2 | 6.8845915692 | 6.8857890044 |
-| Los mismos archivos adaptativos, reextraídos y analizados con v3 | 6.8540481204 | 6.8541678955 |
-| P5, análisis v3 | 6.8642677000 | 6.8643874752 |
+| Adaptive round-00, historical v2 analysis | 6.8845915692 | 6.8857890044 |
+| Same adaptive files, re-extracted and analyzed with v3 | 6.8540481204 | 6.8541678955 |
+| P5, v3 analysis | 6.8642677000 | 6.8643874752 |
 
-Al comparar P5 y adaptive con el mismo tratamiento v3, la diferencia es de unos **10.2196 meV por sitio**, esencialmente igual en ambos sitios. Las cotas deterministas de impresión v3 citadas para esas dos reconstrucciones son aproximadamente **11.8331 meV** y **11.8342 meV**. Por tanto, esa diferencia cae dentro de las cotas de impresión consideradas y no permite aislar por sí sola una contribución SCF/reproducibilidad.
+Comparing P5 and adaptive with the same v3 treatment gives a difference of about **10.2196 meV per site**, essentially equal at both sites. The v3 deterministic printing bounds cited for these reconstructions are approximately **11.8331 meV** and **11.8342 meV**. Thus this difference falls within the considered printing bounds and cannot by itself isolate an SCF/reproducibility contribution.
 
-En cambio, v2 frente a v3 aplicado a los mismos OUT adaptativos cambia U aproximadamente **30.5434 meV** para NiLR0 y **31.6211 meV** para NiLR1. La diferencia se asocia al cambio de fuente/interpretación de ocupación (`matrix_trace` en el tratamiento histórico v2 frente a `siesta_occupations_total` en v3), junto con la versión/selector de análisis. **No es ruido de ejecución de SIESTA**, porque los archivos de salida son los mismos. La comparación histórica de 20–21 meV entre campañas no debe atribuirse a SCF sin corregir primero esa diferencia semántica.
+By contrast, v2 versus v3 applied to the same adaptive OUT files shifts U by approximately **30.5434 meV** for NiLR0 and **31.6211 meV** for NiLR1. This is associated with the change in occupation source/interpretation (`matrix_trace` in historical v2 versus `siesta_occupations_total` in v3), along with analysis version/selector. **This is not SIESTA execution noise**, because the output files are the same. The historical 20–21 meV campaign difference must not be attributed to SCF before correcting for this semantic difference.
 
-Se validaron receipts de 25/25 nodos en cada campaña comparada para FDF/OUT/DM, con identificadores de campaña, nodos y ejecuciones distintos. Se comparte la referencia DM SHA y ciertos metadatos; ambas declaran SIESTA 5.4.2, el mismo path y texto de versión. Sin embargo, no se archivó hash de contenido del ejecutable. Esto sirve para el reanálisis diagnóstico, pero no constituye calibración formal de reproducibilidad entre binarios.
+Receipts for 25/25 nodes in each compared campaign were validated for FDF/OUT/DM, with distinct campaign, node, and execution identifiers. They share the reference DM SHA and some metadata; both declare SIESTA 5.4.2, the same path, and the same version text. However, no executable content hash was archived. This supports diagnostic reanalysis but is not formal calibration of reproducibility between binaries.
 
 ---
 
-## 4. Qué significan los estados actuales
+## 4. What the current states mean
 
-El resultado más reciente relevante se clasifica como:
+The latest relevant result is classified as:
 
 ```text
 NUMERICAL_CANDIDATE_UNASSESSED
 physical_acceptance: NOT_ESTABLISHED
 ```
 
-La lectura correcta es que se produjo un candidato numérico con análisis reproducible, pero el protocolo no permite afirmar aceptación bajo un criterio de sensibilidad/precisión declarado antes de la campaña y la aceptación física permanece fuera de lo establecido. No significa “U no sirve”, “el cálculo fracasó” o “la herramienta no funciona”.
+The correct reading is that a numerical candidate with reproducible analysis was produced, but the protocol does not support claiming acceptance under a sensitivity/precision criterion declared before the campaign, and physical acceptance remains unestablished. It does not mean “U is useless,” “the calculation failed,” or “the tool does not work.”
 
-Tampoco hay que invertir el error y afirmar que el U está garantizado dentro de ±0.02 eV. Con la evidencia actual, esa afirmación tampoco está demostrada.
+Do not reverse the error and claim that U is guaranteed within ±0.02 eV either. Current evidence does not demonstrate that claim.
 
-El plan de cierre contempla conceptualmente que una utilidad pueda funcionar
-aunque un material particular termine como candidato sensible o sin aceptación
-física. La decisión final del flujo ejecutado fue más exigente: el usuario
-consideró que el objetivo científico principal seguía sin resolverse y el
-registro terminal fijó `PRODUCT_BLOCKED`. Por eso la entrega operativa del
-paquete y el estado del producto deben comunicarse por separado. Resolver el
-bloqueo requiere una afirmación útil y respaldada sobre U, no sólo cambiar la
-etiqueta del resultado.
+Conceptually, the closeout plan allows a utility to work even if a particular
+material ends as a sensitive candidate or without physical acceptance. The
+final decision for the executed workflow was stricter: the user considered the
+main scientific objective unresolved, and the terminal log set
+`PRODUCT_BLOCKED`. Therefore, package delivery and product status must be
+communicated separately. Resolving the block requires a useful, supported
+claim about U, not merely changing the result label.
 
 ---
 
-## 5. Objetivo ±0.02 eV: estatus y límites
+## 5. ±0.02 eV target: status and limits
 
-El documento [`docs/U_PRECISION_ACCEPTANCE_CONTRACT_20260928.md`](U_PRECISION_ACCEPTANCE_CONTRACT_20260928.md) consolida ±0.02 eV por sitio para `U_scalar_charge` como el objetivo operativo futuro elegido por el usuario. El contrato advierte que:
+Document [`docs/U_PRECISION_ACCEPTANCE_CONTRACT_20260928.md`](U_PRECISION_ACCEPTANCE_CONTRACT_20260928.md) sets ±0.02 eV per site for `U_scalar_charge` as the future operational target selected by the user. The contract notes that:
 
-- no es una tolerancia física universal;
-- no se debe modificar α, proyectores, ventanas, umbrales SCF, estimador o criterios al ver el U para forzar que pase;
-- el objetivo debe estar preregistrado para una evaluación prospectiva;
-- una envolvente empírica solo permite una afirmación condicional al protocolo observado;
-- aun un pase numérico condicional no implica aceptación física;
-- `total_numerical_U_interval` puede seguir como `NOT_ESTABLISHED` aunque el protocolo muestre reproducibilidad condicional.
+- It is not a universal physical tolerance;
+- Alpha, projectors, windows, SCF thresholds, estimator, or criteria must not be changed after seeing U to force a pass;
+- The target must be preregistered for prospective evaluation;
+- An empirical envelope supports only a claim conditional on the observed protocol;
+- Even a conditional numerical pass does not imply physical acceptance;
+- `total_numerical_U_interval` may remain `NOT_ESTABLISHED` even if the protocol shows conditional reproducibility.
 
-Para P5, el contrato calcula una suma parcial conservadora bajo el modelo compuesto de redondeo, sensibilidad de estimador y ventana. Incluso tomando como cero el spread observado de réplicas, esa suma es aproximadamente:
+For P5, the contract calculates a conservative partial sum under the combined model of rounding, estimator sensitivity, and window sensitivity. Even setting the observed replica spread to zero, that sum is approximately:
 
-| Sitio | Suma parcial bajo la fórmula conservadora actual |
+| Site | Partial sum under the current conservative formula |
 |---|---:|
 | NiLR0 | 0.0275105 eV |
 | NiLR1 | 0.0279243 eV |
 
-Ambas superan ±0.02 eV. La consecuencia exacta es: **el contrato actual, con esa composición conservadora, no puede certificar ±0.02 eV en P5**. No se sigue lógicamente que el error real esté por encima de 0.02 eV. La cota es determinista respecto de intervalos de cuantización y puede resultar conservadora; las sensibilidades son diagnósticos, no necesariamente incertidumbres independientes que deban sumarse linealmente como componentes de error.
+Both exceed ±0.02 eV. The exact consequence is: **the current contract, with this conservative composition, cannot certify ±0.02 eV for P5**. It does not logically follow that actual error exceeds 0.02 eV. The bound is deterministic with respect to quantization intervals and may be conservative; sensitivities are diagnostics, not necessarily independent uncertainties that should be summed linearly as error components.
 
-Por separado, la cota cúbica primaria adaptativa del informe de cierre es **0.03436273105 eV**. El ajuste lineal diagnóstico entrega **0.01353711826 eV**. Que el lineal quede por debajo de 0.02 eV no habilita escogerlo después de ver el resultado. Para preferir un estimador se requiere una razón metodológica predeclarada, validación adecuada o un contrato que explique qué estimando se quiere obtener. El número mayor tampoco prueba que el valor real esté mal: señala que la propagación conservadora asociada al cúbico no satisface el criterio operativo en ese análisis.
+Separately, the primary adaptive cubic bound in the closeout report is **0.03436273105 eV**. The diagnostic linear fit gives **0.01353711826 eV**. The linear result being below 0.02 eV does not authorize choosing it after seeing the result. Preferring an estimator requires a predeclared methodological reason, suitable validation, or a contract explaining the desired estimand. The larger number also does not prove the actual value is wrong: it indicates that the conservative propagation associated with the cubic fit does not meet the operational criterion in that analysis.
 
-### Distinción esencial: cinco conceptos distintos
+### Essential distinction: five different concepts
 
-1. **Decimales impresos:** formato de texto del programa. Determina la resolución de la entrada observada por el parser, no la exactitud física.
-2. **Cota determinista de redondeo:** propagación de intervalos de redondeo a través del ajuste y la inversión de matrices bajo supuestos explícitos. Es una envolvente de posibilidad, no una distribución de probabilidad.
-3. **Sensibilidad al estimador/ventana:** cambio observado al variar modelos o subconjuntos definidos. No es automáticamente error ni incertidumbre estadística.
-4. **Variabilidad SCF/reproducibilidad:** diferencia observada entre ejecuciones bajo protocolo comparable. Requiere separar redondeo, entradas, binario, ramas magnéticas y criterio de convergencia.
-5. **Error/aceptación física verdadera:** cuánto se aparta el resultado del objeto físico que se quiere describir. No se deduce sólo de los cuatro anteriores, ni de acuerdo con literatura.
+1. **Printed decimals:** program text format. It determines the resolution of input observed by the parser, not physical accuracy.
+2. **Deterministic rounding bound:** propagation of rounding intervals through fitting and matrix inversion under explicit assumptions. It is a possibility envelope, not a probability distribution.
+3. **Estimator/window sensitivity:** observed change when varying defined models or subsets. It is not automatically error or statistical uncertainty.
+4. **SCF variability/reproducibility:** observed difference between runs under a comparable protocol. This requires separating rounding, inputs, binary, magnetic branches, and convergence criterion.
+5. **True physical error/acceptance:** how far the result is from the physical quantity being described. It is not inferred solely from the preceding four concepts or from agreement with literature.
 
-El contrato no debe fusionar esos conceptos sin demostrar independencia, supuestos de distribución o cobertura. En particular, una suma lineal de cotas puede ser deliberadamente segura, pero no es una estimación típica del error si sus contribuciones están correlacionadas o describen distintas variaciones diagnósticas.
+The contract must not combine these concepts without demonstrating independence, distribution assumptions, or coverage. In particular, a linear sum of bounds may be deliberately conservative, but is not a typical error estimate when contributions are correlated or describe different diagnostic variations.
 
 ---
 
-## 6. ¿Qué dicen los decimales de otros códigos?
+## 6. What do decimal places in other codes tell us?
 
-Se consultaron fuentes técnicas oficiales o de primera mano. La comparación ayuda a cuestionar qué precisión de presentación es razonable, pero no determina cuántos decimales debe aceptar SIESTAFLOW.
+Official or first-hand technical sources were consulted. The comparison helps question what display precision is reasonable, but does not determine how many decimal places SIESTAFLOW should accept.
 
 ### Quantum ESPRESSO / `hp.x`
 
-- El código fuente oficial de QE 7.5, `HP/src/hp_postproc.f90`, escribe los valores diagonales de Hubbard U en salida normal con formato `f10.4`, cuatro posiciones decimales. Con verbosidad mayor escribe matrices Hubbard y respuestas con `f11.6`, seis posiciones decimales. [Fuente: QE 7.5 `hp_postproc.f90`](https://gitlab.com/QEF/q-e/-/raw/qe-7.5/HP/src/hp_postproc.f90).
-- La documentación de `hp.x` define por separado `conv_thr_chi` (umbral de convergencia de respuesta, con valor por defecto documentado de `1.D-5`) y `ethr_nscf` (`1.D-11`). Un umbral interno de iteración es distinto de los decimales con que se imprime U o χ. [Fuente: documentación `INPUT_HP`](https://www.quantum-espresso.org/Doc/INPUT_HP.html).
-- En una respuesta de la lista oficial de desarrolladores sobre QE 6.7 se cita que `hp_write_chi_full.f90` escribía matrices con `f19.15`; la sugerencia de cambiar a `f20.15` se hizo para añadir un espacio y evitar que valores negativos consecutivos quedaran pegados, no como certificación de quince decimales de exactitud. [Fuente: lista QE developers](https://lists.quantum-espresso.org/pipermail/developers/2021-July/002428.html).
+- Official QE 7.5 source, `HP/src/hp_postproc.f90`, writes diagonal Hubbard U values in normal output using format `f10.4`, four decimal places. At higher verbosity it writes Hubbard matrices and responses using `f11.6`, six decimal places. [Source: QE 7.5 `hp_postproc.f90`](https://gitlab.com/QEF/q-e/-/raw/qe-7.5/HP/src/hp_postproc.f90).
+- `hp.x` documentation separately defines `conv_thr_chi` (response-convergence threshold, documented default `1.D-5`) and `ethr_nscf` (`1.D-11`). An internal iteration threshold is distinct from the decimal places used to print U or χ. [Source: `INPUT_HP` documentation](https://www.quantum-espresso.org/Doc/INPUT_HP.html).
+- A response on the official developer list for QE 6.7 says `hp_write_chi_full.f90` wrote matrices using `f19.15`; the suggestion to change to `f20.15` was made to add a space and prevent adjacent negative values from running together, not to certify accuracy to 15 decimals. [Source: QE developers list](https://lists.quantum-espresso.org/pipermail/developers/2021-July/002428.html).
 
 ### VASP
 
-El tutorial de respuesta lineal de VASP muestra ocupaciones con tres decimales y un ejemplo de análisis lineal de U a partir de una sola perturbación y de un ajuste con varias perturbaciones, que produce valores distintos (aprox. 6.33 eV y 5.58 eV en ese ejemplo). Eso ilustra que el diseño de perturbaciones/ajuste puede mover U más que el conteo de decimales mostrado en una tabla; no permite comparar directamente esos números con NiO/SIESTA. [Fuente: VASP Wiki, Calculate U](https://vasp.at/wiki/index.php/Calculate_U_for_LSDA%2BU).
+The VASP linear-response tutorial shows occupations to three decimal places and an example of linear U analysis from one perturbation and a fit with multiple perturbations, yielding different values (about 6.33 eV and 5.58 eV in that example). This illustrates that perturbation/fit design can move U more than the number of decimals displayed in a table; it does not allow direct comparison of those numbers with NiO/SIESTA. [Source: VASP Wiki, Calculate U](https://vasp.at/wiki/index.php/Calculate_U_for_LSDA%2BU).
 
-### Conclusión prudente de la comparación
+### Cautious conclusion from the comparison
 
-Hay códigos que presentan U con menos decimales y matrices con más; esto es habitual porque el formato responde a necesidades de lectura, depuración y postproceso. No se encontró en estas fuentes una regla física universal del tipo “el U queda validado a N decimales” o “una tolerancia de 0.02 eV es obligatoria”. Tampoco se puede concluir que 4 decimales publicados por QE signifiquen que sus U tienen incertidumbre de 0.0001 eV, ni que 15 decimales internos sean quince dígitos significativos físicamente confiables.
+Some codes display U with fewer decimals and matrices with more; this is common because formatting serves readability, debugging, and postprocessing. These sources provide no universal physical rule such as “U is validated to N decimal places” or “a 0.02 eV tolerance is mandatory.” Nor can one conclude that QE's four published decimals mean its U uncertainty is 0.0001 eV, or that 15 internal decimals are 15 physically reliable significant digits.
 
-La pregunta útil no es solamente “cuántos decimales imprimen otros códigos”, sino “qué afirmación cuantitativa hace SIESTAFLOW, qué evidencia la respalda y qué precisión de presentación evita insinuar más conocimiento del que hay”. Si U se reporta a centésimas, eso puede ser una convención de presentación; no demuestra automáticamente una cota de ±0.01 eV.
-
----
-
-## 7. Hipótesis abiertas sobre el cuello de botella
-
-Las hipótesis siguientes son explicaciones alternativas que se deben discriminar; no son resultados aceptados de antemano.
-
-### H1. La propagación de cuantización es conservadora, pero el peor caso es físicamente inverosímil
-
-La ocupación `Occupations:` se imprime con seis decimales en la ruta v3. El lector deriva un intervalo de cuantización por observación y propaga sus extremos al resultado. Al invertir matrices, las combinaciones de extremos pueden ser muy conservadoras, especialmente si se tratan como independientes aunque provengan de cantidades vinculadas o de redondeo correlacionado.
-
-**A favor:** las cotas de impresión superan el cambio observado entre P5 y la reextracción adaptive v3; el actual análisis de cotas no constituye un experimento de errores reales.  
-**No demostrado:** que la cota sea excesivamente conservadora en este problema concreto; correlación favorable suficiente; o que el valor probable de redondeo sea <0.02 eV.
-
-### H2. El rango de α, la ventana o el grado del ajuste domina la variación
-
-La sensibilidad adaptativa reportada a estimador y ventana está en varios meV por sitio, y la cota cúbica primaria es mayor que la cota del ajuste lineal diagnóstico. El resultado depende de cómo se aproxima la derivada en α=0 y de qué puntos se incluyen.
-
-**A favor:** las propias comparaciones de modelos/ventanas cambian U de forma medible.  
-**No demostrado:** cuál estimador representa mejor el límite de respuesta lineal ni que una ventana más estrecha o más amplia deba elegirse para lograr una meta concreta. Elegirla por el valor de U sería sesgo post hoc.
-
-### H3. SCF, rama magnética o reproducibilidad entre ejecuciones consumen margen
-
-Los outputs SCREENED reportan umbrales TDM `1e-5` y `1e-4 eV`. Se calculó un diagnóstico post hoc de deriva U entre estado terminal y último estado de alrededor de 8.224 meV/sitio. Ese valor no es un límite de error. No hay réplicas completas admitidas por el calibrador ni una envolvente independiente de SCF/reproducibilidad establecida.
-
-**A favor:** el SCF es una fuente plausible y el diagnóstico de deriva no es nulo.  
-**No demostrado:** que sea el factor principal o que una repetición reduzca el total bajo 0.02 eV. La comparación entre campañas actual no permite aislarlo.
-
-### H4. Condicionamiento de matrices
-
-La respuesta matricial afecta a U mediante inversiones. El informe adaptativo muestra rango completo 2/2 y números de condición de aproximadamente 1.745 para χ⁰ y 1.024 para χ.
-
-**A favor:** es una transformación sensible en principio.  
-**En contra de que sea el único problema obvio en este caso:** las matrices reportadas no aparecen mal condicionadas por esos indicadores.  
-**Pendiente:** sensibilidad local de U respecto a cada entrada y de los intervalos de observación, incluidas dependencias/covarianzas. Buen condicionamiento no elimina redondeo ni valida el proyector.
-
-### H5. La definición/extracción de ocupación y las versiones de análisis causaron diferencias históricas
-
-El cambio v2→v3 sobre los mismos OUT altera U unos 31 meV/sitio. La fuente actual v3 usa el total `Occupations:` (`siesta_occupations_total`); el análisis histórico v2 usaba suma de traza de matriz. El plan rector histórico describía `trace_total` como ruta primaria y `Occupations:` como verificación pendiente; la implementación y reportes posteriores fijaron otra semántica.
-
-**Estado:** la discrepancia histórica está identificada y explica que la comparación bruta entre campañas fuese engañosa. El significado exacto debe documentarse como contrato vigente y mantenerse uniforme al comparar. No hay que volver a atribuir ese salto a SCF.
-
-### H6. El problema quizá no sea una garantía de ±0.02, sino definir una afirmación de producto útil
-
-Puede ser que el obstáculo práctico se haya amplificado al pedir una garantía más fuerte de la que el dato experimental/protocolo necesita, o que se estén mezclando exactitud física y reproducibilidad numérica. También puede ocurrir lo contrario: que la aplicación realmente necesite ≤0.02 eV para distinguir decisiones posteriores. El umbral no se debe bajar ni subir para conseguir un “pase”; se debe justificar por el uso posterior o reportar como objetivo de ingeniería condicionado.
-
-El usuario reconoce que la herramienta necesita entregar un U numérico útil, y no quedarse en una negativa permanente. El trabajo pendiente es proponer una afirmación comprobable útil y respaldada, no defender el `NOT_ESTABLISHED` como respuesta final a todo.
+The useful question is not only “how many decimals do other codes print,” but “what quantitative claim does SIESTAFLOW make, what evidence supports it, and what display precision avoids implying more knowledge than is available?” Reporting U to hundredths may be a display convention; it does not automatically demonstrate a ±0.01 eV bound.
 
 ---
 
-## 8. Qué se exploró y qué quedó descartado
+## 7. Open hypotheses about the bottleneck
 
-### Ya explorado con evidencia existente
+The following hypotheses are alternative explanations to discriminate; none is accepted in advance.
 
-1. **Reanalizar resultados históricos sin volver a ejecutar SIESTA.** Se reconstruyeron los OUT adaptativos con la extracción v3 y se compararon con P5 bajo análisis equivalente.
-2. **Separar diferencia de análisis de diferencia entre ejecuciones.** El cambio v2→v3 se observó sobre los mismos OUT y mueve U ~30.5–31.6 meV; por ello no es variación SCF.
-3. **Examinar si la brecha P5–adaptive demuestra ruido SCF.** Su diferencia v3 de ~10.22 meV queda dentro de las cotas de redondeo propagadas; por sí sola no permite tal conclusión.
-4. **Mirar la regla de parada adaptativa y sensibilidad.** La campaña terminó `STOP_STABLE`, pero no tenía tolerancia de sensibilidad física/numerica declarada; el estado no es una garantía de aceptación.
-5. **Cuantificar la cota de impresión con más de un estimador.** La cota primaria cúbica adaptativa es 0.03436273105 eV; el lineal diagnóstico da 0.01353711826 eV. No se usó el lineal como sustituto por quedar debajo del objetivo.
-6. **Comparar formato de otros códigos y sus umbrales.** Hay ejemplos oficiales donde U se imprime con 4 decimales, matrices con 6 o 15; las fuentes separan convergencia y formato.
-7. **Investigar si resolverlo requiere modificar SIESTA.** El objetivo de portabilidad descarta modificar la fuente o exigir una recompilación privada como solución de producto.
+### H1. Quantization propagation is conservative, but its worst case is physically implausible
 
-### Descartado como ruta de producto
+`Occupations:` is printed to six decimal places on the v3 path. The reader derives a quantization interval per observation and propagates its endpoints to the result. On matrix inversion, combinations of endpoints can be very conservative, especially if treated as independent even when they come from linked quantities or correlated rounding.
 
-Se preparó durante la investigación una copia temporal de SIESTA 5.4.2 con formato `f20.12`, bajo `build/siesta542-f20.12-offline/`, para explorar si más resolución textual movería la cota. La fuente auditada original `third_party/siesta-5.4.2-source-audit/Src/dftu.F` quedó intacta. El staging y los logs de compilación son un experimento de investigación, no el backend de producto. **No se ejecutó el binario ni se lanzó una campaña con él**, y no se confirmó un receipt de compilación completo para admisión. Tras la aclaración del usuario de que la herramienta debe ser portable a instalaciones SIESTA soportadas, esta ruta se considera descartada como solución desplegable.
+**For:** printing bounds exceed the observed change between P5 and the v3 adaptive re-extraction; current bound analysis is not an experiment measuring actual errors.
+**Not demonstrated:** that the bound is excessively conservative for this particular problem; that there is sufficient favorable correlation; or that likely rounding error is <0.02 eV.
 
-Esto no demuestra que la resolución impresa sea irrelevante; significa que la solución no puede exigir una modificación de SIESTA. Una futura mejora debe funcionar leyendo artefactos estándar de una instalación soportada, o demostrar con datos que el formato actual ya basta para la afirmación deseada.
+### H2. Alpha range, window, or fit degree dominates variation
 
-### No debe presentarse como hecho
+Reported adaptive sensitivity to estimator and window is several meV per site, and the primary cubic bound is larger than the diagnostic linear-fit bound. The result depends on how the derivative at α=0 is approximated and which points are included.
 
-- “U está inválido porque la cota conservadora es mayor que ±0.02 eV.” No se deduce de la cota.
-- “U está garantizado porque los números impresos tienen seis decimales.” Tampoco se deduce.
-- “QE imprime cuatro decimales, por lo tanto ±0.02 eV es demasiado estricto.” El formato no demuestra exactitud.
-- “La discrepancia entre campañas es ruido SCF de 20 meV.” Mezcla versiones/fuentes de ocupación.
-- “`STOP_STABLE` equivale a tolerancia física satisfecha.” La tolerancia no estaba configurada.
-- “Una campaña de réplicas es la única vía posible.” Puede ser necesaria para una afirmación de repetibilidad definida, pero antes conviene explotar de forma rigurosa los datos existentes y precisar la pregunta que el experimento debe resolver.
+**For:** the model/window comparisons themselves change U measurably.
+**Not demonstrated:** which estimator best represents the linear-response limit, or that a narrower or wider window should be selected to meet a particular target. Choosing it based on U would be post hoc bias.
 
----
+### H3. SCF, magnetic branch, or between-run reproducibility consumes the margin
 
-## 9. Rutas neutrales para avanzar
+SCREENED outputs report TDM thresholds `1e-5` and `1e-4 eV`. A post hoc diagnostic of U drift between terminal and last state was calculated at around 8.224 meV/site. This value is not an error bound. There are no full replicas admitted by the calibrator and no independent SCF/reproducibility envelope has been established.
 
-El objetivo es elegir pasos por su capacidad de distinguir hipótesis, su coste y su compatibilidad con SIESTA estándar. El orden sugerido no presupone la causa principal.
+**For:** SCF is a plausible source and the drift diagnostic is nonzero.
+**Not demonstrated:** that it is the dominant factor or that a repeat would reduce the total below 0.02 eV. The current campaign comparison cannot isolate it.
 
-### Ruta A — Cerrar semántica y cuantización usando los archivos que ya existen
+### H4. Matrix conditioning
 
-**Pregunta:** ¿qué dato exacto se está ajustando, con qué resolución y cómo se propaga esa resolución a U?
+The matrix response affects U through inversion. The adaptive report shows full rank 2/2 and condition numbers of about 1.745 for χ⁰ and 1.024 for χ.
 
-1. Congelar en el informe técnico el significado del evento y de `siesta_occupations_total` para referencia, BARE y SCREENED en la versión de salida soportada.
-2. Para observaciones existentes, reconstruir los límites de ocupación por token impreso y derivar cómo cada perturbación impacta χ⁰, χ y U por sitio.
-3. Separar un “peor caso determinista” de exploraciones de combinaciones plausibles. Si se plantea una interpretación probabilística del redondeo, declarar la distribución y dependencias antes de presentar probabilidades; una simulación Monte Carlo con entradas uniformes no es una garantía sin justificar uniformidad/independencia.
-4. Identificar qué parte de la cota viene de observaciones concretas (referencia, BARE, SCREENED; sitio; α) y si una o pocas filas dominan. Esto puede revelar qué medición merece mejor resolución o qué ecuación amplifica el intervalo.
+**For:** it is a potentially sensitive transformation.
+**Against it being the only obvious problem here:** the reported matrices do not appear ill-conditioned by these indicators.
+**Pending:** local sensitivity of U to each entry and observation interval, including dependencies/covariances. Good conditioning does not remove rounding or validate the projector.
 
-**Resultado esperado:** saber si el 0.03436 eV está distribuido por todo el protocolo, si lo domina una observación específica, o si el método de extremos genera una envolvente muy pesimista. No se modifica el criterio de aceptación.
+### H5. Occupation definition/extraction and analysis versions caused historical differences
 
-### Ruta B — Distinguir error de estimación de sensibilidad al modelo
+The v2→v3 change on the same OUT files shifts U by about 31 meV/site. Current v3 uses the `Occupations:` total (`siesta_occupations_total`); historical v2 analysis used the matrix-trace sum. The historical product charter described `trace_total` as the primary path and `Occupations:` as pending verification; later implementation and reports fixed a different semantics.
 
-**Pregunta:** ¿el ajuste cúbico está estimando una curvatura/no linealidad real, o el intervalo ±0.02 depende de un modelo particular?
+**Status:** the historical discrepancy is identified and explains why the raw campaign comparison was misleading. The exact meaning must be documented as the current contract and kept consistent when comparing. Do not attribute that shift to SCF again.
 
-Usar los análisis ya existentes para documentar, por sitio, cada curva ocupación–α, residuos, dominio de α, número de puntos, grados de libertad y coeficiente lineal/cúbico. Revisar si la regla de seleccionar cúbico/lineal fue fijada con razón científica antes de mirar U y si los puntos adaptativos son comparables. Si hacen falta otros modelos, predefinirlos y tratarlos como sensibilidad, no escoger el menor U ni la menor cota.
+### H6. The problem may be defining a useful product claim, not guaranteeing ±0.02
 
-**Resultado esperado:** determinar qué objeto reporta el algoritmo: derivada local bajo una base de α dada, derivada de un polinomio en la ventana declarada, o ajuste diagnóstico. Elegir una salida principal en función del estimando y una regla declarada, no del pase de ±0.02.
+The practical obstacle may have been amplified by asking for a stronger guarantee than the experimental data/protocol needs, or by mixing physical accuracy with numerical reproducibility. The opposite may also be true: the application may genuinely need ≤0.02 eV to distinguish downstream decisions. The threshold must not be raised or lowered to get a “pass”; justify it by downstream use or report it as a conditional engineering target.
 
-### Ruta C — Verificar resolución accesible sin modificar SIESTA
-
-**Pregunta:** ¿hay una representación estándar más precisa ya generada por SIESTA o recuperable desde una salida nativa de ejecución soportada?
-
-Revisar documentación y artefactos disponibles de SIESTA 5.4.2 para determinar si `Occupations:` y la matriz impresa son las únicas fuentes, o si un archivo estándar (por ejemplo, DM/HSX u otro producto nativo compatible) permite calcular la misma ocupación proyectada con mayor resolución a través de interfaces ya soportadas. No asumir que DM/HSX contiene los mismos proyectores/ocupaciones ni que el postproceso los puede reproducir sin cambiar el observable. Validar equivalencia en resultados existentes antes de adoptarlo.
-
-**Resultado esperado:** una respuesta verificable “sí/no” sobre una ruta de precisión portable. Si no existe, el diseño debe tratar el texto estándar como resolución de dato y reportar su limitación, no modificar el ejecutable.
-
-### Ruta D — Aislar SCF/reproducibilidad solo si es la incertidumbre decisiva
-
-**Pregunta:** ¿una ejecución repetida bajo el mismo protocolo cambia U más que el margen disponible?
-
-Los datos actuales no constituyen réplicas formales: adaptive y P5 difieren en campaña/malla, historia de análisis y no tienen hash de contenido del ejecutable; tampoco existe un protocolo preregistrado para la tolerancia de sensibilidad de la campaña original. Si, después de las rutas A–C, SCF sigue siendo el término dominante que impide una decisión, definir un protocolo mínimo prospectivo: qué se repite (un subconjunto informativo o una malla completa), qué se mantiene idéntico, cómo se identifica el ejecutable instalado sin modificarlo, cómo se comprueba la misma rama magnética, cómo se elimina doble conteo de redondeo y qué decisión cambiaría el resultado.
-
-El contrato futuro actual propone una primaria más tres réplicas de malla completa (25 nodos cada una: 100 en total con una nueva primaria). Eso es una opción conservadora para una evaluación de reproducibilidad condicional, no una necesidad ya demostrada como primer siguiente paso. Requiere autorización de campaña y presupuesto; este informe no la autoriza.
-
-**Resultado esperado:** elegir entre una prueba focalizada y el diseño completo, con criterios que permitan abandonar la ruta si el dato no cambiaría la conclusión.
-
-### Ruta E — Justificar el nivel de tolerancia por el uso
-
-**Pregunta:** ¿qué decisión posterior requiere que U sea estable a ±0.02 eV?
-
-El umbral podría ser una exigencia legítima del producto o una meta conservadora creada como objetivo de ingeniería. Para distinguirlo, describir el uso downstream: ¿se usa U para un reporte cuantitativo, comparar sitios, seleccionar una configuración, alimentar un cálculo DFT+U, o tomar una decisión cuya respuesta cambia en escalas de 20 meV? Si el uso posterior no discrimina esa escala, la interfaz podría expresar un nivel de afirmación distinto (p. ej., cifras reportadas más una categoría de estabilidad) sin fingir una garantía. Si sí discrimina, el objetivo permanece relevante.
-
-**Límite:** no cambiar ±0.02 retrospectivamente sólo porque el resultado actual falla. Cualquier política nueva debe justificarse desde el uso y aplicarse prospectivamente o etiquetarse con claridad como reanálisis exploratorio.
+The user recognizes that the tool needs to deliver a useful numerical U rather than remain in permanent refusal. The outstanding work is to propose a useful, supported, testable claim, not defend `NOT_ESTABLISHED` as the final answer to everything.
 
 ---
 
-## 10. Propuesta de marco para una decisión útil
+## 8. What was explored and what was ruled out
 
-Se recomienda que la siguiente decisión no sea “¿pasa o falla la cota?” en abstracto, sino una de estas afirmaciones explícitas:
+### Already explored with existing evidence
 
-| Nivel de afirmación | Qué tendría que estar respaldado | Qué no implica |
+1. **Reanalyze historical results without rerunning SIESTA.** Adaptive OUT files were reconstructed with v3 extraction and compared with P5 under equivalent analysis.
+2. **Separate analysis differences from execution differences.** The v2→v3 change was observed on the same OUT files and shifts U by ~30.5–31.6 meV; therefore, it is not SCF variation.
+3. **Check whether the P5–adaptive gap demonstrates SCF noise.** Its v3 difference of ~10.22 meV is within propagated rounding bounds; by itself, it does not support that conclusion.
+4. **Review adaptive stopping and sensitivity.** The campaign ended `STOP_STABLE`, but no physical/numerical sensitivity tolerance was declared; this state is not an acceptance guarantee.
+5. **Quantify the printing bound with more than one estimator.** The primary adaptive cubic bound is 0.03436273105 eV; the diagnostic linear result is 0.01353711826 eV. The linear value was not substituted because it falls below the target.
+6. **Compare other codes' formats and thresholds.** Official examples print U to 4 decimals and matrices to 6 or 15; sources distinguish convergence from formatting.
+7. **Investigate whether resolution requires modifying SIESTA.** The portability goal rules out modifying the source or requiring a private rebuild as a product solution.
+
+### Ruled out as a product path
+
+During investigation, a temporary SIESTA 5.4.2 copy with `f20.12` formatting was prepared under `build/siesta542-f20.12-offline/` to explore whether more textual resolution would change the bound. The original audited source `third_party/siesta-5.4.2-source-audit/Src/dftu.F` remained intact. Staging and build logs are a research experiment, not the product backend. **The binary was not run and no campaign was launched with it**, and a complete build receipt for admission was not confirmed. After the user clarified that the tool must be portable to supported SIESTA installations, this path is ruled out as a deployable solution.
+
+This does not show that print resolution is irrelevant; it means the solution cannot require modifying SIESTA. A future improvement must read standard artifacts from a supported installation, or demonstrate with data that the current format is sufficient for the desired claim.
+
+### Must not be presented as fact
+
+- “U is invalid because the conservative bound exceeds ±0.02 eV.” This does not follow from the bound.
+- “U is guaranteed because the printed numbers have six decimal places.” This also does not follow.
+- “QE prints four decimals, so ±0.02 eV is too strict.” Formatting does not demonstrate accuracy.
+- “The campaign discrepancy is 20 meV of SCF noise.” This mixes analysis versions/occupation sources.
+- “`STOP_STABLE` means the physical tolerance was met.” No tolerance was configured.
+- “A replica campaign is the only possible path.” It may be necessary for a defined repeatability claim, but first rigorously use existing data and clarify what question the experiment must resolve.
+
+---
+
+## 9. Neutral paths forward
+
+Choose steps based on their ability to distinguish hypotheses, cost, and compatibility with standard SIESTA. The suggested order does not assume the primary cause.
+
+### Path A — Settle semantics and quantization using existing files
+
+**Question:** What exact datum is being fitted, at what resolution, and how does that resolution propagate to U?
+
+1. Freeze in the technical report the meaning of the event and `siesta_occupations_total` for reference, BARE, and SCREENED under the supported output version.
+2. For existing observations, reconstruct occupation bounds per printed token and derive how each perturbation affects χ⁰, χ, and per-site U.
+3. Separate a “deterministic worst case” from explorations of plausible combinations. If a probabilistic interpretation of rounding is proposed, declare the distribution and dependencies before presenting probabilities; Monte Carlo with uniform inputs is not a guarantee without justification of uniformity/independence.
+4. Identify which observations contribute to the bound (reference, BARE, SCREENED; site; alpha) and whether one or a few rows dominate. This may reveal which measurement needs better resolution or which equation amplifies the interval.
+
+**Expected result:** determine whether 0.03436 eV is distributed across the protocol, dominated by a specific observation, or whether the endpoint method produces a highly pessimistic envelope. Do not change the acceptance criterion.
+
+### Path B — Distinguish estimation error from model sensitivity
+
+**Question:** Is the cubic fit estimating real curvature/nonlinearity, or does the ±0.02 interval depend on a particular model?
+
+Use existing analyses to document, per site, each occupation–alpha curve, residuals, alpha domain, number of points, degrees of freedom, and linear/cubic coefficient. Review whether the rule for selecting cubic/linear was fixed for scientific reasons before viewing U and whether adaptive points are comparable. If other models are needed, predefine them and treat them as sensitivity; do not choose the smallest U or bound.
+
+**Expected result:** determine what quantity the algorithm reports: a local derivative under a given alpha set, a polynomial derivative over the declared window, or a diagnostic fit. Choose the primary output based on the estimand and a declared rule, not on passing ±0.02.
+
+### Path C — Check accessible resolution without modifying SIESTA
+
+**Question:** Is a more precise standard representation already generated by SIESTA or recoverable from native output of a supported run?
+
+Review SIESTA 5.4.2 documentation and available artifacts to determine whether `Occupations:` and the printed matrix are the only sources, or whether a standard file (for example, DM/HSX or another compatible native product) allows the same projected occupation to be calculated at higher resolution through already supported interfaces. Do not assume DM/HSX contains the same projectors/occupations or that postprocessing can reproduce them without changing the observable. Validate equivalence on existing results before adoption.
+
+**Expected result:** a verifiable “yes/no” answer about a portable precision path. If none exists, the design must treat standard text as the data resolution and report its limitation, not modify the executable.
+
+### Path D — Isolate SCF/reproducibility only if it is the decisive uncertainty
+
+**Question:** Does a repeat run under the same protocol change U by more than the available margin?
+
+Current data are not formal replicas: adaptive and P5 differ in campaign/mesh and analysis history and have no executable content hash; there is also no preregistered protocol for the original campaign's sensitivity tolerance. If, after Paths A–C, SCF remains the dominant term preventing a decision, define a minimal prospective protocol: what to repeat (an informative subset or a full mesh), what remains identical, how to identify the installed executable without modifying it, how to verify the same magnetic branch, how to avoid double-counting rounding, and what decision the result would change.
+
+The current future contract proposes one primary plus three full-mesh replicas (25 nodes each: 100 total with a new primary). This is a conservative option for evaluating conditional reproducibility, not a demonstrated necessity as the first next step. It requires campaign authorization and budget; this report does not authorize it.
+
+**Expected result:** choose between a focused test and the full design, with criteria allowing the path to be abandoned if the data would not change the conclusion.
+
+### Path E — Justify tolerance level based on its use
+
+**Question:** Which downstream decision requires U to be stable to ±0.02 eV?
+
+The threshold could be a legitimate product requirement or a conservative engineering target. To distinguish these, describe downstream use: is U used for a quantitative report, comparing sites, selecting a configuration, feeding a DFT+U calculation, or making a decision that changes at a 20 meV scale? If downstream use does not resolve that scale, the interface could express a different claim level (e.g., reported figures plus a stability category) without pretending to provide a guarantee. If it does resolve that scale, the target remains relevant.
+
+**Limit:** do not change ±0.02 retrospectively merely because the current result fails. Any new policy must be justified by use and applied prospectively or clearly labeled as exploratory reanalysis.
+
+---
+
+## 10. Proposed framework for a useful decision
+
+The next decision should not be “does the bound pass or fail?” in the abstract, but one of these explicit claims:
+
+| Claim level | What must be supported | What it does not imply |
 |---|---|---|
-| Resultado reproducible desde artefactos existentes | Mismo input/versiones de análisis generan mismos matrices, ajustes y U | No demuestra exactitud física ni estabilidad entre ejecuciones SIESTA distintas |
-| Estable bajo modelo/ventana declarados | Rango de U al variar modelos/ventanas preregistrados está reportado y acotado condicionalmente | No demuestra error estadístico/verdadero menor al rango |
-| Resolución de impresión suficiente | Cuantización de entradas estándar propagada y comparada con el objetivo | No garantiza SCF ni exactitud del proyector |
-| Repetibilidad condicional de ejecución | Protocolo comparable, rama controlada y réplicas definidas producen envolvente observada | No garantiza resultados fuera de condiciones/máquina/protocolo muestreados |
-| Aceptación física | Definición física del observable, validez del modelo/proyector y criterio físico independente debidamente justificado | No se obtiene solo con más decimales ni concordancia con literatura |
+| Reproducible result from existing artifacts | Same input/analysis versions produce the same matrices, fits, and U | Does not demonstrate physical accuracy or stability across distinct SIESTA runs |
+| Stable under declared model/window | U range across preregistered models/windows is reported and conditionally bounded | Does not demonstrate statistical/true error below that range |
+| Sufficient print resolution | Quantization of standard inputs is propagated and compared with the target | Does not guarantee SCF or projector accuracy |
+| Conditional execution repeatability | Comparable protocol, controlled branch, and defined replicas produce an observed envelope | Does not guarantee results outside sampled conditions/machine/protocol |
+| Physical acceptance | Physical definition of observable, model/projector validity, and a properly justified physical criterion | Not obtained from more decimals or agreement with literature alone |
 
-Una herramienta útil puede reportar varias capas en vez de colapsarlas en un único “sirve/no sirve”: U estimado; intervalo por cuantización de impresión; dispersión entre modelos/ventanas; diagnóstico SCF/reproducibilidad; advertencias de rango y condición; y nivel de afirmación que sí está respaldado. Esto permite entregar un resultado sin ocultar límites ni llamar “físicamente inválido” a un cálculo que simplemente no ha pasado una prueba de garantía que aún no se diseñó.
-
----
-
-## 11. Restricciones que deben sobrevivir a cualquier ruta
-
-1. **No editar ni recompilar SIESTA como solución de producto.** SIESTAFLOW debe permanecer portable a instalaciones soportadas.
-2. **No alterar campañas, datos o informes históricos.** Reanálisis debe guardarse aparte y enlazarse a la fuente.
-3. **No ajustar α, tolerancias SCF, proyectores, ventanas, grados del polinomio o criterios para alcanzar un U deseado o forzar un pase.** Los cambios metodológicos requieren justificación y congelamiento previo.
-4. **No usar acuerdo con literatura como criterio de aceptación** ni escoger el resultado por acercarse a un valor esperado.
-5. **No tratar decimales de salida como cifras significativas certificadas.** Formato y exactitud son distintos.
-6. **No llamar error observado a una cota de peor caso**, ni llamar cota a un rango empírico entre dos ajustes.
-7. **No llamar réplica formal a la comparación adaptive/P5 actual.** Es diagnóstico de archivos/historia existentes.
-8. **No iniciar otra campaña sin autorización y puerta correspondiente.** La posibilidad de una calibración de hasta 100 nodos está documentada, no autorizada.
-9. **Comunicar correctamente el estado del producto.** Las puertas operativas
-   concluyeron, pero el cierre vigente es `PRODUCT_BLOCKED` por el objetivo
-   científico del usuario. Distinguir ese bloqueo de un fallo de ejecución del
-   CLI y de una demostración de que el valor numérico sea erróneo.
+A useful tool can report several layers rather than collapsing them into one “useful/not useful” result: estimated U; interval from print quantization; spread across models/windows; SCF/reproducibility diagnostic; rank and condition warnings; and the level of claim that is actually supported. This allows delivering a result without hiding limits or calling a calculation “physically invalid” merely because it has not passed a guarantee test that has not yet been designed.
 
 ---
 
-## 12. Paquete local que sirve como evidencia primaria
+## 11. Constraints that must survive any path
 
-Revisar estas fuentes locales para recuperar definiciones exactas, detalles de salida y valores citados:
-
-- [`docs/EJE_RECTOR_CIERRE_PRODUCTO.md`](EJE_RECTOR_CIERRE_PRODUCTO.md): plan vigente de cierre, estado del producto, rutas R1/R2 y límites de campaña.
-- [`docs/P0_EXECUTION_20260928.md`](P0_EXECUTION_20260928.md): registro final de las puertas P0–P6, auditoría Sol, campaña P5, wheel y estado terminal `PRODUCT_BLOCKED` (el addendum inicial sustituye las secciones históricas inferiores).
-- [`docs/ESTADO_REPOSITORIO_Y_PUBLICACION_20260929.md`](ESTADO_REPOSITORIO_Y_PUBLICACION_20260929.md): inventario previo, selección del commit local y estado de publicación en GitHub.
-- [`docs/U_PRECISION_ACCEPTANCE_CONTRACT_20260928.md`](U_PRECISION_ACCEPTANCE_CONTRACT_20260928.md): objetivo ±0.02 eV, revisión de P5/adaptive, cotas y protocolo propuesto de réplicas.
-- [`README.md`](../README.md): propósito, CLI, alcance SIESTA y estados.
-- Reporte JSON/Markdown y manifest/receipts de la campaña NiO adaptativa mencionada arriba: valores v3, estado terminal, malla, rondas y procedencia.
-- Reporte y receipts de P5: reconstrucción fija, ocupaciones y cotas de impresión.
-- `src/siestaflow_hubbard/siesta_backend/occupation_precision.py`: interpretación de decimales impresos y semianchos.
-- `src/siestaflow_hubbard/lr_analysis_v2.py`: política de análisis, tolerancias y contexto de respuesta.
-
-Los paths absolutos de artefactos de campaña pueden depender de Windows/WSL y de las rutas del usuario; la evidencia debe resolverse desde los roots registrados en los receipts en vez de asumir una ruta portátil fija.
+1. **Do not edit or rebuild SIESTA as a product solution.** SIESTAFLOW must remain portable to supported installations.
+2. **Do not alter historical campaigns, data, or reports.** Save reanalysis separately and link it to the source.
+3. **Do not tune alpha, SCF tolerances, projectors, windows, polynomial degree, or criteria to reach a desired U or force a pass.** Method changes require prior justification and freezing.
+4. **Do not use agreement with literature as an acceptance criterion** or select a result because it is close to an expected value.
+5. **Do not treat output decimals as certified significant figures.** Formatting and accuracy are different.
+6. **Do not call a worst-case bound an observed error**, or call an empirical range between two fits a bound.
+7. **Do not call the current adaptive/P5 comparison a formal replica.** It is a diagnostic of existing files/history.
+8. **Do not start another campaign without authorization and its required gate.** A calibration of up to 100 nodes is documented as a possibility, not authorized.
+9. **Communicate product status accurately.** Operational gates finished, but current closeout is `PRODUCT_BLOCKED` due to the user's scientific objective. Distinguish this block from CLI execution failure and from proof that the numerical value is wrong.
 
 ---
 
-## 13. Preguntas concretas para el siguiente análisis
+## 12. Local package serving as primary evidence
 
-Un análisis externo útil debería contestar, con evidencias y no con preferencia previa:
+Review these local sources for exact definitions, output details, and cited values:
 
-1. ¿Cuál es el cuello de botella que más contribuye hoy a no poder respaldar una afirmación de ±0.02 eV: cuantización, modelo/ventana, SCF/reproducibilidad, definición del observable o mezcla de versiones?
-2. ¿Qué parte está demostrada con los datos existentes y cuál es solo una hipótesis plausible?
-3. ¿La suma conservadora `B_round + E_estimator + E_window + E_SCF/repro` es matemáticamente apropiada para la afirmación deseada? ¿Qué dependencias o dobles conteos hay? Si se propone otra regla, ¿qué cobertura/garantía tiene y bajo qué supuestos explícitos?
-4. ¿Se puede calcular un diagnóstico más informativo de cuantización con los mismos resultados sin asignar una probabilidad injustificada al redondeo?
-5. ¿Qué opción portable basada en salidas nativas de SIESTA podría aportar más resolución sin cambiar el observable ni recompilar el programa, y qué prueba de equivalencia la falsaría?
-6. ¿Qué mínimo experimento prospectivo cambiaría la decisión, si uno es imprescindible? Comparar explícitamente el valor de una prueba focalizada con la campaña de réplicas completas de 100 nodos. No ejecutar nada.
-7. ¿Qué afirmación de producto le permitiría al usuario obtener un U útil sin presentar como garantizada una exactitud física que no se ha probado?
-8. ¿Qué evidencia refutaría cada explicación propuesta? Evitar una sola narrativa dominante si los datos no la distinguen.
+- [`docs/EJE_RECTOR_CIERRE_PRODUCTO.md`](EJE_RECTOR_CIERRE_PRODUCTO.md): current closeout plan, product status, R1/R2 paths, and campaign limits.
+- [`docs/P0_EXECUTION_20260928.md`](P0_EXECUTION_20260928.md): final P0–P6 gates log, Sol audit, P5 campaign, wheel, and terminal state `PRODUCT_BLOCKED` (the initial addendum supersedes lower historical sections).
+- [`docs/ESTADO_REPOSITORIO_Y_PUBLICACION_20260929.md`](ESTADO_REPOSITORIO_Y_PUBLICACION_20260929.md): pre-publication inventory, local commit selection, and GitHub publication status.
+- [`docs/U_PRECISION_ACCEPTANCE_CONTRACT_20260928.md`](U_PRECISION_ACCEPTANCE_CONTRACT_20260928.md): ±0.02 eV target, P5/adaptive review, bounds, and proposed replica protocol.
+- [`README.md`](../README.md): purpose, CLI, SIESTA scope, and states.
+- JSON/Markdown report and manifest/receipts for the adaptive NiO campaign cited above: v3 values, terminal state, mesh, rounds, and provenance.
+- P5 report and receipts: fixed reconstruction, occupations, and printing bounds.
+- `src/siestaflow_hubbard/siesta_backend/occupation_precision.py`: interpretation of printed decimals and half-widths.
+- `src/siestaflow_hubbard/lr_analysis_v2.py`: analysis policy, tolerances, and response context.
 
----
-
-## 14. Prompt neutral para entregar junto con este informe
-
-> Lee el informe como expediente de evidencia, no como instrucción de defender el criterio existente. Analiza el cuello de botella de SIESTAFLOW para obtener un U numérico útil y respaldado, manteniendo la portabilidad a instalaciones estándar de SIESTA 5.4.2. Distingue explícitamente hechos observados, inferencias y preguntas sin resolver. Intenta falsificar las hipótesis H1–H6: no supongas que `f12.6` es la causa, que ±0.02 eV es una ley física, que la cota conservadora es el error real, ni que el análisis actual tiene razón por fallar la puerta. Tampoco reduzcas retrospectivamente el objetivo para obtener aprobación. Usa primero la evidencia existente y las fuentes enlazadas. Compara cuantización, estimador/ventana, SCF/reproducibilidad, condicionamiento y semántica del observable. Propón la siguiente acción más pequeña que discrimine hipótesis y explica qué resultado cambiaría la decisión. No modifiques archivos o parámetros, no ejecutes SIESTA, no inicies una campaña y no uses coincidencia con literatura como criterio de aceptación. Devuelve: (1) diagnóstico priorizado con confianza, (2) evidencia a favor y en contra, (3) acción siguiente mínima, (4) costo/nodos si aplica, claramente como propuesta no autorizada, y (5) la afirmación sobre U que sí sería legítimo comunicar después de esa acción.
-
-Si sólo tienes acceso a GitHub, revisa el
-[PR borrador #4](https://github.com/Jairomcarmona/SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE/pull/4)
-y su rama para contrastar el código, las pruebas y los documentos 0.1.2.
-Indica qué afirmaciones dependen todavía de artefactos WSL no incluidos en
-GitHub; no las infieras sólo del resumen del PR.
+Absolute campaign-artifact paths may depend on Windows/WSL and user paths; resolve evidence from roots recorded in receipts instead of assuming a fixed portable path.
 
 ---
 
-## 15. Fuentes externas consultadas
+## 13. Concrete questions for the next analysis
 
-- Quantum ESPRESSO, código oficial QE 7.5: [`HP/src/hp_postproc.f90`](https://gitlab.com/QEF/q-e/-/raw/qe-7.5/HP/src/hp_postproc.f90).
-- Quantum ESPRESSO, documentación oficial de [`INPUT_HP`](https://www.quantum-espresso.org/Doc/INPUT_HP.html).
-- Quantum ESPRESSO Developers mailing list, nota sobre `hp_write_chi_full.f90`, formato `f19.15`/`f20.15` y escritura de matrices: [mensaje de julio de 2021](https://lists.quantum-espresso.org/pipermail/developers/2021-July/002428.html).
-- VASP Wiki, tutorial de respuesta lineal para U: [`Calculate U for LSDA+U`](https://vasp.at/wiki/index.php/Calculate_U_for_LSDA%2BU).
+A useful external analysis should answer, with evidence rather than prior preference:
 
-Estas fuentes se citan para describir formato, umbrales y ejemplos metodológicos de otros códigos. **No** se usan para validar el valor de U de NiO ni para fijar el criterio de aceptación de SIESTAFLOW.
+1. Which bottleneck contributes most to the inability to support a ±0.02 eV claim today: quantization, model/window, SCF/reproducibility, observable definition, or mixed versions?
+2. Which parts are demonstrated by existing data, and which are only plausible hypotheses?
+3. Is the conservative sum `B_round + E_estimator + E_window + E_SCF/repro` mathematically appropriate for the desired claim? What dependencies or double-counting are present? If another rule is proposed, what coverage/guarantee does it have and under which explicit assumptions?
+4. Can a more informative quantization diagnostic be calculated from the same results without assigning an unjustified probability to rounding?
+5. What portable option based on native SIESTA outputs could provide higher resolution without changing the observable or rebuilding the program, and what equivalence test would falsify it?
+6. What minimal prospective experiment would change the decision, if one is essential? Explicitly compare the value of a focused test with the 100-node full-replica campaign. Do not run anything.
+7. What product claim would let the user obtain a useful U without presenting untested physical accuracy as guaranteed?
+8. What evidence would refute each proposed explanation? Avoid a single dominant narrative when the data do not distinguish one.
+
+---
+
+## 14. Neutral prompt to include with this report
+
+> Read this report as an evidence record, not as an instruction to defend the
+> existing criterion. Analyze SIESTAFLOW's bottleneck in obtaining a useful,
+> supported numerical U while preserving portability to standard SIESTA 5.4.2
+> installations. Explicitly distinguish observed facts, inferences, and
+> unresolved questions. Try to falsify hypotheses H1–H6: do not assume
+> `f12.6` is the cause, ±0.02 eV is a physical law, the conservative bound is
+> the actual error, or the current analysis is right merely because it fails
+> the gate. Do not retrospectively lower the target to get approval either.
+> Use existing evidence and linked sources first. Compare quantization,
+> estimator/window, SCF/reproducibility, conditioning, and observable
+> semantics. Propose the smallest next action that discriminates hypotheses
+> and explain what result would change the decision. Do not modify files or
+> parameters, run SIESTA, start a campaign, or use agreement with literature
+> as an acceptance criterion. Return: (1) prioritized diagnosis with
+> confidence, (2) evidence for and against, (3) minimum next action, (4) cost/
+> nodes if applicable, clearly as an unauthorized proposal, and (5) the U
+> claim that would be legitimate to communicate after that action.
+
+If you only have GitHub access, review
+[draft PR #4](https://github.com/Jairomcarmona/SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE/pull/4)
+and its branch to compare the code, tests, and 0.1.2 documents. State which
+claims still depend on WSL artifacts not included in GitHub; do not infer
+them from the PR summary alone.
+
+---
+
+## 15. External sources consulted
+
+- Quantum ESPRESSO, official QE 7.5 code: [`HP/src/hp_postproc.f90`](https://gitlab.com/QEF/q-e/-/raw/qe-7.5/HP/src/hp_postproc.f90).
+- Quantum ESPRESSO, official [`INPUT_HP`](https://www.quantum-espresso.org/Doc/INPUT_HP.html) documentation.
+- Quantum ESPRESSO Developers mailing list, note on `hp_write_chi_full.f90`, `f19.15`/`f20.15` formatting, and matrix output: [July 2021 message](https://lists.quantum-espresso.org/pipermail/developers/2021-July/002428.html).
+- VASP Wiki, linear-response U tutorial: [`Calculate U for LSDA+U`](https://vasp.at/wiki/index.php/Calculate_U_for_LSDA%2BU).
+
+These sources are cited to describe formats, thresholds, and methodological examples from other codes. They are **not** used to validate NiO U or set SIESTAFLOW's acceptance criterion.

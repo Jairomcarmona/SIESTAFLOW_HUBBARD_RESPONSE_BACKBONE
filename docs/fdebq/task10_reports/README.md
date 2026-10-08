@@ -29,5 +29,5 @@ the supplied FDF. MnO has positive D1 admission but negative semantic identity
 qualification. See BLOCKERS.md for the precise source limitations. Synthetic
 tests cover non-polarized translations and MnO 16->2 / 16->1 candidates.
 
-Both are `decisión del implementador (conservadora)` under AMENDMENTS_2.md:
+Both are `conservative implementer decision` under AMENDMENTS_2.md:
 neither source limitation is repaired by fabricating or joining evidence.

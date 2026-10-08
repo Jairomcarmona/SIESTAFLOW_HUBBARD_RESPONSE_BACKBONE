@@ -1,106 +1,105 @@
-# Estado del repositorio y distancia respecto a GitHub
+# Repository Status and Distance from GitHub
 
-**Fecha de inspección y publicación:** 2026-09-29. **Alcance:** lectura del
-checkout, verificación de la rama remota, selección de archivos, commit local
-y publicación en una rama de GitHub con PR borrador.
+**Inspection and publication date:** 2026-09-29. **Scope:** checkout review,
+remote-branch verification, file selection, local commit, and publication to a
+GitHub branch with a draft PR.
 
-## Conclusión inmediata
+## Immediate conclusion
 
-El trabajo de cierre de SIESTAFLOW se consolidó en la rama
-`codex/sync-product-20260929`, que reúne la implementación 0.1.2, pruebas,
-documentación y resultados NiO seleccionados. La rama está publicada en
-GitHub mediante el [PR borrador #4](https://github.com/Jairomcarmona/SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE/pull/4),
-con base `fix/mno-audit-20260925`. **`main` aún no contiene estos cambios**;
-quien analice el código debe abrir la rama o el diff de ese PR.
+The SIESTAFLOW closeout work was consolidated on branch
+`codex/sync-product-20260929`, which contains implementation 0.1.2, tests,
+documentation, and selected NiO results. The branch is published on GitHub via
+[draft PR #4](https://github.com/Jairomcarmona/SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE/pull/4),
+based on `fix/mno-audit-20260925`. **`main` does not yet contain these changes**;
+anyone analyzing the code must open the branch or the PR diff.
 
-La rama local de partida fue `fix/mno-audit-20260925` en
-`e53a6b0266bd83e8e41589973c59eb251ce034a7`. Una consulta de lectura
-`git ls-remote` desde el entorno autorizado confirmó ese mismo SHA para la
-rama remota y `bc2d1d0fccb4670476bac22c852476315a660e58` para `main`.
-Se preparó una rama nueva basada en `fix/mno-audit-20260925`, de modo que su
-diff de producto se pueda revisar por separado de los PR anteriores.
+The starting local branch was `fix/mno-audit-20260925` at
+`e53a6b0266bd83e8e41589973c59eb251ce034a7`. A read-only `git ls-remote` query
+from the authorized environment confirmed that same SHA for the remote branch
+and `bc2d1d0fccb4670476bac22c852476315a660e58` for `main`. A new branch was
+prepared from `fix/mno-audit-20260925` so its product diff could be reviewed
+separately from earlier PRs.
 
-## Inventario previo a seleccionar los archivos
+## Inventory before file selection
 
-| Categoría | Estado observado | Relevancia |
+| Category | Observed state | Relevance |
 |---|---|---|
-| Archivos ya seguidos por Git con modificaciones locales | 28 en el checkout completo, incluidos `README.md`, `docs/USER_MANUAL.md`, `pyproject.toml`, CLI, ejecutores, análisis y pruebas | Contienen parte del comportamiento de la entrega 0.1.2; no están en `HEAD`. |
-| Módulos de producto aún sin seguimiento | 8 bajo `src/siestaflow_hubbard/`: control adaptativo, análisis LR, reproducibilidad de malla, runner, campaña v2, inicialización y supervisor WSL, informe U | Son código esencial para lo descrito en la documentación nueva. Un commit sólo de documentos no publicaría esa implementación. |
-| Pruebas aún sin seguimiento | 15 bajo `tests/` en la inspección dirigida | Incluyen análisis v3, runner, adaptación y reproducibilidad; requieren selección y revisión antes de publicar. |
-| Documentos Markdown aún sin seguimiento | Al menos 16 bajo `docs/` antes de este inventario, incluidos el eje rector, registro P0–P6, contrato de precisión, quickstart e informe de contexto | El expediente que se quiere entregar a ChatGPT no se obtiene leyendo sólo la rama remota. |
-| Entradas y resultados NiO locales sin seguimiento | 18 archivos visibles en las carpetas dirigidas `campaigns/nio_pbe_adaptive_20260928` y `campaigns/nio_pbe_p5_20260928` | Distinguir entradas/configuración de resultados versionados; los OUT/DM reales de P5 están en WSL y no se deben reemplazar por una copia incompleta. |
-| Wheel local | `dist/siestaflow_hubbard-0.1.2-py3-none-any.whl` existe | La existencia del wheel no prueba que el código fuente correspondiente esté publicado en GitHub. |
+| Git-tracked files with local modifications | 28 in the complete checkout, including `README.md`, `docs/USER_MANUAL.md`, `pyproject.toml`, CLI, runners, analysis, and tests | They contain part of the 0.1.2 delivery behavior; they are not in `HEAD`. |
+| Untracked product modules | 8 under `src/siestaflow_hubbard/`: adaptive control, LR analysis, mesh reproducibility, runner, campaign v2, initialization and WSL supervisor, U report | This is essential code for what the new documentation describes. |
+| Untracked tests | 15 under `tests/` in the targeted inspection | They include v3 analysis, runner, adaptation, and reproducibility; they require selection and review before publication. |
+| Untracked Markdown documents | At least 16 under `docs/` before this inventory, including the product charter, P0–P6 log, precision contract, quickstart, and context report | The record intended for delivery to ChatGPT cannot be obtained by reading only the remote branch. |
+| Local untracked NiO inputs and results | 18 files visible in the targeted folders `campaigns/nio_pbe_adaptive_20260928` and `campaigns/nio_pbe_p5_20260928` | Distinguish inputs/configuration from versioned results; the real P5 OUT/DM files are in WSL and must not be replaced by an incomplete copy. |
+| Local wheel | `dist/siestaflow_hubbard-0.1.2-py3-none-any.whl` exists | The wheel’s existence does not prove that the corresponding source code is published on GitHub. |
 
-El commit local seleccionó 73 archivos. Quedaron fuera el ZIP modificado,
-temporales, campañas ajenas al cierre NiO y otros archivos sin seguimiento.
-Los resultados NiO incluidos son archivos locales versionados; los OUT/DM
-reales de P5 continúan en la ruta WSL documentada y no se sustituyeron por
-una copia incompleta.
+The local commit selected 73 files. It excluded the modified ZIP, temporary
+files, campaigns unrelated to the NiO closeout, and other untracked files. The
+included NiO results are locally versioned files; the real P5 OUT/DM files
+remain at the documented WSL path and were not replaced with an incomplete
+copy.
 
-### Verificación de la selección
+### Selection verification
 
-- Primera selección focalizada de análisis v3, reproducibilidad, runner y CLI:
+- First focused selection of v3 analysis, reproducibility, runner, and CLI:
   **35 passed**.
-- Segunda selección de adaptación, ocupación, Cu1, benchmarks y NiO:
-  **40 passed, 2 failed** por llamadas de tests que trataban métodos de
-  instancia como métodos de clase. `implementador_luna` corrigió sólo las
-  llamadas en los dos archivos afectados; esas **8 pruebas pasaron** después.
-- Los primeros intentos de pytest dentro del sandbox no pudieron crear su
-  directorio temporal; se ejecutaron las mismas selecciones con un basetemp
-  nuevo en el workspace mediante el entorno autorizado. Ninguna prueba
-  ejecutó SIESTA.
-- El hash SHA-256 del parche experimental `f20.12` coincide con la constante
-  registrada en el runner. Ese chequeo sólo valida identidad del archivo;
-  no lo convierte en ruta de producto portable.
+- Second selection of adaptation, occupation, Cu1, benchmarks, and NiO:
+  **40 passed, 2 failed** because test calls treated instance methods as class
+  methods. `implementador_luna` fixed only the calls in the two affected files;
+  those **8 tests passed** afterward.
+- The initial pytest attempts inside the sandbox could not create their
+  temporary directory; the same selections were run with a new basetemp in the
+  workspace using the authorized environment. No test ran SIESTA.
+- The SHA-256 hash of the experimental `f20.12` patch matches the constant
+  recorded in the runner. That check validates only file identity; it does not
+  make this a portable product path.
 
-La reconstrucción del wheel a partir del commit preparado y una revisión
-exhaustiva de CI remota siguen pendientes. El registro P6 conserva la
-validación del wheel construido durante el cierre del 28 de septiembre.
+Rebuilding the wheel from the prepared commit and exhaustively reviewing remote
+CI remain pending. The P6 log retains validation of the wheel built during the
+September 28 closeout.
 
-## Estado científico y operativo que debe acompañar la publicación
+## Scientific and operational status that must accompany publication
 
-El [registro final P0–P6](P0_EXECUTION_20260928.md) documenta `PASS` operativo
-en P0–P6, una auditoría científica Sol `APTO` antes de P5, una única campaña
-NiO P5 de 25 nodos y un wheel 0.1.2 instalado en Windows y WSL. Su estado
-terminal es **`PRODUCT_BLOCKED`**, porque el valor P5 sigue siendo
-`NUMERICAL_CANDIDATE_UNASSESSED` / `NOT_ESTABLISHED` frente al objetivo
-científico exigido por el usuario. El [informe del cuello de botella](INFORME_CONTEXTO_CUELLO_BOTELLA_U_20260929.md)
-explica las magnitudes y rutas de investigación; no reabre ni aprueba una
-campaña.
+The [final P0–P6 log](P0_EXECUTION_20260928.md) documents operational `PASS`
+for P0–P6, a scientific Sol audit marked `READY` before P5, one 25-node P5 NiO
+campaign, and a 0.1.2 wheel installed on Windows and WSL. Its terminal state is
+**`PRODUCT_BLOCKED`**, because the P5 value remains
+`NUMERICAL_CANDIDATE_UNASSESSED` / `NOT_ESTABLISHED` relative to the scientific
+objective required by the user. The [bottleneck report](INFORME_CONTEXTO_CUELLO_BOTELLA_U_20260929.md)
+explains the magnitudes and investigation paths; it does not reopen or approve
+a campaign.
 
-Publicar sólo `README.md` o sólo los documentos nuevos induciría a pensar que
-GitHub contiene el CLI/análisis v3 al que se refieren. Publicar sin el estado
-terminal sugeriría que el wheel 0.1.2 implica `PRODUCT_READY`. Ambas lecturas
-serían inexactas.
+Publishing only `README.md` or only the new documents would suggest that GitHub
+contains the CLI/v3 analysis they reference. Publishing without the terminal
+status would suggest that wheel 0.1.2 implies `PRODUCT_READY`. Both readings
+would be inaccurate.
 
-## Unidad mínima coherente para una actualización de GitHub
+## Minimum coherent unit for a GitHub update
 
-1. **Código fuente y empaquetado:** seleccionar las modificaciones de
-   `src/siestaflow_hubbard/`, `pyproject.toml` y los módulos nuevos realmente
-   importados por la ruta pública 0.1.2; comprobar sus relaciones de importación
-   y dependencia. Registrar cualquier componente experimental fuera de alcance.
-2. **Pruebas y evidencia:** incluir las pruebas pertinentes para esos módulos
-   y el registro P0–P6 con los hashes de artefactos ya documentados. Usar
-   referencias a los datos grandes/inmutables y su ubicación, sin fabricar un
-   archivo de campaña incompleto ni reescribir reportes históricos.
-3. **Documentación de usuario:** incluir `README.md`, manual, quickstart,
-   changelog, eje rector, contrato de precisión e informe de contexto con el
-   estado `PRODUCT_BLOCKED` visible y el alcance portable de SIESTA estándar.
-4. **Revisión del conjunto seleccionado:** inspeccionar el diff final y su
-   tamaño, excluir staging de compilación y temporales, y verificar que la
-   versión 0.1.2 descrita puede construirse desde las fuentes publicadas.
-5. **Publicación:** el primer `git push` fue rechazado por la revisión
-   automática porque el repositorio es público y aún faltaba autorización
-   explícita para exportar este conjunto exacto. El usuario autorizó después
-   el commit, se envió la rama y se abrió el
-   [PR borrador #4](https://github.com/Jairomcarmona/SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE/pull/4).
-   El PR está disponible para revisión; no está fusionado en `main`.
+1. **Source code and packaging:** select the modifications under
+   `src/siestaflow_hubbard/`, `pyproject.toml`, and the new modules actually
+   imported by the public 0.1.2 path; check their import and dependency
+   relationships. Record any out-of-scope experimental component.
+2. **Tests and evidence:** include the relevant tests for those modules and the
+   P0–P6 log with the already documented artifact hashes. Refer to large,
+   immutable data and its location without fabricating an incomplete campaign
+   file or rewriting historical reports.
+3. **User documentation:** include `README.md`, manual, quickstart, changelog,
+   product charter, precision contract, and context report with the
+   `PRODUCT_BLOCKED` status visible and the portable scope of standard SIESTA.
+4. **Review of the selected set:** inspect the final diff and its size, exclude
+   build staging and temporary files, and verify that the described 0.1.2
+   version can be built from the published sources.
+5. **Publication:** the first `git push` was rejected by automatic review
+   because the repository is public and explicit authorization to export this
+   exact set was still missing. The user later authorized the commit; the branch
+   was pushed and [draft PR #4](https://github.com/Jairomcarmona/SIESTAFLOW_HUBBARD_RESPONSE_BACKBONE/pull/4)
+   was opened. The PR is available for review; it is not merged into `main`.
 
-## Límite científico para esa actualización
+## Scientific limit for that update
 
-La publicación del repositorio no cambia el resultado científico. La ruta
-experimental de impresión `f20.12` requiere una SIESTA recompilada y queda
-fuera del producto portable. No se altera α, SCF, ventana, proyector, estimador
-ni criterio para conseguir un U deseado. El objetivo ±0.02 eV es operativo y
-posterior; la cota conservadora que supera ese valor impide certificarlo bajo
-el contrato actual, pero no demuestra que el error real de U lo supere.
+Publishing the repository does not change the scientific result. The
+experimental `f20.12` printing path requires a recompiled SIESTA and is outside
+the portable product. Alpha, SCF, window, projector, estimator, and criterion
+are not changed to obtain a desired U. The ±0.02 eV target is operational and
+post hoc; the conservative bound exceeding that value prevents certification
+under the current contract, but does not prove that the actual U error exceeds
+it.

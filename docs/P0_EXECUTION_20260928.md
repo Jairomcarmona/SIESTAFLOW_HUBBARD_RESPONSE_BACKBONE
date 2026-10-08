@@ -1,90 +1,206 @@
-# Registro de ejecución P0 — 2026-09-28
+# P0 Execution Log — 2026-09-28
 
-> **Cierre final P0–P6 — 2026-09-28.** Este addendum sustituye el estado histórico de bloqueo registrado más abajo, que precedió a la localización de los datos NiO. Las puertas operativas se ejecutaron, pero el objetivo científico que el usuario considera necesario para declarar listo el producto no se alcanzó. Estado terminal actual: **PRODUCT_BLOCKED**. El resultado P5 permanece `NUMERICAL_CANDIDATE_UNASSESSED` / `NOT_ESTABLISHED` y no establece un U útil/aceptado.
+> **Final P0–P6 closeout — 2026-09-28.** This addendum supersedes the
+> historical blocked status recorded below, which preceded locating the NiO
+> data. The operational gates were completed, but the scientific objective
+> the user requires for declaring the product ready was not achieved. Current
+> terminal state: **PRODUCT_BLOCKED**. The P5 result remains
+> `NUMERICAL_CANDIDATE_UNASSESSED` / `NOT_ESTABLISHED` and does not establish a
+> useful/accepted U.
 
-| Puerta | Estado | Evidencia verificable |
+| Gate | Status | Verifiable evidence |
 |---|---|---|
-| P0 — congelar contrato | `PASS` | Campaña NiO histórica `99d5ee67-d9cf-41f1-9f8f-39315c6e81fd`: 41 pares `.out`/DM verificados; 948 cotejos matrix→`Occupations:` sin anomalías. Contrato R1 y ruta P5 NiO PBE de dos sitios, 25 nodos, fijados antes del cálculo. El FDF P5 coincide con SHA-256 `b4fb34e642d862be6949a5b2033a60c5b9fcae56119879583bb3eaf237620ee7`; PSML NiLR0/NiLR1 `192eb05ffb64671715e570e2ca9a99a551cf15544984592082d43004f8554e06`; O `224ded5c59176d9bcb76d19b7a4a68a48d5dffabf8b262f64d5760250e87c35e`. |
-| P1 — fuente de ocupación | `PASS` | Esquema `siestaflow.lr_u_analysis.v3`; total del token `Occupations:` como observable primario para reference/BARE/SCREENED y su precisión del mismo evento. `trace_total` sólo como cotejo. Los artefactos v2 y reportes históricos quedaron intactos. |
-| P2 — decisiones matemáticas | `PASS` | Replay v3 guardado por ronda: `REFINE`, `REFINE`, `STOP_STABLE`; final `NUMERICAL_CANDIDATE_UNASSESSED`, aceptación `NOT_ESTABLISHED`, por ausencia de tolerancia declarada de sensibilidad. Umbrales adaptativos persistidos sin cambios; tests de control adaptativo pasaron. |
-| P3 — DAG, CLI e informe | `PASS` | Ruta pública `init/run/status/resume/report` para PowerShell→WSL y manifiesto Linux/Slurm; reporte no inicia worker. Pruebas focalizadas y auditoría independiente de P3 pasaron. |
-| P4 — regresión sin SIESTA | `PASS` | Suite pública final: `677 passed, 29 skipped, 20 subtests passed` (14.43 s). Los skips tienen razón registrada: APIs BARE antiguas retiradas, generador NiO legacy incompatible con FDF fixtures históricos congelados, auxiliares POSIX ejecutados en Windows y calibración ligada a un release histórico cuyo hash no coincide con el workspace actual. Regresión archivada Cu1 v3 valida outputs/DM y conserva `FAIL_CLOSED_NO_AUTHORIZED_U`. |
-| Auditoría Sol — antes de P5 | `APTO` | Auditor científico independiente, GPT-6 Sol / medium / read-only; revisión única de fuente, funcional de ajuste OLS vía QR, cotas, matrices, inversión y reporte. Reprodujo χ⁰, χ y U. Cota primaria cúbica de redondeo: `0.034362731047454464 eV`; la cota lineal diagnóstica es `0.013537118260117095 eV`. |
-| P5 — campaña real final | `PASS` | Única campaña nueva UUID `73a0a508-93df-41e2-b1bd-993c3dc7d94a`, `/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928`. Ejecutó `25/25` nodos SIESTA, 4 rangos MPI, serialmente; cero nodos duplicados. DAG total `27/27` con análisis. Sin cambios al FDF/PSML base ni ejecución simultánea adicional. |
-| P6 — entrega | `PASS` | Wheel `dist/siestaflow_hubbard-0.1.2-py3-none-any.whl`, SHA-256 `e66ad3621e9f4c3f2ba42d2eb632878fc014bde9e38980f98eaf7c9ea30a610e`. Instalación limpia y `pip check` pasaron en Windows y WSL; `--help`, `audit-fdf`, `status`, `resume`, `report` ejercitados. `resume` conservó 27 nodos y no relanzó SIESTA. README, manual, quickstart y changelog alineados; reportes regenerados idénticamente. |
+| P0 — freeze contract | `PASS` | Historical NiO campaign `99d5ee67-d9cf-41f1-9f8f-39315c6e81fd`: 41 `.out`/DM pairs verified; 948 matrix→`Occupations:` comparisons with no anomalies. R1 contract and two-site PBE NiO P5 path, 25 nodes, fixed before calculation. P5 FDF matches SHA-256 `b4fb34e642d862be6949a5b2033a60c5b9fcae56119879583bb3eaf237620ee7`; PSML NiLR0/NiLR1 `192eb05ffb64671715e570e2ca9a99a551cf15544984592082d43004f8554e06`; O `224ded5c59176d9bcb76d19b7a4a68a48d5dffabf8b262f64d5760250e87c35e`. |
+| P1 — occupation source | `PASS` | Schema `siestaflow.lr_u_analysis.v3`; total from the `Occupations:` token is the primary observable for reference/BARE/SCREENED, using its precision from the same event. `trace_total` is only a cross-check. Historical v2 artifacts and reports remain intact. |
+| P2 — mathematical decisions | `PASS` | v3 replay saved by round: `REFINE`, `REFINE`, `STOP_STABLE`; final `NUMERICAL_CANDIDATE_UNASSESSED`, acceptance `NOT_ESTABLISHED`, because no sensitivity tolerance was declared. Adaptive thresholds persisted unchanged; adaptive-control tests passed. |
+| P3 — DAG, CLI, and report | `PASS` | Public `init/run/status/resume/report` path for PowerShell→WSL and Linux/Slurm manifest; report does not start a worker. Focused tests and independent P3 audit passed. |
+| P4 — regression without SIESTA | `PASS` | Final public suite: `677 passed, 29 skipped, 20 subtests passed` (14.43 s). Skips have recorded reasons: retired legacy BARE APIs, legacy NiO generator incompatible with frozen historical FDF fixtures, POSIX helpers run on Windows, and calibration tied to a historical release whose hash differs from the current workspace. Archived Cu1 v3 regression validates outputs/DM and retains `FAIL_CLOSED_NO_AUTHORIZED_U`. |
+| Sol audit — before P5 | `READY` | Independent scientific auditor, GPT-6 Sol / medium / read-only; one-time review of source, OLS fit via QR, bounds, matrices, inversion, and report. Reproduced χ⁰, χ, and U. Primary cubic rounding bound: `0.034362731047454464 eV`; the diagnostic linear bound is `0.013537118260117095 eV`. |
+| P5 — final real campaign | `PASS` | One new campaign UUID `73a0a508-93df-41e2-b1bd-993c3dc7d94a`, `/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928`. Ran `25/25` SIESTA nodes, 4 MPI ranks, serially; no duplicate nodes. DAG total `27/27` including analysis. No changes to the base FDF/PSML and no additional concurrent execution. |
+| P6 — delivery | `PASS` | Wheel `dist/siestaflow_hubbard-0.1.2-py3-none-any.whl`, SHA-256 `e66ad3621e9f4c3f2ba42d2eb632878fc014bde9e38980f98eaf7c9ea30a610e`. Clean installation and `pip check` passed on Windows and WSL; `--help`, `audit-fdf`, `status`, `resume`, and `report` exercised. `resume` retained 27 nodes and did not relaunch SIESTA. README, manual, quickstart, and changelog aligned; reports regenerated identically. |
 
-**Artefactos P5:** JSON `/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/results/lr_u_analysis.v3.json`; Markdown `/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/results/LR_U_REPORT.v3.md`. SHA-256 JSON `d9b76e3841c1da43e70a82a56fad9f69fb68ddd9726779a5643f0cf39b1860ba`; Markdown `f52f370f1ee6b7198ac27e9c7dc5748261ae5df33c80bc943c975c7e34138f1d`. `U_scalar_charge`: NiLR0 `6.864267700049239 eV`, NiLR1 `6.864387475210124 eV`; cota de redondeo de ocupación `±0.01183306193 eV` por sitio. La interpretación continúa `NUMERICAL_CANDIDATE_UNASSESSED` y `NOT_ESTABLISHED`.
+**P5 artifacts:** JSON `/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/results/lr_u_analysis.v3.json`; Markdown `/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/results/LR_U_REPORT.v3.md`. JSON SHA-256 `d9b76e3841c1da43e70a82a56fad9f69fb68ddd9726779a5643f0cf39b1860ba`; Markdown `f52f370f1ee6b7198ac27e9c7dc5748261ae5df33c80bc943c975c7e34138f1d`. `U_scalar_charge`: NiLR0 `6.864267700049239 eV`, NiLR1 `6.864387475210124 eV`; occupation rounding bound `±0.01183306193 eV` per site. Interpretation remains `NUMERICAL_CANDIDATE_UNASSESSED` and `NOT_ESTABLISHED`.
 
-**Estado terminal vigente: `PRODUCT_BLOCKED`.** La ejecución y entrega del paquete funcionan, pero la salida científica principal no llegó a un U establecido: P5 carece de un criterio predeclarado y justificado de estabilidad/ruido que permita interpretar el valor como resultado útil. Este bloqueo no se resuelve marcando el U como aceptado ni cambiando retrospectivamente α, tolerancias, proyectores, ventanas o criterios. Trabajo mínimo para reabrir: fijar antes de cualquier cálculo adicional un protocolo independiente de aceptación/ruido y su presupuesto; después volver a evaluar el contrato desde P0. Esta ejecución no autoriza una campaña adicional. No se usó concordancia con literatura como criterio.
+**Current terminal state: `PRODUCT_BLOCKED`.** Package execution and delivery work, but the primary scientific output did not reach an established U: P5 has no predeclared and justified stability/noise criterion by which to interpret the value as useful. This block cannot be resolved by labeling U accepted or retrospectively changing alpha, tolerances, projectors, windows, or criteria. Minimum work to reopen: establish an independent acceptance/noise protocol and budget before any additional calculation; then reevaluate the contract from P0. This execution does not authorize another campaign. Agreement with literature was not used as a criterion.
 
-> **Addendum de reanudación — 2026-09-28.** La revisión local de los 41 resultados NiO levantó el bloqueo previo. El resto de las secciones inferiores conserva el expediente inicial como antecedente; sus estados y decisiones de campaña quedan sustituidos por este cierre final.
+> **Resumption addendum — 2026-09-28.** Local review of the 41 NiO results
+> cleared the earlier block. The remaining sections below retain the initial
+> record as background; their campaign states and decisions are superseded by
+> this final closeout.
 
-## Decisiones y evidencia añadidas en la ejecución P0–P2
+## Decisions and evidence added during P0–P2 execution
 
-**Ruta única P5 fijada en P0 antes de cualquier campaña nueva:** no hay una entrada NiO de un sitio con configuración pública `lr-config.json` en los conjuntos locales inspeccionados; los dos candidatos NiO PBE tienen los sitios `NiLR0` y `NiLR1`. Se elige la alternativa NiO PBE de dos sitios con seis amplitudes simétricas no nulas `[-0.06,-0.04,-0.02,0.02,0.04,0.06] eV`, máximo `1+2×2×6=25` nodos SIESTA. FDF de referencia: `campaigns/nio_pbe_adaptive_20260928/reference_pbe.fdf`; PSML Ni/O y funcional PBE: las entradas ya empleadas por esa campaña, cuyos hashes de procedencia están en el resultado v3. La campaña nueva usará malla fija y el CLI público; no se editarán FDF ni PSML. Perfil: hasta 4 rangos MPI, una ejecución SIESTA concurrente. La campaña adaptativa histórica de 41 nodos no será la prueba P5.
+**Single P5 path fixed at P0 before any new campaign:** there is no one-site
+NiO input with a public `lr-config.json` in the inspected local datasets; the
+two PBE NiO candidates have sites `NiLR0` and `NiLR1`. The two-site PBE NiO
+alternative was selected with six symmetric nonzero amplitudes
+`[-0.06,-0.04,-0.02,0.02,0.04,0.06] eV`, at most `1+2×2×6=25` SIESTA nodes.
+Reference FDF: `campaigns/nio_pbe_adaptive_20260928/reference_pbe.fdf`; Ni/O
+PSML and PBE functional: the inputs already used by that campaign, with
+provenance hashes in the v3 result. The new campaign will use a fixed mesh and
+the public CLI; FDF and PSML will not be edited. Profile: up to 4 MPI ranks,
+one concurrent SIESTA run. The historical 41-node adaptive campaign will not
+be the P5 test.
 
-**P2 reproducido con el observable v3 y sin SIESTA:** el replay volvió a verificar los mismos recibos/output/DM seleccionados y recalculó por ronda con `occupation_source=siesta_occupations_total`. Las rondas 0 y 1 entregan `REFINE/shrink` con adiciones `[-0.01,+0.01]` y `[-0.005,+0.005] eV`, respectivamente; sus mallas coinciden con las rondas persistidas. En ronda 2, dos comparaciones dan `ΔU=0.00375228894 eV`, menor que la tolerancia aplicada `0.06867064122 eV` (`tol_abs=0.05 eV`, `tol_rel=0.01`), y `STOP_STABLE` tiene precedencia sobre la métrica de truncación. Cierre: candidato `NUMERICAL_CANDIDATE_UNASSESSED`; aceptación física `NOT_ESTABLISHED`; presupuesto `41/41`. Esto sustituye sólo la decisión histórica para el análisis v3; los resultados y estado adaptativo v2 de WSL siguen intactos.
+**P2 reproduced with the v3 observable and without SIESTA:** the replay
+reverified the same selected receipts/output/DM and recomputed each round with
+`occupation_source=siesta_occupations_total`. Rounds 0 and 1 return
+`REFINE/shrink`, adding `[-0.01,+0.01]` and `[-0.005,+0.005] eV`, respectively;
+their meshes match the persisted rounds. In round 2, two comparisons give
+`ΔU=0.00375228894 eV`, below the applied tolerance `0.06867064122 eV`
+(`tol_abs=0.05 eV`, `tol_rel=0.01`), and `STOP_STABLE` takes precedence over
+the truncation metric. Closeout: candidate `NUMERICAL_CANDIDATE_UNASSESSED`;
+physical acceptance `NOT_ESTABLISHED`; budget `41/41`. This supersedes only the
+historical decision for v3 analysis; historical v2 results and WSL adaptive
+state remain intact.
 
-Artefactos v3 reproducibles: `campaigns/nio_pbe_adaptive_20260928/results/lr_u_analysis.v3.json`, `LR_U_REPORT.v3.md` y `alpha_rounds_v3/round-00..02/analysis.v3.json`. Las pruebas de la política ejecutadas por `implementador_luna`: `.venv\Scripts\python.exe -m pytest tests/unit/test_adaptive_alpha_control.py -q` → 11 passed. No se ejecutó SIESTA.
+Reproducible v3 artifacts: `campaigns/nio_pbe_adaptive_20260928/results/lr_u_analysis.v3.json`,
+`LR_U_REPORT.v3.md`, and `alpha_rounds_v3/round-00..02/analysis.v3.json`.
+Policy tests run by `implementador_luna`:
+`.venv\Scripts\python.exe -m pytest tests/unit/test_adaptive_alpha_control.py -q`
+→ 11 passed. SIESTA was not run.
 
-## Reapertura de P0 y contrato congelado
+## P0 reopened and contract frozen
 
-La campaña requerida está en `/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-adaptive-20260928-v2`. El manifiesto `node-evidence.json` selecciona los 41 outputs SIESTA (1 referencia, 20 BARE y 20 SCREENED); la revisión de lectura verificó los hashes de los 41 outputs y sus DM padres. Esto resuelve la ausencia de datos que causó el bloqueo anterior. Los reportes históricos de la campaña permanecen sin cambios.
+The required campaign is at
+`/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-adaptive-20260928-v2`.
+The
+ode-evidence.json` manifest selects all 41 SIESTA outputs (1 reference,
+20 BARE, and 20 SCREENED); read-only review verified hashes for all 41 outputs
+and their parent DMs. This resolves the data absence that caused the earlier
+block. Historical campaign reports remain unchanged.
 
-La fuente SIESTA 5.4.2 local, [`dftu.F`](../third_party/siesta-5.4.2-source-audit/Src/dftu.F), imprime la matriz en `f12.5`, acumula sus diagonales y después imprime `Occupations:` y `sum(oc)` en `f12.6`. En los 41 outputs se cotejaron 948 bloques de población matriz→`Occupations:` completos: error máximo por canal `2.2e-5`, bajo el límite de redondeo `2.55e-5`; error máximo en total `3.1e-5`, bajo `5.05e-5`; cero anomalías. Ejemplo reproducible: output de referencia, átomo 1, líneas 1010–1038: las trazas impresas suman `5.01139`, `3.01979` y `8.03118`; el resumen informa `5.011377`, `3.019776` y `8.031153` (diferencias `1.3e-5`, `1.4e-5` y `2.7e-5`).
+The local SIESTA 5.4.2 source,
+[`dftu.F`](../third_party/siesta-5.4.2-source-audit/Src/dftu.F), prints the
+matrix using `f12.5`, accumulates its diagonals, and then prints
+`Occupations:` and `sum(oc)` using `f12.6`. Across the 41 outputs, 948 complete
+matrix→`Occupations:` population blocks were compared: maximum error per
+channel `2.2e-5`, below the rounding limit `2.55e-5`; maximum total error
+`3.1e-5`, below `5.05e-5`; zero anomalies. Reproducible example: reference
+output, atom 1, lines 1010–1038: printed traces sum to `5.01139`, `3.01979`,
+and `8.03118`; the summary reports `5.011377`, `3.019776`, and `8.031153`
+(differences `1.3e-5`, `1.4e-5`, and `2.7e-5`).
 
-**Decisión R1 congelada:** el total de `Occupations:` del evento seleccionado es el observable primario de referencia, BARE y SCREENED. Su semiancho se lee de sus tokens (`f12.6`; para el formato de dos canales sin total explícito, se suman los semianchos de los dos tokens). `trace_total` y la traza de matriz quedan únicamente como cotejo independiente: no alimentan los ajustes, `χ0`, `χ`, `U` ni la cota. El cambio de significado se publica como esquema `siestaflow.lr_u_analysis.v3` con `occupation_source=siesta_occupations_total`; los resultados v2 históricos no se reetiquetan.
+**R1 decision frozen:** the `Occupations:` total from the selected event is the
+primary observable for reference, BARE, and SCREENED. Its half-width is read
+from its tokens (`f12.6`; for the two-channel format without an explicit
+total, the half-widths of the two tokens are added). `trace_total` and the
+matrix trace remain independent cross-checks only: they do not feed fits,
+`χ0`, `χ`, `U`, or the bound. The semantic change is published as schema
+`siestaflow.lr_u_analysis.v3` with
+`occupation_source=siesta_occupations_total`; historical v2 results are not
+relabeled.
 
-P0 queda superada. P1/R1 reprocesó los mismos 41 outputs sin volver a ejecutar SIESTA y creó artefactos v3 con `occupation_source=siesta_occupations_total`; P2 volvió a analizar por separado las tres rondas y congeló su resultado `STOP_STABLE` dentro de la política declarada. Los artefactos históricos v2 y estado WSL permanecen sin cambios. P3 está en ejecución; P4–P6 aún no se han ejecutado. No se han cambiado α, tolerancias, proyectores, ventanas ni criterios; literatura no participa en la aceptación; P5 está seleccionada pero no despachada.
+P0 is complete. P1/R1 reprocessed the same 41 outputs without rerunning SIESTA
+and created v3 artifacts with `occupation_source=siesta_occupations_total`; P2
+reanalyzed the three rounds separately and froze `STOP_STABLE` within the
+declared policy. Historical v2 artifacts and WSL state remain unchanged. P3
+was in progress; P4–P6 had not yet run. Alpha, tolerances, projectors, windows,
+and criteria were not changed; literature does not contribute to acceptance;
+P5 was selected but not dispatched.
 
-| Puerta | Estado vigente | Evidencia/razón |
+| Gate | Current status | Evidence/reason |
 |---|---|---|
-| P0 — congelar contrato | `PASS` | Ubicación WSL recuperada; 41 pares output/DM verificados; cotejo 948/948 y fuente primaria R1 fijada arriba. |
-| P1 — fuente de ocupación | `PASS` | Reprocesamiento de los 41 outputs publicado en JSON/Markdown v3 con `occupation_source=siesta_occupations_total`; v2 histórico intacto. |
-| P2 — decisiones matemáticas | `PASS` | Tres decisiones reproducidas con la política original; `STOP_STABLE` por dos comparaciones dentro de tolerancia y las rondas 0/1 reducidas por la truncación declarada. |
-| P3 — DAG, CLI e informe | `PASS` | CLI público Linux/Slurm acepta manifiesto directo dentro de la asignación; WSL conserva pointer/supervisor; `report` no inicia worker. Pruebas focalizadas 7 passed y verificación independiente 4 passed. |
-| P4 — regresión sin SIESTA | `IN_PROGRESS` | Reproceso NiO v3 realizado; cerrando segundo conjunto real Cu1 y suite pública sin cómputo SIESTA. |
-| P5 — prueba real final | `SELECTED / NO DESPACHADA` | Ruta alternativa NiO PBE de dos sitios; tope de 25 nodos. |
-| P6 — entrega | `NOT STARTED` | El proyecto continúa en P1. |
+| P0 — freeze contract | `PASS` | WSL location recovered; 41 output/DM pairs verified; 948/948 comparisons and R1 primary source fixed above. |
+| P1 — occupation source | `PASS` | Reprocessing of 41 outputs published in v3 JSON/Markdown with `occupation_source=siesta_occupations_total`; historical v2 intact. |
+| P2 — mathematical decisions | `PASS` | Three decisions reproduced with original policy; `STOP_STABLE` from two within-tolerance comparisons and rounds 0/1 reduced by declared truncation. |
+| P3 — DAG, CLI, and report | `PASS` | Public Linux/Slurm CLI accepts a direct manifest within an allocation; WSL retains pointer/supervisor; `report` does not start a worker. Focused tests 7 passed and independent verification 4 passed. |
+| P4 — regression without SIESTA | `IN_PROGRESS` | v3 NiO reprocessing complete; closing second real Cu1 dataset and public suite without SIESTA compute. |
+| P5 — final real test | `SELECTED / NOT DISPATCHED` | Two-site PBE NiO alternative; 25-node maximum. |
+| P6 — delivery | `NOT STARTED` | Project was still in P1. |
 
 ---
 
-**Plan rector:** [`EJE_RECTOR_CIERRE_PRODUCTO.md`](EJE_RECTOR_CIERRE_PRODUCTO.md), §§ 2–6.  
-**Resultado:** `PRODUCT_BLOCKED` en P0.  
-**Alcance ejecutado:** sólo inspección de P0. No se editaron código, configuración, entradas de campaña ni datos históricos; no se ejecutaron pruebas ni SIESTA.
+**Governing plan:** [`EJE_RECTOR_CIERRE_PRODUCTO.md`](EJE_RECTOR_CIERRE_PRODUCTO.md), §§ 2–6.
+**Result:** `PRODUCT_BLOCKED` at P0.
+**Executed scope:** P0 inspection only. No code, configuration, campaign input, or historical data was edited; no tests or SIESTA were run.
 
-## Decisión de P0
+## P0 decision
 
-P0 no puede congelar el contrato de ocupación ni autorizar P1: falta el conjunto NiO PBE adaptativo de 41 salidas requerido para cotejar el orden de impresión y los eventos BARE/SCREENED. El conjunto alternativo Cu1 es evidencia de ejecución real e íntegra en sus nodos, pero su propio veredicto cierra el análisis sin autorizar χ, inversiones ni U, porque no tiene un límite externo de ruido de ocupación aplicable. No sustituye la evidencia científica NiO que P0 exige para la ruta primaria.
+P0 cannot freeze the occupation contract or authorize P1: the required
+41-output adaptive PBE NiO dataset is missing, so print order and BARE/SCREENED
+events cannot be cross-checked. The alternative Cu1 dataset is evidence of
+real execution and its nodes are intact, but its own verdict closes the
+analysis without authorizing χ, inversions, or U because there is no applicable
+external occupation-noise bound. It does not replace the NiO scientific
+evidence required by P0 for the primary path.
 
-Por esta puerta fallida, **P1–P6 no se ejecutan**. En particular, no se inicia una campaña ni se invoca al auditor Sol: la auditoría prevista antes de P5 depende de completar P0–P4 y no se alcanza ese punto.
+Because this gate failed, **P1–P6 are not run**. In particular, no campaign is
+started and Sol is not asked to audit: the audit planned before P5 depends on
+completing P0–P4, and that point is not reached.
 
-## Evidencia reproducible
+## Reproducible evidence
 
-1. **Fuente SIESTA 5.4.2.** En [`third_party/siesta-5.4.2-source-audit/Src/dftu.F`](../third_party/siesta-5.4.2-source-audit/Src/dftu.F), líneas 525–526, la matriz se imprime con formato `(2i4,2f12.5)`; líneas 534–538 acumulan las diagonales; líneas 541–544 escriben `Occupations:` y `sum(oc)` mediante `(a,/,a,3f12.6)`. Esto establece el código fuente local que se debe contrastar, pero no demuestra que los tokens sean del mismo evento físico que los archivos NiO ausentes.
-2. **NiO requerido ausente.** El directorio [`campaigns/nio_pbe_adaptive_20260928`](../campaigns/nio_pbe_adaptive_20260928) contiene **0** archivos `*.out` y `*.DM` (conteo recursivo dirigido a esas extensiones). La misma serie de 41 salidas no se encuentra en `docs/evidence`. Hay otras carpetas de campañas NiO, pero son campañas distintas y no se usan como sustitución de datos.
-3. **Cu1 archivado, alcance y estado.** [`final-verdict.json`](../docs/evidence/siesta542_openmpi_slurm_full_campaign_20260920_run2_wheel/final-verdict.json) registra `13_VALIDATED_NODES`, `FAIL_CLOSED_NO_AUTHORIZED_U` y `U_ev: null`; sus razones indican que no se declaró `occupation_noise` con justificación externa y que no se permite derivarlo de la malla observada, pruebas sintéticas o repetibilidad histórica de MnO. [`result.json`](../docs/evidence/siesta542_openmpi_slurm_full_campaign_20260920_run2_wheel/result.json) confirma `METHODOLOGY_LOCK_MISSING_EXTERNAL_OCCUPATION_NOISE_BOUND`, inversión `NOT_AUTHORIZED` y reconstrucción de matrices `NOT_AUTHORIZED`. La inspección del `artifact-manifest.json` encontró 450 entradas: 449 artefactos coinciden en tamaño y SHA256; la única discrepancia de tamaño corresponde a `FULL_CAMPAIGN_REPORT.md`. Los 13 nodos y sus salidas de ejecución están validados en el veredicto y resultado archivados. Esta discrepancia no convierte el resultado Cu1 en un U autorizado.
-4. **Recursos registrados, no despachados.** El perfil Slurm archivado declara 4 CPU/rangos y SIESTA 5.4.2. La laptop expone un comando WSL y no un comando SIESTA nativo; la lectura de `Win32_Processor` fue denegada, así que no se atribuye un conteo de CPU local no verificado. No se lanzó trabajo alguno.
+1. **SIESTA 5.4.2 source.** In
+   [`third_party/siesta-5.4.2-source-audit/Src/dftu.F`](../third_party/siesta-5.4.2-source-audit/Src/dftu.F),
+   lines 525–526 print the matrix with `(2i4,2f12.5)`; lines 534–538 accumulate
+   the diagonals; lines 541–544 write `Occupations:` and `sum(oc)` with
+   `(a,/,a,3f12.6)`. This establishes which local source code must be checked,
+   but does not show that the tokens correspond to the same physical event in
+   the missing NiO files.
+2. **Required NiO data missing.** Directory
+   [`campaigns/nio_pbe_adaptive_20260928`](../campaigns/nio_pbe_adaptive_20260928)
+   contains **0** `*.out` and `*.DM` files (recursive count limited to those
+   extensions). The same 41-output series is not present in `docs/evidence`.
+   Other NiO campaign folders exist, but they are different campaigns and were
+   not used as substitute data.
+3. **Archived Cu1, scope, and status.**
+   [`final-verdict.json`](../docs/evidence/siesta542_openmpi_slurm_full_campaign_20260920_run2_wheel/final-verdict.json)
+   records `13_VALIDATED_NODES`, `FAIL_CLOSED_NO_AUTHORIZED_U`, and
+   `U_ev: null`; its reasons say `occupation_noise` was not declared with
+   external justification and must not be derived from the observed mesh,
+   synthetic tests, or historical MnO repeatability.
+   [`result.json`](../docs/evidence/siesta542_openmpi_slurm_full_campaign_20260920_run2_wheel/result.json)
+   confirms `METHODOLOGY_LOCK_MISSING_EXTERNAL_OCCUPATION_NOISE_BOUND`,
+   inversion `NOT_AUTHORIZED`, and matrix reconstruction `NOT_AUTHORIZED`.
+   Inspecting `artifact-manifest.json` found 450 entries: 449 artifacts match
+   in size and SHA256; the only size discrepancy is for
+   `FULL_CAMPAIGN_REPORT.md`. All 13 nodes and their execution outputs are
+   validated in the archived verdict and result. This discrepancy does not
+   make the Cu1 result an authorized U.
+4. **Resources recorded, not dispatched.** The archived Slurm profile declares
+   4 CPUs/ranks and SIESTA 5.4.2. The laptop exposes a WSL command, not a native
+   SIESTA command; reading `Win32_Processor` was denied, so no unverified local
+   CPU count is asserted. No work was launched.
 
-## Contrato y límites retenidos
+## Retained contract and limits
 
-- Se conserva como referencia la semántica histórica del esquema v2. Si el análisis posterior cambia la representación ajustada, el plan requiere `occupation_source` explícito y una nueva versión de esquema; `report` no debe reetiquetar números v2.
-- La decisión de usar `Occupations:` como variable primaria queda **pendiente** del cotejo con los mismos eventos de los 41 `.out` NiO; no se infiere equivalencia sólo porque la fuente acumule diagonales y luego imprima `sum(oc)`.
-- No se eligió material ni ruta P5. El plan limita P5 a una campaña única de hasta 13 nodos para un sitio, o hasta 25 para la alternativa NiO de dos sitios elegida antes del cálculo; contempla hasta cuatro rangos MPI y una ejecución SIESTA simultánea. Esos límites quedan registrados sin autorización de despacho.
-- No se modifican α, tolerancias, proyectores, ventanas, límites ni criterios para obtener un U. Literatura no se usa como criterio de aceptación. Los artefactos y reportes históricos permanecen inmutables.
+- Preserve historical v2 schema semantics as a reference. If later analysis
+  changes the fitted representation, the plan requires explicit
+  `occupation_source` and a new schema version; `report` must not relabel v2
+  numbers.
+- The decision to use `Occupations:` as the primary variable remains
+  **pending** a cross-check against the same events in the 41 NiO `.out` files;
+  equivalence is not inferred merely because the source accumulates diagonals
+  and then prints `sum(oc)`.
+- No material or P5 path was selected. The plan limits P5 to one campaign of
+  up to 13 nodes for one site, or up to 25 for the two-site NiO alternative
+  chosen before calculation; it allows up to four MPI ranks and one concurrent
+  SIESTA run. These limits are recorded without dispatch authorization.
+- Alpha, tolerances, projectors, windows, limits, and criteria are not changed
+  to obtain a U. Literature is not an acceptance criterion. Historical
+  artifacts and reports remain immutable.
 
-## Mínimo necesario para reabrir
+## Minimum required to reopen
 
-Recuperar en la ruta NiO declarada las **41 salidas `.out`**, sus archivos `.DM` padres y el manifiesto de procedencia/integridad que permita vincular cada salida con su entrada y evento. Después se podrá reanudar P0 y comprobar la selección científica fijada por el plan. El conjunto Cu1 requiere además, si se pretende usar para una decisión que dependa de ruido de ocupación, un protocolo de repetibilidad/calibración aplicable a Cu predeclarado y su recibo inmutable de bloqueo metodológico, tal como especifica `final-verdict.json`.
+Recover the **41 `.out` files**, their parent `.DM` files, and provenance/
+integrity manifest in the declared NiO location so each output can be tied to
+its input and event. P0 can then resume and verify the scientific selection
+fixed by the plan. If Cu1 is to support a decision depending on occupation
+noise, it also needs a predeclared Cu-applicable repeatability/calibration
+protocol and its immutable methodology-block receipt, as specified by
+`final-verdict.json`.
 
-| Puerta | Estado | Evidencia/razón |
+| Gate | Status | Evidence/reason |
 |---|---|---|
-| P0 — congelar contrato | `BLOCKED` | Fuente inspeccionada; faltan los 41 `.out`, `.DM` padres y manifiesto NiO. Cu1 está cerrado sin U autorizado. |
-| P1 — fuente de ocupación | `NOT RUN` | P0 no superada; no hay datos NiO requeridos para el cotejo. |
-| P2 — decisiones matemáticas | `NOT RUN` | P0 no superada. |
-| P3 — DAG, CLI e informe | `NOT RUN` | P0 no superada. |
-| P4 — regresión sin SIESTA | `NOT RUN` | P0 no superada. |
-| P5 — prueba real final | `NOT RUN / NO AUTORIZADA` | No se seleccionó campaña; no se ejecutó SIESTA. |
-| P6 — entrega | `NOT RUN` | El producto no satisface las puertas previas. |
+| P0 — freeze contract | `BLOCKED` | Source inspected; 41 NiO `.out` files, parent `.DM` files, and manifest are missing. Cu1 is closed without an authorized U. |
+| P1 — occupation source | `NOT RUN` | P0 not passed; required NiO data for comparison are unavailable. |
+| P2 — mathematical decisions | `NOT RUN` | P0 not passed. |
+| P3 — DAG, CLI, and report | `NOT RUN` | P0 not passed. |
+| P4 — regression without SIESTA | `NOT RUN` | P0 not passed. |
+| P5 — final real test | `NOT RUN / NOT AUTHORIZED` | No campaign selected; SIESTA was not run. |
+| P6 — delivery | `NOT RUN` | The product does not meet the preceding gates. |
 
-**Estado terminal de esta ejecución:** `PRODUCT_BLOCKED`, por la ausencia reproducible de los datos NiO y su procedencia necesarios en P0. No se amplía el alcance para fabricar un sustituto ni se continúa hacia P1–P6.
+**Terminal state of this execution:** `PRODUCT_BLOCKED`, due to the
+reproducible absence of the NiO data and provenance required at P0. Scope is
+not expanded to fabricate a substitute, and work does not proceed to P1–P6.

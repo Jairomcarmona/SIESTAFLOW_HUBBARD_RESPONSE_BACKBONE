@@ -508,14 +508,14 @@ Output: DISABLED 16 47f5bbb9dde9803fed4d1a5601d3cebd1926990f2ebf3ef3d851bcf7e192
 20.8 requires the SCF ladder v2 protocol from 20.3 and validates calibration against coverage/planner evidence from 20.5. 20.3 is blocked by two existing tests that demand v1 production materialization; 20.5 is stopped under R3 because a within-band translation candidate is lost. Therefore 20.8 is not independent and no 20.8 code, tests, or premise checks were started. Resume after the two upstream blockers are resolved.
 
 
-### 20.9 — comprobación R4 sobre NiO P5 (detenida por diferencia)
+### 20.9 — R4 check for NiO P5 (stopped due to a difference)
 
-La única cadena archivada compatible especificada por R4 existe en `/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/`. Los hashes del campaign.v2.json, reference.fdf, lr_config.json y node-evidence.json son, respectivamente, `0917d0ca393f167aaff02f5730d0a6a549ea35cbc17ddbe818cb662b3d073b4f`, `b4fb34e642d862be6949a5b2033a60c5b9fcae56119879583bb3eaf237620ee7`, `619895c0908c5c557a476151a9e06a63483254b7e0b814af084784ac07fd7cd6`, y `0e8d0b0bb781437b59942f8bae33204401bb116b32d40a4762aa33a2c174e1be`. Los hashes de FDF materializados constan en los 24 nodos de node-evidence.
+The only compatible archived chain specified by R4 is at `/home/jmc/.local/state/siestaflow/campaigns/nio-pbe-p5-20260928/`. The hashes for campaign.v2.json, reference.fdf, lr_config.json, and node-evidence.json are, respectively, `0917d0ca393f167aaff02f5730d0a6a549ea35cbc17ddbe818cb662b3d073b4f`, `b4fb34e642d862be6949a5b2033a60c5b9fcae56119879583bb3eaf237620ee7`, `619895c0908c5c557a476151a9e06a63483254b7e0b814af084784ac07fd7cd6`, and `0e8d0b0bb781437b59942f8bae33204401bb116b32d40a4762aa33a2c174e1be`. The materialized FDF hashes are recorded in the 24 node-evidence entries.
 
-Comando de inicialización en directorio temporal, con coverage=DISABLED y usando la FDF, lr-config y ejecución de la cadena archivada:
+Initialization command in a temporary directory, with coverage=DISABLED, using the archived chain's FDF, lr-config, and execution configuration:
 `wsl.exe -d Ubuntu -- bash -lc 'PYTHONPATH=/mnt/c/Users/Jairo/work/hubbardflow/src /home/jmc/.local/state/siestaflow/hubbard-response-env/bin/python - << "PY" ... initialize_campaign(...) ... PY'`
 
-Salida observada: 2 sitios actuales (`NiLR0`, `NiLR1`, átomos 1 y 2), 24 run specs y coverage `DISABLED`. Las tuplas de átomo, modo y alpha coinciden con las 24 entradas archivadas, pero falla la igualdad estricta solicitada para `(site, atom, mode, alpha)`: el plan actual emplea `NiLR0@0:3:2` y `NiLR1@1:3:2`; el manifiesto y node-evidence usan `NiLR0` y `NiLR1`. Por instrucción R4, 20.9 se detiene sin cambios para forzar equivalencia. Al no coincidir el conjunto, no se intentó fabricar una comparación de hashes materializados actuales. CoO, MnO y Cu3N: `NOT_COVERED`, según R4. No se modificaron fixtures ni datos archivados.
+Observed output: 2 current sites (`NiLR0`, `NiLR1`, atoms 1 and 2), 24 run specs, and coverage `DISABLED`. The atom, mode, and alpha tuples match the 24 archived entries, but the requested strict equality for `(site, atom, mode, alpha)` fails: the current plan uses `NiLR0@0:3:2` and `NiLR1@1:3:2`; the manifest and node-evidence use `NiLR0` and `NiLR1`. Per R4, stop 20.9 without changes rather than force equivalence. Since the sets do not match, no comparison of current materialized hashes was fabricated. CoO, MnO, and Cu3N: `NOT_COVERED`, per R4. No fixtures or archived data were modified.
 
 
 ## Rerun under author resolutions R1–R4 — final current branch check
@@ -787,26 +787,25 @@ Moved the include expansion algorithm unchanged into `siesta_backend/fdf_include
 - `campaign_v2.py` outside the configured static set: Ruff before/after remains 2/2 (I001 line 2 and UP035 line 11, both untouched); strict mypy before/after remains 0/0. No whole-file formatting was run.
 - `git diff --check` → clean; V6 → `V6 GATE OK`. No SIESTA run.
 
-## TASK 23c — registro R5 de las aserciones de procedencia
+## TASK 23c — R5 record of provenance assertions
 
-Estas ediciones sustituyen exclusivamente veredictos por SHA256 crudo, conforme
-al TASK 23c §1 (identidad/trazabilidad: advertencia y registro), D16.1 §2(a),
-§2(d) del encargo del autor (digests nunca deciden y siempre se registran),
+These edits replace only raw SHA256 verdicts, in accordance with
+TASK 23c §1 (identity/traceability: warning and recording), D16.1 §2(a),
+§2(d) of the author's task (digests never decide and are always recorded),
 [AMENDMENTS_2.md, D16.1](AMENDMENTS_2.md#d161-physical-parent-comparison-with-independent-fermi-policy)
-y la regla R5. La auditoría científica final confirmó estas ediciones antes del
-commit; los invariantes físicos y los archivos requeridos permanecen verificados.
+and rule R5. The final scientific audit confirmed these edits before the
+commit; the physical invariants and required files remain verified.
 
-| Prueba existente / caso | Aserción anterior | Aserción nueva | Cláusula y justificación R5 |
+| Existing test / case | Previous assertion | New assertion | R5 clause and justification |
 |---|---|---|---|
-| `test_campaign_production.py`, DM padre con digest distinto | `prepare_canonical_dm` lanza `RuntimeError` por mismatch. | Emite `RuntimeWarning` con `PARENT_DM_DIGEST_MISMATCH`; copia exactamente los bytes reales y devuelve su digest observado. | TASK 23c §1 y D16.1 §2(a),(d): SHA de archivo es procedencia, no veto. R5 autoriza reemplazar precisamente el veredicto por SHA crudo. |
-| `test_matrix_lr.py`, DM padre con digest distinto | `prepare_canonical_dm` lanza `RuntimeError` con `Parent DM identity mismatch`. | Advertencia `PARENT_DM_DIGEST_MISMATCH`, bytes copiados idénticos al padre y digest observado distinto del declarado erróneo. | TASK 23c §1 y D16.1 §2(a),(d); misma sustitución R5 de identidad por SHA por trazabilidad registrada. No se cambia la respuesta numérica. |
-| `test_product_execution.py`, comentario FDF / whitespace de pseudopotencial | `ProductError` por hash de fuente; ninguna llamada al worker ni execution link. | Worker ejecuta una vez el protocolo congelado, conserva `run_specs` y config congelada, y registra `ARTIFACT_DIGEST_MISMATCH` tanto en el execution link como en el artefacto de trazabilidad. | TASK 23c §1 y D16.1 §2(a),(d): una diferencia de bytes inocua no prueba una diferencia física. R5 reemplaza solo el veto por SHA; se añaden comprobaciones de protocolo y registro. |
-| `test_symmetry_operations.py`, solo `input_fdf_sha256` cambiado | Caso negativo `digest` rechazaba la clasificación física. | Caso positivo acepta la traslación y conserva `DigestWarningReason.MISMATCH` para `reference.input_fdf_sha256` en `CoverageQualification` y su serialización. | TASK 23c §1: FDF SHA es clase (a), solo trazabilidad. R5 sustituye ese único negativo por SHA; `identity_digest` canónico de especie sigue siendo el invariante físico F2 de la revisión §F, y los negativos de especie/base/entorno permanecen. |
+| `test_campaign_production.py`, parent DM with a different digest | `prepare_canonical_dm` raises `RuntimeError` for mismatch. | Emits `RuntimeWarning` with `PARENT_DM_DIGEST_MISMATCH`; copies the actual bytes exactly and returns their observed digest. | TASK 23c §1 and D16.1 §2(a),(d): a file SHA is provenance, not a veto. R5 specifically authorizes replacing the raw SHA verdict. |
+| `test_matrix_lr.py`, parent DM with a different digest | `prepare_canonical_dm` raises `RuntimeError` with `Parent DM identity mismatch`. | `PARENT_DM_DIGEST_MISMATCH` warning, copied bytes identical to the parent, and observed digest differs from the incorrectly declared digest. | TASK 23c §1 and D16.1 §2(a),(d); the same R5 replacement of SHA identity with recorded traceability. The numerical result does not change. |
+| `test_product_execution.py`, FDF comment / pseudopotential whitespace | `ProductError` for source hash; no worker call or execution link. | The worker executes the frozen protocol once, preserves `run_specs` and frozen config, and records `ARTIFACT_DIGEST_MISMATCH` in both the execution link and traceability artifact. | TASK 23c §1 and D16.1 §2(a),(d): an innocuous byte difference does not prove a physical difference. R5 replaces only the SHA veto; protocol and recording checks are added. |
+| `test_symmetry_operations.py`, only `input_fdf_sha256` changed | Negative `digest` case rejected physical classification. | Positive case accepts the translation and retains `DigestWarningReason.MISMATCH` for `reference.input_fdf_sha256` in `CoverageQualification` and its serialization. | TASK 23c §1: FDF SHA is class (a), traceability only. R5 replaces that one SHA negative case; the canonical species `identity_digest` remains review §F's F2 physical invariant, and species/basis/environment negative cases remain. |
 
-El resumen exacto R5 de los dos goldens NiO P5 (ocho rutas JSON y tres hashes
-derivados, sin cambios físicos) está en
-[TASK23C_HASH_AUDIT.md, Corrección de CI y golden R5 de procedencia](TASK23C_HASH_AUDIT.md#corrección-de-ci-y-golden-r5-de-procedencia).
-La ausencia del archivo DM real sigue fallando; únicamente la ausencia de su
+The exact R5 summary for the two NiO P5 goldens (eight JSON paths and three hash-derived artifacts, with no physical changes) is in
+[TASK23C_HASH_AUDIT.md, CI correction and R5 provenance golden](TASK23C_HASH_AUDIT.md#corrección-de-ci-y-golden-r5-de-procedencia).
+Absence of the actual DM file still fails; only absence of its
 digest deja de producir `PARENT_DM_NOT_ESTABLISHED`.
 
 ## TASK 24a — R5 print-bound report schema adaptation

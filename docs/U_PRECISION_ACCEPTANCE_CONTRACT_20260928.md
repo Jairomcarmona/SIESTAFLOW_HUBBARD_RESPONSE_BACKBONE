@@ -1,128 +1,125 @@
-# Contrato de precisión numérica de U
+# Numerical Precision Contract for U
 
-**Tolerancia predeclarada para una campaña futura:** ±0.02 eV por sitio en
-`U_scalar_charge`. La campaña deberá congelar explícitamente
-`analysis_policy.u_precision_tolerance_eV: 0.02` antes de generar sus
-respuestas. Este umbral define un objetivo de precisión numérica; no es una
-tolerancia física, una aceptación de DFT+U ni una razón para alterar α,
-proyectores, ventanas, criterios SCF o el estimador después de observar U.
+**Predeclared tolerance for a future campaign:** ±0.02 eV per site in
+`U_scalar_charge`. The campaign must explicitly freeze
+`analysis_policy.u_precision_tolerance_eV: 0.02` before generating its
+responses. This threshold defines a numerical precision target; it is not a
+physical tolerance, DFT+U acceptance criterion, or reason to change alpha,
+projectors, windows, SCF criteria, or estimator after observing U.
 
-> **Estado de portabilidad (2026-09-29):** los cálculos condicionales de este
-> contrato describen qué ocurriría bajo su fórmula de aceptación vigente; no
-> autorizan ni establecen como ruta de producto una modificación de SIESTA.
-> La opción experimental `f20.12` requiere cambiar/recompilar el ejecutable y
-> por ello no satisface el requisito de usar instalaciones estándar
-> soportadas. El experimento local de staging no produjo un build receipt
-> admitido y su binario no se ejecutó en una campaña. La precisión extendida
-> queda fuera de la ruta portable; este límite no demuestra que el error real
-> de U supere ±0.02 eV. Para el estado y las rutas actuales, véase
+> **Portability status (2026-09-29):** the conditional calculations in this
+> contract describe what would happen under its current acceptance formula;
+> they do not authorize or establish a SIESTA modification as a product path.
+> The experimental `f20.12` option requires changing/recompiling the
+> executable and therefore does not meet the requirement to use supported
+> standard installations. Local staging did not produce an accepted build
+> receipt, and its binary was not run in a campaign. Extended precision is
+> outside the portable path; this limit does not demonstrate that actual U
+> error exceeds ±0.02 eV. For current status and paths, see
 > [`INFORME_CONTEXTO_CUELLO_BOTELLA_U_20260929.md`](INFORME_CONTEXTO_CUELLO_BOTELLA_U_20260929.md).
 
-## Evidencias que deben permanecer separadas
+## Evidence that must remain separate
 
-- **Redondeo determinista de impresión:** calcularlo desde los tokens de
-  ocupación realmente emitidos y propagar sus intervalos por el ajuste y la
-  inversión. La revisión de la fórmula vigente de `lr_analysis_v2.py` separa
-  `B_round` de la cuantización de las réplicas, y suma además los envolventes
-  de estimador/ventana y el término condicional de repetibilidad. Para P5,
-  `B_round = 0.01183306193 eV`; el término cuantitativo de impresión de las
-  réplicas con `f12.6` es `B_replica,quant = 0.0118330619317529 eV`. Aun
-  suponiendo dispersión empírica réplica-primaria igual a cero, la suma de
-  esos términos y los envolventes por sitio da, incluso dejando fuera
-  cualquier floor positivo y fijando la dispersión observada en cero, como
-  mínimo
-  `B_total,NiLR0 = 0.027510528418052065 eV` y
-  `B_total,NiLR1 = 0.02792425893343447 eV`. Ambos exceden `0.02 eV`; la
-  cuantización del formato stock hace imposible satisfacer este umbral con la
-  fórmula actual incluso en ese caso de dispersión cero. La implementación
-  aplica `max(deterministic_floor_e, observed_spread)` antes de sumar la
-  cuantización de réplicas; por ello, un floor o dispersión positivos sólo
-  pueden aumentar esos mínimos. Por tanto, el P5 stock no es elegible
-  para la puerta de ±0.02 eV bajo este contrato; esto no invalida su valor
-  numérico como diagnóstico y no es un juicio de aceptación física.
-- **Precisión extendida `f20.12` (experimento no portable):** el parche aislado
-  `reserved_external_patches/siesta542-occupations-f20.12.patch` cambia el
-  formato de `f12.6` a `f20.12` y reduce por un factor de 10⁶ el semipaso
-  decimal bajo la misma propagación. Bajo la fórmula `B_total` fijada aquí,
-  ese cambio reduce el término de cuantización de réplicas; no garantiza por sí
-  solo que el total pase. La afirmación de que `f20.12` es “necesario” sólo es
-  condicional a mantener esa fórmula y esa puerta; no demuestra una necesidad
-  física ni que la cota conservadora sea el error real. Además, exige modificar
-  y recompilar SIESTA, así que **no es una ruta aceptable para el producto
-  portable**. El staging local no produjo un build receipt admitido y el
-  binario no se ejecutó en una campaña. El runner puede validar un receipt que
-  enlace SHA-256 del parche y ejecutable, junto con al menos 12 decimales en
-  cada salida, pero esa capacidad del runner no convierte el parche en una
-  ruta aprobada. No reinterpretar salidas históricas `f12.6` como si tuvieran
-  precisión extendida.
-- **Modelo y ventana:** informar la sensibilidad entre estimadores y ventanas
-  por separado. Es un diagnóstico de dependencia del análisis, no una cota
-  matemática de error.
-- **SCF y repetibilidad:** validar convergencia y estado electrónico. Una
-  envolvente empírica de réplicas de la malla completa sólo describe
-  reproducibilidad condicionada al protocolo observado; no es una cota de
-  verdad ni una confianza probabilística. No transferir calibraciones de α=0
-  a α≠0. La calibración de malla usa dataset schema v4 y result schema v2.
-  Cada recibo identifica explícitamente el root de su campaña fuente; el
-  dataset, análisis, `node-evidence.json`, FDF, OUT y DM quedan ligados por
-  hashes. La referencia también enlaza su node ID/digest y attempt ID; cada
-  celda enlaza node ID/digest, attempt ID y coordenada. El validador compara
-  perturbación/sitio, relee el desplazamiento `DFTU.Proj` desde el FDF y
-  reextrae las ocupaciones desde los OUT de respuesta y referencia. Los paths
-  se confinan al root de la campaña fuente y al attempt de ejecución. Las
-  campañas necesitan UUID, root y attempts distintos; hashes DM/OUT iguales
-  son admisibles si los receipts prueban attempts independientes. Reutilizar
-  un attempt o un recibo de ejecución no pasa. Datasets sin ese recibo no
-  producen una calibración completa.
+- **Deterministic print rounding:** calculate it from the occupation tokens
+  actually emitted and propagate their intervals through the fit and
+  inversion. Review of the current `lr_analysis_v2.py` formula separates
+  `B_round` from replica quantization, and also sums estimator/window
+  envelopes and the conditional repeatability term. For P5,
+  `B_round = 0.01183306193 eV`; the quantitative print term for replicas with
+  `f12.6` is `B_replica,quant = 0.0118330619317529 eV`. Even assuming the
+  empirical primary/replica spread is zero, the sum of those terms and the
+  per-site envelopes is at least
+  `B_total,NiLR0 = 0.027510528418052065 eV` and
+  `B_total,NiLR1 = 0.02792425893343447 eV`, even after excluding any positive
+  floor and setting observed spread to zero. Both exceed `0.02 eV`; under the
+  current formula, stock-format quantization makes this threshold impossible
+  even in the zero-spread case. The implementation applies
+  `max(deterministic_floor_e, observed_spread)` before adding replica
+  quantization; therefore a positive floor or spread can only increase these
+  minima. Thus stock P5 is ineligible for the ±0.02 eV gate under this
+  contract; this does not invalidate its numerical value as a diagnostic and
+  is not a physical-acceptance judgment.
+- **Extended `f20.12` precision (non-portable experiment):** the isolated
+  patch `reserved_external_patches/siesta542-occupations-f20.12.patch` changes
+  the format from `f12.6` to `f20.12` and reduces the decimal half-step by a
+  factor of 10⁶ under the same propagation. Under the `B_total` formula fixed
+  here, that change reduces the replica quantization term; it does not by
+  itself guarantee that the total passes. The claim that `f20.12` is
+  “necessary” is conditional only on retaining that formula and gate; it does
+  not demonstrate physical necessity or that the conservative bound is the
+  actual error. It also requires modifying and recompiling SIESTA, so it is
+  **not an acceptable path for the portable product**. Local staging did not
+  produce an accepted build receipt and the binary was not run in a campaign.
+  The runner can validate a receipt linking the SHA-256 of the patch and
+  executable, along with at least 12 decimals in each output, but that runner
+  capability does not make the patch an approved path. Do not reinterpret
+  historical `f12.6` outputs as if they had extended precision.
+- **Model and window:** report sensitivity across estimators and windows
+  separately. This diagnoses analysis dependence; it is not a mathematical
+  error bound.
+- **SCF and repeatability:** validate convergence and electronic state. An
+  empirical envelope from full-mesh replicas describes reproducibility
+  conditional on the observed protocol only; it is not a truth bound or
+  probabilistic confidence statement. Do not transfer calibrations at α=0 to
+  α≠0. The mesh calibration uses dataset schema v4 and result schema v2. Each
+  receipt explicitly identifies the source campaign root; the dataset,
+  analysis, `node-evidence.json`, FDF, OUT, and DM are linked by hashes. The
+  reference also links its node ID/digest and attempt ID; each cell links node
+  ID/digest, attempt ID, and coordinate. The validator compares
+  perturbation/site, rereads the `DFTU.Proj` shift from the FDF, and
+  re-extracts occupations from response and reference OUT files. Paths are
+  confined to the source campaign root and execution attempt. Campaigns need
+  distinct UUIDs, roots, and attempts; identical DM/OUT hashes are allowed if
+  receipts prove independent attempts. Reusing an attempt or execution receipt
+  does not pass. Datasets without this receipt do not yield a complete
+  calibration.
 
-## Reanálisis retrospectivo de P5
+## Retrospective P5 reanalysis
 
-La CLI `tools/package_response_grid_replica.py --mode reanalyze-primary`
-permite evaluar el P5 fixed-grid existente con una tolerancia indicada
-explícitamente con `--target-tolerance-eV`, junto con un lock y resultado de
-calibración validados. La primaria se vuelve a comprobar desde sus artefactos
-hash-verificados y se escribe un análisis/informe en un sidecar nuevo, fuera
-de la carpeta de campaña. P5 no se cuenta como réplica ni se modifican sus
-artefactos históricos. La CLI considera la tolerancia preregistrada sólo si
-los dos campos (`sensitivity_tolerance_eV` y `u_precision_tolerance_eV`) de
-la política guardada en la campaña ya coinciden con el valor explícito.
+The CLI `tools/package_response_grid_replica.py --mode reanalyze-primary`
+allows evaluation of the existing fixed-grid P5 using an explicitly specified
+tolerance via `--target-tolerance-eV`, together with a validated lock and
+calibration result. The primary is checked again from its hash-verified
+artifacts, and an analysis/report is written to a new sidecar outside the
+campaign folder. P5 is not counted as a replica and its historical artifacts
+are not modified. The CLI treats the tolerance as preregistered only if both
+fields (`sensitivity_tolerance_eV` and `u_precision_tolerance_eV`) in the
+policy saved with the campaign already match the explicit value.
 
-Si esos campos no coinciden, se conservan los diagnósticos, pero el estado de
-la puerta se fuerza a `RETROSPECTIVE_THRESHOLD_NOT_PREREGISTERED` y
-`precision_gate_eligible` es `false`, aunque el cálculo retrospectivo quede
-dentro del umbral. Si coinciden, la evaluación puede ser elegible para la
-puerta de reproducibilidad numérica bajo el protocolo, nunca para aceptación
-física. La coincidencia de campos no altera el análisis ni los artefactos
-históricos; sólo determina si el sidecar puede ser elegible para la puerta.
+If those fields do not match, diagnostics are retained, but the gate state is
+forced to `RETROSPECTIVE_THRESHOLD_NOT_PREREGISTERED` and
+`precision_gate_eligible` is `false`, even if retrospective calculation falls
+within the threshold. If they match, the evaluation may be eligible for the
+protocol's numerical-reproducibility gate, never for physical acceptance.
+Matching fields do not alter the analysis or historical artifacts; they only
+determine whether the sidecar can be eligible for the gate.
 
-Ese umbral es **declarado por el usuario para evaluación retrospectiva**. No
-fue preregistrado para P5 y el reanálisis no puede cambiar ese hecho. El
-resultado condicional, si existiera, sólo describiría reproducibilidad
-numérica bajo el protocolo empírico validado; no sería aceptación física ni
-una garantía de error total. Esta descripción no anuncia un pase de precisión.
+This threshold is **declared by the user for retrospective evaluation**. It
+was not preregistered for P5, and reanalysis cannot change that fact. Any
+conditional result would describe only numerical reproducibility under the
+validated empirical protocol; it would not be physical acceptance or a total
+error guarantee. This description does not announce a precision pass.
 
-La evidencia SCF NiO disponible incluye 12 salidas SCREENED con `TDM=1e-5` y
-`TH=1e-4 eV`. La diferencia post hoc entre los registros terminales
-convergido y final se observó como un drift diagnóstico de 8.224 meV/sitio.
-Es sensibilidad terminal observada, no una cota ni una calibración de
-repetibilidad independiente. Sigue faltando evidencia de réplicas
-independientes de la malla completa para evaluar el componente SCF/repro bajo
-el contrato.
+Available NiO SCF evidence includes 12 SCREENED outputs with `TDM=1e-5` and
+`TH=1e-4 eV`. The post hoc difference between converged and final terminal
+records was observed as a diagnostic drift of 8.224 meV/site. This is observed
+terminal sensitivity, not a bound or an independent repeatability calibration.
+Independent full-mesh replica evidence is still missing to evaluate the
+SCF/repeatability component under this contract.
 
-### Comparación retrospectiva P5–adaptive-v2
+### Retrospective P5–adaptive-v2 comparison
 
-La campaña P5 fixed-grid y la campaña adaptativa NiO v2 tienen UUID, roots y
-attempts de ejecución distintos, pero comparten el mismo SHA del DM de
-referencia. Ambas usaron la malla `[-0.06, -0.04, -0.02, 0.02, 0.04,
-0.06] eV`, el funcional PBE y la política `polynomial`, grado 3, matriz raw y
-`minimum_residual_dof=1`. La igualdad del DM es compatible con ejecuciones
-deterministas; la independencia operativa se apoya en los receipts de campaña
-y de nodo con UUID/root/attempts distintos, no en exigir bytes distintos del
-estado físico.
+The fixed-grid P5 campaign and adaptive NiO v2 campaign have distinct UUIDs,
+roots, and execution attempts, but share the same reference DM SHA. Both used
+mesh `[-0.06, -0.04, -0.02, 0.02, 0.04, 0.06] eV`, PBE functional, and policy
+`polynomial`, degree 3, raw matrix, and `minimum_residual_dof=1`. Identical DM
+is compatible with deterministic execution; operational independence is
+supported by campaign and node receipts with distinct UUID/root/attempts, not
+by requiring distinct bytes for the physical state.
 
-Los receipts registran estos hashes idénticos en ambas campañas:
+The receipts record these identical hashes in both campaigns:
 
-| Entrada común | SHA-256 |
+| Shared input | SHA-256 |
 |---|---|
 | Reference FDF | `b4fb34e642d862be6949a5b2033a60b5c9fcae56119879583bb3eaf237620ee7` |
 | Execution profile | `fbc9ff5ae47a6791d0e1ff962b6070f8690f1ffef475bafd8784a7388d755ae1` |
@@ -131,95 +128,95 @@ Los receipts registran estos hashes idénticos en ambas campañas:
 | Ni pseudopotential | `192eb05ffb64671715e570e2ca9a99a551cf15544984592082d43004f8554e06` |
 | O pseudopotential | `224ded5c59176d9bcb76d19b7a4a68a48d5dffabf8b262f64d5760250e87c35e` |
 
-Ambas declaran SIESTA 5.4.2, el mismo path de ejecutable y el mismo texto de
-versión. No se archivó un hash del binario ejecutable; por eso esta igualdad
-de entradas y metadatos no constituye calibración formal del ejecutable ni
-cambia la clasificación diagnóstica de la ronda adaptativa.
+Both declare SIESTA 5.4.2, the same executable path, and the same version
+text. No executable binary hash was archived; therefore, these matching
+inputs and metadata do not constitute formal executable calibration and do
+not change the adaptive round's diagnostic classification.
 
-La ronda adaptativa 00 sigue siendo **diagnóstico**, no una réplica admitida
-por el calibrador: su campaña es adaptativa y su análisis histórico usa schema
-v2, mientras el packager de réplica exige campaña fixed-grid y análisis v3.
-No se contó ni se usó para construir una envolvente de repetibilidad.
+Adaptive round 00 remains a **diagnostic**, not a replica admitted by the
+calibrator: its campaign is adaptive and its historical analysis uses schema
+v2, whereas the replica packager requires a fixed-grid campaign and v3
+analysis. It was not counted or used to construct a repeatability envelope.
 
-Los valores reconstruidos por sitio fueron:
+Reconstructed per-site values were:
 
-| Fuente y método | NiLR0 (eV) | NiLR1 (eV) |
+| Source and method | NiLR0 (eV) | NiLR1 (eV) |
 |---|---:|---:|
-| Adaptive round-00, análisis histórico v2 | 6.884591569153939 | 6.885789004356711 |
-| Adaptive round-00, reextracción de los mismos OUT con v3 | 6.854048120360063 | 6.854167895520947 |
-| P5, análisis v3 | 6.864267700049239 | 6.864387475210124 |
+| Adaptive round-00, historical v2 analysis | 6.884591569153939 | 6.885789004356711 |
+| Adaptive round-00, v3 re-extraction of the same OUT files | 6.854048120360063 | 6.854167895520947 |
+| P5, v3 analysis | 6.864267700049239 | 6.864387475210124 |
 
-Al releer los mismos OUT adaptativos con el selector de eventos y parser de
-`Occupations:` vigentes y el análisis v3, la diferencia P5–adaptive queda en
-10.219579689 meV/sitio para ambos sitios, frente al salto histórico de
-20.324/21.402 meV. Las cotas deterministas de impresión propagadas por v3 son
-11.833061932 meV para P5 y 11.834222998 meV para adaptive. El residual
-10.220 meV queda dentro de esas cotas: esta comparación no identifica por sí
-sola un componente SCF/repetibilidad independiente.
+Rereading the same adaptive OUT files with the current event selector and
+`Occupations:` parser and v3 analysis reduces the P5–adaptive difference to
+10.219579689 meV/site for both sites, compared with the historical gap of
+20.324/21.402 meV. Deterministic print bounds propagated by v3 are
+11.833061932 meV for P5 and 11.834222998 meV for adaptive. The 10.220 meV
+residual is within those bounds: this comparison alone does not identify an
+independent SCF/repeatability component.
 
-El cambio entre adaptive v2 y v3 sobre los mismos archivos OUT mueve U en
-30.543448794 meV (NiLR0) y 31.621108836 meV (NiLR1). Es una diferencia de
-fuente/interpretación del observable (`matrix_trace` v2 frente a
-`siesta_occupations_total` v3), no ruido SCF. Por tanto, el salto original no
-debe atribuirse a variación entre campañas sin separar primero este cambio de
-extracción. Ninguna fila de esta comparación constituye calibración,
-aceptación de tolerancia ni aceptación física.
+The change from adaptive v2 to v3 on the same OUT files shifts U by
+30.543448794 meV (NiLR0) and 31.621108836 meV (NiLR1). This is a difference in
+data source/observable interpretation (`matrix_trace` v2 versus
+`siesta_occupations_total` v3), not SCF noise. Therefore, the original gap
+must not be attributed to between-campaign variation without first
+separating this extraction change. No row in this comparison constitutes
+calibration, tolerance acceptance, or physical acceptance.
 
-La comparación se puede reproducir sin escribir en las campañas: leer los
-manifiestos, análisis y receipts `node-evidence.json` existentes; verificar
-los hashes de manifest, análisis, node evidence, FDF, OUT y DM, además de
-UUID, root, node ID, evidence digest y attempt de cada fuente; comprobar la
-malla y el contexto de análisis; reextraer ocupaciones desde los OUT con
+The comparison can be reproduced without writing to the campaigns: read the
+existing manifests, analyses, and `node-evidence.json` receipts; verify hashes
+for manifest, analysis, node evidence, FDF, OUT, and DM, as well as each
+source's UUID, root, node ID, evidence digest, and attempt; check the mesh and
+analysis context; re-extract occupations from the OUT files using
 `Siesta542PotentialShiftHamiltonianProfile.select_response(...).response_event`
-para BARE y `select_converged_screened_event(...)` para SCREENED; obtener
-valores e intervalos con `read_printed_occupation_precision(...)`; y pasar las
-observaciones reconstruidas a `analyze_verified_lr` con la política v3
-declarada. Mantener los archivos originales intactos y guardar cualquier
-análisis futuro sólo en un sidecar. Los nombres de ruta se toman de los
-receipts relativos a cada root; no dependen de rutas absolutas de una máquina.
+for BARE and `select_converged_screened_event(...)` for SCREENED; obtain values
+and intervals with `read_printed_occupation_precision(...)`; and pass the
+reconstructed observations to `analyze_verified_lr` with the declared v3
+policy. Keep original files intact and write any future analysis only to a
+sidecar. Paths are taken from receipts relative to each root; they do not
+depend on machine-specific absolute paths.
 
-El protocolo fijado requiere tres réplicas completas adicionales. Con 25
-nodos por malla, su presupuesto es **75 nodos**. Una campaña primaria nueva,
-con tolerancias congeladas antes de ejecutarse, requiere otros 25: **100 nodos
-en total** para una ruta prospectiva con primary preregistrada y tres
-réplicas. P5 puede reanalizarse como primaria exploratoria y evita repetir
-esos 25 nodos para esa evaluación retrospectiva, pero no sustituye la primaria
-preregistrada de una futura ruta de aceptación numérica. No se cuenta P5 como
-réplica, ni se reduce la cobertura o relaja la independencia.
+The fixed protocol requires three more complete replicas. At 25 nodes per
+mesh, the budget is **75 nodes**. A new primary campaign, with tolerances
+frozen before execution, requires another 25: **100 nodes total** for a
+prospective path with a preregistered primary and three replicas. P5 can be
+reanalyzed as an exploratory primary and avoids repeating those 25 nodes for
+that retrospective evaluation, but it does not replace the preregistered
+primary for a future numerical-acceptance path. P5 is not counted as a
+replica, and coverage or independence requirements are not reduced.
 
-Para campañas y réplicas futuras, la tolerancia, la política de análisis y el
-protocolo de SCF/repetibilidad deben quedar congelados antes de ejecutar los
-cálculos. La evaluación retrospectiva de P5 no sustituye esa preregistración.
+For future campaigns and replicas, tolerance, analysis policy, and
+SCF/repeatability protocol must be frozen before calculations run. Retrospective
+P5 evaluation does not replace preregistration.
 
-Para evaluar el objetivo total, la campaña futura deberá declarar antes de
-calcular una envolvente de modelo/ventana por sitio y un protocolo de
-repetibilidad SCF. La composición conservadora propuesta es
+To evaluate the total target, a future campaign must declare before
+calculation a model/window envelope for each site and an SCF repeatability
+protocol. The proposed conservative composition is
 
 ```text
 B_total,s = B_round,s + E_estimator,s + E_window,s + E_SCF/repro,s
 ```
 
-El pase numérico requiere que los cuatro términos estén disponibles,
-`analysis_policy.sensitivity_tolerance_eV` esté predeclarado, y
-`B_total,s <= 0.02 eV` para **cada** sitio. No basta con que cada componente
-individual sea menor que 0.02 eV. Si una envolvente de modelo/ventana o de
-SCF/repetibilidad es empírica, el resultado debe etiquetarse como
-**condicional al protocolo observado**, nunca como garantía matemática o
-probabilística. Si alguno de esos términos sólo es un diagnóstico sin una
-envolvente predeclarada defendible, el total queda sin establecer; no se debe
-sumar ese diagnóstico como si fuera una cota.
+A numerical pass requires all four terms to be available,
+`analysis_policy.sensitivity_tolerance_eV` to be preregistered, and
+`B_total,s <= 0.02 eV` for **each** site. It is not sufficient for each
+component individually to be below 0.02 eV. If a model/window or
+SCF/repeatability envelope is empirical, the result must be labeled
+**conditional on the observed protocol**, never as a mathematical or
+probabilistic guarantee. If any term is only a diagnostic without a defensible
+predeclared envelope, the total remains unestablished; do not add that
+diagnostic as if it were a bound.
 
-El analizador compone esos términos por sitio y sólo puede emitir
-`CONDITIONALLY_REPRODUCIBLE_WITHIN_TOTAL_TOLERANCE` cuando todos están
-disponibles, el umbral de sensibilidad está predeclarado, existe evidencia de
-estado/SCF y el total está bajo el criterio. La parte SCF/repetibilidad se
-propaga excluyendo el redondeo primario, para no contarlo dos veces; incluye
-la cuantización de las réplicas y la dispersión primaria-réplica. Aun cuando
-el estado condicional pase, `total_numerical_U_interval` permanece
-`NOT_ESTABLISHED`: las envolventes empíricas no son cotas de error verdadero.
-El estado tampoco implica aceptación física.
+The analyzer composes these terms per site and may emit
+`CONDITIONALLY_REPRODUCIBLE_WITHIN_TOTAL_TOLERANCE` only when all are available,
+the sensitivity threshold is preregistered, state/SCF evidence exists, and the
+total meets the criterion. The SCF/repeatability portion is propagated while
+excluding primary rounding to avoid double-counting; it includes replica
+quantization and primary/replica spread. Even if the conditional state passes,
+`total_numerical_U_interval` remains `NOT_ESTABLISHED`: empirical envelopes are
+not bounds on true error. Nor does that state imply physical acceptance.
 
-El reanálisis sidecar puede reevaluar retrospectivamente el P5 histórico, pero
-no modifica sus datos, manifiestos, JSON ni informes originales. Tampoco
-establece aceptación física de ningún valor de U. La suma parcial revisada de
-P5 se informa aquí para fijar el margen pendiente; no modifica sus artefactos.
+The sidecar reanalysis may retrospectively reevaluate historical P5, but does
+not modify its data, manifests, JSON, or original reports. It also does not
+establish physical acceptance of any U value. The revised partial P5 sum is
+reported here to document the remaining margin; it does not modify P5
+artifacts.

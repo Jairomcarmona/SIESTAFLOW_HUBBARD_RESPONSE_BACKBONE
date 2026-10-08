@@ -1,34 +1,34 @@
-# TASK 22 — resumen de cierre
+# TASK 22 — closeout summary
 
-## Commits por ítem
+## Commits by item
 
-| Ítem | Commit |
+| Item | Commit |
 |---|---|
-| Preparación y decisiones D13a–c | `3c0b8ca` |
-| 22.1 — código de salida y evidencia de corridas fallidas | `c397fb1` |
-| 22.2 — error explícito de versión del planificador | `d044deb` |
-| 22.3 — parser y records de estado I.5 | `b54a74c` |
-| Registro de preguntas científicas | `386dd52` |
-| R11/R12 del autor | `72539b8` |
-| 22.4 — gates de estado y pruebas | `80e2f3b` |
-| 22.5 — integración, reporte y replay | `0a8a12f` |
-| 22.6 — corrida real y guía WSL | este commit: `docs: record TASK 22 real NiO validation` |
+| Preparation and D13a–c decisions | `3c0b8ca` |
+| 22.1 — exit codes and evidence for failed runs | `c397fb1` |
+| 22.2 — explicit planner-version error | `d044deb` |
+| 22.3 — parser and I.5 state records | `b54a74c` |
+| Scientific questions log | `386dd52` |
+| Author's R11/R12 | `72539b8` |
+| 22.4 — state gates and tests | `80e2f3b` |
+| 22.5 — integration, report, and replay | `0a8a12f` |
+| 22.6 — real run and WSL guide | this commit: `docs: record TASK 22 real NiO validation` |
 
-## Cambios de pruebas y golden
+## Test and golden changes
 
-- 22.1 amplió `tests/unit/test_runtime_adapters.py` para salida no cero, señales/launcher, OSError, límites de stdout/stderr y el recibo de falla. Los casos POSIX se verificaron en WSL.
-- 22.2 añadió `test_resume_reports_explicit_planner_version_change` en `tests/unit/test_campaign_plan.py`.
-- 22.4 añadió `tests/unit/test_state_gate.py`, pruebas para R11/R12 y fixtures comprimidos de stdout/`.EIG` de referencia y puntos NiO reales.
-- 22.5 actualizó el replay y añadió `tests/fixtures/replay_nio_p5/replay_i5_state_gate.json`, SHA-256 `326f5f63ecc590d27350493ed28636dfe9a6f8bceb369902124581b61f430404`. No se regeneró el manifest. No hubo ediciones de pruebas ni golden en 22.6.
+- 22.1 expanded `tests/unit/test_runtime_adapters.py` for nonzero exit, signals/launcher, OSError, stdout/stderr limits, and the failure receipt. POSIX cases were verified in WSL.
+- 22.2 added `test_resume_reports_explicit_planner_version_change` in `tests/unit/test_campaign_plan.py`.
+- 22.4 added `tests/unit/test_state_gate.py`, tests for R11/R12, and compressed stdout/`.EIG` fixtures from the reference and real NiO points.
+- 22.5 updated the replay and added `tests/fixtures/replay_nio_p5/replay_i5_state_gate.json`, SHA-256 `326f5f63ecc590d27350493ed28636dfe9a6f8bceb369902124581b61f430404`. The manifest was not regenerated. No test or golden edits were made in 22.6.
 
-## Decisiones conservadoras
+## Conservative decisions
 
-- R11 define `k` solo desde la referencia y devuelve `SUBSPACE_AMBIGUOUS` si el margen del punto no alcanza; R12 usa E_F y quantum impresos en `.EIG`, con comparación inclusiva y chequeo separado contra stdout.
-- G3 suavidad permanece `NOT_ESTABLISHED:SMOOTHNESS_REQUIRES_SCF_LADDER` según D13a. I.5 sigue siendo diagnóstico.
-- En la corrida real, solo la copia del perfil movió `wsl.workspace_root` a la carpeta de campaña nueva para mantener allí los artefactos.
+- R11 defines `k` from the reference only and returns `SUBSPACE_AMBIGUOUS` if the point margin is insufficient; R12 uses E_F and the printed quantum in `.EIG`, with an inclusive comparison and a separate check against stdout.
+- G3 smoothness remains `NOT_ESTABLISHED:SMOOTHNESS_REQUIRES_SCF_LADDER` under D13a. I.5 remains diagnostic.
+- In the real run, only the copied profile changed `wsl.workspace_root` to the new campaign directory so artifacts would remain there.
 
-## Ejecución y gates
+## Execution and gates
 
-La campaña real del ítem 22.6 terminó COMPLETED, sin `failure.json`; cuatro pares I.5 PASS, G4 APPLICABLE/PASS y U idéntico a Parte A (ΔU=0 para ambos sitios). Los detalles y hashes están en [TASK22_REAL_RUN.md](TASK22_REAL_RUN.md).
+The real campaign in item 22.6 finished COMPLETED, with no `failure.json`; four I.5 pairs PASS, G4 APPLICABLE/PASS, and U identical to Part A (ΔU=0 for both sites). Details and hashes are in [TASK22_REAL_RUN.md](TASK22_REAL_RUN.md).
 
-Los gates locales post-commit 22.6 están registrados en `TASK22_LOG.md`: replay 7, golden 4, producto 110, regresiones 70, arquitectura 8, ruff/formato/mypy, V6 `OK` y suite `1395 passed, 27 skipped, 20 xfailed, 4 subtests`. La punta final se publica sin PR y se verifica con dos corridas CI verdes consecutivas usando `gh run rerun`; sus enlaces se entregan en el reporte de cierre.
+The local post-commit 22.6 gates are recorded in `TASK22_LOG.md`: replay 7, golden 4, product 110, regressions 70, architecture 8, ruff/format/mypy, V6 `OK`, and suite `1395 passed, 27 skipped, 20 xfailed, 4 subtests`. The final tip is published without a PR and verified with two consecutive green CI runs using `gh run rerun`; their links are provided in the closeout report.

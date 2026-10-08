@@ -1,42 +1,41 @@
 # Symmetry evidence filter — Luna B proposal
 
-## Alcance
+## Scope
 
-Esta propuesta añade una ruta estricta para autorizar reducción de
-perturbaciones. El certificado geométrico/magnético existente continúa siendo
-compatible con el comportamiento anterior; la ruta estricta exige además un
-`SymmetryEvidenceBundle` ligado por SHA-256 al certificado, al FDF de
-referencia, a su salida y a la evidencia magnética.
+This proposal adds a strict path for authorizing perturbation reduction. The
+existing geometric/magnetic certificate remains compatible with prior
+behavior; the strict path additionally requires a
+`SymmetryEvidenceBundle` linked by SHA-256 to the certificate, reference FDF,
+its output, and magnetic evidence.
 
-El paquete también contiene una huella explícita del subespacio local por
-átomo. Una operación magnética candidata sólo pasa el filtro si los átomos que
-intercambia tienen la misma huella de subespacio. El filtro no infiere
-equivalencia a partir de nombres de sitio ni de `DM.InitSpin`.
+The bundle also contains an explicit local-subspace fingerprint for each
+atom. A candidate magnetic operation passes the filter only if the atoms it
+exchanges have the same subspace fingerprint. The filter does not infer
+equivalence from site names or `DM.InitSpin`.
 
-## Candados conservados
+## Preserved safeguards
 
-- La ausencia o incompletitud de evidencia produce `SymmetryPlanError` en la
-  ruta estricta.
-- La política existente `translation_only=True` sigue siendo la única que
-  puede autorizar reducción; las rotaciones permanecen candidatas.
-- La autorización exige todavía respuestas sombra directas y sus tolerancias
-  preexistentes. Este cambio no altera ninguna tolerancia.
-- No se añadió `spglib`, no se modificaron FDF, campañas, lanzadores, Slurm ni
-  perfiles de sitio.
+- Missing or incomplete evidence raises `SymmetryPlanError` on the strict path.
+- Existing policy `translation_only=True` remains the only policy that can
+  authorize reduction; rotations remain candidates.
+- Authorization still requires direct shadow responses and their existing
+  tolerances. This change alters no tolerance.
+- No `spglib` dependency was added; FDFs, campaigns, launchers, Slurm, and site
+  profiles were not modified.
 
-## Qué demuestran las pruebas
+## What the tests demonstrate
 
-Las pruebas sintéticas verifican que:
+Synthetic tests verify that:
 
-1. un bundle correctamente ligado conserva sólo operaciones compatibles con el
-   subespacio declarado;
-2. una huella diferente elimina operaciones no triviales, conservando como
-   máximo la identidad;
-3. un hash de certificado incorrecto bloquea la planificación;
-4. evidencia magnética incompleta bloquea la ruta estricta;
-5. formatos desconocidos o hashes inválidos no se aceptan.
+1. A correctly linked bundle retains only operations compatible with the
+   declared subspace;
+2. A different fingerprint removes non-trivial operations, retaining at most
+   the identity;
+3. An incorrect certificate hash blocks planning;
+4. Incomplete magnetic evidence blocks the strict path;
+5. Unknown formats or invalid hashes are rejected.
 
-Pruebas ejecutadas:
+ Tests run:
 
 ```text
 python -m pytest tests/unit/test_symmetry_evidence_contract.py \
@@ -45,11 +44,10 @@ python -m pytest tests/unit/test_symmetry_evidence_contract.py \
 15 passed
 ```
 
-## Límites deliberados
+## Deliberate limits
 
-Este cambio no implementa operaciones orbitales generales, inversión temporal,
-SOC, no colinealidad ni simetría magnética automática. Tampoco genera el
-bundle desde `siesta.out`: el adaptador de producción debe producirlo a partir
-de una referencia aceptada y calcular sus hashes. Hasta entonces, la ruta
-estricta es un contrato verificable y no una afirmación de capacidad de
-producción.
+This change does not implement general orbital operations, time reversal,
+SOC, non-collinearity, or automatic magnetic symmetry. Nor does it generate
+the bundle from `siesta.out`: the production adapter must create it from an
+accepted reference and calculate its hashes. Until then, the strict path is a
+verifiable contract, not a claim of production capability.

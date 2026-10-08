@@ -1,7 +1,8 @@
-"""Subgrupo conservador, no buscador completo de grupos espaciales.
+"""Conservative symmetry subgroup detector, not a full space-group search.
 
-Entrada: red en Å y coordenadas FDF ya normalizadas. No se requiere CIF.
-No certifica orbitales orientados ni operaciones con inversión temporal.
+Input: lattice in angstroms and normalized FDF coordinates. A CIF is not
+required. This module does not certify oriented orbitals or time-reversal
+operations.
 """
 
 from dataclasses import asdict, dataclass
@@ -13,8 +14,9 @@ import numpy as np
 
 
 def _digest(value):
-    return sha256(json.dumps(value, sort_keys=True, separators=(",", ":"),
-                             allow_nan=False).encode()).hexdigest()
+    return sha256(
+        json.dumps(value, sort_keys=True, separators=(",", ":"), allow_nan=False).encode()
+    ).hexdigest()
 
 
 @dataclass(frozen=True)
@@ -43,53 +45,76 @@ class SymmetryCertificate:
         payload = asdict(self)
         digest = payload.pop("digest")
         if digest != _digest(payload) or self.ambiguous:
-            raise ValueError("Certificado alterado o ambiguo")
+            raise ValueError("Certificate was altered or is ambiguous")
 
 
-def detect_symmetry(lattice, coordinates, species, labels, moments,
-                    subspaces, projectors, coordinate_format="fractional",
-                    geometric_tolerance=1e-7, magnetic_tolerance=1e-6):
-    """Preserva etiquetas de especie/clase, no permuta IDs arbitrarios.
+def detect_symmetry(
+    lattice,
+    coordinates,
+    species,
+    labels,
+    moments,
+    subspaces,
+    projectors,
+    coordinate_format="fractional",
+    geometric_tolerance=1e-7,
+    magnetic_tolerance=1e-6,
+):
+    """Preserve species/class labels; do not permute arbitrary IDs.
 
-Las definiciones se comparan exactamente. Rotaciones no triviales requieren
-complete_l_shell y scalar_occupation en cada subespacio, y rotationally_invariant
-en cada proyector. Los valores ausentes desactivan toda reducción.
-"""
+    Definitions are compared exactly. Non-trivial rotations require
+    ``complete_l_shell`` and ``scalar_occupation`` for every subspace, and
+    ``rotationally_invariant`` for every projector. Missing values disable all
+    reduction.
+    """
     lattice = np.asarray(lattice, dtype=float)
     positions = np.asarray(coordinates, dtype=float)
     moments = np.asarray(moments, dtype=float)
     count = len(species)
-    if (lattice.shape != (3, 3) or positions.shape != (count, 3)
-            or moments.shape != (count, 3) or count == 0
-            or any(len(items) != count for items in (labels, subspaces, projectors))):
-        raise ValueError("Dimensiones incompatibles")
+    if (
+        lattice.shape != (3, 3)
+        or positions.shape != (count, 3)
+        or moments.shape != (count, 3)
+        or count == 0
+        or any(len(items) != count for items in (labels, subspaces, projectors))
+    ):
+        raise ValueError("Input dimensions are incompatible")
     if not all(np.all(np.isfinite(array)) for array in (lattice, positions, moments)):
-        raise ValueError("Geometría o magnetismo no finitos")
-    if not all(np.isfinite(value) and value > 0
-               for value in (geometric_tolerance, magnetic_tolerance)):
-        raise ValueError("Tolerancias inválidas")
+        raise ValueError("Geometry or magnetic moments are non-finite")
+    if not all(np.isfinite(value) and value > 0 for value in (geometric_tolerance, magnetic_tolerance)):
+        raise ValueError("Tolerances must be finite and positive")
     singular_values = np.linalg.svd(lattice, compute_uv=False)
     if singular_values[-1] <= 0 or singular_values[0] / singular_values[-1] > 1e8:
-        raise ValueError("Red singular o demasiado mal condicionada")
+        raise ValueError("Lattice is singular or too ill-conditioned")
     if geometric_tolerance / singular_values[-1] >= 0.1:
-        raise ValueError("Tolerancia geométrica demasiado grande para esta red")
+        raise ValueError("Geometric tolerance is too large for this lattice")
     if coordinate_format == "cartesian_angstrom":
         positions = positions @ np.linalg.inv(lattice)
     elif coordinate_format != "fractional":
-        raise ValueError("Normalizar unidades FDF antes de detectar simetrías")
+        raise ValueError("Normalize FDF coordinate units before detecting symmetry")
     positions = positions % 1.0
     definitions = list(zip(species, labels, subspaces, projectors))
-    input_hash = _digest({"lattice": lattice.tolist(), "positions": positions.tolist(),
-                          "moments": moments.tolist(), "definitions": definitions,
-                          "geometric_tolerance": geometric_tolerance,
-                          "magnetic_tolerance": magnetic_tolerance})
-    metadata_complete = all(isinstance(value, dict) and bool(value)
-                            for value in (*subspaces, *projectors)) and all(species) and all(labels)
+    input_hash = _digest(
+        {
+            "lattice": lattice.tolist(),
+            "positions": positions.tolist(),
+            "moments": moments.tolist(),
+            "definitions": definitions,
+            "geometric_tolerance": geometric_tolerance,
+            "magnetic_tolerance": magnetic_tolerance,
+        }
+    )
+    metadata_complete = (
+        all(isinstance(value, dict) and bool(value) for value in (*subspaces, *projectors))
+        and all(species)
+        and all(labels)
+    )
     scalar_shells = metadata_complete and all(
         subspace.get("complete_l_shell") is True
         and subspace.get("scalar_occupation") is True
         and projector.get("rotationally_invariant") is True
-        for subspace, projector in zip(subspaces, projectors))
+        for subspace, projector in zip(subspaces, projectors)
+    )
     crystal, magnetic = [], []
     ambiguous = False
     inverse_transpose = np.linalg.inv(lattice.T)
@@ -97,8 +122,7 @@ en cada proyector. Los valores ausentes desactivan toda reducción.
         for signs in product((-1, 1), repeat=3):
             rotation = np.eye(3, dtype=int)[list(axis_order)] * np.array(signs)[:, None]
             cartesian_rotation = lattice.T @ rotation @ inverse_transpose
-            if not np.allclose(cartesian_rotation.T @ cartesian_rotation, np.eye(3),
-                               rtol=0, atol=1e-10):
+            if not np.allclose(cartesian_rotation.T @ cartesian_rotation, np.eye(3), rtol=0, atol=1e-10):
                 continue
             rotated = positions @ rotation.T
             for target in range(count):
@@ -129,18 +153,30 @@ en cada proyector. Los valores ausentes desactivan toda reducción.
                 if not valid or len(set(site_permutation)) != count:
                     continue
                 transformed_moments = np.linalg.det(cartesian_rotation) * moments @ cartesian_rotation.T
-                magnetic_residual = float(np.max(np.linalg.norm(
-                    transformed_moments - moments[site_permutation], axis=1)))
-                operation = Operation(tuple(map(tuple, rotation.tolist())), tuple(translation.tolist()),
-                                      tuple(site_permutation), max(distances), magnetic_residual)
+                magnetic_residual = float(
+                    np.max(np.linalg.norm(transformed_moments - moments[site_permutation], axis=1))
+                )
+                operation = Operation(
+                    tuple(map(tuple, rotation.tolist())),
+                    tuple(translation.tolist()),
+                    tuple(site_permutation),
+                    max(distances),
+                    magnetic_residual,
+                )
                 if operation in crystal:
                     continue
                 crystal.append(operation)
-                preserves_definitions = all(definitions[site] == definitions[destination]
-                                            for site, destination in enumerate(site_permutation))
+                preserves_definitions = all(
+                    definitions[site] == definitions[destination]
+                    for site, destination in enumerate(site_permutation)
+                )
                 scalar_compatible = scalar_shells or np.array_equal(rotation, np.eye(3))
-                if (metadata_complete and preserves_definitions and scalar_compatible
-                        and magnetic_residual <= magnetic_tolerance):
+                if (
+                    metadata_complete
+                    and preserves_definitions
+                    and scalar_compatible
+                    and magnetic_residual <= magnetic_tolerance
+                ):
                     magnetic.append(operation)
     reasons = ["subgrupo_de_rotaciones_enteras_con_signo; sin_inversion_temporal"]
     if not metadata_complete:
@@ -154,17 +190,24 @@ en cada proyector. Los valores ausentes desactivan toda reducción.
     while remaining:
         orbit = {min(remaining)}
         while True:
-            expanded = orbit | {operation.permutation[site]
-                                for operation in permitted for site in orbit}
+            expanded = orbit | {operation.permutation[site] for operation in permitted for site in orbit}
             if expanded == orbit:
                 break
             orbit = expanded
         orbits.append(tuple(sorted(orbit)))
         remaining -= orbit
     enabled = any(len(orbit) > 1 for orbit in orbits) and not ambiguous
-    certificate = SymmetryCertificate(input_hash, count, tuple(crystal), tuple(magnetic),
-                                      tuple(orbits), enabled, ambiguous, tuple(reasons),
-                                      geometric_tolerance)
+    certificate = SymmetryCertificate(
+        input_hash,
+        count,
+        tuple(crystal),
+        tuple(magnetic),
+        tuple(orbits),
+        enabled,
+        ambiguous,
+        tuple(reasons),
+        geometric_tolerance,
+    )
     payload = asdict(certificate)
     payload.pop("digest")
     return SymmetryCertificate(**{**vars(certificate), "digest": _digest(payload)})

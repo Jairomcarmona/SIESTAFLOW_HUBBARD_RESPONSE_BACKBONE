@@ -1,18 +1,18 @@
-# Plan de cierre del flujo independiente: DAG y U de respuesta
+# Independent workflow closeout plan: DAG and response U
 
-**Revisión del plan:** 2026-09-28 · **Estado:** fases A–C ejecutadas; integración y prueba operacional completadas.  
-**Alcance autorizado:** fases A–C de §5, incluido el controlador adaptativo, la integración Slurm/históricos, pruebas sintéticas y una comprobación operacional SIESTA pequeña en WSL al cierre. Se limita a un proceso SIESTA simultáneo y hasta cuatro rangos MPI en la laptop. No incluye barridos exploratorios ni integración al orquestador general.
+**Plan review:** 2026-09-28 · **Status:** Phases A–C executed; integration and operational testing completed.
+**Authorized scope:** Phases A–C of §5, including the adaptive controller, Slurm/historical-path integration, synthetic tests, and a small operational SIESTA check in WSL at closeout. Limited to one concurrent SIESTA process and up to four MPI ranks on the laptop. Excludes exploratory scans and integration with the general orchestrator.
 
-**Resultado de esta ejecución:** controlador adaptativo y rutas Slurm/históricas conectados al analizador común; pruebas sintéticas focales y auditoría puntual completadas; campaña operativa NiO PBE ejecutada en WSL con un solo SIESTA activo y 4 ranks. El DAG terminó con 11 nodos validados y produjo JSON v2 e informe Markdown. La expansión de α queda condicionada a una sonda SCF con medida de ruido válida y umbrales explícitos por campaña; no se activa automáticamente por defecto ni se deducen tolerancias de NiO.
+**Outcome of this run:** the adaptive controller and Slurm/historical paths are connected to the common analyzer; focused synthetic tests and a targeted audit are complete; an operational NiO PBE campaign ran in WSL with one active SIESTA process and 4 ranks. The DAG completed with 11 validated nodes and produced JSON v2 and a Markdown report. Expansion of α depends on a valid SCF noise measurement and explicit per-campaign thresholds; it is not enabled automatically by default, and tolerances are not inferred from NiO.
 
-**Decisión de arquitectura vigente:** `siestaflow_hubbard` seguirá siendo un paquete científico independiente, con su propio CLI. Esta tarea no lo integra al repositorio general `siestaflow` ni a otro orquestador. La modularidad se conserva mediante contratos internos estables entre CLI, ejecución, análisis y reporte, para dejar abierta una integración futura sin acoplarla ahora.
+**Current architecture decision:** `siestaflow_hubbard` remains an independent scientific package with its own CLI. This task does not integrate it into the general `siestaflow` repository or another orchestrator. Modularity is preserved through stable internal contracts among the CLI, execution, analysis, and reporting, leaving future integration possible without coupling it now.
 
-## 1. Resultado que debe obtener el usuario
+## 1. User-facing outcome
 
-Con una campaña configurada para un material y un conjunto explícito de subespacios correlacionados, el CLI independiente permite actualmente:
+For a campaign configured for a material and an explicit set of correlated subspaces, the independent CLI currently supports:
 
 ```text
-siestaflow init material.fdf --name MATERIAL --lr-config respuesta.json --profile local-wsl.json
+siestaflow init material.fdf --name MATERIAL --lr-config lr-config.json --profile local-wsl.json
 siestaflow run campaign.siestaflow.json
 siestaflow status campaign.siestaflow.json
 siestaflow resume campaign.siestaflow.json
@@ -20,49 +20,49 @@ siestaflow report campaign.siestaflow.json
 siestaflow stop campaign.siestaflow.json
 ```
 
-Esta es la interfaz pública ya registrada en `pyproject.toml`; `init` crea campañas v2 de malla fija o con política adaptativa, `run` y `resume` controlan el trabajador persistente en WSL, `status` consulta su estado, `stop` solicita una detención segura y `report` regenera/imprime el informe desde el análisis guardado. El reporte v2 muestra el candidato numérico o la causa precisa por la que no pudo calcularse.
+This is the public interface already registered in `pyproject.toml`; `init` creates v2 campaigns with a fixed grid or adaptive policy, `run` and `resume` control the persistent WSL worker, `status` queries its state, `stop` requests a safe stop, and `report` regenerates/prints the report from saved analysis. The v2 report shows the numerical candidate or the precise reason it could not be calculated.
 
-**Uso final esperado:** el usuario opera el paquete desde PowerShell sin abrir Codex ni editar FDF durante la campaña. El perfil local invoca SIESTA en WSL mediante un lanzador persistente; la prueba operacional del 2026-09-28 confirmó que el trabajo siguió ejecutándose tras volver el control a PowerShell y que `status` consultó el estado durable. El CLI devuelve identificador de campaña/trabajo, fallos concretos y resultados.
+**Expected end-user workflow:** the user operates the package from PowerShell without opening Codex or editing FDF during the campaign. The local profile invokes SIESTA in WSL through a persistent launcher; the 2026-09-28 operational test confirmed that work continued after control returned to PowerShell and that `status` queried durable state. The CLI returns a campaign/job identifier, concrete failures, and results.
 
-El alcance es **todo material y cualquier número de sitios correlacionados** que cumpla el contrato de entrada. NiO y MnO son casos de regresión, no fuentes de constantes, umbrales o valores de U para el algoritmo. Los rangos MPI se configuran en el perfil y se validan contra los recursos expuestos por el runtime; para esta laptop el perfil puede fijarse en hasta cuatro rangos. Se conserva una sola ejecución SIESTA simultánea por espacio de trabajo. Slurm debe usar los recursos declarados por su perfil, sin límites de laptop codificados en la matemática.
+The scope covers **any material and any number of correlated sites** that satisfy the input contract. NiO and MnO are regression cases, not sources of constants, thresholds, or U values for the algorithm. MPI ranks are configured in the profile and validated against resources exposed by the runtime; for this laptop the profile may be set to at most four ranks. Only one SIESTA run is allowed concurrently per workspace. Slurm must use resources declared by its profile, with no laptop limits hard-coded into the mathematics.
 
-El perfil local declara distribución WSL, ejecutable/versión en Linux, mapa de rutas Windows↔WSL, directorio de trabajo y límites MPI/concurrencia. Las rutas Slurm e históricas y la operación Windows→WSL quedaron conectadas y verificadas en esta ejecución.
+The local profile declares the WSL distribution, Linux executable/version, Windows↔WSL path map, working directory, and MPI/concurrency limits. Slurm and historical paths, as well as Windows→WSL operation, were connected and verified in this run.
 
-### 1.1 Prioridad operativa: ejecutar simulaciones
+### 1.1 Operational priority: run simulations
 
-En una campaña autorizada, la **prioridad 1 es iniciar y completar los cálculos SIESTA pendientes**. La trazabilidad se registra de forma automática y proporcional al riesgo; no se convierte en una serie de revisiones manuales antes de cada trabajo. La ruta crítica antes del lanzamiento contiene sólo: FDF/funcional/pseudopotenciales compatibles, entradas presentes, política de α y recursos válidos, y un identificador inmutable de la configuración de entrada calculado **una sola vez por versión de campaña**. Superados esos controles, despachar el primer cálculo sin esperar al reporte, a comparaciones con literatura, a una auditoría de todos los archivos históricos ni a la revisión humana de hashes.
+For an authorized campaign, **priority 1 is to start and complete pending SIESTA calculations**. Traceability is recorded automatically and in proportion to risk; it does not become a sequence of manual reviews before each job. The pre-launch critical path contains only: compatible FDF/functional/pseudopotentials, present inputs, valid α policy and resources, and an immutable input-configuration identifier calculated **once per campaign version**. Once these checks pass, dispatch the first calculation without waiting for the report, literature comparisons, an audit of all historical files, or human review of hashes.
 
-Al terminar cada trabajo, el DAG registra automáticamente estado y procedencia de sus salidas; el análisis, el reporte y sus hashes se producen después del cálculo que los alimenta. En `resume` sólo se comprueba la evidencia de los nodos que se pretende reutilizar, una vez por reanudación; se recalcula la huella únicamente si falta, cambió el archivo o lo exige la validación de ese nodo. No volver a recorrer ni recalcular hashes del árbol completo por cada α, transición o intento. Un fallo de integridad de un artefacto requerido sí impide reutilizar **ese nodo** y obliga a rehacerlo junto con sus descendientes, sin detener los trabajos independientes listos para ejecutarse.
+When each job finishes, the DAG automatically records the state and provenance of its outputs; analysis, reporting, and their hashes are produced after the calculation that feeds them. During `resume`, evidence is checked only for nodes intended for reuse, once per resume; a digest is recalculated only if missing, if the file changed, or if that node's validation requires it. Do not rescan or recompute hashes for the whole tree for every α, transition, or attempt. An integrity failure in a required artifact does prevent reuse of **that node** and requires rerunning it and its descendants, without stopping independent jobs that are ready to run.
 
-## 2. Estado del paquete al cierre de este plan
+## 2. Package status at closeout
 
-La ruta v2 de malla fija ya existe. El plan de implementación empieza desde ese código y no vuelve a proponer construir el CLI o el informe desde cero.
+The fixed-grid v2 path already exists. The implementation plan starts from that code and does not propose rebuilding the CLI or report from scratch.
 
-| Área | Estado actual | Trabajo restante |
+| Area | Current status | Remaining work |
 |---|---|---|
-| Ajuste y análisis v2 | Analizador común lineal/polinómico con matrices, diagnósticos y candidatos por sitio en JSON. | Calibrar valores predeterminados de tolerancias con casos diversos; no se infieren de NiO. |
-| DAG de campaña | Trabajador persistente WSL, ejecución serial, refinamiento por rondas, presupuesto, recibos y reanudación selectiva. | Ninguna función estructural bloqueante; completar calibración científica de políticas de campaña antes de recomendar presets. |
-| CLI independiente | `init`, `run`, `status`, `resume`, `report`, `stop` y `audit-fdf` disponibles; probado desde PowerShell→WSL. | Mantener como interfaz propia del paquete; sin integración con el orquestador general en este alcance. |
-| Persistencia y recursos | Perfil configurable, validación contra CPU de WSL y una ejecución SIESTA simultánea; campaña regresó a `status=COMPLETED`. | Ninguna pendiente para el caso local verificado; WSL shutdown/reinicio requiere `resume`, como documenta el quickstart. |
-| JSON y reporte humano | JSON v2 y `LR_U_REPORT.md` generados; el comando público `report` se verificó y sus archivos se conservaron en la carpeta de campaña. | La política `linear` del smoke test de dos amplitudes es sensible; no constituye validación de un ajuste cúbico. |
-| Refinamiento adaptativo de α | Política versionada, decisiones, rondas, probes, presupuesto y DAG dinámico integrados; pruebas sintéticas completadas. | Expansión exterior sólo cuando la sonda SCF cuantifica ruido de forma comparable y la campaña declara umbrales; esos umbrales no se suministran como constantes universales. |
-| Slurm y rutas históricas | Adaptadas al analizador y reporte comunes, con recibos y validación de observaciones. | Ninguna integración pendiente dentro de las fases autorizadas. |
-| Integración externa | No forma parte de esta entrega. | Ninguna conexión al repositorio general `siestaflow`; dejar una interfaz modular para una integración futura. |
+| v2 fitting and analysis | Common linear/polynomial analyzer with matrices, diagnostics, and per-site candidates in JSON. | Calibrate default tolerances against diverse cases; do not infer them from NiO. |
+| Campaign DAG | Persistent WSL worker, serial execution, round-based refinement, budget, receipts, and selective resume. | No blocking structural functionality; complete scientific calibration of campaign policies before recommending presets. |
+| Independent CLI | `init`, `run`, `status`, `resume`, `report`, `stop`, and `audit-fdf` available; tested from PowerShell→WSL. | Keep it as the package's own interface; no integration with the general orchestrator in this scope. |
+| Persistence and resources | Configurable profile, validation against WSL CPUs, and one concurrent SIESTA run; campaign returned to `status=COMPLETED`. | Nothing pending for the verified local case; WSL shutdown/restart requires `resume`, as documented in the quickstart. |
+| JSON and human-readable report | JSON v2 and `LR_U_REPORT.md` generated; public `report` command verified and its files retained in the campaign directory. | The `linear` policy in the two-amplitude smoke test is sensitive; it does not validate a cubic fit. |
+| Adaptive α refinement | Versioned policy, decisions, rounds, probes, budget, and dynamic DAG integrated; synthetic tests complete. | Outer expansion only when the SCF probe quantifies noise comparably and the campaign declares thresholds; those thresholds are not supplied as universal constants. |
+| Slurm and historical paths | Adapted to the common analyzer and report, with receipts and observation validation. | No integration remains within the authorized phases. |
+| External integration | Not part of this delivery. | No connection to the general `siestaflow` repository; retain a modular interface for future integration. |
 
-La fuente canónica del paquete es `src/siestaflow_hubbard`. Antes de editar, el ejecutor revisa sólo los archivos y cambios que vaya a tocar, conserva modificaciones existentes y evita copiar código de campañas históricas como implementación paralela. No se requiere inventario o recálculo general de hashes para comenzar esta tarea de software.
+The package's canonical source is `src/siestaflow_hubbard`. Before editing, the implementer reviews only the files and changes they intend to touch, preserves existing modifications, and avoids copying code from historical campaigns as a parallel implementation. A general inventory or recomputation of hashes is not required to start this software task.
 
-### 2.1 Estado de las dos tareas registradas previamente
+### 2.1 Status of the two previously recorded tasks
 
-| Documento previo | Estado | Aplicación a este plan |
+| Prior document | Status | Application to this plan |
 |---|---|---|
-| `ADAPTIVE_ALPHA_GRID_IMPLEMENTATION_TASK.md` | Integrado en el DAG y verificado con pruebas sintéticas. | Mantener la calibración de ruido/tolerancias como configuración explícita antes de habilitar expansión en campañas reales. |
-| `PENDING_HUMAN_READABLE_RESULTS_EXPORT.md` | JSON v2 y Markdown canónico generados y verificados por el CLI público en campaña operativa. | Mantener Markdown como formato canónico; `.txt`/`.out` sigue siendo opcional. |
+| `ADAPTIVE_ALPHA_GRID_IMPLEMENTATION_TASK.md` | Integrated into the DAG and verified with synthetic tests. | Keep noise/tolerance calibration as explicit configuration before enabling expansion in real campaigns. |
+| `PENDING_HUMAN_READABLE_RESULTS_EXPORT.md` | JSON v2 and canonical Markdown generated and verified by the public CLI in an operational campaign. | Keep Markdown as the canonical format; `.txt`/`.out` remains optional. |
 
-Los documentos originales se conservan como registro de requisitos. Si algún criterio allí menciona las antiguas «puertas de aceptación», aplicar la distinción de §3.2: los controles de datos, rama electrónica y álgebra siguen vigentes; la intersección de tres ventanas lineales pasa a ser diagnóstico, no veto para mostrar un candidato numérico.
+The original documents are retained as a requirements record. If any criterion there mentions the former “acceptance gates,” apply the distinction in §3.2: data, electronic-branch, and algebra checks remain in force; intersection of three linear windows becomes a diagnostic, not a veto on showing a numerical candidate.
 
-## 3. Contrato científico y regla de reporte
+## 3. Scientific contract and reporting rule
 
-Para cada sitio perturbado (J), sitio observado (I) y modo BARE/SCREENED, ajustar sobre amplitudes declaradas antes de ver el resultado:
+For each perturbed site (J), observed site (I), and BARE/SCREENED mode, fit over amplitudes declared before seeing the result:
 
 \[
 n_I(\alpha_J)=c_0+c_1\alpha_J+c_2\alpha_J^2+c_3\alpha_J^3,
@@ -71,95 +71,97 @@ n_I(\alpha_J)=c_0+c_1\alpha_J+c_2\alpha_J^2+c_3\alpha_J^3,
 \chi_{IJ}=c_{1,\mathrm{SCREENED}}.
 \]
 
-Con filas = sitios observados y columnas = sitios perturbados, invertir matrices completas bajo la representación declarada:
+With rows = observed sites and columns = perturbed sites, invert the full matrices under the declared representation:
 
 \[
 K=(\chi^0)^{-1}-\chi^{-1},\qquad U_I=K_{II}.
 \]
 
-Mantener los términos fuera de la diagonal en el JSON como elementos del núcleo de respuesta; **no etiquetarlos automáticamente como (V)** de otro funcional. La magnitud obtenida con ocupaciones de carga sumadas en espín se identificará como `U_scalar_charge`. Su transferencia a `Ueff_Dudarev` requiere un contrato físico separado; un informe de U numérico no autoriza por sí mismo escribir `DFTU.proj` para producción.
+Keep off-diagonal terms in JSON as elements of the response kernel; **do not automatically label them as (V)** from another functional. The quantity obtained from spin-summed charge occupations is identified as `U_scalar_charge`. Its transfer to `Ueff_Dudarev` requires a separate physical contract; a numerical U report alone does not authorize writing `DFTU.proj` for production.
 
-### 3.1 Selección del estimador, aplicable a cualquier material
+### 3.1 Estimator selection, applicable to any material
 
-1. Declarar en una política versionada `auto`, `polynomial` o `linear`. La opción `auto` será el valor por defecto **en campañas nuevas**, sin cambiar silenciosamente la interpretación de campañas congeladas.
-2. Para una malla centrada con al menos cinco amplitudes distintas, signos positivo y negativo, diseño de rango completo y al menos un grado de libertad residual, `auto` usa la **cúbica de grado 3** ya implementada. En siete puntos conserva tres grados residuales. Ajustar BARE y SCREENED con la misma política y todos los canales requeridos.
-3. Cuando esos requisitos no se cumplen, `auto` declara `linear_fallback` y explica la causa; nunca finge haber hecho un ajuste cúbico ni rebaja el grado sin registrarlo. Un modo `polynomial` solicitado explícitamente falla de forma clara si la malla no lo soporta.
-4. Calcular, sobre **los mismos puntos**, el estimador lineal de comparación. Si la malla permite ventanas simétricas más estrechas con suficientes grados residuales, calcular también sus derivados en cero. Registrar grado, coeficientes, residuos, DoF, condición del diseño y amplitudes usadas por canal.
-5. Elegir modelo y malla mediante reglas declaradas antes de la campaña; la cercanía a literatura, gap, red o momento magnético no entra en la selección. No promediar valores de U entre modelos, ventanas o sitios.
+1. Declare `auto`, `polynomial`, or `linear` in a versioned policy. `auto` is the default **for new campaigns**, without silently changing the interpretation of frozen campaigns.
+2. For a centered grid with at least five distinct amplitudes, positive and negative signs, a full-rank design, and at least one residual degree of freedom, `auto` uses the already implemented **degree-3 cubic**. With seven points it retains three residual degrees of freedom. Fit BARE and SCREENED using the same policy and all required channels.
+3. When those requirements are not met, `auto` declares `linear_fallback` and explains why; it never pretends to have performed a cubic fit or lowers the degree without recording it. An explicitly requested `polynomial` mode fails clearly if the grid cannot support it.
+4. Calculate the linear comparison estimator on **the same points**. If the grid supports narrower symmetric windows with enough residual degrees of freedom, also calculate their derivatives at zero. Record degree, coefficients, residuals, DoF, design condition, and amplitudes used per channel.
+5. Select the model and grid using rules declared before the campaign; proximity to literature, gap, lattice, or magnetic moment is not part of selection. Do not average U values across models, windows, or sites.
 
-El estimador cúbico entrega una derivada en α = 0, no una prueba automática de que todos los puntos pertenezcan a la misma rama electrónica. La validación de convergencia SCF, continuidad magnética y procedencia de la respuesta es independiente del ajuste.
+The cubic estimator gives a derivative at α = 0; it does not automatically prove that all points belong to the same electronic branch. Validation of SCF convergence, magnetic continuity, and response provenance is independent of the fit.
 
-### 3.2 Sustituir el veto de intersección por diagnóstico transparente
+### 3.2 Replace the intersection veto with a transparent diagnostic
 
-La intersección de intervalos de tres ventanas lineales deja de ser condición necesaria para **mostrar** un candidato. Conservar los tres valores como `window_sensitivity_eV` y el contraste cúbico/lineal como `model_sensitivity_eV`. Las cotas por redondeo de ocupaciones impresas se registran como `printing_rounding_bound_eV`; no se llaman intervalos de confianza ni se suman a una incertidumbre total no justificada.
+Intersection of intervals from three linear windows is no longer a necessary condition to **show** a candidate. Retain the three values as `window_sensitivity_eV` and the cubic/linear contrast as `model_sensitivity_eV`. Bounds from rounding printed occupations are recorded as `printing_rounding_bound_eV`; they are not called confidence intervals or added to an unjustified total uncertainty.
 
-Estados propuestos para el resultado común:
+Proposed states for the common result:
 
-| Estado | Condición | Salida |
+| State | Condition | Output |
 |---|---|---|
-| `NUMERICAL_CANDIDATE` | Datos validados, misma rama electrónica, diseño e inversas válidas; diagnósticos dentro de la política. | (U_I), matrices, sensibilidad y limitaciones. |
-| `NUMERICAL_CANDIDATE_SENSITIVE` | Se puede invertir y calcular (U_I), pero ventana/modelo/ruido excede un umbral declarado o no hay ventana lineal admitida. | (U_I) visible, diferencias y motivos; ninguna aceptación física automática. |
-| `NO_SINGLE_STATE_U` | Cambio de estado magnético/electrónico entre perturbaciones utilizadas. | Curvas y diagnóstico; no un único U obtenido mezclando estados. |
-| `NO_NUMERICAL_U` | Observaciones incompletas o inválidas, matrices de rango insuficiente o inversión fallida. | Razón exacta y evidencia disponible; campo U nulo. |
+| `NUMERICAL_CANDIDATE` | Validated data, same electronic branch, valid design and inverses; diagnostics within policy. | (U_I), matrices, sensitivity, and limitations. |
+| `NUMERICAL_CANDIDATE_SENSITIVE` | (U_I) can be calculated by inversion, but window/model/noise exceeds a declared threshold or there is no admitted linear window. | Show (U_I), differences, and reasons; no automatic physical acceptance. |
+| `NO_SINGLE_STATE_U` | Magnetic/electronic state changes among the perturbations used. | Curves and diagnostics; no single U obtained by mixing states. |
+| `NO_NUMERICAL_U` | Incomplete or invalid observations, insufficient-rank matrices, or failed inversion. | Exact reason and available evidence; U field is null. |
 
-Los umbrales de sensibilidad pertenecen a una política versionada, con unidades y justificación; no se ajustan usando el resultado de NiO. Si no existe un límite de ruido SCF cuantificado, reportar `noise_not_quantified` y evitar una precisión física ficticia. La compatibilidad entre sitios se reporta separadamente. Un `U_common_scalar` sólo se emite si una política física de equivalencia de sitios y una regla de agregación explícita lo respaldan; siempre se preservan los (U_I).
+Sensitivity thresholds belong to a versioned policy, with units and justification; they are not tuned using the NiO result. If no quantified SCF noise limit exists, report `noise_not_quantified` and avoid fictitious physical precision. Compatibility among sites is reported separately. Emit `U_common_scalar` only when a physical site-equivalence policy and an explicit aggregation rule support it; always preserve the (U_I).
 
-La evaluación del nodo de amplitud puede terminar correctamente aunque su conclusión sea `no_linear_window`. El DAG debe avanzar a `MATRIX_ANALYSIS` para producir el candidato sensible o el diagnóstico final. Fallos de ejecución, salidas incompletas, procedencia inválida y cambios de rama siguen teniendo estados propios y no se convierten en un `PASS` científico.
+Amplitude-node evaluation may complete successfully even when its conclusion is `no_linear_window`. The DAG must advance to `MATRIX_ANALYSIS` to produce the sensitive candidate or final diagnostic. Execution failures, incomplete outputs, invalid provenance, and branch changes retain their own states and do not become a scientific `PASS`.
 
-### 3.3 Refinamiento adaptativo de α como parte del DAG
+### 3.3 Adaptive α refinement as part of the DAG
 
-**Elección recomendada para v1:** mantener una malla simétrica inicial de siete amplitudes `{-3h, -2h, -h, 0, h, 2h, 3h}` y el ajuste cúbico como estimador principal cuando el diseño sea válido. Cada ronda y cada dirección posible (`shrink`/`expand`) deben tener en la política una ventana activa, grado y grados de libertad mínimos propios; los puntos fuera de la ventana se conservan como diagnóstico y no entran silenciosamente en el estimador activo. Para esta malla predeterminada, la ruta `shrink` añade `±h/2` y usa `|α|≤2h` en la primera ronda; después añade `±h/4` y usa `|α|≤h`. Así cada estimación activa conserva siete puntos, mientras que los puntos exteriores siguen disponibles para medir sensibilidad. En una malla distinta, la política debe declarar explícitamente la secuencia de puntos nuevos y las ventanas activas para cada rama.
+**Recommended choice for v1:** retain an initial symmetric grid of seven amplitudes `{-3h, -2h, -h, 0, h, 2h, 3h}` and use the cubic fit as the primary estimator when the design is valid. For each round and possible direction (`shrink`/`expand`), the policy must define its own active window, degree, and minimum degrees of freedom; points outside the window are retained as diagnostics and do not silently enter the active estimator. For this default grid, the `shrink` path adds `±h/2` and uses `|α|≤2h` in the first round; it then adds `±h/4` and uses `|α|≤h`. Thus each active estimate retains seven points, while outer points remain available to measure sensitivity. For a different grid, the policy must explicitly declare the sequence of new points and active windows for each branch.
 
-La ruta `expand` añade pares exteriores predeclarados y sólo los incluye en la ventana activa de la ronda que los calcula. **No se expande α por una señal débil, un residuo bajo o una sonda SCF aislados.** Se requiere una medida empírica de sensibilidad numérica SCF, comparación de canales/vectores equivalentes, una predicción de señal frente al ruido de ocupación/SCF dentro de los límites de la política y evidencia de continuidad de rama. Si no existen los predicados y umbrales versionados necesarios, la acción es cerrar como candidato sensible; no expandir ni declarar estabilidad. Aplicar cada par aceptado a todos los sitios/modos. Dos rondas añaden como máximo cuatro valores α: 11 en total desde una malla inicial de siete, más los trabajos puntuales de comprobación SCF si se activan. Este límite de rondas es un **tope de costo v1**, no una constante física; puede elevarse explícitamente en el perfil de campaña.
+The `expand` path adds predeclared outer pairs and includes them only in the active window of the round that calculates them. **Do not expand α based on a weak signal, a low residual, or an isolated SCF probe.** Require an empirical measurement of numerical SCF sensitivity, comparison of equivalent channels/vectors, a prediction of signal versus occupation/SCF noise within policy limits, and evidence of branch continuity. If the required versioned predicates and thresholds are unavailable, close with a sensitive candidate; do not expand or declare stability. Apply each accepted pair to all sites/modes. Two rounds add at most four α values: 11 total starting from an initial grid of seven, plus any targeted SCF-check jobs. This round limit is a **v1 cost cap**, not a physical constant; it may be explicitly increased in the campaign profile.
 
-La escala `h` debe declararse o seleccionarse por un preset visible. Como semilla para probar, `alpha_seed_span_eV = 3h = 0.1 eV` es razonable: ABINIT usa 0.1 eV por defecto y reporta un rango lineal amplio en sus pruebas. Ese dato depende de ABINIT/PAW y no demuestra que 0.1 eV sea óptimo para SIESTA; por eso se registra como semilla configurable, se examinan simetría y no linealidad, y no se codifica como verdad universal. Si existe una malla explícita y validada en el manifiesto, se conserva. `alpha_ceiling_eV` es una **cota distinta** que debe superar la semilla cuando la expansión esté habilitada; en otro caso, el controlador no propone pares exteriores.
+The `h` scale must be declared or selected through a visible preset. As a trial seed, `alpha_seed_span_eV = 3h = 0.1 eV` is reasonable: ABINIT uses 0.1 eV by default and reports a broad linear range in its tests. That result depends on ABINIT/PAW and does not prove that 0.1 eV is optimal for SIESTA; therefore it is recorded as a configurable seed, symmetry and nonlinearity are examined, and it is not hard-coded as universal truth. If an explicit validated grid exists in the manifest, retain it. `alpha_ceiling_eV` is a **separate bound** that must exceed the seed when expansion is enabled; otherwise, the controller proposes no outer pairs.
 
-La literatura LR-U recomienda varias perturbaciones pequeñas de ambos signos y advierte que amplitudes grandes pueden introducir no linealidad/asimetría. No fija siete puntos, dos rondas ni un porcentaje universal de estabilidad. Esos tres elementos son decisiones transparentes de ingeniería para una primera política acotada; el trabajo de diferencias finitas adaptativas aporta el principio de equilibrar truncamiento y ruido, no una receta específica para U.
+LR-U literature recommends several small perturbations of both signs and warns that large amplitudes can introduce nonlinearity/asymmetry. It does not prescribe seven points, two rounds, or a universal stability percentage. These are transparent engineering choices for an initial bounded policy; adaptive finite-difference work contributes the principle of balancing truncation and noise, not a U-specific recipe.
 
-En cada ronda, comparar estimaciones obtenidas con la **misma familia de ajuste y regla de selección de ventana** fijadas en la política. La firma comparable incluye método/grado, DoF mínimo, regla de selección, política de matriz y nivel SCF; la ventana activa concreta puede cambiar según la rama/ronda predeclarada y se reporta como variable de refinamiento, no como cambio de método. Si se cambia la regla o el nivel SCF de las observaciones usadas, reiniciar el contador de comparaciones estables; no contar un cambio de método como evidencia de convergencia. Conservar ajustes de ventana central/completa, el lineal sobre los mismos datos y sus residuos como diagnósticos. La decisión no se toma por el menor RMS de un único ajuste. Un predicado de truncamiento compara los `U_I` de las ventanas activa e interior con la misma política; sus tolerancias absoluta/relativa pertenecen a la campaña y sus unidades se informan. Sin umbral configurado, la evidencia se reporta como sensibilidad y no autoriza `shrink` automático. Para cada sitio, calcular el mayor cambio absoluto de `U_I` entre rondas comparables y contrastarlo con una tolerancia mixta:
+In each round, compare estimates obtained using the **same fit family and window-selection rule** fixed in the policy. The comparable signature includes method/degree, minimum DoF, selection rule, matrix policy, and SCF level; the specific active window may change according to the predeclared branch/round and is reported as a refinement variable, not as a method change. If the rule or SCF level of the observations used changes, reset the stable-comparison counter; do not count a method change as evidence of convergence. Retain central/full-window fits, the linear fit on the same data, and their residuals as diagnostics. The decision is not based on the lowest RMS of a single fit. A truncation predicate compares `U_I` from the active and interior windows under the same policy; its absolute/relative tolerances belong to the campaign and their units are reported. Without a configured threshold, evidence is reported as sensitivity and does not authorize automatic `shrink`. For each site, calculate the largest absolute change in `U_I` between comparable rounds and compare it against a mixed tolerance:
 
 ```text
 delta_U(r) = max_I |U_I(r) - U_I(r-1)|
 tol_U(r)   = max(tol_abs_eV, tol_rel * max_I |U_I(r)|)
 ```
 
-`STOP_STABLE` exige que `delta_U <= tol_U` en **dos comparaciones interronda consecutivas**, rama electrónica/magnética consistente, matrices utilizables y sensibilidad ventana/modelo que no empeore más que su tolerancia configurada. Por lo tanto, hacen falta la malla inicial y dos refinamientos comparables; una política con menos de dos rondas posibles no puede emitir `STOP_STABLE`. La forma absoluta-relativa sigue el patrón usado por software numérico para controlar errores a distintas escalas; no existe en la literatura un porcentaje universal que certifique el U físico. Por ello `tol_abs_eV`, `tol_rel` y tolerancias de ventana pertenecen a una política versionada: el preset por defecto debe calibrarse con una batería de sistemas y convergencias independiente de NiO, y el informe debe imprimir sus valores exactos. Si una tolerancia o un predicado necesario no está configurado, no se afirma estabilidad ni se activa una refinación que dependa de ese criterio; se conserva el candidato como sensible.
+`STOP_STABLE` requires `delta_U <= tol_U` for **two consecutive inter-round comparisons**, a consistent electronic/magnetic branch, usable matrices, and window/model sensitivity that does not worsen beyond its configured tolerance. Therefore, the initial grid and two comparable refinements are required; a policy with fewer than two possible rounds cannot emit `STOP_STABLE`. The absolute-relative form follows the pattern used by numerical software to control errors at different scales; the literature provides no universal percentage that certifies physical U. Thus `tol_abs_eV`, `tol_rel`, and window tolerances belong to a versioned policy: the default preset must be calibrated using a set of systems and convergence studies independent of NiO, and the report must print their exact values. If a required tolerance or predicate is not configured, stability is not claimed and a refinement depending on that criterion is not activated; the candidate remains marked sensitive.
 
-El controlador no interpreta el RMS del ajuste como incertidumbre física. Presenta por separado sensibilidad al modelo/ventana, límite por redondeo de ocupaciones y sensibilidad a la convergencia SCF. Si esta última no se ha medido, lo marca como `noise_not_quantified`; puede informar convergencia respecto a la malla de α, pero no afirmar una incertidumbre numérica total.
+The controller does not interpret fit RMS as physical uncertainty. It presents model/window sensitivity, the occupation-rounding bound, and SCF-convergence sensitivity separately. If the latter has not been measured, it is marked `noise_not_quantified`; convergence with respect to the α grid may be reported, but not a total numerical uncertainty.
 
-**Comprobación puntual durante la misma campaña:** después de la malla inicial, si los trabajos SCF convergieron pero la norma del cambio de ocupaciones de una columna entre `+h` y `-h` queda cerca de la resolución impresa según `probe_trigger_ratio` de la política, repetir sólo el punto de referencia y ese par simétrico con el siguiente nivel SCF más estricto, predeclarado en la política. Comparar, por separado para BARE y SCREENED, los vectores de respuesta con el mismo orden de sitios y la misma amplitud; registrar la norma, la resolución de impresión del vector y la diferencia entre niveles. La diferencia es una **medida empírica de sensibilidad al criterio SCF**, no una cota rigurosa de error de U. No comparar cambios escalares incompatibles ni interpretar el máximo cambio de ocupación como error de U. Limitar la comprobación a una vez por columna afectada y contabilizar todos sus nodos en el presupuesto; los resultados del nivel estricto no se mezclan con los anteriores para ajustar una misma matriz. Si se adopta el nivel estricto para el U final, rehacer de forma consistente los puntos utilizados por las matrices de respuesta, conservando los recibos previos como evidencia. Una salida SCF no convergida sigue la ruta normal de fallo/reintento y no se usa como sonda de ruido.
+**Targeted check within the same campaign:** after the initial grid, if SCF jobs converged but the norm of the occupation change for a column between `+h` and `-h` is near printed resolution according to the policy's `probe_trigger_ratio`, rerun only the reference point and that symmetric pair using the next stricter SCF level predeclared in the policy. Compare response vectors separately for BARE and SCREENED, using the same site ordering and amplitude; record the norm, vector print resolution, and difference between levels. The difference is an **empirical measure of sensitivity to the SCF criterion**, not a rigorous bound on U error. Do not compare incompatible scalar changes or interpret the maximum occupation change as U error. Limit the check to once per affected column and count all its nodes in the budget; do not mix results from the stricter level with earlier results when fitting a single matrix. If the stricter level is adopted for final U, consistently rerun the points used by the response matrices while retaining previous receipts as evidence. An unconverged SCF output follows the normal failure/retry path and is not used as a noise probe.
 
-Para fijar la comparación de la sonda, por columna J y modo m ∈ {BARE, SCREENED}, definir `v_m^L(J,h)=n_m^L(J,+h)-n_m^L(J,-h)` y `eta_m(J)=||v_m^strict-v_m^base||₂`. `eta_m` es sensibilidad empírica de la respuesta al nivel SCF. La resolución del vector diferencia se deriva de los intervalos de redondeo validados de ambos vectores; si éstos no están disponibles, la sonda queda `noise_not_quantified`. La activación/materialidad de la sonda se evalúa por separado por modo con ratios configurados, nunca con el máximo de una componente aislada. Para proponer expansión hasta `a`, estimar `rho_m(J,a)=(a/h)||v_m^strict||₂/(eta_m(J)+q_m(J))`, donde `q_m` es la cota determinista de redondeo del vector diferencia. `REFINE(expand)` requiere un `rho_min` explícito y que los modos/columnas requeridos lo cumplan, además de la cota α y la continuidad de rama. Como la malla y las matrices de respuesta comparten α para todos los sitios, una expansión global requiere métricas completas para todas las columnas y ambos modos; una sonda parcial puede activar mejora SCF para las columnas afectadas, pero no autoriza expandir las demás. Esta proyección lineal sólo decide si merece medirse el nuevo par; no prueba que la respuesta siga lineal fuera de la malla existente, lo que debe verificarse con los datos de la ronda siguiente.
+To define the probe comparison, for column J and mode m ∈ {BARE, SCREENED}, define `v_m^L(J,h)=n_m^L(J,+h)-n_m^L(J,-h)` and `eta_m(J)=||v_m^strict-v_m^base||₂`. `eta_m` is empirical response sensitivity to SCF level. The resolution of the difference vector is derived from the validated rounding intervals of both vectors; if these are unavailable, the probe is `noise_not_quantified`. Probe activation/materiality is evaluated separately by mode using configured ratios, never using the maximum of an isolated component. To propose expansion up to `a`, estimate `rho_m(J,a)=(a/h)||v_m^strict||₂/(eta_m(J)+q_m(J))`, where `q_m` is the deterministic rounding bound for the difference vector. `REFINE(expand)` requires an explicit `rho_min` and that required modes/columns satisfy it, in addition to the α bound and branch continuity. Because the grid and response matrices share α across all sites, global expansion requires complete metrics for all columns and both modes; a partial probe may trigger SCF improvement for affected columns but does not authorize expansion of the others. This linear projection only decides whether it is worthwhile to measure the new pair; it does not prove that the response remains linear outside the existing grid, which must be checked using the next round's data.
 
 
-La política versionada fija antes de ejecutar la tolerancia, la escala inicial permitida, máximo de rondas/puntos, presupuesto y manejo del ruido. No se eligen puntos por cercanía a literatura. El presupuesto se cuenta como **nodos SIESTA adicionales reales** tras expandir las amplitudes por sitios y modos; el DAG no inicia una ronda incompleta si su costo excede el remanente. No se promedian U entre sitios.
+The versioned policy fixes the tolerance, permitted initial scale, maximum rounds/points, budget, and noise handling before execution. Points are not selected based on proximity to literature. The budget is counted as **additional actual SIESTA nodes** after expanding amplitudes across sites and modes; the DAG does not start an incomplete round if its cost exceeds the remaining budget. U values are not averaged across sites.
 
-En cada ronda, el controlador además revisa residuos, DoF, condición del diseño, convergencia SCF, estado magnético y rango/condición de χ₀ y χ. Debe registrar una de estas decisiones con motivo, entradas y presupuesto consumido:
+In each round, the controller also checks residuals, DoF, design condition, SCF convergence, magnetic state, and rank/condition of χ₀ and χ. It must record one of these decisions, with its reason, inputs, and consumed budget:
 
-| Decisión del controlador | Acción del DAG |
+| Controller decision | DAG action |
 |---|---|
-| `PROBE_SCF` | Reservar y ejecutar sólo los nodos de sonda autorizados por política; persistir antes el recibo/ID idempotente de la sonda y su costo. Tras validar resultados, reevaluar la política. |
-| `STOP_STABLE` | Concluir sólo al pasar dos comparaciones interronda consecutivas bajo tolerancias explícitas, con controles de rama, matrices y sensibilidad satisfechos; requiere dos refinamientos posibles. |
-| `REFINE` | Registrar dirección `shrink` o `expand`, ventana activa/grado/DoF, predicados y valores que la justifican; `expand` requiere sensibilidad SCF empírica medida y criterio de señal/ruido predeclarado. Añadir un par simétrico dentro de los límites, materializar sólo sus FDF y ejecutar sólo las respuestas faltantes. |
-| `IMPROVE_SCF_FIRST` | Si la comprobación revela sensibilidad SCF material, adoptar sólo un nivel más estricto preconfigurado y rehacer los puntos necesarios para analizar una matriz bajo condiciones consistentes; si no cabe en el presupuesto, detener y reportar la limitación. |
-| `STOP_LIMIT_SENSITIVE` | Agotar presupuesto o rondas sin estabilidad: cerrar como **no resuelto en estabilidad**, conservar y mostrar cualquier candidato numérico con su sensibilidad. |
-| `STOP_INVALID` | Detener por datos inválidos, cambio de rama o matriz no utilizable; indicar la causa exacta y no mezclar estados. |
+| Controller decision | DAG action |
+|---|---|
+| `PROBE_SCF` | Reserve and run only the probe nodes authorized by policy; persist the probe's idempotent receipt/ID and cost first. Reevaluate the policy after validating the results. |
+| `STOP_STABLE` | Conclude only after passing two consecutive inter-round comparisons under explicit tolerances, with branch, matrix, and sensitivity checks satisfied; two possible refinements are required. |
+| `REFINE` | Record `shrink` or `expand` direction, active window/degree/DoF, predicates, and supporting values; `expand` requires measured empirical SCF sensitivity and a predeclared signal/noise criterion. Add a symmetric pair within the limits, materialize only its FDF files, and run only missing responses. |
+| `IMPROVE_SCF_FIRST` | If the check reveals material SCF sensitivity, adopt only a preconfigured stricter level and rerun the points needed to analyze a matrix under consistent conditions; if the budget cannot cover it, stop and report the limitation. |
+| `STOP_LIMIT_SENSITIVE` | Exhaust the budget or rounds without stability: close as **stability unresolved**, retaining and showing any numerical candidate with its sensitivity. |
+| `STOP_INVALID` | Stop for invalid data, branch change, or unusable matrix; state the exact cause and do not mix states. |
 
-Un buen residuo no equivale a estabilidad ni aceptación física. `STOP_LIMIT_SENSITIVE` y `NUMERICAL_CANDIDATE_SENSITIVE` pueden coexistir: el primer estado expresa la decisión de campaña; el segundo, que sí se pudo calcular una estimación de U. La política, ventanas activas, nivel SCF, presupuesto y decisiones se congelan/versionan. Cada transición de ronda se persiste atómicamente antes de despachar nodos; la identidad durable de cada nodo incluye campaña/política, α, sitio, modo BARE/SCREENED, nivel SCF y DM padre pertinente. Las referencias compartidas se deduplican y se contabilizan una sola vez. `resume` debe reconstruir la misma decisión y no repetir puntos, sondas ni costo ya comprometidos. La convergencia en α no certifica convergencia con tamaño de supercelda, funcional, pseudopotencial ni definición del proyector; son controles físicos independientes.
+A good residual is not equivalent to stability or physical acceptance. `STOP_LIMIT_SENSITIVE` and `NUMERICAL_CANDIDATE_SENSITIVE` may coexist: the first state expresses the campaign decision; the second indicates that a U estimate could be calculated. The policy, active windows, SCF level, budget, and decisions are frozen/versioned. Each round transition is persisted atomically before dispatching nodes; each durable node identity includes campaign/policy, α, site, BARE/SCREENED mode, SCF level, and relevant parent DM. Shared references are deduplicated and counted once. `resume` must reconstruct the same decision without repeating points, probes, or already committed cost. Convergence in α does not certify convergence with respect to supercell size, functional, pseudopotential, or projector definition; these are independent physical checks.
 
-## 4. Contrato de entrada y salida del DAG
+## 4. DAG input/output contract
 
-### Entrada de campaña nueva
+### New campaign input
 
-El manifiesto v2 existente declara FDF efectivo e `include` resueltos, estructura, sitios/subespacios correlacionados y sus proyectores, pseudopotenciales, funcional, estado magnético de referencia, malla α fija, política de estimador, validación, identidad de SIESTA y perfil de ejecución. Para la extensión adaptativa, añadir una versión de esquema que declare además la **política de refinamiento y presupuesto**; el resultado adaptativo debe ser versionado de manera compatible con JSON v2. No cambiar silenciosamente el significado de campañas fijas. No inferir el subespacio por el nombre del material. Si el FDF y la procedencia del pseudopotencial declaran funcionales incompatibles, bloquear antes de lanzar SIESTA; esto evita repetir la mezcla LDA/PBE.
+The existing v2 manifest declares the effective FDF and resolved `include` files, structure, correlated sites/subspaces and their projectors, pseudopotentials, functional, reference magnetic state, fixed α grid, estimator policy, validation, SIESTA identity, and execution profile. For the adaptive extension, add a schema version that also declares the **refinement and budget policy**; the adaptive result must be versioned compatibly with JSON v2. Do not silently change the meaning of fixed campaigns. Do not infer the subspace from the material name. If the FDF and pseudopotential provenance declare incompatible functionals, block before launching SIESTA; this prevents repeating the LDA/PBE mix-up.
 
-El adaptador SIESTA debe entregar observaciones normalizadas `ResponseObservation` con etiquetas de sitio estables, modo BARE/SCREENED, amplitud, ocupaciones, DM padre, salida y recibo de validación. El análisis consume **únicamente** observaciones verificadas; esa verificación ocurre cuando la salida se consume, no como auditoría reiterada antes de lanzar otras simulaciones independientes. El perfil local declara `mpi_ranks` según los recursos expuestos por el runtime y `max_concurrent_siesta = 1`; Slurm usa el perfil de la instalación, sin codificar valores de la laptop en la matemática.
+The SIESTA adapter must provide normalized `ResponseObservation` objects with stable site labels, BARE/SCREENED mode, amplitude, occupations, parent DM, output, and validation receipt. Analysis consumes **only** verified observations; verification occurs when the output is consumed, not as a repeated audit before launching other independent simulations. The local profile declares `mpi_ranks` based on resources exposed by the runtime and `max_concurrent_siesta = 1`; Slurm uses the installation profile, without hard-coding laptop values into the mathematics.
 
-El supervisor tendrá un registro durable de campaña, lock para impedir dos controladores sobre el mismo DAG, identificador de proceso/trabajo y heartbeat. Si el proceso termina durante un nodo, `status` lo reporta como interrumpido; `resume` archiva el intento parcial y reintenta sólo ese nodo desde entradas validadas. No asumir que un PID antiguo sigue vivo únicamente porque aparece guardado en disco. Los gates deterministas del DAG requieren handlers locales propios; no se envían como si fueran comandos SIESTA.
+The supervisor has a durable campaign record, a lock preventing two controllers from operating on the same DAG, a process/job identifier, and a heartbeat. If the process ends during a node, `status` reports it as interrupted; `resume` archives the partial attempt and retries only that node from validated inputs. Do not assume an old PID is still alive merely because it is saved on disk. Deterministic DAG gates require their own local handlers; they are not sent as if they were SIESTA commands.
 
-### Salida canónica por campaña
+### Canonical output per campaign
 
-`results/lr_u_analysis.v2.json` ya es la fuente para el DAG fijo y los reportes. Para campañas adaptativas se conserva el contrato v2 cuando la extensión resulte compatible; si requiere campos o semántica incompatibles, se publica una versión nueva en lugar de cambiar el significado de v2. Campos mínimos del resultado completo:
+`results/lr_u_analysis.v2.json` is already the source for the fixed DAG and reports. For adaptive campaigns, retain the v2 contract when the extension is compatible; if incompatible fields or semantics are required, publish a new version rather than changing the meaning of v2. Minimum fields for a complete result:
 
 ```text
 schema_version, campaign_id, material, functional, quantity,
@@ -175,91 +177,91 @@ cost_budget_and_consumption,
 numerical_status, physical_acceptance, reasons, provenance
 ```
 
-Todos los campos numéricos no disponibles serán `null` con causa explícita; no usar `NaN` en JSON. `results/LR_U_REPORT.md` será el **formato legible canónico v2** y se genera desde ese JSON. La tabla debe identificar material, campaña, funcional, observable, valor y unidad, método/estimador, referencia de comparación cuando exista, sensibilidad por origen, estado de reportabilidad y acción permitida por el DAG. Una sección por sitio muestra U, amplitudes, ajustes y estado; otras observables sólo aparecen si están en el JSON, sin inventar referencias. El encabezado registra pseudopotenciales, archivos fuente, hashes, versión del analizador y si cada dato es canónico o candidato. Se puede añadir `.txt`/`.out` como vista derivada posterior, sin crear otra fuente de verdad. El JSON conserva curvas, matrices y fuentes. La exportación es idempotente, registra hashes de entrada/salida y no invoca SIESTA ni envía trabajos a Slurm.
+All unavailable numeric fields are `null` with an explicit reason; do not use `NaN` in JSON. `results/LR_U_REPORT.md` is the **canonical human-readable v2 format**, generated from that JSON. Its table identifies the material, campaign, functional, observable, value and unit, method/estimator, comparison reference when available, sensitivity by source, reportability status, and action permitted by the DAG. A section per site shows U, amplitudes, fits, and status; other observables appear only if present in the JSON, without invented references. The header records pseudopotentials, source files, hashes, analyzer version, and whether each datum is canonical or a candidate. A `.txt`/`.out` view may be added later as a derived view without creating another source of truth. JSON retains curves, matrices, and sources. Export is idempotent, records input/output hashes, and does not invoke SIESTA or submit Slurm jobs.
 
-El contrato `tools/scientific_dag_analysis.py` registrará el resultado numérico como `RECORDED_ONLY` y `physical_acceptance=NOT_ESTABLISHED`, salvo que una política física distinta demuestre explícitamente más. `tools/scientific_dag_gate.py` conservará el vínculo hash del JSON, el veredicto y el Markdown. Las campañas antiguas mantienen sus esquemas y veredictos originales; la versión nueva no reescribe NiO v1/v2, MnO ni sus recibos.
+The `tools/scientific_dag_analysis.py` contract records the numerical result as `RECORDED_ONLY` and `physical_acceptance=NOT_ESTABLISHED`, unless a separate physical policy explicitly establishes more. `tools/scientific_dag_gate.py` retains the hash link among the JSON, verdict, and Markdown. Old campaigns keep their original schemas and verdicts; the new version does not rewrite NiO v1/v2, MnO, or their receipts.
 
-## 5. Secuencia de trabajo restante
+## 5. Remaining work sequence
 
-El refinamiento se aplica como extensión versionada del flujo existente; conserva compatibilidad con campañas fijas y manifiestos anteriores.
+Refinement is applied as a versioned extension to the existing workflow; it preserves compatibility with fixed campaigns and earlier manifests.
 
-### Fase A — Controlador adaptativo de α y DAG por rondas (completada)
+### Phase A — Adaptive α controller and round-based DAG (complete)
 
-- Añadir un esquema versionado para la política adaptativa. Implementar como propuestas por defecto la malla simétrica de siete puntos y un máximo de dos rondas que añaden un par interior o exterior (hasta once amplitudes); `h`, ventanas activas por ronda/dirección, grado/DoF, `alpha_seed_span_eV`, `alpha_ceiling_eV`, `probe_trigger_ratio`, predicados/umbrales de señal-ruido y tolerancias, escalera SCF y presupuesto total deben quedar configurables y visibles. La semilla de 0.1 eV requiere validación para SIESTA antes de anunciarse como valor predeterminado del producto.
-- Calibrar el preset de `tol_abs_eV`/`tol_rel` y tolerancias de ventana en casos diversos con datos de respuesta conocidos y convergencia numérica; no deducirlo sólo de NiO ni copiar la tolerancia por defecto de otra biblioteca. Si esa calibración aún no existe, exigir una política explícita para activar `STOP_STABLE`/refinamientos basados en tolerancia y permitir cerrar por presupuesto como candidato sensible.
-- Implementar decisiones `STOP_STABLE`, `REFINE`, `IMPROVE_SCF_FIRST`, `STOP_LIMIT_SENSITIVE` y `STOP_INVALID` de §3.3. Cada decisión guarda los diagnósticos que la motivan y el costo restante.
-- Al decidir `REFINE(shrink)`, requerir que la diferencia de U entre ventanas interior/activa supere el umbral de truncamiento versionado; elegir el grado y puntos usados según la ventana activa congelada. Al decidir `REFINE(expand)`, exigir una sonda SCF validada, métrica señal/ruido de canales equivalentes, tolerancias configuradas y continuidad de rama. Si falta un predicado, cerrar como sensible. Añadir el par simétrico correspondiente dentro de los límites declarados, materializar sólo los FDF aún ausentes, expandir antes el par a todos los sitios/modos y comprobar el costo completo de la ronda. La nueva ronda conserva nodos y recibos todavía válidos; `resume` vuelve a ejecutar únicamente el trabajo incompleto o invalidado y sus descendientes.
-- Implementar `PROBE_SCF` de §3.3 como nodos diagnósticos de una sola activación por columna afectada, sin rehacer la campaña completa para medir sensibilidad. Su recibo identifica referencia, par ±α, vectores BARE/SCREENED comparables, nivel SCF, resolución impresa, diferencia empírica y decisión. Si se contempla una expansión global de α, completar las sondas para todas las columnas/modos requeridos o cerrar sin expandir. Contar el costo antes de despacharlos, deduplicar referencias compartidas y no reutilizar una respuesta de otro nivel SCF dentro del ajuste final.
-- Si se admite una escalera SCF, versionarla y reaplicar el mismo nivel a todo el conjunto usado para comparar derivadas; nunca mezclar respuestas convergidas con criterios SCF diferentes sin anotarlo y rehacer el conjunto pertinente.
-- Mantener independiente el estado del cálculo, el candidato numérico de U y la aceptación física. Una falta de estabilidad no borra un candidato calculable ni lo presenta como convergido.
-- Preservar lectura de manifiestos/análisis de malla fija v2. La integración adaptativa debe usar una versión nueva o una extensión aditiva validada del esquema; no reinterpretar silenciosamente campañas anteriores. Persistir cada política/decisión de manera atómica antes de despachar trabajo; la identidad de nodo incluye política, ronda, α, sitio, modo, nivel SCF y DM padre pertinente.
+- Add a versioned schema for the adaptive policy. Implement the seven-point symmetric grid and at most two rounds adding an inner or outer pair (up to eleven amplitudes) as proposed defaults; `h`, active windows per round/direction, degree/DoF, `alpha_seed_span_eV`, `alpha_ceiling_eV`, `probe_trigger_ratio`, signal/noise predicates/thresholds and tolerances, SCF ladder, and total budget must remain configurable and visible. The 0.1 eV seed requires validation for SIESTA before being announced as a product default.
+- Calibrate the `tol_abs_eV`/`tol_rel` preset and window tolerances across diverse cases with known response data and numerical convergence; do not infer them only from NiO or copy another library's default tolerance. Until that calibration exists, require an explicit policy to enable `STOP_STABLE`/tolerance-based refinements and allow budget-based closeout as a sensitive candidate.
+- Implement the §3.3 decisions `STOP_STABLE`, `REFINE`, `IMPROVE_SCF_FIRST`, `STOP_LIMIT_SENSITIVE`, and `STOP_INVALID`. Each decision saves its supporting diagnostics and remaining cost.
+- For `REFINE(shrink)`, require that the U difference between inner/active windows exceed the versioned truncation threshold; select the degree and points according to the frozen active window. For `REFINE(expand)`, require a validated SCF probe, a signal/noise metric for equivalent channels, configured tolerances, and branch continuity. If a predicate is missing, close as sensitive. Add the corresponding symmetric pair within declared limits, materialize only missing FDFs, expand the pair across all sites/modes first, and check the full round cost. The new round retains still-valid nodes and receipts; `resume` reruns only incomplete or invalidated work and its descendants.
+- Implement §3.3 `PROBE_SCF` as diagnostic nodes activated once per affected column, without rerunning the full campaign to measure sensitivity. Its receipt identifies the reference, ±α pair, comparable BARE/SCREENED vectors, SCF level, print resolution, empirical difference, and decision. If global α expansion is considered, complete probes for all required columns/modes or close without expansion. Count cost before dispatch, deduplicate shared references, and do not reuse a response from another SCF level in the final fit.
+- If an SCF ladder is supported, version it and apply the same level to the entire set used to compare derivatives; never mix responses converged under different SCF criteria without recording it and rerunning the relevant set.
+- Keep calculation status, the numerical U candidate, and physical acceptance independent. Lack of stability neither removes a calculable candidate nor presents it as converged.
+- Preserve reading of fixed-grid v2 manifests/analysis. Adaptive integration must use a new version or validated additive schema extension; do not silently reinterpret earlier campaigns. Persist each policy/decision atomically before dispatching work; node identity includes policy, round, α, site, mode, SCF level, and relevant parent DM.
 
-**Entrega:** campaña adaptativa que decide continuar o terminar dentro del presupuesto, registra por qué y reutiliza las amplitudes válidas sin repetir sus SIESTA.
+**Delivery:** an adaptive campaign that decides whether to continue or stop within budget, records why, and reuses valid amplitudes without repeating their SIESTA runs.
 
-### Fase B — Adaptadores Slurm e históricos (completada)
+### Phase B — Slurm and historical adapters (complete)
 
-- Conectar la plantilla Slurm al contrato común de observaciones, análisis y reporte; el adaptador envía los nodos científicos conforme al perfil del clúster y conserva el mismo JSON/Markdown que la ruta local.
-- Adaptar `production_benchmarks/lr_arithmetic.py` y `campaign_controller.py` al analizador común. Las rutas históricas pueden convertir sus observaciones al contrato común, pero no mantener una fórmula o política de U paralela.
-- Dejar esta fase desacoplada del CLI PowerShell/WSL: Slurm es otro backend del paquete autónomo, no una integración con el orquestador general SIESTAFLOW.
+- Connect the Slurm template to the common observation, analysis, and reporting contract; the adapter submits scientific nodes according to the cluster profile and preserves the same JSON/Markdown as the local path.
+- Adapt `production_benchmarks/lr_arithmetic.py` and `campaign_controller.py` to the common analyzer. Historical paths may convert their observations to the common contract, but must not maintain a parallel U formula or policy.
+- Keep this phase decoupled from the PowerShell/WSL CLI: Slurm is another backend for the standalone package, not an integration with the general SIESTAFLOW orchestrator.
 
-**Entrega:** mismo análisis reproducible en perfil local y Slurm a partir de observaciones equivalentes.
+**Delivery:** the same reproducible analysis in local and Slurm profiles from equivalent observations.
 
-### Fase C — Verificación sintética y cierre operativo (completada)
+### Phase C — Synthetic verification and operational closeout (complete)
 
-- Cubrir ajuste lineal/cúbico, N=1/2/3, mallas de cinco/siete puntos, DoF insuficientes, cambio de rama, matrices singulares/mal condicionadas, diferencias por sitio, redondeo frente a sensibilidad, fallos de salida, refinamiento y límites de costo.
-- Verificar `REFINE` con sólo FDF nuevos, estabilidad en rondas consecutivas, activación condicional de la comprobación SCF, expansión sólo después de una señal débil confirmada, consistencia del nivel SCF en las matrices, presupuesto que incluye los nodos diagnósticos, `STOP`/`UNRESOLVED` sin trabajos extra, interrupción/reanudación sin duplicar nodos, reporte idempotente y que cambios únicamente de reporte no recalculen SIESTA.
-- Reproducir, sin SIESTA nuevo y con datos PBE existentes ya validados, aproximadamente 6.8684 eV (NiLR0) y 6.8638 eV (NiLR1) para `U_scalar_charge`. Investigar cualquier diferencia como cambio de datos, contrato o álgebra; no ajustar umbrales para forzar concordancia.
-- Completar una comprobación operacional Windows→WSL desde PowerShell normal con un caso PBE pequeño basado en entradas existentes y auditadas: lanzar, cerrar la terminal, consultar `status`, recuperar con `resume` si aplica y generar JSON/reporte. En la laptop usar como máximo cuatro rangos MPI y un SIESTA simultáneo. Esta prueba acredita persistencia; las pruebas sintéticas por sí solas no lo hacen.
-- Auditar una sola vez el contrato y el diff final. Según la instrucción vigente del usuario para esta integración, Luna GPT-6 máximo ejecuta y Sol GPT-6 alto revisa puntualmente los contratos o hallazgos concretos; no hay auditorías repetidas durante cada amplitud ni revisiones generales del repositorio.
+- Cover linear/cubic fitting, N=1/2/3, five-/seven-point grids, insufficient DoF, branch changes, singular/ill-conditioned matrices, per-site differences, rounding versus sensitivity, output failures, refinement, and cost limits.
+- Verify `REFINE` using only new FDFs, stability over consecutive rounds, conditional activation of the SCF check, expansion only after a confirmed weak signal, consistent SCF level across matrices, budget including diagnostic nodes, `STOP`/`UNRESOLVED` with no extra jobs, interruption/resume without duplicate nodes, idempotent reporting, and that report-only changes do not rerun SIESTA.
+- Reproduce, without new SIESTA runs and using already validated existing PBE data, approximately 6.8684 eV (NiLR0) and 6.8638 eV (NiLR1) for `U_scalar_charge`. Investigate any difference as a change in data, contract, or algebra; do not tune thresholds to force agreement.
+- Complete an operational Windows→WSL check from ordinary PowerShell using a small PBE case based on existing audited inputs: launch, close the terminal, query `status`, recover with `resume` if applicable, and generate JSON/report. On the laptop use at most four MPI ranks and one concurrent SIESTA process. This test establishes persistence; synthetic tests alone do not.
+- Audit the contract and final diff once. Under the user's current instruction for this integration, Luna GPT-6 max executes and Sol GPT-6 high performs targeted review of contracts or concrete findings; do not repeat audits for every amplitude or conduct general repository reviews.
 
-**Entrega:** criterios científicos, de reanudación y de operación verificados; ninguna campaña nueva se lanza sólo por ejecutar pruebas del software.
+**Delivery:** scientific, resume, and operational criteria verified; no new campaign is launched merely to run software tests.
 
-## 6. Criterios de aceptación y límites
+## 6. Acceptance criteria and limits
 
-### Ya implementado en la ruta fija v2
+### Already implemented in the fixed v2 path
 
-- CLI independiente con `init`, `run`, `status`, `resume`, `report`, `stop` y `audit-fdf`, registrado como comando instalable.
-- Campaña de malla fija con perfil MPI configurable, trabajador WSL persistente, ejecución serial, análisis JSON v2 y reporte Markdown generado desde los datos guardados.
-- El reporte muestra dataset de ocupaciones, ajustes, matrices, diagnósticos, sensibilidad y procedencia; no necesita PDF ni dependencias pesadas.
-- Verificación focal: las pruebas sintéticas del controlador/DAG/análisis común pasaron; pruebas dirigidas confirmaron `audit-fdf`, salida UTF-8 del puente y emisión segura en consola cp1252. La campaña operativa PBE se ejecutó con SIESTA/MPI y generó reporte JSON/Markdown.
+- Independent CLI with `init`, `run`, `status`, `resume`, `report`, `stop`, and `audit-fdf`, registered as an installable command.
+- Fixed-grid campaign with configurable MPI profile, persistent WSL worker, serial execution, JSON v2 analysis, and Markdown report generated from saved data.
+- The report shows the occupation dataset, fits, matrices, diagnostics, sensitivity, and provenance; it requires no PDF or heavyweight dependencies.
+- Focused verification: synthetic controller/DAG/common-analysis tests passed; targeted tests confirmed `audit-fdf`, UTF-8 bridge output, and safe output on a cp1252 console. The operational PBE campaign ran with SIESTA/MPI and generated JSON/Markdown reports.
 
-### Criterios cubiertos al cierre de la integración
+### Criteria covered at integration closeout
 
-- El DAG decide `REFINE`/`STOP` con una política explícita y presupuesto, añade únicamente FDF nuevos y conserva recibos válidos entre rondas.
-- Si una respuesta inicial queda cerca de la resolución, una comprobación SCF puntual y presupuestada permite decidir entre mejorar SCF, ampliar α dentro de su cota o cerrar con diagnóstico. La expansión requiere una medida de ruido y predicados configurados para todos los sitios/modos implicados; el reporte no presenta la diferencia de ocupaciones como cota rigurosa de error.
-- Los candidatos invertibles por sitio se muestran aunque la estabilidad no esté demostrada; cambio de rama, datos inválidos o inversión imposible producen estado y causa propios. El reporte separa candidato numérico y aceptación física.
-- La misma política y observaciones dan el mismo resultado en ejecución continua y tras `resume`. Modificar sólo el reporte no vuelve a ejecutar SIESTA.
-- El controlador adaptativo y los resultados se versionan sin alterar manifiestos, datos o recibos de campañas fijas anteriores.
-- El contrato general funciona para materiales y números de sitios distintos; NiO/MnO sirven como regresiones y no determinan constantes ni umbrales.
-- La integración Slurm y las rutas históricas usan el analizador y el reporte comunes; el paquete sigue independiente y no depende del orquestador general SIESTAFLOW.
-- La ruta Windows→WSL se verificó operacionalmente con una campaña SIESTA autorizada el 2026-09-28; el trabajo persistió después de volver el control a PowerShell.
-- La ruta crítica de una campaña autorizada lanza el primer SIESTA tras los controles físicos mínimos de §1.1. Los hashes se registran automáticamente una vez por entrada/salida pertinente; no se inspecciona ni recalcula el árbol completo por cada nodo.
+- The DAG decides `REFINE`/`STOP` using an explicit policy and budget, adds only new FDFs, and retains valid receipts between rounds.
+- If an initial response is near resolution, a targeted, budgeted SCF check allows a choice between improving SCF, expanding α within its bound, or closing with a diagnostic. Expansion requires a noise measurement and configured predicates for all involved sites/modes; the report does not present occupation differences as a rigorous error bound.
+- Invertible per-site candidates are shown even if stability is unproven; branch changes, invalid data, or impossible inversion produce their own state and reason. The report separates numerical candidacy from physical acceptance.
+- The same policy and observations produce the same result in continuous execution and after `resume`. Editing only the report does not rerun SIESTA.
+- The adaptive controller and results are versioned without altering manifests, data, or receipts from earlier fixed campaigns.
+- The general contract works for different materials and site counts; NiO/MnO serve as regressions and do not determine constants or thresholds.
+- Slurm integration and historical paths use the common analyzer and report; the package remains independent and does not depend on the general SIESTAFLOW orchestrator.
+- The Windows→WSL path was operationally verified using an authorized SIESTA campaign on 2026-09-28; work persisted after control returned to PowerShell.
+- The critical path of an authorized campaign launches the first SIESTA after the minimum physical checks in §1.1. Hashes are automatically recorded once per relevant input/output; the entire tree is not inspected or rehashed for each node.
 
-Una simulación real no es requisito para comprobar la matemática mediante entradas guardadas o adaptadores sintéticos, pero sí es necesaria para declarar demostrada la operación persistente Windows→WSL. La implementación no debe iniciar nuevas campañas durante las fases de software sin autorización expresa.
+A real simulation is not required to check the mathematics using saved inputs or synthetic adapters, but it is required to claim that persistent Windows→WSL operation has been demonstrated. Implementation must not start new campaigns during software phases without express authorization.
 
-## 7. Ejecución y evidencia de cierre
+## 7. Execution and closeout evidence
 
-La ejecución siguió `AGENTS.md`: Luna GPT-6 máximo implementó y ejecutó; Sol GPT-6 alto hizo una auditoría puntual del contrato adaptativo y del control científico previo a campaña. No se lanzaron barridos exploratorios ni se repitieron revisiones manuales de hashes.
+Execution followed `AGENTS.md`: Luna GPT-6 max implemented and ran the work; Sol GPT-6 high performed a targeted audit of the adaptive contract and pre-campaign scientific check. No exploratory scans were launched and manual hash reviews were not repeated.
 
-- Las fases A–C quedaron implementadas y verificadas; el smoke test local PBE usó SIESTA 5.4.2, 4 ranks MPI y concurrencia máxima 1.
-- El proceso de PowerShell terminó tras despachar el trabajador; comprobaciones posteriores confirmaron persistencia y `status=COMPLETED` con 11 nodos validados.
-- El reporte del smoke test entrega `U_scalar_charge = 6.86087028 eV` por sitio y estado `NUMERICAL_CANDIDATE_SENSITIVE`. Como sólo usó α = ±0.025 eV y estimador lineal, el resultado verifica el cierre operacional/analítico del DAG, no estabilidad cúbica ni aceptación física.
-- El smoke test evidenció la decodificación cp1252 del reporte en Windows; se corrigió el puente para leer UTF-8 y emitir texto seguro en consolas heredadas.
-- Evidencia accesible: `campaigns/nio_pbe_cli_smoke_20260928/results/LR_U_REPORT.md` y `campaigns/nio_pbe_cli_smoke_20260928/results/lr_u_analysis.v2.json`.
+- Phases A–C were implemented and verified; the local PBE smoke test used SIESTA 5.4.2, 4 MPI ranks, and maximum concurrency 1.
+- The PowerShell process ended after dispatching the worker; subsequent checks confirmed persistence and `status=COMPLETED` with 11 validated nodes.
+- The smoke-test report gives `U_scalar_charge = 6.86087028 eV` per site and status `NUMERICAL_CANDIDATE_SENSITIVE`. Because it used only α = ±0.025 eV and a linear estimator, this verifies operational/analytical DAG closeout, not cubic stability or physical acceptance.
+- The smoke test exposed cp1252 decoding of the report on Windows; the bridge was corrected to read UTF-8 and emit safe text to legacy consoles.
+- Accessible evidence: `campaigns/nio_pbe_cli_smoke_20260928/results/LR_U_REPORT.md` and `campaigns/nio_pbe_cli_smoke_20260928/results/lr_u_analysis.v2.json`.
 
-No queda una decisión del usuario pendiente para cerrar el alcance autorizado. La expansión de α en materiales futuros deberá activarse sólo si una medida de ruido SCF comparable y umbrales explícitos de campaña permiten distinguir señal de ruido; de lo contrario, el DAG reporta candidato sensible y se detiene dentro del presupuesto.
+No user decision remains pending to close the authorized scope. α expansion for future materials should be activated only if a comparable SCF noise measurement and explicit campaign thresholds allow signal to be distinguished from noise; otherwise, the DAG reports a sensitive candidate and stops within budget.
 
-## Referencias internas y metodológicas
+## Internal and methodological references
 
-- [Polynomial response fitting](RESPONSE_POLYNOMIAL_FIT.md): implementación actual y límites del ajuste.
-- [Refinamiento adaptativo de α](ADAPTIVE_ALPHA_GRID_IMPLEMENTATION_TASK.md): requisitos incluidos en el controlador del DAG; su implementación y pruebas sintéticas no autorizan por sí mismas una campaña SIESTA nueva.
-- [Informe legible de resultados](PENDING_HUMAN_READABLE_RESULTS_EXPORT.md): requisitos incorporados al reporte Markdown canónico v2.
-- [Cococcioni y de Gironcoli, respuesta lineal](https://arxiv.org/abs/cond-mat/0405160).
-- [Tutorial oficial ABINIT LR-U(J)](https://docs.abinit.org/tutorial/lruj/): precedente de regresión polinómica sobre múltiples perturbaciones.
-- [MacEnulty et al., prácticas de LR-U/J](https://doi.org/10.1088/2516-1075/ad610f): amplitud, ruido, no linealidad y sensibilidad de la respuesta.
-- [Shi et al., intervalo adaptativo para diferencias finitas con ruido](https://arxiv.org/abs/2110.06380): base numérica para equilibrar error de truncamiento y ruido; no es una regla física específica para calcular U.
-- [Documentación oficial de SciPy `quad`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.integrate.quad.html): ejemplo de criterio de parada con tolerancias absoluta/relativa y límite de evaluaciones; su valor predeterminado numérico no se transfiere al estimador de U.
+- [Polynomial response fitting](RESPONSE_POLYNOMIAL_FIT.md): current implementation and fit limitations.
+- [Adaptive α refinement](ADAPTIVE_ALPHA_GRID_IMPLEMENTATION_TASK.md): requirements incorporated into the DAG controller; its implementation and synthetic tests do not by themselves authorize a new SIESTA campaign.
+- [Human-readable results report](PENDING_HUMAN_READABLE_RESULTS_EXPORT.md): requirements incorporated into the canonical v2 Markdown report.
+- [Cococcioni and de Gironcoli, linear response](https://arxiv.org/abs/cond-mat/0405160).
+- [Official ABINIT LR-U(J) tutorial](https://docs.abinit.org/tutorial/lruj/): precedent for polynomial regression over multiple perturbations.
+- [MacEnulty et al., LR-U/J practices](https://doi.org/10.1088/2516-1075/ad610f): amplitude, noise, nonlinearity, and response sensitivity.
+- [Shi et al., adaptive interval for noisy finite differences](https://arxiv.org/abs/2110.06380): numerical basis for balancing truncation error and noise; not a physical rule specific to calculating U.
+- [Official SciPy `quad` documentation](https://docs.scipy.org/doc/scipy/reference/generated/scipy.integrate.quad.html): example of a stopping criterion with absolute/relative tolerances and an evaluation limit; its numerical default is not transferred to the U estimator.
 
-## Historial de implementación — actualizado 2026-09-28
+## Implementation history — updated 2026-09-28
 
-Las fases A–C quedan cerradas. Además de las pruebas sintéticas focales, las pruebas dirigidas del `audit-fdf` PBE y del manejo UTF-8 del CLI pasaron; el smoke test generó informe Markdown/JSON y verificó la operación persistente Windows→WSL con una campaña SIESTA real de bajo costo. El alcance sigue independiente del repositorio general SIESTAFLOW. La calibración de tolerancias de política con familias de materiales y la selección de presets recomendados quedan como trabajo científico futuro, no como bloqueo de integración.
+Phases A–C are closed. In addition to focused synthetic tests, targeted tests of PBE `audit-fdf` and CLI UTF-8 handling passed; the smoke test generated a Markdown/JSON report and verified persistent Windows→WSL operation with a low-cost real SIESTA campaign. The scope remains independent of the general SIESTAFLOW repository. Calibrating policy tolerances across material families and selecting recommended presets remain future scientific work, not integration blockers.

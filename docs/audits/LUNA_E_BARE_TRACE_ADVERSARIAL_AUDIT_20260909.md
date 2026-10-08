@@ -1,73 +1,72 @@
-# Luna E — auditoría adversarial de trazas BARE
+# Luna E — adversarial audit of BARE traces
 
-## Alcance
+## Scope
 
-Esta entrega contiene únicamente fixtures sintéticos y pruebas unitarias. No
-es evidencia física, no ejecuta SIESTA/MPI/Hydra/Slurm y no modifica campañas,
-FDF, perfiles ni código de producción.
+This change contains only synthetic fixtures and unit tests. It is not physical
+evidence, does not run SIESTA/MPI/Hydra/Slurm, and does not modify campaigns,
+FDFs, profiles, or production code.
 
-La batería ataca el contrato
-`siestaflow-bare-semantics-v2` en dos niveles:
+The test suite attacks the `siestaflow-bare-semantics-v2` contract at two
+levels:
 
-1. integridad de la secuencia nativa (`DM → población seleccionada →
-   perturbación → reconstrucción Hxc`);
-2. procedencia de los artefactos ligados por SHA-256 (ejecutable, DM, FDF,
-   salida y traza).
+1. integrity of the native sequence (`DM → selected population → perturbation
+   → Hxc reconstruction`);
+2. provenance of artifacts bound by SHA-256 (executable, DM, FDF, output, and
+   trace).
 
-## Casos cubiertos
+## Covered cases
 
-- marcador duplicado;
-- marcador ausente o combinación parcial;
-- eventos fuera de orden;
-- modificación del ejecutable;
-- modificación del DM padre;
-- modificación del FDF;
-- modificación de `siesta.out`;
-- modificación de la traza sin actualizar su hash;
-- `MPI_Abort`/terminación anormal aunque se actualice el hash de la salida;
-- versión SIESTA distinta de la versión certificada;
-- vocabulario de marcadores sustituido por cuatro cadenas arbitrarias;
-- esquema parcial sin todos los campos de procedencia.
+- duplicated marker;
+- missing marker or partial combination;
+- events out of order;
+- modified executable;
+- modified parent DM;
+- modified FDF;
+- modified `siesta.out`;
+- modified trace without updating its hash;
+- `MPI_Abort`/abnormal termination even when the output hash is updated;
+- SIESTA version different from the certified version;
+- marker vocabulary replaced by four arbitrary strings;
+- partial schema missing provenance fields.
 
-En todos estos casos, salvo las dos limitaciones explícitas indicadas abajo,
-el verificador debe lanzar `BareSemanticEvidenceError`; por lo tanto no se
-puede obtener `VerifiedBareEvidence`.
+In all these cases, except for the two explicit limitations below, the
+verifier must raise `BareSemanticEvidenceError`; therefore,
+`VerifiedBareEvidence` cannot be obtained.
 
-## Resultado de la revisión
+## Review result
 
-Las pruebas demuestran que una traza no puede conservar un certificado válido
-si se cambia cualquier artefacto ligado o si se rompe la secuencia de eventos.
-Actualizar `trace_sha256` no oculta un orden inválido, un evento repetido, un
-marcador faltante ni una terminación anormal.
+Tests show that a trace cannot retain a valid certificate if any bound artifact
+changes or the event sequence is broken. Updating `trace_sha256` does not hide
+invalid ordering, a repeated event, a missing marker, or abnormal termination.
 
-## Corrección de Terra posterior a la auditoría
+## Terra's post-audit correction
 
-La auditoría identificó tres huecos y Terra los corrigió en la misma frontera
-del verificador. La batería adversarial ya no contiene `xfail` para ellos:
+The audit identified three gaps, and Terra fixed them at the verifier
+boundary. The adversarial suite no longer marks these cases `xfail`:
 
-1. `BareTraceExpectation` se aporta desde el contrato de campaña, no desde el
-   sidecar. Fija tanto `source_revision` como los cuatro marcadores exactos.
-   Una revisión o un vocabulario alterados se rechazan.
-2. El verificador vuelve a leer `siesta.out` aun cuando coincida su hash y
-   rechaza `MPI_Abort`, `ABNORMAL_TERMINATION` o ausencia de terminación
-   normal.
-3. `SiestaOutputValidator` no autoriza un nodo BARE si la política no declara
-   una expectativa auditada.
+1. `BareTraceExpectation` is supplied by the campaign contract, not by the
+   sidecar. It fixes both `source_revision` and the four exact markers.
+   Altered revisions or vocabularies are rejected.
+2. The verifier rereads `siesta.out` even when its hash matches, and rejects
+   `MPI_Abort`, `ABNORMAL_TERMINATION`, or the absence of normal
+   termination.
+3. `SiestaOutputValidator` does not authorize a BARE node unless the policy
+   declares an audited expectation.
 
-Esto fortalece el contrato de verificación, pero no inventa una traza para un
-binario estándar. Si no existe una revisión identificable y una gramática
-nativa auditada, la decisión sigue siendo `CONTRACT GAP`, no `PASS`.
+This strengthens the verification contract but does not invent a trace for a
+standard binary. Without an identifiable revision and an audited native
+grammar, the decision remains `CONTRACT GAP`, not `PASS`.
 
-## Evidencia real indispensable para una prueba posterior
+## Real evidence required for a later test
 
-Para certificar BARE real serán necesarios, como mínimo:
+At minimum, real BARE certification requires:
 
-- `siesta.out` y `siesta.err` de la misma corrida;
-- FDF exacta y hash;
-- DM padre exacta y hash;
-- ejecutable y versión/build identificables;
-- traza nativa versionada con los cuatro eventos únicos y ordenados;
-- sidecar generado sin sobrescritura y ligado a todos los hashes;
-- manifest del DAG que relacione nodo, perturbación y artefactos.
+- `siesta.out` and `siesta.err` from the same run;
+- exact FDF and hash;
+- exact parent DM and hash;
+- identifiable executable and version/build;
+- versioned native trace with the four unique, ordered events;
+- sidecar generated without overwriting and bound to all hashes;
+- DAG manifest relating node, perturbation, and artifacts.
 
-Una salida normal o un código de retorno cero no sustituyen la traza nativa.
+A normal output or zero return code does not replace the native trace.

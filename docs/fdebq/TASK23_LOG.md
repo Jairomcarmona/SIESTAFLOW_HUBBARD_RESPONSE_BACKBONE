@@ -26,7 +26,7 @@ No premise was false.
 
 ### Independent review and conservative choice
 
-`auditor_cientifico` confirmed D14a is compatible with the coverage evidence contract and found no scientific choice blocking implementation. The read-only check also showed fallback pseudopotential selection depended on the caller's directory order when duplicate files disagreed. The implementation sorts search directories and treats conflicting copies of the selected suffix as `NOT_ESTABLISHED`; this is recorded as **decisión del implementador (conservadora)**. Explicit map entries remain authoritative, and a missing mapped file does not fall back to directory search.
+`auditor_cientifico` confirmed D14a is compatible with the coverage evidence contract and found no scientific choice blocking implementation. The read-only check also showed fallback pseudopotential selection depended on the caller's directory order when duplicate files disagreed. The implementation sorts search directories and treats conflicting copies of the selected suffix as `NOT_ESTABLISHED`; this is recorded as **conservative implementer decision**. Explicit map entries remain authoritative, and a missing mapped file does not fall back to directory search.
 
 ### Changes and authorized tests
 

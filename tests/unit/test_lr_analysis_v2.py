@@ -140,7 +140,7 @@ def test_occupations_primary_source_requires_v3_and_propagates_its_token_widths(
     assert bound["rounding_source"] == "siesta_occupations_total"
     assert bound["chi0_slope_half_width_eV_inv"][0][0] < 1e-3
     report = render_lr_u_report(result)
-    assert "Fuente de ocupación ajustada: `siesta_occupations_total`" in report
+    assert "Fitted occupation source: `siesta_occupations_total`" in report
 
 
 def test_two_point_window_is_reported_but_excluded_from_window_sensitivity():
@@ -169,7 +169,7 @@ def test_two_point_window_is_reported_but_excluded_from_window_sensitivity():
     assert result["sensitivity_summary"]["excluded_resolution_limited_window_count"] == 1
     report = render_lr_u_report(result)
     assert "resolution_limited_two_point_central_difference" in report
-    assert "Cota determinista por redondeo de tokens diagonales de la traza de matriz impresa" in report
+    assert "Deterministic rounding bound for diagonal tokens in the printed matrix trace" in report
     assert "UNASSESSED_TOLERANCE_MISSING" in report
 
 
@@ -188,8 +188,8 @@ def test_configured_tolerance_distinguishes_exceedance_from_missing_acceptance_l
     assert exceeded["sensitivity_summary"]["state"] == "SENSITIVE"
     assert exceeded["sensitivity_summary"]["declared_by"] == "config"
     report = render_lr_u_report(exceeded)
-    assert "declarado por: `config`" in report
-    assert "vía: `config`" in report
+    assert "declared by: `config`" in report
+    assert "via: `config`" in report
 
 
 def test_sensitivity_policy_has_four_explicit_assessment_states():
@@ -279,7 +279,7 @@ def test_markdown_report_is_per_site_and_keeps_scalar_u_semantics():
     assert "U_scalar_charge" in report
     assert "Ueff_Dudarev" in report
     assert "| U_scalar_charge | NiLR0 |" in report
-    assert "Acción DAG registrada" in report
+    assert "Recorded DAG action" in report
     assert "NO_DECLARADA" not in report
     assert "NOT_ESTABLISHED" in report
 
@@ -335,19 +335,19 @@ def test_markdown_report_renders_verified_dataset_math_and_source_lineage():
     }
 
     report = render_lr_u_report(result)
-    assert "n referencia (e)" in report
+    assert "n reference (e)" in report
     assert "5.1" in report and "5.2" in report
-    assert "½ ancho de traza por impresión" in report
+    assert "Printed trace half-width" in report
     assert "5e-05 / 5e-05 / 5e-05" in report
     assert "χ⁰ raw (BARE)" in report
     assert "(χ⁰)⁻¹" in report and "U_matrix" in report
-    assert "Coeficientes con unidades" in report
+    assert "Coefficients with units" in report
     assert "e·eV⁻¹" in report
     assert "runs/bare.fdf" in report
-    assert "Versión SIESTA:** 5.4.2" in report
+    assert "SIESTA version:** 5.4.2" in report
     assert "software/siesta_version.txt" in report
     assert "0.1.2" in report
-    assert "Digest de evidencia del recibo" in report
+    assert "Receipt evidence digest" in report
     assert "NiA" in report and "NiB" in report
     linear_fit = next(
         item for item in result["primary"]["fit_diagnostics"] if item["mode"] == "BARE"
@@ -363,7 +363,7 @@ def test_markdown_report_accepts_legacy_v2_without_occupation_dataset():
     result = analyze_verified_lr(observations, LRAnalysisPolicy(estimator="auto"))
     result.pop("response_observation_dataset", None)
     report = render_lr_u_report(result)
-    assert "análisis v2 anterior no guardaba las ocupaciones verificadas" in report
+    assert "this earlier v2 analysis did not store verified occupations" in report
     assert "χ⁰ raw (BARE)" in report
 
 
@@ -390,24 +390,24 @@ def test_markdown_report_separates_adaptive_campaign_and_candidate_status():
         "adaptive_budget": {"reserved_nodes": 25, "total_siesta_node_budget": 40, "remaining_nodes": 15},
     })
     report = render_lr_u_report(result)
-    assert "Decisión de campaña: **STOP_LIMIT_SENSITIVE**" in report
-    assert "Estado del candidato: **NUMERICAL_CANDIDATE_SENSITIVE**" in report
-    assert "Ventana activa" in report
-    assert "25/40 nodos SIESTA" in report
-    assert "Umbral de truncación declarado: 0.001 eV" in report
-    assert "se propone `shrink`, sujeto a la precedencia de otras decisiones y a los límites de rondas y presupuesto" in report
-    assert "Tolerancia de aumento de sensibilidad entre rondas: 0.05 eV" in report
-    assert "Solo compara el aumento frente a la ronda previa" in report
-    assert "no es un umbral absoluto de aceptación ni una cota de error" in report
+    assert "Campaign decision: **STOP_LIMIT_SENSITIVE**" in report
+    assert "Candidate status: **NUMERICAL_CANDIDATE_SENSITIVE**" in report
+    assert "active window" in report
+    assert "25/40 SIESTA nodes" in report
+    assert "Declared truncation threshold: 0.001 eV" in report
+    assert "If the observed metric exceeds this value, `shrink` is proposed, subject to the precedence of other decisions and round and budget limits" in report
+    assert "Tolerance for sensitivity increase between rounds: 0.05 eV" in report
+    assert "It compares only the increase from the previous round" in report
+    assert "is neither an absolute acceptance threshold nor an error bound" in report
 
 
 def test_large_matrix_report_is_split_into_column_blocks():
     matrix = [[float(row * 10 + column) for column in range(10)] for row in range(10)]
     names = {str(index): f"Site{index}" for index in range(10)}
     report = "\n".join(_matrix_table("χ", matrix, names, unit="eV⁻¹"))
-    assert "sitios perturbados 1–8" in report
-    assert "sitios perturbados 9–10" in report
-    assert report.count("Sitio observado \\ Sitio perturbado") == 2
+    assert "Perturbed-site columns 1–8." in report
+    assert "Perturbed-site columns 9–10." in report
+    assert report.count("Observed site \\ Perturbed site") == 2
 
 
 def test_v3_report_renders_occupation_token_half_widths_and_v2_uses_trace_widths():
@@ -436,7 +436,7 @@ def test_v3_report_renders_occupation_token_half_widths_and_v2_uses_trace_widths
         }],
     }
     report = render_lr_u_report(result)
-    assert "½ ancho del observable impreso (ref/BARE/SCREENED, e)" in report
+    assert "Printed observable half-width (ref/BARE/SCREENED, e)" in report
     assert "5e-07 / 6e-07 / 7e-07" in report
     assert "5e-05 / 5e-05 / 5e-05" not in report
 
@@ -450,7 +450,7 @@ def test_rounding_footer_attributes_the_bound_to_each_schema_source():
     v2 = analyze_verified_lr(observations, LRAnalysisPolicy(estimator="auto"))
     report_v3 = render_lr_u_report(v3)
     report_v2 = render_lr_u_report(v2)
-    assert "tokens del total `Occupations:` impreso" in report_v3
-    assert "tokens diagonales impresos de la traza de matriz" not in report_v3
-    assert "tokens diagonales impresos de la traza de matriz" in report_v2
-    assert "tokens del total `Occupations:` impreso" not in report_v2
+    assert "printed `Occupations:` total tokens" in report_v3
+    assert "printed diagonal tokens in the matrix trace" not in report_v3
+    assert "printed diagonal tokens in the matrix trace" in report_v2
+    assert "printed `Occupations:` total tokens" not in report_v2

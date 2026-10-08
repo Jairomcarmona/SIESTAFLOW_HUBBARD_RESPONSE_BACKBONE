@@ -39,12 +39,12 @@ def _as_float(value: str) -> float:
 
 def _require_normal_completion(text: str) -> None:
     if _FAILURE.search(text):
-        raise ReferenceMagneticEvidenceError("SIESTA reporta fallo o SCF no convergida")
+        raise ReferenceMagneticEvidenceError("SIESTA reports a failure or unconverged SCF")
     normal = re.search(r"siesta:\s*normal completion", text, re.IGNORECASE)
     end_of_run = re.search(r">>\s*End of run:", text, re.IGNORECASE)
     job_completed = re.search(r"^\s*Job completed\s*$", text, re.IGNORECASE | re.MULTILINE)
     if not normal and not (end_of_run and job_completed):
-        raise ReferenceMagneticEvidenceError("La salida no acredita terminación normal de SIESTA")
+        raise ReferenceMagneticEvidenceError("Output does not establish normal SIESTA termination")
 
 
 def parse_final_collinear_mulliken_sz(output_text: str, atom_count: int) -> np.ndarray:
@@ -56,7 +56,7 @@ def parse_final_collinear_mulliken_sz(output_text: str, atom_count: int) -> np.n
     unusable for a symmetry operation on the full cell.
     """
     if not isinstance(atom_count, int) or atom_count <= 0:
-        raise ReferenceMagneticEvidenceError("Número de átomos inválido")
+        raise ReferenceMagneticEvidenceError("Atom count must be a positive integer")
     _require_normal_completion(output_text)
     lines = output_text.splitlines()
     candidates: list[dict[int, float]] = []
@@ -93,27 +93,28 @@ def parse_final_collinear_mulliken_sz(output_text: str, atom_count: int) -> np.n
             candidates.append(rows)
     if not candidates:
         raise ReferenceMagneticEvidenceError(
-            "No hay tabla Mulliken final, completa y colineal para todos los átomos"
+            "No complete final collinear Mulliken table was found for all atoms"
         )
     return np.asarray([[0.0, 0.0, candidates[-1][index]] for index in range(1, atom_count + 1)], dtype=float)
 
 
 def _is_explicitly_nonpolarized(fdf_text: str, output_text: str) -> bool:
     """Verify the non-magnetic mode in both declared input and executed output."""
-    fdf_nonpolarized = re.search(
-        r"^\s*Spin\s+non-polarized\s*$", fdf_text, re.IGNORECASE | re.MULTILINE
-    )
+    fdf_nonpolarized = re.search(r"^\s*Spin\s+non-polarized\s*$", fdf_text, re.IGNORECASE | re.MULTILINE)
     reported_none = re.search(
         r"^\s*redata:\s*Spin configuration\s*=\s*none\s*$",
-        output_text, re.IGNORECASE | re.MULTILINE,
+        output_text,
+        re.IGNORECASE | re.MULTILINE,
     )
     one_component = re.search(
         r"^\s*redata:\s*Number of spin components\s*=\s*1\s*$",
-        output_text, re.IGNORECASE | re.MULTILINE,
+        output_text,
+        re.IGNORECASE | re.MULTILINE,
     )
     time_reversal = re.search(
         r"^\s*redata:\s*Time-Reversal Symmetry\s*=\s*T\s*$",
-        output_text, re.IGNORECASE | re.MULTILINE,
+        output_text,
+        re.IGNORECASE | re.MULTILINE,
     )
     return bool(fdf_nonpolarized and reported_none and one_component and time_reversal)
 
@@ -122,12 +123,14 @@ def reference_moments_from_fdf_and_output(fdf_text: str, output_text: str) -> tu
     """Return moments only for a verified collinear or explicitly nonpolarized run."""
     match = re.search(r"^\s*NumberOfAtoms\s+(\d+)\s*$", fdf_text, re.IGNORECASE | re.MULTILINE)
     if not match:
-        raise ReferenceMagneticEvidenceError("La FDF no declara NumberOfAtoms")
+        raise ReferenceMagneticEvidenceError("FDF does not declare NumberOfAtoms")
     atom_count = int(match.group(1))
     _require_normal_completion(output_text)
     if _is_explicitly_nonpolarized(fdf_text, output_text):
         return np.zeros((atom_count, 3), dtype=float), "siesta_5_4_explicit_nonpolarized_v1"
-    return parse_final_collinear_mulliken_sz(output_text, atom_count), "siesta_5_4_final_collinear_mulliken_sz_v1"
+    return parse_final_collinear_mulliken_sz(
+        output_text, atom_count
+    ), "siesta_5_4_final_collinear_mulliken_sz_v1"
 
 
 def build_reference_magnetic_evidence(
