@@ -1,5 +1,6 @@
 import re
 import numpy as np
+from decimal import Decimal
 from typing import List, Dict, Tuple, Optional
 from hubbardflow.siesta_backend.parser_models import (
     HubbardAtomPopulation,
@@ -108,6 +109,10 @@ def parse_hubbard_population_events(output_content: str) -> List[HubbardPopulati
         elif len(sum_parts) == 2:
             printed_up = float(sum_parts[0])
             printed_down = float(sum_parts[1])  # same in non-pol
+            if not has_down and Decimal(sum_parts[0]) != Decimal(sum_parts[1]):
+                raise UnsupportedSpinFormat(
+                    f"Atom {current_atom_idx}: one-column matrix requires two equal per-spin Occupations values"
+                )
             printed_total = printed_up + printed_down
         else:
             raise UnsupportedSpinFormat(f"Atom {current_atom_idx}: Unknown Occupations format: {current_summary_line}")

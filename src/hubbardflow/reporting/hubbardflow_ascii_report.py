@@ -55,6 +55,11 @@ def render_hubbardflow_out(source: Mapping[str, Any]) -> str:
     context = _map(source.get("context"))
     dataset = _map(analysis.get("response_observation_dataset"))
     provenance = _map(source.get("occupation_provenance"))
+    provenance_records = provenance.get("records")
+    total_derived = isinstance(provenance_records, list) and any(
+        isinstance(item, Mapping) and item.get("total_derived") is True
+        for item in provenance_records
+    )
     state_gate = _map(source.get("state_gate"))
     campaign = _map(analysis.get("campaign"))
     primary = _map(analysis.get("primary"))
@@ -121,6 +126,8 @@ def render_hubbardflow_out(source: Mapping[str, Any]) -> str:
     lines.append(
         f"  Material: {_value(campaign.get('material'))}; functional: {_value(system.get('functional'))}"
     )
+    if total_derived:
+        lines.append("  spin treatment: non-polarized; occupation = 2 x printed per-spin value")
     lines.append(
         f"  Geometry: {_value(geometry.get('number_of_atoms'))} atoms; "
         f"{_value(geometry.get('number_of_species'))} species; "
@@ -385,6 +392,13 @@ def render_hubbardflow_out(source: Mapping[str, Any]) -> str:
                     f"U*abs(CHI0_ii)={_value(item.get('u_times_abs_chi0'))}; "
                     f"status={_value(item.get('regime_indicator_status'))}"
                 )
+        if total_derived:
+            lines.append("  Reference total d-shell occupation (derived from printed per-spin values):")
+            for item in projector_sites:
+                if isinstance(item, Mapping):
+                    lines.append(
+                        f"    {item.get('site_id')}: {_value(item.get('reference_occupation_e'))} e"
+                    )
     else:
         lines.append("  Occupation/formal/free-atom and U*abs(CHI0): NOT_ASSESSED")
 

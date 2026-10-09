@@ -53,9 +53,10 @@ class ObservationAssembler:
         sites: list[dict[str, Any]],
         *,
         minimum_decimal_places: int | None,
+        fdf_text: str | None = None,
     ) -> list[float]:
         printed = read_printed_occupation_precision(
-            output_content, event, minimum_decimal_places=minimum_decimal_places
+            output_content, event, minimum_decimal_places=minimum_decimal_places, fdf_text=fdf_text
         )
         expected = [int(site["atom_index"]) for site in sites]
         if len(printed) != len(event.atoms) or any(index not in printed for index in expected):
@@ -69,6 +70,7 @@ class ObservationAssembler:
         sites: list[dict[str, Any]],
         *,
         minimum_decimal_places: int | None,
+        fdf_text: str | None = None,
     ) -> list[float] | None:
         """Enclose printing plus conversion/summation of Occupations tokens.
 
@@ -78,7 +80,7 @@ class ObservationAssembler:
         """
         try:
             precision = read_printed_occupation_precision(
-                output_content, event, minimum_decimal_places=minimum_decimal_places
+                output_content, event, minimum_decimal_places=minimum_decimal_places, fdf_text=fdf_text
             )
         except (ValueError, KeyError, IndexError):
             return None
@@ -184,10 +186,12 @@ class ObservationAssembler:
         fdf_text = reference_fdf.read_text(encoding="utf-8", errors="replace")
         reference_event = select_converged_screened_event(output_text)
         reference_occ = self.event_occupations(
-            output_text, reference_event, sites, minimum_decimal_places=minimum_decimal_places
+            output_text, reference_event, sites, minimum_decimal_places=minimum_decimal_places,
+            fdf_text=fdf_text,
         )
         reference_trace_half_widths = self.event_trace_half_widths(
-            output_text, reference_event, sites, minimum_decimal_places=minimum_decimal_places
+            output_text, reference_event, sites, minimum_decimal_places=minimum_decimal_places,
+            fdf_text=fdf_text,
         )
         reference_moments, magnetic_parser = reference_moments_from_fdf_and_output(fdf_text, output_text)
 
@@ -240,31 +244,40 @@ class ObservationAssembler:
                     ) from exc
                 bare_output = Path(bare_record["command"]["stdout_path"])
                 screened_output = Path(screened_record["command"]["stdout_path"])
+                bare_fdf_path = Path(bare_record["command"]["stdin_path"])
+                screened_fdf_path = Path(screened_record["command"]["stdin_path"])
                 bare_hashes = verify_record_artifacts(bare_record, bare_node.node_id)
                 screened_hashes = verify_record_artifacts(screened_record, screened_node.node_id)
                 bare_text = bare_output.read_text(encoding="utf-8", errors="replace")
-                bare_event = admitted.factory.bare_profile.select_response(bare_text).response_event
+                bare_fdf_text = bare_fdf_path.read_text(encoding="utf-8", errors="replace")
+                bare_event = admitted.factory.bare_profile.select_response(
+                    bare_text, fdf_text=bare_fdf_text
+                ).response_event
                 screened_text = screened_output.read_text(encoding="utf-8", errors="replace")
+                screened_fdf_text = screened_fdf_path.read_text(encoding="utf-8", errors="replace")
                 screened_event = select_converged_screened_event(screened_text)
                 bare_occ = self.event_occupations(
-                    bare_text, bare_event, sites, minimum_decimal_places=minimum_decimal_places
+                    bare_text, bare_event, sites, minimum_decimal_places=minimum_decimal_places,
+                    fdf_text=bare_fdf_text,
                 )
                 screened_occ = self.event_occupations(
-                    screened_text, screened_event, sites, minimum_decimal_places=minimum_decimal_places
+                    screened_text, screened_event, sites, minimum_decimal_places=minimum_decimal_places,
+                    fdf_text=screened_fdf_text,
                 )
                 bare_half_widths = self.event_trace_half_widths(
-                    bare_text, bare_event, sites, minimum_decimal_places=minimum_decimal_places
+                    bare_text, bare_event, sites, minimum_decimal_places=minimum_decimal_places,
+                    fdf_text=bare_fdf_text,
                 )
                 screened_half_widths = self.event_trace_half_widths(
-                    screened_text, screened_event, sites, minimum_decimal_places=minimum_decimal_places
+                    screened_text, screened_event, sites, minimum_decimal_places=minimum_decimal_places,
+                    fdf_text=screened_fdf_text,
                 )
                 if bare_half_widths is not None:
                     trace_half_widths_electron[(site_index, float(alpha), "bare")] = bare_half_widths
                 if screened_half_widths is not None:
                     trace_half_widths_electron[(site_index, float(alpha), "screened")] = screened_half_widths
-                screened_fdf = Path(screened_record["command"]["stdin_path"])
                 moments, screened_magnetic_parser = reference_moments_from_fdf_and_output(
-                    screened_fdf.read_text(encoding="utf-8", errors="replace"), screened_text
+                    screened_fdf_text, screened_text
                 )
                 difference = float(abs(moments - reference_moments).max())
                 branch_differences.append(difference)

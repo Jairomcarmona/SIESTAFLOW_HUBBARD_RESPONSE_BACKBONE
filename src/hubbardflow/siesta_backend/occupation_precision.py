@@ -1,4 +1,5 @@
 """Read decimal precision from SIESTA population events and summaries."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -8,6 +9,7 @@ import math
 import re
 
 from .parser_models import HubbardPopulationEvent
+from .reference_magnetic_evidence import require_verified_population_spin_mode
 
 
 _ATOM_RE = re.compile(r"hubbard_term:\s+atom,\s+species:\s+(\d+)\s+(\d+)")
@@ -24,6 +26,8 @@ class PrintedOccupation:
     value_decimal: str
     half_width_exact: str
     certification_tokens: tuple[str, ...]
+    per_spin_occupation_e: float | None = None
+    total_derived: bool = False
 
 
 @dataclass(frozen=True)
@@ -47,6 +51,7 @@ def read_printed_occupation_precision(
     event: HubbardPopulationEvent,
     *,
     minimum_decimal_places: int | None = None,
+    fdf_text: str | None = None,
 ) -> dict[int, PrintedOccupation]:
     """Map each event atom to SIESTA's summary total and its rounding interval.
 
@@ -61,14 +66,20 @@ def read_printed_occupation_precision(
         or minimum_decimal_places < 0
     ):
         raise ValueError("minimum_decimal_places must be a nonnegative integer when supplied")
+    nonpolarized = require_verified_population_spin_mode(event, fdf_text, output_content)
     start, end = event.source_start_line, event.source_end_line
     lines = output_content.splitlines()
-    if (not isinstance(start, int) or not isinstance(end, int) or start < 0
-            or end < start or end >= len(lines)):
+    if (
+        not isinstance(start, int)
+        or not isinstance(end, int)
+        or start < 0
+        or end < start
+        or end >= len(lines)
+    ):
         raise ValueError("selected population event has invalid source line bounds")
     found: dict[int, PrintedOccupation] = {}
     current_atom: int | None = None
-    for line in lines[start:end + 1]:
+    for line in lines[start : end + 1]:
         atom_match = _ATOM_RE.search(line)
         if atom_match:
             if current_atom is not None:
@@ -80,6 +91,8 @@ def read_printed_occupation_precision(
         if current_atom is None:
             raise ValueError("population event has an Occupations summary without an atom")
         tokens = _NUMBER_RE.findall(line.split("Occupations:", 1)[1])
+        per_spin_value: float | None = None
+        total_derived = False
         if len(tokens) == 3:
             total = float(tokens[2])
             half_width, decimal_places = _half_step(tokens[2])
@@ -89,7 +102,11 @@ def read_printed_occupation_precision(
             places = len(mantissa.split(".", 1)[1]) if "." in mantissa else 0
             exact_half_width = Fraction(1, 2) * Fraction(10) ** ((int(exponent) if sep else 0) - places)
         elif len(tokens) == 2:
+            if nonpolarized and Decimal(tokens[0]) != Decimal(tokens[1]):
+                raise ValueError(f"non-polarized Occupations values differ for atom {current_atom}")
             total = float(tokens[0]) + float(tokens[1])
+            per_spin_value = float(tokens[0]) if nonpolarized else None
+            total_derived = nonpolarized
             first_width, first_places = _half_step(tokens[0])
             second_width, second_places = _half_step(tokens[1])
             half_width = first_width + second_width
@@ -111,9 +128,16 @@ def read_printed_occupation_precision(
         if current_atom in found:
             raise ValueError(f"duplicate Occupations summary for atom {current_atom}")
         found[current_atom] = PrintedOccupation(
-            current_atom, total, half_width, decimal_places, tuple(tokens),
-            value_decimal, str(exact_half_width),
+            current_atom,
+            total,
+            half_width,
+            decimal_places,
+            tuple(tokens),
+            value_decimal,
+            str(exact_half_width),
             certification_tokens,
+            per_spin_value,
+            total_derived,
         )
         current_atom = None
     expected = {atom.atom_index: atom for atom in event.atoms}
@@ -129,6 +153,8 @@ def read_printed_occupation_precision(
 def read_printed_matrix_trace_precision(
     output_content: str,
     event: HubbardPopulationEvent,
+    *,
+    fdf_text: str | None = None,
 ) -> dict[int, PrintedMatrixTrace]:
     """Bound rounding in the matrix diagonal tokens used by ``trace_total``.
 
@@ -138,10 +164,16 @@ def read_printed_matrix_trace_precision(
     every up-channel half-step.  ``Occupations:`` summaries are deliberately
     not used here because they are a different printed observable.
     """
+    require_verified_population_spin_mode(event, fdf_text, output_content)
     start, end = event.source_start_line, event.source_end_line
     lines = output_content.splitlines()
-    if (not isinstance(start, int) or not isinstance(end, int) or start < 0
-            or end < start or end >= len(lines)):
+    if (
+        not isinstance(start, int)
+        or not isinstance(end, int)
+        or start < 0
+        or end < start
+        or end >= len(lines)
+    ):
         raise ValueError("selected population event has invalid source line bounds")
 
     matrix_line = re.compile(
@@ -174,17 +206,25 @@ def read_printed_matrix_trace_precision(
         if not has_down and any(token is not None for token in down_tokens):
             raise ValueError(f"unexpected down-spin diagonal tokens for atom {current_atom}")
         up_values = [float(token) for token in up_tokens]
-        if not all(math.isclose(value, float(atom.raw_matrix_up[i, i]), rel_tol=0.0, abs_tol=1e-12)
-                   for i, value in enumerate(up_values)):
-            raise ValueError(f"raw up-spin diagonal tokens disagree with event matrix for atom {current_atom}")
+        if not all(
+            math.isclose(value, float(atom.raw_matrix_up[i, i]), rel_tol=0.0, abs_tol=1e-12)
+            for i, value in enumerate(up_values)
+        ):
+            raise ValueError(
+                f"raw up-spin diagonal tokens disagree with event matrix for atom {current_atom}"
+            )
         up_total = math.fsum(up_values)
         terms = list(up_tokens)
         if has_down:
             down_values = [float(token) for token in down_tokens if token is not None]
             assert atom.raw_matrix_down is not None
-            if not all(math.isclose(value, float(atom.raw_matrix_down[i, i]), rel_tol=0.0, abs_tol=1e-12)
-                       for i, value in enumerate(down_values)):
-                raise ValueError(f"raw down-spin diagonal tokens disagree with event matrix for atom {current_atom}")
+            if not all(
+                math.isclose(value, float(atom.raw_matrix_down[i, i]), rel_tol=0.0, abs_tol=1e-12)
+                for i, value in enumerate(down_values)
+            ):
+                raise ValueError(
+                    f"raw down-spin diagonal tokens disagree with event matrix for atom {current_atom}"
+                )
             total = up_total + math.fsum(down_values)
             terms.extend(token for token in down_tokens if token is not None)
         else:
@@ -203,7 +243,7 @@ def read_printed_matrix_trace_precision(
         current_atom = None
         diagonal_tokens = {}
 
-    for line in lines[start:end + 1]:
+    for line in lines[start : end + 1]:
         atom_match = _ATOM_RE.search(line)
         if atom_match:
             finish_atom()

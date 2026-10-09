@@ -3,6 +3,7 @@ from hashlib import sha256
 import os
 from pathlib import Path
 import re
+from types import SimpleNamespace
 
 import pytest
 
@@ -11,18 +12,21 @@ from hubbardflow.execution.source_evidence import (
     source_manifest_identity_sha256, validate_source_manifest,
 )
 from hubbardflow.siesta_backend.siesta542_bare_profile import Siesta542PotentialShiftHamiltonianProfile
+from hubbardflow.siesta_backend.event_parser import parse_hubbard_population_events
 
 
-def _manifest(root: Path) -> dict:
-    out = Path(__file__).resolve().parents[2] / "examples" / "MnO_BARE_+0.05.out"
+def _manifest(root: Path, *, out_source: Path | None = None, input_fdf: str | None = None) -> dict:
+    out = out_source or Path(__file__).resolve().parents[2] / "examples" / "MnO_BARE_+0.05.out"
     target = root / "response.out"
     target.write_bytes(out.read_bytes())
     parent = root / "reference.DM"
     parent.write_bytes(b"reference dm fixture\n")
     text = target.read_text(encoding="utf-8", errors="replace")
-    event = Siesta542PotentialShiftHamiltonianProfile().select_response(text).response_event
+    event = Siesta542PotentialShiftHamiltonianProfile().select_response(
+        text, fdf_text=input_fdf
+    ).response_event
     from hubbardflow.siesta_backend.occupation_precision import read_printed_occupation_precision
-    atom_indices = sorted(read_printed_occupation_precision(text, event))
+    atom_indices = sorted(read_printed_occupation_precision(text, event, fdf_text=input_fdf))
     out_hash = sha256(target.read_bytes()).hexdigest()
     parent_hash = sha256(parent.read_bytes()).hexdigest()
     node_hash = "a" * 64
@@ -53,6 +57,10 @@ def _manifest(root: Path) -> dict:
         "backend_identity": backend, "scientific_profile_id": profile,
         "parser_id": parser, "atom_indices": atom_indices,
     }
+    if input_fdf is not None:
+        fdf_path = root / "input.fdf"
+        fdf_path.write_text(input_fdf, encoding="utf-8", newline="\n")
+        row["fdf_path"] = fdf_path.name
     manifest = {
         "schema_version": "source_evidence_manifest.v1", "campaign_uuid": "fixture",
         "generation_version": "test-v1", "matrix_dimension": len(atom_indices), "polynomial_degree": 1,
@@ -82,6 +90,26 @@ def test_out_reextraction_produces_stable_scientific_tokens(tmp_path):
     second = extract_verified_response_tokens(manifest, tmp_path)
     assert first["observations"][0]["occupation_tokens"]
     assert scientific_tokens_sha256(first) == scientific_tokens_sha256(second)
+
+
+def test_nonpolarized_out_reextraction_uses_manifest_fdf(tmp_path, monkeypatch):
+    fixture = Path(__file__).resolve().parents[1] / "fixtures" / "cu3n_nonpol_excerpt.txt"
+    output_text = fixture.read_text(encoding="utf-8")
+    event = parse_hubbard_population_events(output_text)[0]
+    fdf_text = "Spin non-polarized\n"
+    observed_fdf: list[str | None] = []
+
+    def select_response(self, content, *, fdf_text=None):
+        observed_fdf.append(fdf_text)
+        return SimpleNamespace(response_event=event)
+
+    monkeypatch.setattr(Siesta542PotentialShiftHamiltonianProfile, "select_response", select_response)
+    manifest = _manifest(tmp_path, out_source=fixture, input_fdf=fdf_text)
+
+    dataset = extract_verified_response_tokens(manifest, tmp_path)
+
+    assert observed_fdf == [fdf_text, fdf_text]
+    assert dataset["observations"][0]["occupation_tokens"] == [["4.792367", "4.792367"]]
 
 
 def test_manifest_schema_and_semantic_identity_exclude_operational_paths(tmp_path):
@@ -130,6 +158,14 @@ def test_manifest_rejects_paths_outside_campaign_root(tmp_path, path):
         extract_verified_response_tokens(manifest, tmp_path)
 
 
+@pytest.mark.parametrize("path", ["../input.fdf", "/input.fdf", "C:/input.fdf"])
+def test_manifest_rejects_fdf_paths_outside_campaign_root(tmp_path, path):
+    manifest = _manifest(tmp_path)
+    manifest["observations"][0]["fdf_path"] = path
+    with pytest.raises(SourceEvidenceError, match="campaign-relative"):
+        extract_verified_response_tokens(manifest, tmp_path)
+
+
 def test_manifest_rejects_duplicate_node_ids(tmp_path):
     manifest = _manifest(tmp_path)
     duplicate = dict(manifest["observations"][0])
@@ -160,11 +196,15 @@ def test_parent_dm_mutation_is_a_traceability_warning(tmp_path):
     assert "PARENT_DM_DIGEST_MISMATCH" in {item["reason_code"] for item in dataset["traceability_warnings"]}
 
 
-@pytest.mark.parametrize("role", ["out", "receipt", "parent_dm"])
+@pytest.mark.parametrize("role", ["out", "receipt", "parent_dm", "fdf"])
 def test_symlink_to_external_primary_evidence_is_rejected(tmp_path, role):
     manifest = _manifest(tmp_path)
     row = manifest["observations"][0]
-    locator_key = {"out": "out_path", "receipt": "receipt_path", "parent_dm": "parent_dm_path"}[role]
+    locator_key = {"out": "out_path", "receipt": "receipt_path", "parent_dm": "parent_dm_path", "fdf": "fdf_path"}[role]
+    if role == "fdf":
+        input_fdf = tmp_path / "input.fdf"
+        input_fdf.write_text("Spin polarized\n", encoding="utf-8")
+        row[locator_key] = input_fdf.name
     original = tmp_path / row[locator_key]
     outside_dir = tmp_path.parent / f"{tmp_path.name}-outside-{role}"
     outside_dir.mkdir(parents=True, exist_ok=True)

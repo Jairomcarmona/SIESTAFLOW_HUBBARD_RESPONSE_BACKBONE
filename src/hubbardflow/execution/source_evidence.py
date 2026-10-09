@@ -131,7 +131,7 @@ def validate_source_manifest(manifest: Mapping[str, Any]) -> None:
     for item in (manifest.get("observations", []) if isinstance(manifest, Mapping) else []):
         if not isinstance(item, Mapping):
             continue
-        for key in ("out_path", "receipt_path", "parent_dm_path"):
+        for key in ("out_path", "receipt_path", "parent_dm_path", "fdf_path"):
             value = item.get(key)
             if isinstance(value, str):
                 normalized = value.replace("\\", "/")
@@ -239,6 +239,10 @@ def extract_verified_response_tokens(
             out_text = out_bytes.decode("utf-8", errors="replace")
         except (json.JSONDecodeError, UnicodeDecodeError) as exc:
             raise SourceEvidenceError("INVALID_SOURCE_EVIDENCE: source artifact is unreadable") from exc
+        fdf_text: str | None = None
+        if row.get("fdf_path") is not None:
+            _, fdf_bytes = _safe_relative_file(root, str(row["fdf_path"]))
+            fdf_text = fdf_bytes.decode("utf-8", errors="replace")
         if (receipt.get("node_id") != row["node_id"] or receipt.get("state") != "VALIDATED"
                 or receipt.get("campaign_uuid") != campaign_uuid
                 or receipt.get("parent_dm_loaded") is not True
@@ -261,14 +265,16 @@ def extract_verified_response_tokens(
         try:
             if parser_id == "siesta-5.4.2-bare-first-iteration-v1":
                 from hubbardflow.siesta_backend.siesta542_bare_profile import Siesta542PotentialShiftHamiltonianProfile
-                event = Siesta542PotentialShiftHamiltonianProfile().select_response(out_text).response_event
+                event = Siesta542PotentialShiftHamiltonianProfile().select_response(
+                    out_text, fdf_text=fdf_text
+                ).response_event
             elif parser_id == "siesta-5.4.2-screened-dmout-v1":
                 from hubbardflow.siesta_backend.siesta542_screened_selection import select_converged_screened_event
                 event = select_converged_screened_event(out_text)
             else:
                 raise SourceEvidenceError("INVALID_SOURCE_EVIDENCE: undeclared response parser")
             from hubbardflow.siesta_backend.occupation_precision import read_printed_occupation_precision
-            parsed = read_printed_occupation_precision(out_text, event)
+            parsed = read_printed_occupation_precision(out_text, event, fdf_text=fdf_text)
             sites = [int(value) for value in row["atom_indices"]]
             tokens = [[parsed[index].certification_tokens[k] for k in range(len(parsed[index].certification_tokens))]
                       for index in sites]

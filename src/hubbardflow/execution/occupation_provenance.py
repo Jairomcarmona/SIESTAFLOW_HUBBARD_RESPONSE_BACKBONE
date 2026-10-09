@@ -48,6 +48,8 @@ class OccupationProvenanceRecord:
     output_sha256_recorded: str | None
     output_sha256_observed: str | None
     traceability_warnings: tuple[str, ...] = ()
+    per_spin_occupation_e: float | None = None
+    total_derived: bool = False
 
     def to_mapping(self) -> dict[str, Any]:
         return {
@@ -68,6 +70,8 @@ class OccupationProvenanceRecord:
             "output_sha256_recorded": self.output_sha256_recorded,
             "output_sha256_observed": self.output_sha256_observed,
             "traceability_warnings": list(self.traceability_warnings),
+            "per_spin_occupation_e": self.per_spin_occupation_e,
+            "total_derived": self.total_derived,
         }
 
 
@@ -113,9 +117,10 @@ def _select_event(
     output_text: str,
     mode: str,
     bare_profile: Siesta542PotentialShiftHamiltonianProfile,
+    fdf_text: str | None,
 ) -> HubbardPopulationEvent:
     if mode == "BARE":
-        return bare_profile.select_response(output_text).response_event
+        return bare_profile.select_response(output_text, fdf_text=fdf_text).response_event
     if mode in {"SCREENED", "REFERENCE_SCREENED"}:
         return select_converged_screened_event(output_text)
     raise ValueError(f"unsupported occupation provenance mode: {mode}")
@@ -144,6 +149,8 @@ def _resolved_source(
     occurrence: int | None = None
     occupation_at_source: float | None = None
     source_minus_analysis: float | None = None
+    per_spin_occupation: float | None = None
+    total_derived = False
     source_status = "AVAILABLE"
     if output_path is None:
         source_status = "NOT_ASSESSED"
@@ -155,7 +162,12 @@ def _resolved_source(
             if recorded_sha and output_sha != recorded_sha:
                 warnings.append("OUTPUT_SHA256_DIFFERS_FROM_RECORDED_VALUE")
             output_text = raw.decode("utf-8", errors="replace")
-            event = _select_event(output_text, mode, bare_profile)
+            raw_fdf_path = source.get("fdf_path")
+            fdf_path = Path(str(raw_fdf_path)) if raw_fdf_path else None
+            if fdf_path is not None and not fdf_path.is_absolute():
+                fdf_path = root / fdf_path
+            fdf_text = None if fdf_path is None else fdf_path.read_text(encoding="utf-8", errors="replace")
+            event = _select_event(output_text, mode, bare_profile, fdf_text)
             if event.source_start_line is None:
                 source_status = "NOT_ASSESSED"
                 warnings.append("SELECTED_BLOCK_START_LINE_MISSING")
@@ -167,8 +179,11 @@ def _resolved_source(
                     warnings.append("ANALYSIS_ATOM_INDEX_MISSING")
                 else:
                     try:
-                        printed = read_printed_occupation_precision(output_text, event)
-                        occupation_at_source = float(printed[atom_index].total)
+                        printed = read_printed_occupation_precision(output_text, event, fdf_text=fdf_text)
+                        measurement = printed[atom_index]
+                        occupation_at_source = float(measurement.total)
+                        per_spin_occupation = measurement.per_spin_occupation_e
+                        total_derived = measurement.total_derived
                         source_minus_analysis = occupation_at_source - occupation_electron
                         if source_minus_analysis != 0.0:
                             warnings.append("SOURCE_OCCUPATION_VALUE_DIFFERS_FROM_ANALYSIS")
@@ -197,6 +212,8 @@ def _resolved_source(
         output_sha256_recorded=recorded_sha,
         output_sha256_observed=output_sha,
         traceability_warnings=tuple(sorted(set(warnings))),
+        per_spin_occupation_e=per_spin_occupation,
+        total_derived=total_derived,
     )
 
 

@@ -15,9 +15,15 @@ from typing import Any
 
 import numpy as np
 
+from hubbardflow.siesta_backend.parser_models import HubbardPopulationEvent
+
 
 class ReferenceMagneticEvidenceError(ValueError):
     """The output cannot certify a collinear converged reference state."""
+
+
+class PopulationSpinEvidenceError(ValueError):
+    """A population matrix's spin representation is not verified by input and output."""
 
 
 _TABLE_HEADER = re.compile(r"^\s*Atom\s+#.*\bSz\s*\[e\].*\bSpecies\s*$", re.IGNORECASE)
@@ -98,25 +104,69 @@ def parse_final_collinear_mulliken_sz(output_text: str, atom_count: int) -> np.n
     return np.asarray([[0.0, 0.0, candidates[-1][index]] for index in range(1, atom_count + 1)], dtype=float)
 
 
-def _is_explicitly_nonpolarized(fdf_text: str, output_text: str) -> bool:
-    """Verify the non-magnetic mode in both declared input and executed output."""
-    fdf_nonpolarized = re.search(r"^\s*Spin\s+non-polarized\s*$", fdf_text, re.IGNORECASE | re.MULTILINE)
+def _fdf_declares_nonpolarized(fdf_text: str) -> bool:
+    return bool(re.search(r"^\s*Spin\s+non-polarized\s*$", fdf_text, re.IGNORECASE | re.MULTILINE))
+
+
+def _output_attests_nonpolarized(output_text: str) -> bool:
+    source_prefix = r"(?:\d+\s*:\s*)?"
     reported_none = re.search(
-        r"^\s*redata:\s*Spin configuration\s*=\s*none\s*$",
+        r"^\s*" + source_prefix + r"redata:\s*Spin configuration\s*=\s*none\s*$",
         output_text,
         re.IGNORECASE | re.MULTILINE,
     )
     one_component = re.search(
-        r"^\s*redata:\s*Number of spin components\s*=\s*1\s*$",
+        r"^\s*" + source_prefix + r"redata:\s*Number of spin components\s*=\s*1\s*$",
         output_text,
         re.IGNORECASE | re.MULTILINE,
     )
     time_reversal = re.search(
-        r"^\s*redata:\s*Time-Reversal Symmetry\s*=\s*T\s*$",
+        r"^\s*" + source_prefix + r"redata:\s*Time-Reversal Symmetry\s*=\s*T\s*$",
         output_text,
         re.IGNORECASE | re.MULTILINE,
     )
-    return bool(fdf_nonpolarized and reported_none and one_component and time_reversal)
+    return bool(reported_none and one_component and time_reversal)
+
+
+def is_explicitly_nonpolarized(fdf_text: str, output_text: str) -> bool:
+    """Verify non-polarized mode from both the declared FDF and SIESTA output."""
+    return _fdf_declares_nonpolarized(fdf_text) and _output_attests_nonpolarized(output_text)
+
+
+def _is_explicitly_nonpolarized(fdf_text: str, output_text: str) -> bool:
+    """Compatibility alias for the original local predicate."""
+    return is_explicitly_nonpolarized(fdf_text, output_text)
+
+
+def require_verified_population_spin_mode(
+    event: HubbardPopulationEvent,
+    fdf_text: str | None,
+    output_text: str,
+) -> bool:
+    """Return whether an event is verified non-polarized, rejecting mixed evidence.
+
+    SIESTA's one-column matrix is per spin only when both the FDF and output
+    attest non-polarized mode. Without that paired evidence, duplicating its
+    trace would silently change the physical occupation used by LR.
+    """
+    counts = {atom.channel_count for atom in event.atoms}
+    if not event.atoms or len(counts) != 1 or counts not in ({1}, {2}):
+        raise PopulationSpinEvidenceError("population event has an empty or mixed spin-channel inventory")
+
+    fdf_declares = fdf_text is not None and _fdf_declares_nonpolarized(fdf_text)
+    output_attests = _output_attests_nonpolarized(output_text)
+    if counts == {1}:
+        if fdf_text is None or not is_explicitly_nonpolarized(fdf_text, output_text):
+            raise PopulationSpinEvidenceError(
+                "one-column population matrix requires Spin non-polarized in the FDF and "
+                "Spin configuration=none, one spin component, and time-reversal symmetry in output"
+            )
+        return True
+    if fdf_declares or output_attests:
+        raise PopulationSpinEvidenceError(
+            "two-channel population matrix conflicts with explicit non-polarized FDF/output evidence"
+        )
+    return False
 
 
 def reference_moments_from_fdf_and_output(fdf_text: str, output_text: str) -> tuple[np.ndarray, str]:
@@ -126,7 +176,7 @@ def reference_moments_from_fdf_and_output(fdf_text: str, output_text: str) -> tu
         raise ReferenceMagneticEvidenceError("FDF does not declare NumberOfAtoms")
     atom_count = int(match.group(1))
     _require_normal_completion(output_text)
-    if _is_explicitly_nonpolarized(fdf_text, output_text):
+    if is_explicitly_nonpolarized(fdf_text, output_text):
         return np.zeros((atom_count, 3), dtype=float), "siesta_5_4_explicit_nonpolarized_v1"
     return parse_final_collinear_mulliken_sz(
         output_text, atom_count

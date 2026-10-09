@@ -18,6 +18,7 @@ from typing import ClassVar, Dict, Iterable, List
 
 from hubbardflow.siesta_backend.event_parser import parse_hubbard_population_events
 from hubbardflow.siesta_backend.parser_models import HubbardPopulationEvent
+from hubbardflow.siesta_backend.reference_magnetic_evidence import require_verified_population_spin_mode
 
 
 class Siesta542BareProfileError(ValueError):
@@ -91,7 +92,7 @@ class Siesta542PotentialShiftHamiltonianProfile:
                     "{0} must be {1!r}, got {2!r}".format(key, expected, actual)
                 )
 
-    def select_response(self, output_text: str) -> BareResponseSelection:
+    def select_response(self, output_text: str, *, fdf_text: str | None = None) -> BareResponseSelection:
         """Select the first-iteration response from a native 5.4.2 output.
 
         SIESTA 5.4.2 Hamiltonian mixing prints the parent DFT+U occupations
@@ -155,6 +156,13 @@ class Siesta542PotentialShiftHamiltonianProfile:
             raise Siesta542BareProfileError(
                 "Expected one populated parent DFTU first-iteration block before stepf"
             )
+        try:
+            parent_nonpolarized = require_verified_population_spin_mode(parent[0], fdf_text, output_text)
+            response_nonpolarized = require_verified_population_spin_mode(response, fdf_text, output_text)
+        except ValueError as exc:
+            raise Siesta542BareProfileError("Population spin representation is not verified: {0}".format(exc)) from exc
+        if parent_nonpolarized != response_nonpolarized:
+            raise Siesta542BareProfileError("Parent and response population blocks use different spin representations")
         return BareResponseSelection(parent[0], response, stepf_line, first_scf_line)
 
     @staticmethod
