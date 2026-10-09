@@ -10,7 +10,7 @@ from hubbardflow.execution.lr_dag import LRDagNode, LRNodeKind
 from hubbardflow.execution.runtime_adapters import NodeCommand
 from hubbardflow.domain.symmetry_reduction import PerturbationSpec, ResponseMode
 from hubbardflow.siesta_backend.backend_identity import sha256_file
-from hubbardflow.siesta_backend.command_factory import SiestaCampaignLayout
+from hubbardflow.siesta_backend.command_factory import SiestaCampaignLayout, SiestaCommandFactoryError
 from hubbardflow.siesta_backend.production_runtime import (
     AdmittedSiestaRuntime,
     SiestaProductionRuntimeError,
@@ -174,6 +174,38 @@ def test_admitted_runtime_materializes_bare_only_with_its_current_profile(tmp_pa
     assert "MaxSCFIterations 1" in fdf
     assert "SCF.Mix hamiltonian" in fdf
     assert runtime.validator.policy.bare_backend_admission == runtime.admission
+
+
+def test_response_projector_override_is_rejected_before_command_admission(tmp_path: Path):
+    executable = tmp_path / "siesta"
+    executable.write_bytes(b"known backend")
+    base_layout = _layout(tmp_path)
+    layout = SiestaCampaignLayout(
+        reference_fdf=base_layout.reference_fdf,
+        run_root=base_layout.run_root,
+        reference_dm=base_layout.reference_dm,
+        reference_dm_name=base_layout.reference_dm_name,
+        scf_level_overrides={"different-projector": {"DFTU.ProjectorGenerationMethod": 1}},
+    )
+    runtime = build_admitted_siesta542_runtime(
+        campaign_root=tmp_path,
+        contract=_contract_files(tmp_path, executable),
+        executable_path=executable,
+        profile=_profile(executable),
+        hosts=["host-a"],
+        layout=layout,
+    )
+    node = LRDagNode(
+        "response:projector-mismatch",
+        LRNodeKind.PERTURBATION,
+        ("reference",),
+        PerturbationSpec("mismatch", "orbit_001", 0, "M0", ResponseMode.SCREENED, 0.05, "direct"),
+        scf_level_id="different-projector",
+    )
+
+    with pytest.raises(SiestaCommandFactoryError, match="PROJECTOR_METHOD_MISMATCH"):
+        runtime.factory.command_for(node)
+    assert "response:projector-mismatch" not in runtime.factory.artifacts
 
 
 def test_runtime_rejects_a_weakened_validator_policy(tmp_path: Path):
