@@ -11,6 +11,7 @@ from pathlib import Path, PurePosixPath
 from typing import Any, Mapping
 
 from ..domain.hash_traceability import digest_warning
+from ..domain.geometry_preflight import GeometryPreflightError, GeometryThresholdPolicy
 from ..domain.adaptive_alpha_control import AdaptiveAlphaControlError, AdaptiveAlphaPolicy
 from ..domain.scientific_profile import (
     ScientificProfileError, profile_from_explicit_functional, require_lr_qualified,
@@ -186,6 +187,12 @@ def validate_psml(path: Path, expected_label: str, expected_z: int, functional: 
 def validate_lr_config(payload: Mapping[str, Any], fdf_species: Mapping[str, int], projector_sites: list[str], atom_count: int, *, inventory: CorrelatedSubspaceInventory | None = None) -> dict[str, Any]:
     if payload.get("schema") != CONFIG_SCHEMA:
         raise CampaignV2Error(f"lr-config schema must be {CONFIG_SCHEMA!r}")
+    geometry_policy = None
+    if "geometry_preflight" in payload:
+        try:
+            geometry_policy = GeometryThresholdPolicy.from_mapping(payload["geometry_preflight"])
+        except GeometryPreflightError as exc:
+            raise CampaignV2Error(f"invalid geometry_preflight policy: {exc}") from exc
     try:
         coverage_policy = campaign_coverage_policy(payload)
     except CampaignCoveragePolicyError as exc:
@@ -447,6 +454,8 @@ def validate_lr_config(payload: Mapping[str, Any], fdf_species: Mapping[str, int
         "observables": payload.get("observables", []),
         "magnetic_moment_tolerance_muB": magnetic_tolerance,
     }
+    if geometry_policy is not None:
+        normalized["geometry_preflight"] = geometry_policy.to_mapping()
     if "projector_diagnostic_references" in payload:
         normalized["projector_diagnostic_references"] = normalized_projector_references
     if shadow_rejection_policy is not None:

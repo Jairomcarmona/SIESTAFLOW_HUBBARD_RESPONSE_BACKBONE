@@ -410,6 +410,67 @@ def render_hubbardflow_out(source: Mapping[str, Any]) -> str:
     if not file_map:
         lines.append("  Campaign files: NOT_ASSESSED")
 
+    geometry_preflight = _map(source.get("geometry_preflight"))
+    lines.extend(_section_header("[14] REFERENCE GEOMETRY PREFLIGHT"))
+    lines.append(f"  Status: {_value(geometry_preflight.get('state'))}; role: RECORD_ONLY")
+    lines.append(
+        f"  Reference XC: {_value(geometry_preflight.get('xc_functional'))} / "
+        f"{_value(geometry_preflight.get('xc_authors'))}"
+    )
+    lines.append(f"  Reference output: {_value(geometry_preflight.get('reference_output_path'))}")
+    lines.append(
+        f"  Output SHA-256 (traceability only): {_value(geometry_preflight.get('reference_output_sha256'))}"
+    )
+    lines.append(
+        f"  Max force: {_value(geometry_preflight.get('maximum_force_ev_ang'))} eV/Ang; "
+        f"Res: {_value(geometry_preflight.get('residual_ev_ang'))} eV/Ang"
+    )
+    lines.append(
+        f"  Max constrained: {_value(geometry_preflight.get('maximum_constrained_force_ev_ang'))} "
+        f"eV/Ang; constraints detected: {_value(geometry_preflight.get('constraints_detected'))}"
+    )
+    stress = geometry_preflight.get("stress_voigt_kbar")
+    if isinstance(stress, list) and len(stress) == 6:
+        lines.append("  Stress Voigt x,y,z,yz,xz,xy (kbar):")
+        lines.append("    " + ", ".join(_value(item) for item in stress))
+    else:
+        lines.append("  Stress Voigt x,y,z,yz,xz,xy (kbar): NOT_ASSESSED")
+    lines.append(
+        f"  Mean pressure: {_value(geometry_preflight.get('mean_pressure_kbar'))} kbar; "
+        f"max shear: {_value(geometry_preflight.get('maximum_shear_kbar'))} kbar"
+    )
+    policy = _map(geometry_preflight.get("policy"))
+    lines.append(
+        "  Advisory limits: force "
+        f"{_value(policy.get('max_force_ev_ang'))} eV/Ang; abs pressure "
+        f"{_value(policy.get('max_abs_mean_pressure_kbar'))} kbar; shear "
+        f"{_value(policy.get('max_shear_kbar'))} kbar; source "
+        f"{_value(policy.get('declared_by'))}"
+    )
+    hubbard_context = geometry_preflight.get("hubbard_context")
+    if isinstance(hubbard_context, list) and hubbard_context:
+        for item in hubbard_context:
+            if isinstance(item, Mapping):
+                lines.append(
+                    f"  U context {item.get('label')}: U_ref={_value(item.get('u_ref_ev'))} eV; "
+                    f"J_ref={_value(item.get('j_ref_ev'))} eV; "
+                    f"PotentialShift={_value(item.get('potential_shift'))}"
+                )
+    else:
+        lines.append("  U context: NOT_ASSESSED")
+    source_lines = _map(geometry_preflight.get("source_lines"))
+    if source_lines:
+        lines.append(
+            "  Source lines: " + ", ".join(f"{key}={value}" for key, value in sorted(source_lines.items()))
+        )
+    lines.append("U computed for the geometry as supplied; no relaxation performed by HubbardFlow.")
+    lines.append("  Another-functional or PBE+U relaxed geometry may appear non-relaxed here.")
+    lines.append("  Advisory limits account for MeshCutoff, egg-box effects, and finite basis.")
+    lines.append("  No Pulay-stress attribution is made by this diagnostic.")
+    additional_states = geometry_preflight.get("additional_states")
+    if isinstance(additional_states, list) and additional_states:
+        lines.append("  Additional status: " + ", ".join(_value(item) for item in additional_states))
+
     lines.extend(_quality_check_lines(source, state_gate))
     lines.extend(_additional_report_sections(source, context, analysis, geometry, system, basis, k_grid))
     return "\n".join(_wrap_lines(lines)) + "\n"
