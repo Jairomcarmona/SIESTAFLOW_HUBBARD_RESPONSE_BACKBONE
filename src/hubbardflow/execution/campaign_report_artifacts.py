@@ -15,6 +15,7 @@ from typing import Any
 
 from hubbardflow.domain.projector_diagnostics import METHOD2_PROJECTOR_WARNING
 from hubbardflow.execution.campaign_store import atomic_json
+from hubbardflow.execution.geometry_preflight import build_geometry_preflight
 from hubbardflow.execution.report_csv_exports import export_report_csv
 from hubbardflow.reporting.hubbardflow_ascii_report import render_hubbardflow_out
 from hubbardflow.siesta_backend.fdf_model import FdfModel, parse_effective_fdf
@@ -387,6 +388,9 @@ def write_campaign_report_artifacts(
         "traceability_warnings": warnings,
         "campaign_state": dict(workflow_state) if isinstance(workflow_state, Mapping) else None,
         "quality_checks": _quality_checks(analysis),
+        "geometry_preflight": build_geometry_preflight(
+            root, campaign, _read_json(root / str(campaign.get("lr_config_file", "")))
+        ),
         "not_assessed_or_not_claimed": [
             "Cell-size, vacuum, and k-grid sensitivity: NOT_ASSESSED unless measured separately.",
             "This is not a self-consistent DFT+U result.",

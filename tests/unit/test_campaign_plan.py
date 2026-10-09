@@ -473,3 +473,27 @@ def test_fermi_tolerance_is_optional_and_enters_frozen_config(tmp_path: Path) ->
     assert configured["tol_Fermi_eV"] == 0.002
     assert configured["tol_Fermi_eV_source"] == "config"
     assert planning_config_digest(absent) != planning_config_digest(configured)
+
+
+def test_geometry_preflight_config_is_validated_and_frozen(tmp_path: Path) -> None:
+    fdf, raw, _ = inputs(tmp_path)
+    result = normalized(
+        fdf,
+        {
+            **raw,
+            "geometry_preflight": {
+                "max_force_ev_ang": 0.02,
+                "max_abs_mean_pressure_kbar": 8.0,
+            },
+        },
+    )
+
+    assert result["geometry_preflight"] == {
+        "version": "reference-geometry-preflight-v1",
+        "max_force_ev_ang": 0.02,
+        "max_abs_mean_pressure_kbar": 8.0,
+        "max_shear_kbar": 5.0,
+        "declared_by": "CONFIG",
+    }
+    with pytest.raises(CampaignV2Error, match="invalid geometry_preflight policy"):
+        normalized(fdf, {**raw, "geometry_preflight": {"max_force_ev_ang": -0.01}})
