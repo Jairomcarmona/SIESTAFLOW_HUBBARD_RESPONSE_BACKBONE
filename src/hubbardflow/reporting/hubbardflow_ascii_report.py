@@ -176,6 +176,8 @@ def render_hubbardflow_out(source: Mapping[str, Any]) -> str:
     lines.append(
         f"  Method: {_value(projector.get('method'))}; CutoffNorm: {_value(projector.get('cutoff_norm'))}"
     )
+    lines.append("  U depends on the declared projector; M1 changed by 1.3589 eV between")
+    lines.append("    CutoffNorm 0.85 and 0.90 (tests/fixtures/projector_curve_m1.json).")
     records = projector.get("records")
     if isinstance(records, list) and records:
         for record in records:

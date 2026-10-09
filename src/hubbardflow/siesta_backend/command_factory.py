@@ -22,6 +22,7 @@ from hubbardflow.execution.runtime_adapters import NodeCommand
 from .output_validator import SiestaArtifactSpec
 from .backend_admission import BackendAdmission, BackendAdmissionError
 from .backend_admission_plugin import _is_campaign_contract_admission
+from .projector_consistency import ProjectorConsistencyError, compare_projector_definitions
 from .siesta542_bare_profile import Siesta542PotentialShiftHamiltonianProfile
 from .symmetry_materializer import write_materialized_response
 
@@ -207,6 +208,20 @@ class SiestaCommandFactory:
             overrides = self.layout.scf_level_overrides.get(level_id)
             if overrides:
                 _apply_fdf_overrides(fdf_path, overrides)
+            if node.kind is LRNodeKind.PERTURBATION:
+                try:
+                    projector_check = compare_projector_definitions(
+                        self.layout.reference_fdf.read_text(encoding="utf-8"),
+                        fdf_path.read_text(encoding="utf-8"),
+                    )
+                except ProjectorConsistencyError as exc:
+                    raise SiestaCommandFactoryError(
+                        f"projector admission could not be verified: {exc}"
+                    ) from exc
+                if not projector_check.compatible:
+                    raise SiestaCommandFactoryError(
+                        f"projector admission failed: {projector_check.describe()}"
+                    )
             self.artifacts[node.node_id] = SiestaArtifactSpec(
                 fdf=self.layout.fdf_name,
                 output=self.layout.output_name,
