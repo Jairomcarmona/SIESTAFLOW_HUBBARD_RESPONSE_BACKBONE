@@ -1,0 +1,21 @@
+{
+  "schema": "backend_compatibility_v1",
+  "records": [
+    {
+      "backend": {
+        "backend_id": "siesta",
+        "version": "5.4.2",
+        "executable_sha256": "c69519dc7296ca8f9e454303947084ee246efd609be4bc05244a31a91b82e37e"
+      },
+      "profile": {
+        "profile_id": "siesta-5.4.2-potential-shift-hamiltonian-v1",
+        "version": "1",
+        "metadata": {
+          "source_revision": "e486d12067b96ff688179f0496d0ec21b6fae0ab"
+        }
+      },
+      "state": "compatible",
+      "reason": "Yoltla siesta/5.4.2 runtime observed for M1 HubbardFlow campaign"
+    }
+  ]
+}
