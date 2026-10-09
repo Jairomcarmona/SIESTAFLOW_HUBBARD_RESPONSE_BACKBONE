@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# Yoltla site adapter for HubbardFlow's Hydra argv contract.
+# Translates the exact Hydra-shaped command emitted by the pinned engine to srun.
+set -euo pipefail
+bootstrap='' hosts_csv='' np='' ppn='' uuid=''
+while (($#)); do
+  case "$1" in
+    -bootstrap) bootstrap="$2"; shift 2 ;;
+    -hosts) hosts_csv="$2"; shift 2 ;;
+    -np) np="$2"; shift 2 ;;
+    -ppn) ppn="$2"; shift 2 ;;
+    -genv)
+      [[ "${2:-}" == "FI_PSM3_UUID" ]] || { echo "Unsupported -genv key: ${2:-}" >&2; exit 64; }
+      uuid="$3"; shift 3 ;;
+    --) shift; break ;;
+    -*) echo "Unsupported HubbardFlow launcher argument: $1" >&2; exit 64 ;;
+    *) break ;;
+  esac
+done
+[[ "$bootstrap" == "ssh" ]] || { echo 'Expected HubbardFlow bootstrap=ssh' >&2; exit 64; }
+[[ -n "$hosts_csv" && "$np" =~ ^[0-9]+$ && "$ppn" =~ ^[0-9]+$ && $# -ge 1 ]] || { echo 'Incomplete Hydra-shaped launch' >&2; exit 64; }
+IFS=',' read -r -a hosts <<< "$hosts_csv"
+(( ${#hosts[@]} * ppn == np )) || { echo 'Host/rank placement mismatch' >&2; exit 64; }
+[[ -n "${SLURM_JOB_ID:-}" ]] || { echo 'This adapter only runs inside a Slurm allocation' >&2; exit 64; }
+export FI_PSM3_UUID="$uuid"
+exec srun --exact --exclusive \
+  --nodes="${#hosts[@]}" \
+  --ntasks="$np" \
+  --ntasks-per-node="$ppn" \
+  --cpus-per-task=1 \
+  --nodelist="$hosts_csv" \
+  "$@"

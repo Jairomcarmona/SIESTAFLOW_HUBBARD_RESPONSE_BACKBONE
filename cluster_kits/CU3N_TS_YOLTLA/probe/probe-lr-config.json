@@ -1,0 +1,60 @@
+{
+  "adaptive_alpha_policy": null,
+  "alpha_grid_ev": [
+    -0.1,
+    -0.05,
+    -0.025,
+    0.025,
+    0.05,
+    0.1
+  ],
+  "analysis_policy": {
+    "estimator": "polynomial",
+    "matrix_for_inversion": "raw",
+    "minimum_residual_dof": 1,
+    "polynomial_degree": 3
+  },
+  "compatibility_registry": "C:\\Users\\Jairo\\.codex\\worktrees\\task40-cu3n-ts-kit\\hubbardflow\\cluster_kits\\CU3N_TS_YOLTLA\\config\\backend_compatibility.json",
+  "declared_executable": "siesta",
+  "functional": "PBE",
+  "magnetic_moment_tolerance_muB": 0.1,
+  "material": "Cu3N-PBE-SC222-one-column-probe-yoltla",
+  "pseudopotentials": {
+    "CuLR00": "C:\\Users\\Jairo\\.codex\\worktrees\\task40-cu3n-ts-kit\\hubbardflow\\cluster_kits\\CU3N_TS_YOLTLA\\inputs\\CuLR00.psml",
+    "CuLR01": "C:\\Users\\Jairo\\.codex\\worktrees\\task40-cu3n-ts-kit\\hubbardflow\\cluster_kits\\CU3N_TS_YOLTLA\\inputs\\CuLR01.psml",
+    "CuLR02": "C:\\Users\\Jairo\\.codex\\worktrees\\task40-cu3n-ts-kit\\hubbardflow\\cluster_kits\\CU3N_TS_YOLTLA\\inputs\\CuLR02.psml",
+    "CuLR03": "C:\\Users\\Jairo\\.codex\\worktrees\\task40-cu3n-ts-kit\\hubbardflow\\cluster_kits\\CU3N_TS_YOLTLA\\inputs\\CuLR03.psml",
+    "CuLR04": "C:\\Users\\Jairo\\.codex\\worktrees\\task40-cu3n-ts-kit\\hubbardflow\\cluster_kits\\CU3N_TS_YOLTLA\\inputs\\CuLR04.psml",
+    "CuLR05": "C:\\Users\\Jairo\\.codex\\worktrees\\task40-cu3n-ts-kit\\hubbardflow\\cluster_kits\\CU3N_TS_YOLTLA\\inputs\\CuLR05.psml",
+    "CuLR06": "C:\\Users\\Jairo\\.codex\\worktrees\\task40-cu3n-ts-kit\\hubbardflow\\cluster_kits\\CU3N_TS_YOLTLA\\inputs\\CuLR06.psml",
+    "CuLR07": "C:\\Users\\Jairo\\.codex\\worktrees\\task40-cu3n-ts-kit\\hubbardflow\\cluster_kits\\CU3N_TS_YOLTLA\\inputs\\CuLR07.psml",
+    "CuLR08": "C:\\Users\\Jairo\\.codex\\worktrees\\task40-cu3n-ts-kit\\hubbardflow\\cluster_kits\\CU3N_TS_YOLTLA\\inputs\\CuLR08.psml",
+    "CuLR09": "C:\\Users\\Jairo\\.codex\\worktrees\\task40-cu3n-ts-kit\\hubbardflow\\cluster_kits\\CU3N_TS_YOLTLA\\inputs\\CuLR09.psml",
+    "CuLR10": "C:\\Users\\Jairo\\.codex\\worktrees\\task40-cu3n-ts-kit\\hubbardflow\\cluster_kits\\CU3N_TS_YOLTLA\\inputs\\CuLR10.psml",
+    "CuLR11": "C:\\Users\\Jairo\\.codex\\worktrees\\task40-cu3n-ts-kit\\hubbardflow\\cluster_kits\\CU3N_TS_YOLTLA\\inputs\\CuLR11.psml",
+    "CuLR12": "C:\\Users\\Jairo\\.codex\\worktrees\\task40-cu3n-ts-kit\\hubbardflow\\cluster_kits\\CU3N_TS_YOLTLA\\inputs\\CuLR12.psml",
+    "CuLR13": "C:\\Users\\Jairo\\.codex\\worktrees\\task40-cu3n-ts-kit\\hubbardflow\\cluster_kits\\CU3N_TS_YOLTLA\\inputs\\CuLR13.psml",
+    "CuLR14": "C:\\Users\\Jairo\\.codex\\worktrees\\task40-cu3n-ts-kit\\hubbardflow\\cluster_kits\\CU3N_TS_YOLTLA\\inputs\\CuLR14.psml",
+    "CuLR15": "C:\\Users\\Jairo\\.codex\\worktrees\\task40-cu3n-ts-kit\\hubbardflow\\cluster_kits\\CU3N_TS_YOLTLA\\inputs\\CuLR15.psml",
+    "CuLR16": "C:\\Users\\Jairo\\.codex\\worktrees\\task40-cu3n-ts-kit\\hubbardflow\\cluster_kits\\CU3N_TS_YOLTLA\\inputs\\CuLR16.psml",
+    "CuLR17": "C:\\Users\\Jairo\\.codex\\worktrees\\task40-cu3n-ts-kit\\hubbardflow\\cluster_kits\\CU3N_TS_YOLTLA\\inputs\\CuLR17.psml",
+    "CuLR18": "C:\\Users\\Jairo\\.codex\\worktrees\\task40-cu3n-ts-kit\\hubbardflow\\cluster_kits\\CU3N_TS_YOLTLA\\inputs\\CuLR18.psml",
+    "CuLR19": "C:\\Users\\Jairo\\.codex\\worktrees\\task40-cu3n-ts-kit\\hubbardflow\\cluster_kits\\CU3N_TS_YOLTLA\\inputs\\CuLR19.psml",
+    "CuLR20": "C:\\Users\\Jairo\\.codex\\worktrees\\task40-cu3n-ts-kit\\hubbardflow\\cluster_kits\\CU3N_TS_YOLTLA\\inputs\\CuLR20.psml",
+    "CuLR21": "C:\\Users\\Jairo\\.codex\\worktrees\\task40-cu3n-ts-kit\\hubbardflow\\cluster_kits\\CU3N_TS_YOLTLA\\inputs\\CuLR21.psml",
+    "CuLR22": "C:\\Users\\Jairo\\.codex\\worktrees\\task40-cu3n-ts-kit\\hubbardflow\\cluster_kits\\CU3N_TS_YOLTLA\\inputs\\CuLR22.psml",
+    "CuLR23": "C:\\Users\\Jairo\\.codex\\worktrees\\task40-cu3n-ts-kit\\hubbardflow\\cluster_kits\\CU3N_TS_YOLTLA\\inputs\\CuLR23.psml",
+    "N": "C:\\Users\\Jairo\\.codex\\worktrees\\task40-cu3n-ts-kit\\hubbardflow\\cluster_kits\\CU3N_TS_YOLTLA\\inputs\\N.psml"
+  },
+  "reference_dm_name": "00_REFERENCE.DM",
+  "schema": "siestaflow.lr_config.v2",
+  "sites": [
+    {
+      "atom_index": 1,
+      "orbit_id": "CuLR00",
+      "site_id": "CuLR00"
+    }
+  ],
+  "static_artifacts": {},
+  "version_text_source": "C:\\Users\\Jairo\\.codex\\worktrees\\task40-cu3n-ts-kit\\hubbardflow\\cluster_kits\\CU3N_TS_YOLTLA\\config\\siesta-version.txt"
+}
