@@ -258,8 +258,9 @@ class SiestaOutputValidator:
                     self.policy.bare_backend_admission.require_declared_executable(executable)
                     if self.policy.bare_backend_admission.observed.version != self.policy.siesta_version:
                         raise BackendAdmissionError("policy version differs from admitted backend")
-                    self.policy.bare_profile.validate_fdf(fdf.read_text(encoding="utf-8", errors="replace"))
-                    selection = self.policy.bare_profile.select_response(output)
+                    fdf_text = fdf.read_text(encoding="utf-8", errors="replace")
+                    self.policy.bare_profile.validate_fdf(fdf_text)
+                    selection = self.policy.bare_profile.select_response(output, fdf_text=fdf_text)
                 except (BackendAdmissionError, Siesta542BareProfileError) as exc:
                     raise SiestaOutputValidationError(
                         "BARE profile evidence rejected: {0}".format(exc)

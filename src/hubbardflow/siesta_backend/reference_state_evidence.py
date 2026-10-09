@@ -165,10 +165,11 @@ def _spectrum_evidence(
     event: HubbardPopulationEvent,
     subspaces: Sequence[CorrelatedSubspaceLike],
     species_by_atom: dict[int, int],
+    fdf_text: str,
 ) -> tuple[SubspaceOccupationEvidence, ...]:
     if not subspaces:
         return ()
-    read_printed_matrix_trace_precision(text, event)
+    read_printed_matrix_trace_precision(text, event, fdf_text=fdf_text)
     by_atom = {atom.atom_index: atom for atom in event.atoms}
     output: list[SubspaceOccupationEvidence] = []
     lines = text.splitlines()
@@ -304,7 +305,7 @@ def build_reference_state_evidence(
             assert selected_event is not None
             species_by_atom = {atom.atom_index: atom.species_index for atom in model.atoms}
             occupation_evidence = _spectrum_evidence(
-                output_text, selected_event, active_subspaces, species_by_atom
+                output_text, selected_event, active_subspaces, species_by_atom, model.effective_text
             )
             occupation_status = OccupationSpectraStatus.AVAILABLE
     except (ValueError, IndexError, SiestaParserError, SemanticValidationFailure):

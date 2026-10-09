@@ -9,6 +9,8 @@ from __future__ import annotations
 
 import math
 import re
+from dataclasses import dataclass
+from decimal import Decimal
 
 from hubbardflow.domain.state_gate_types import (
     AtomPointState,
@@ -17,6 +19,7 @@ from hubbardflow.domain.state_gate_types import (
     PrintedBandEnergy,
 )
 from hubbardflow.siesta_backend.parser_models import HubbardPopulationEvent
+from hubbardflow.siesta_backend.reference_magnetic_evidence import require_verified_population_spin_mode
 
 
 class PointStateEvidenceError(ValueError):
@@ -25,7 +28,7 @@ class PointStateEvidenceError(ValueError):
 
 _NUMBER = r"[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[EeDd][-+]?\d+)?"
 _MATRIX_ROW = re.compile(
-    rf"^\s*(?P<i>[1-9]\d*)\s+(?P<j>[1-9]\d*)\s+(?P<up>{_NUMBER})\s+(?P<down>{_NUMBER})\s*$"
+    rf"^\s*(?P<i>[1-9]\d*)\s+(?P<j>[1-9]\d*)\s+(?P<up>{_NUMBER})(?:\s+(?P<down>{_NUMBER}))?\s*$"
 )
 _ATOM_START = re.compile(r"^\s*hubbard_term:\s+atom,\s+species:\s+(\d+)\s+(\d+)\s*$", re.IGNORECASE)
 _FERMI = re.compile(rf"^\s*siesta:\s*Fermi\s*=\s*(?P<value>{_NUMBER})\s*$", re.IGNORECASE)
@@ -33,6 +36,19 @@ _MULLIKEN_START = re.compile(r"^\s*Mulliken Atomic Populations:\s*$", re.IGNOREC
 _MULLIKEN_HEADER = re.compile(r"^\s*Atom\s+#.*\bSz\s*\[e\].*\bSpecies\s*$", re.IGNORECASE)
 _MULLIKEN_ROW = re.compile(rf"^\s*(?P<index>\d+)\s+{_NUMBER}\s+{_NUMBER}\s+(?P<sz>{_NUMBER})\s+\S+\s*$")
 _EIG_NUMBER = re.compile(rf"^{_NUMBER}$")
+
+
+@dataclass(frozen=True)
+class PointStateMatrixBlock:
+    """One selected atom's validated printed matrices and occupation summary."""
+
+    atom_index: int
+    matrix_up: tuple[tuple[str, ...], ...]
+    matrix_down: tuple[tuple[str, ...], ...]
+    print_quantum_e: float
+    printed_occupations_e: tuple[float, ...]
+    total_occupation_e: float
+    total_derived: bool
 
 
 def _normal_number(token: str) -> float:
@@ -53,26 +69,41 @@ def _quantum(token: str) -> float:
     return 10.0 ** (exponent - decimal_places)
 
 
-def _selected_matrix_blocks(
-    event: HubbardPopulationEvent, output_text: str
-) -> tuple[tuple[int, tuple[tuple[str, ...], ...], tuple[tuple[str, ...], ...], float], ...]:
+def parse_point_state_matrix_blocks(
+    event: HubbardPopulationEvent,
+    output_text: str,
+    *,
+    fdf_text: str | None = None,
+) -> tuple[PointStateMatrixBlock, ...]:
+    """Parse a selected event's matrix blocks after verifying their spin mode.
+
+    In non-polarized SIESTA output the single matrix is the per-spin matrix;
+    the two equal ``Occupations:`` values are summed for the total electron
+    count consumed by linear response. The matrix is mirrored into both state
+    channels only after paired FDF/output spin evidence has been verified.
+    """
+    nonpolarized = require_verified_population_spin_mode(event, fdf_text, output_text)
     if event.source_start_line is None or event.source_end_line is None:
         raise PointStateEvidenceError("selected Hubbard event has no source line range")
     lines = output_text.splitlines()
     if event.source_start_line < 0 or event.source_end_line >= len(lines):
         raise PointStateEvidenceError("selected Hubbard event source range is outside output")
 
-    blocks: list[tuple[int, tuple[tuple[str, ...], ...], tuple[tuple[str, ...], ...], float]] = []
+    blocks: list[PointStateMatrixBlock] = []
     current_atom: int | None = None
-    rows: list[tuple[int, int, str, str]] = []
-    summary: tuple[float, float] | None = None
+    rows: list[tuple[int, int, str, str | None]] = []
+    summary_tokens: tuple[str, ...] | None = None
+    event_atoms = {atom.atom_index: atom for atom in event.atoms}
 
     def finish_atom() -> None:
-        nonlocal current_atom, rows, summary
+        nonlocal current_atom, rows, summary_tokens
         if current_atom is None:
             return
-        if summary is None:
+        if summary_tokens is None:
             raise PointStateEvidenceError(f"atom {current_atom} has no Occupations summary")
+        atom = event_atoms.get(current_atom)
+        if atom is None:
+            raise PointStateEvidenceError(f"atom {current_atom} is absent from the selected event")
         if len(rows) != 25:
             raise PointStateEvidenceError(
                 f"atom {current_atom} matrix is truncated: expected 25 entries, found {len(rows)}"
@@ -84,30 +115,62 @@ def _selected_matrix_blocks(
         down = [[""] * 5 for _ in range(5)]
         quantum_values: set[float] = set()
         for i, j, up_token, down_token in rows:
+            if nonpolarized and down_token is not None:
+                raise PointStateEvidenceError(f"atom {current_atom} has an unexpected second matrix column")
+            if not nonpolarized and down_token is None:
+                raise PointStateEvidenceError(f"atom {current_atom} is missing its down-spin matrix column")
             up[i - 1][j - 1] = up_token
-            down[i - 1][j - 1] = down_token
             quantum_values.add(_quantum(up_token))
-            quantum_values.add(_quantum(down_token))
+            if down_token is not None:
+                down[i - 1][j - 1] = down_token
+                quantum_values.add(_quantum(down_token))
         if quantum_values != {1e-5}:
             raise PointStateEvidenceError(f"atom {current_atom} matrix precision is not uniformly 5 decimals")
+        if nonpolarized:
+            if atom.channel_count != 1 or len(summary_tokens) != 2:
+                raise PointStateEvidenceError(
+                    f"atom {current_atom} does not have a one-column, two-value non-polarized summary"
+                )
+            if Decimal(summary_tokens[0]) != Decimal(summary_tokens[1]):
+                raise PointStateEvidenceError(
+                    f"atom {current_atom} per-spin Occupations values are not equal"
+                )
+            down = [list(row) for row in up]
+            printed_occupations = tuple(_normal_number(token) for token in summary_tokens)
+            total_occupation = math.fsum(printed_occupations)
+        else:
+            if atom.channel_count != 2 or len(summary_tokens) != 3:
+                raise PointStateEvidenceError(
+                    f"atom {current_atom} has inconsistent polarized matrix/summary format"
+                )
+            printed_occupations = tuple(_normal_number(token) for token in summary_tokens)
+            total_occupation = printed_occupations[2]
         for matrix in (up, down):
             for i in range(5):
                 for j in range(i + 1, 5):
                     if _normal_number(matrix[i][j]) != _normal_number(matrix[j][i]):
                         raise PointStateEvidenceError(f"atom {current_atom} matrix is not symmetric")
-        for channel, matrix in (("up", up), ("down", down)):
+        summaries = printed_occupations[:2]
+        for channel, matrix, printed in zip(("up", "down"), (up, down), summaries):
             trace = sum(_normal_number(matrix[i][i]) for i in range(5))
-            printed = summary[0] if channel == "up" else summary[1]
             if abs(trace - printed) > 2.55e-5:
                 raise PointStateEvidenceError(
                     f"atom {current_atom} {channel} trace differs from Occupations by more than 2.55e-5"
                 )
         blocks.append(
-            (current_atom, tuple(tuple(row) for row in up), tuple(tuple(row) for row in down), 1e-5)
+            PointStateMatrixBlock(
+                atom_index=current_atom,
+                matrix_up=tuple(tuple(row) for row in up),
+                matrix_down=tuple(tuple(row) for row in down),
+                print_quantum_e=1e-5,
+                printed_occupations_e=printed_occupations,
+                total_occupation_e=total_occupation,
+                total_derived=len(summary_tokens) == 2,
+            )
         )
         current_atom = None
         rows = []
-        summary = None
+        summary_tokens = None
 
     for line in lines[event.source_start_line : event.source_end_line + 1]:
         atom_match = _ATOM_START.match(line)
@@ -123,17 +186,17 @@ def _selected_matrix_blocks(
                 (int(match.group("i")), int(match.group("j")), match.group("up"), match.group("down"))
             )
         elif "Occupations:" in line:
-            values = re.findall(_NUMBER, line.split("Occupations:", 1)[1])
-            if len(values) != 3:
+            values = tuple(re.findall(_NUMBER, line.split("Occupations:", 1)[1]))
+            if len(values) not in (2, 3):
                 raise PointStateEvidenceError(f"atom {current_atom} has malformed Occupations summary")
-            summary = (_normal_number(values[0]), _normal_number(values[1]))
+            summary_tokens = values
     finish_atom()
 
     if len(blocks) != len(event.atoms) or not blocks:
         raise PointStateEvidenceError(
             f"selected event matrix blocks ({len(blocks)}) do not match parsed atoms ({len(event.atoms)})"
         )
-    if tuple(block[0] for block in blocks) != tuple(atom.atom_index for atom in event.atoms):
+    if tuple(block.atom_index for block in blocks) != tuple(atom.atom_index for atom in event.atoms):
         raise PointStateEvidenceError("selected event atom indices do not match its parsed matrices")
     return tuple(blocks)
 
@@ -239,11 +302,16 @@ def _parse_eig(eig_text: str) -> tuple[str, float, tuple[PrintedBandEnergy, ...]
 
 
 def build_point_state(
-    event: HubbardPopulationEvent, output_text: str, eig_text: str | None = None
+    event: HubbardPopulationEvent,
+    output_text: str,
+    eig_text: str | None = None,
+    *,
+    fdf_text: str | None = None,
 ) -> PointState:
     """Build a typed state record from one already-selected population event."""
     if not output_text.strip():
         raise PointStateEvidenceError("SIESTA output is empty")
+    blocks = parse_point_state_matrix_blocks(event, output_text, fdf_text=fdf_text)
     fermi_tokens = [
         match.group("value") for line in output_text.splitlines() if (match := _FERMI.match(line))
     ]
@@ -253,18 +321,17 @@ def build_point_state(
     fermi_stdout_energy_ev = _normal_number(fermi_stdout_token)
     fermi_stdout_half_width_ev = 0.5 * _quantum(fermi_stdout_token)
 
-    blocks = _selected_matrix_blocks(event, output_text)
-    mulliken = _final_mulliken_sz(output_text, tuple(block[0] for block in blocks))
+    mulliken = _final_mulliken_sz(output_text, tuple(block.atom_index for block in blocks))
     atoms = tuple(
         AtomPointState(
-            atom_index=atom_index,
-            matrix_up=matrix_up,
-            matrix_down=matrix_down,
-            matrix_print_quantum_e=quantum,
-            sz_e=mulliken[atom_index][0],
-            sz_half_width_e=mulliken[atom_index][1],
+            atom_index=block.atom_index,
+            matrix_up=block.matrix_up,
+            matrix_down=block.matrix_down,
+            matrix_print_quantum_e=block.print_quantum_e,
+            sz_e=mulliken[block.atom_index][0],
+            sz_half_width_e=mulliken[block.atom_index][1],
         )
-        for atom_index, matrix_up, matrix_down, quantum in blocks
+        for block in blocks
     )
     if eig_text is None:
         fermi_token = fermi_stdout_token

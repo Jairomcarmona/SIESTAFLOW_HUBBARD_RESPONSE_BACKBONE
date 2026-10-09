@@ -37,11 +37,15 @@ _POLICY_ID = "i5-state-policy-v1"
 
 def _event_for(
     output_text: str,
+    fdf_text: str,
     mode: ResponseMode,
     bare_profile: Any,
 ) -> HubbardPopulationEvent:
     if mode is ResponseMode.BARE:
-        return cast(HubbardPopulationEvent, bare_profile.select_response(output_text).response_event)
+        return cast(
+            HubbardPopulationEvent,
+            bare_profile.select_response(output_text, fdf_text=fdf_text).response_event,
+        )
     return select_converged_screened_event(output_text)
 
 
@@ -51,17 +55,17 @@ def _point_state(record: Mapping[str, Any], mode: ResponseMode, bare_profile: An
         raise TypeError("node command record is missing")
     stdout_path = Path(str(command["stdout_path"]))
     output_text = stdout_path.read_text(encoding="utf-8", errors="replace")
-    event = _event_for(output_text, mode, bare_profile)
     cwd = Path(str(command["cwd"]))
     fdf_value = command.get("stdin_path")
     fdf_path = Path(str(fdf_value)) if fdf_value else cwd / str(record["artifact_spec"]["fdf"])
     fdf_text = fdf_path.read_text(encoding="utf-8", errors="replace")
+    event = _event_for(output_text, fdf_text, mode, bare_profile)
     label_match = _SYSTEM_LABEL.search(fdf_text)
     eig_path = cwd / f"{label_match.group(1)}.EIG" if label_match else None
     eig_text = (
         eig_path.read_text(encoding="utf-8", errors="replace") if eig_path and eig_path.is_file() else None
     )
-    return build_point_state(event, output_text, eig_text)
+    return build_point_state(event, output_text, eig_text, fdf_text=fdf_text)
 
 
 def _not_established(column_id: str, mode: StateGateMode, reason: StateGateReason) -> StateGateResult:

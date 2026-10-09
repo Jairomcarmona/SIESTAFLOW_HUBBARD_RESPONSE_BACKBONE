@@ -120,6 +120,10 @@
           "out_path": {
             "$ref": "#/$defs/relativePath"
           },
+          "fdf_path": {
+            "$ref": "#/$defs/relativePath",
+            "description": "Optional campaign-relative FDF required to verify one-column non-polarized population data."
+          },
           "out_sha256": {
             "$ref": "#/$defs/hash"
           },

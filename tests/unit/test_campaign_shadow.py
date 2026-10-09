@@ -397,6 +397,9 @@ def test_real_observation_assembler_reads_nodes_added_by_shadow_expansion(
                 output = (
                     "\n".join(
                         (
+                            "redata: Spin configuration = none",
+                            "redata: Number of spin components = 1",
+                            "redata: Time-Reversal Symmetry = T",
                             "redata: SCF mix quantity = Hamiltonian",
                             population_event(0.500000),
                             "stepf: Fermi-Dirac step function",

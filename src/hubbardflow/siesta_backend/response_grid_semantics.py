@@ -68,10 +68,12 @@ def extract_siesta_response_cell(
     _verify_projector_shift(fdf_text, site_id, alpha_ev)
     output_text = out_path.read_text(encoding="utf-8", errors="replace")
     if mode == "BARE":
-        event = Siesta542PotentialShiftHamiltonianProfile().select_response(output_text).response_event
+        event = Siesta542PotentialShiftHamiltonianProfile().select_response(
+            output_text, fdf_text=fdf_text
+        ).response_event
     elif mode == "SCREENED":
         event = select_converged_screened_event(output_text)
     else:
         raise ValueError(f"unsupported SIESTA response mode {mode!r}")
-    parsed = read_printed_occupation_precision(output_text, event)[atom_index]
+    parsed = read_printed_occupation_precision(output_text, event, fdf_text=fdf_text)[atom_index]
     return float(parsed.total), float(parsed.half_width)

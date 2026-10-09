@@ -8,6 +8,12 @@ from hubbardflow.siesta_backend.occupation_precision import (
 from hubbardflow.execution.campaign_runner import CampaignRunner
 from hubbardflow.execution.observation_assembly import ObservationAssembler
 
+NONPOLARIZED_FDF = "Spin non-polarized\n"
+NONPOLARIZED_OUTPUT_PREFIX = """redata: Spin configuration = none
+redata: Number of spin components = 1
+redata: Time-Reversal Symmetry = T
+"""
+
 
 def _matrix_event(diagonal_token="0.10000", *, down_spin=True):
     places = len(diagonal_token.split(".", 1)[1])
@@ -59,14 +65,14 @@ def test_campaign_observable_uses_occupations_total_not_matrix_trace():
 
 
 def test_precision_adapter_bounds_a_total_summed_from_two_printed_channels():
-    output = """
+    output = NONPOLARIZED_OUTPUT_PREFIX + """
 hubbard_term: recalculating local occupations 1
   hubbard_term: atom, species:    1    1
     1    1    0.45679
     Occupations:   0.456789   0.456789
-"""
+    """
     event = parse_hubbard_population_events(output)[0]
-    measured = read_printed_occupation_precision(output, event)[1]
+    measured = read_printed_occupation_precision(output, event, fdf_text=NONPOLARIZED_FDF)[1]
     assert measured.total == pytest.approx(0.913578)
     assert measured.half_width == pytest.approx(1e-6)
 
@@ -95,9 +101,9 @@ def test_matrix_trace_precision_does_not_substitute_a_higher_precision_summary()
 
 
 def test_matrix_trace_precision_duplicates_up_channel_when_down_channel_is_absent():
-    output = _matrix_event("0.10000", down_spin=False)
+    output = NONPOLARIZED_OUTPUT_PREFIX + _matrix_event("0.10000", down_spin=False)
     event = parse_hubbard_population_events(output)[0]
-    measured = read_printed_matrix_trace_precision(output, event)[1]
+    measured = read_printed_matrix_trace_precision(output, event, fdf_text=NONPOLARIZED_FDF)[1]
     assert event.atoms[0].raw_matrix_down is None
     assert measured.total == pytest.approx(event.atoms[0].trace_total)
     assert measured.half_width == pytest.approx(5e-5)

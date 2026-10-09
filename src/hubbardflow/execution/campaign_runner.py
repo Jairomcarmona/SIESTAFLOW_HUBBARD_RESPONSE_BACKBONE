@@ -953,13 +953,18 @@ class CampaignRunner:
             raise ValueError(f"validated response is unavailable for {node.node_id}")
         output_path = Path(record["command"]["stdout_path"])
         output_text = output_path.read_text(encoding="utf-8", errors="replace")
+        fdf_path = Path(record["command"]["stdin_path"])
+        fdf_text = fdf_path.read_text(encoding="utf-8", errors="replace")
         if node.perturbation is not None and node.perturbation.mode is ResponseMode.BARE:
-            event = self.admitted.factory.bare_profile.select_response(output_text).response_event
+            event = self.admitted.factory.bare_profile.select_response(
+                output_text, fdf_text=fdf_text
+            ).response_event
         else:
             event = select_converged_screened_event(output_text)
-        vector = self._event_occupations(output_text, event, self.sites)
+        vector = self._event_occupations(output_text, event, self.sites, fdf_text=fdf_text)
         precision = read_printed_occupation_precision(
             output_text, event, minimum_decimal_places=self._minimum_occupation_decimal_places,
+            fdf_text=fdf_text,
         )
         widths = [float(precision[int(site["atom_index"])].half_width) for site in self.sites]
         return vector, widths
@@ -1514,11 +1519,17 @@ class CampaignRunner:
         return build_projector_diagnostics(inputs, projector_generation_method=2).to_mapping()
 
     def _event_occupations(
-        self, output_content: str, event: HubbardPopulationEvent, sites: list[dict[str, Any]],
+        self,
+        output_content: str,
+        event: HubbardPopulationEvent,
+        sites: list[dict[str, Any]],
+        *,
+        fdf_text: str | None = None,
     ) -> list[float]:
         return self.observations.event_occupations(
             output_content, event, sites,
             minimum_decimal_places=self._minimum_occupation_decimal_places,
+            fdf_text=fdf_text,
         )
 
     def _event_trace_half_widths(
