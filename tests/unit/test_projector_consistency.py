@@ -107,7 +107,7 @@ def test_malformed_projector_fails_closed() -> None:
 def test_response_materialization_fails_closed_on_projector_difference(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    def report_mismatch(reference: str, response: str):
+    def report_mismatch(reference: str, response: str) -> ProjectorComparison:
         return compare_projector_definitions(_fdf(omega=0.05), _fdf(omega=0.06))
 
     monkeypatch.setattr(symmetry_materializer, "compare_projector_definitions", report_mismatch)
