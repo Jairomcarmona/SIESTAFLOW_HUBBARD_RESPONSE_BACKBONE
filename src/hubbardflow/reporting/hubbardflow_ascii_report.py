@@ -57,8 +57,7 @@ def render_hubbardflow_out(source: Mapping[str, Any]) -> str:
     provenance = _map(source.get("occupation_provenance"))
     provenance_records = provenance.get("records")
     total_derived = isinstance(provenance_records, list) and any(
-        isinstance(item, Mapping) and item.get("total_derived") is True
-        for item in provenance_records
+        isinstance(item, Mapping) and item.get("total_derived") is True for item in provenance_records
     )
     state_gate = _map(source.get("state_gate"))
     campaign = _map(analysis.get("campaign"))
@@ -396,9 +395,7 @@ def render_hubbardflow_out(source: Mapping[str, Any]) -> str:
             lines.append("  Reference total d-shell occupation (derived from printed per-spin values):")
             for item in projector_sites:
                 if isinstance(item, Mapping):
-                    lines.append(
-                        f"    {item.get('site_id')}: {_value(item.get('reference_occupation_e'))} e"
-                    )
+                    lines.append(f"    {item.get('site_id')}: {_value(item.get('reference_occupation_e'))} e")
     else:
         lines.append("  Occupation/formal/free-atom and U*abs(CHI0): NOT_ASSESSED")
 
