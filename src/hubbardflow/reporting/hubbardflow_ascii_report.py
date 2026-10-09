@@ -464,7 +464,7 @@ def render_hubbardflow_out(source: Mapping[str, Any]) -> str:
             "  Source lines: " + ", ".join(f"{key}={value}" for key, value in sorted(source_lines.items()))
         )
     lines.append("U computed for the geometry as supplied; no relaxation performed by HubbardFlow.")
-    lines.append("  Another-functional or PBE+U relaxed geometry may appear non-relaxed here.")
+    lines.append("  A geometry relaxed with another functional (e.g. PBE+U) may appear unrelaxed.")
     lines.append("  Advisory limits account for MeshCutoff, egg-box effects, and finite basis.")
     lines.append("  No Pulay-stress attribution is made by this diagnostic.")
     additional_states = geometry_preflight.get("additional_states")

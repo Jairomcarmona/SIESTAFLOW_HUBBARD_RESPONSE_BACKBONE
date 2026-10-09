@@ -94,6 +94,7 @@ def test_configured_threshold_is_visible_in_record_only_report(tmp_path: Path) -
     assert result["state"] == GeometryPreflightState.NEAR_EQUILIBRIUM.value
     assert "[14] REFERENCE GEOMETRY PREFLIGHT" in report
     assert "U computed for the geometry as supplied; no relaxation performed by HubbardFlow." in report
+    assert "A geometry relaxed with another functional (e.g. PBE+U) may appear unrelaxed." in report
     assert "max shear:" in report
     assert all(len(line) <= 80 for line in report.splitlines())
     assert report.isascii()
