@@ -3,7 +3,7 @@
 ## Fixed identities
 
 - HubbardFlow source commit:
-  `d7d2d824ed7e6cd87a1dfafe0866b4ecd9e06650`.
+  `48cbc72958225fcc6ef00702d757e3f0ec4ee135`.
 - Full-site FDF SHA-256:
   `cb83162115cd2e8b414c1ebd05acc276b7b9a5d75535e18196f91e5a33641eaa`.
 - Cu pseudopotential SHA-256, for CuLR00 through CuLR23:

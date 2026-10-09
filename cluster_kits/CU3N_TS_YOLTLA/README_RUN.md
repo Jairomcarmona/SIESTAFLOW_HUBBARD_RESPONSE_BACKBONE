@@ -5,9 +5,10 @@ SIESTA job requires an explicit launch variable. Codex did not access Yoltla
 or run SIESTA while preparing this kit.
 
 The vendored HubbardFlow source is pinned to commit
-`d7d2d824ed7e6cd87a1dfafe0866b4ecd9e06650`. This includes the non-polarized
-BARE output parser required for Cu3N. Setup verifies the commit and the
-Yoltla SIESTA executable hash before allowing campaign commands.
+`48cbc72958225fcc6ef00702d757e3f0ec4ee135`. This includes the non-polarized
+BARE output parser required for Cu3N and the reference geometry preflight.
+Setup verifies the commit and the Yoltla SIESTA executable hash before
+allowing campaign commands.
 
 ## Frozen calculation inputs
 
@@ -48,8 +49,11 @@ pseudopotentials are supplied. `CHECKSUMS.sha256` covers the kit files.
    plan checks.
 
    ```bash
-   sbatch submit_ts.slurm
+   sbatch --time=00:30:00 submit_ts.slurm
    ```
+
+   This short allocation is for planning only; the Slurm script retains its
+   96-hour default request.
 
    The expected plan is three translation classes of eight Cu sites, six
    calculated columns, and 72 BARE/SCREENED response run specs. The campaign
@@ -116,3 +120,6 @@ full-site FDF and matching archived reference output; scheduler placement,
 the fresh reference, the one-column probe, and campaign execution remain
 for the operator to verify. Never interpret a hash difference as a
 physical acceptance result.
+
+Confirm redistribution terms of the pseudopotentials before publishing this
+kit outside the project.
