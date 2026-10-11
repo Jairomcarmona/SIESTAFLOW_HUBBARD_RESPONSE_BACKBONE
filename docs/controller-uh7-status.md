@@ -114,6 +114,18 @@ Published-commit wheel results and fresh Windows/Linux CI remain to be recorded.
 
 ## Remaining acceptance gates
 
+ROOT verified commit `64e02e02c219c2c979b75d252d6e18bf89a93744` after
+DFT Lab PR #65 merged the authorized Adenda 3. Its clean Git archive produced
+wheel SHA-256 `7a67f30b8b842365ac215b8e7c0ba07d0e6a4707bf90d05d0edad4852d24619e`:
+Windows 11 / CPython 3.12.10: 40 passed, 10 skipped (21.69s);
+WSL Ubuntu / CPython 3.12.10: 50 passed (29.47s), both isolated installed
+consumers with 23 vectors. The three previous API schemas preserve the exact
+Git bytes; LF is now explicit for those resources to prevent Windows checkout
+conversion from invalidating the same raw SHA-256 checks. No schema content
+was changed. All seven push/PR checks for that commit succeeded, including
+Windows/Linux public consumers and both complete Linux regression runs.
+The earlier #59 design gate is resolved; these results remain synthetic.
+
 - The synthetic consumer cases do not prove real SIESTA cancellation/recovery,
   containment ownership, scientific reuse, or full HF-1 qualification.
 - QRAFT integration and the published engine/runtime CI remain separate gates.
