@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import sys
 from pathlib import Path
 from threading import Event, Timer
 
@@ -227,7 +228,7 @@ def test_synthetic_process_lifecycle_writes_intent_before_settlement(tmp_path: P
     descriptor = load_controller_reservation(descriptor_path)
     observer = ControllerLedgerObserver(descriptor, tmp_path)
     node = LRDagNode("reference", LRNodeKind.REFERENCE, ())
-    command = NodeCommand(("python", "-c", "print('synthetic')"), tmp_path)
+    command = NodeCommand((sys.executable, "-c", "print('synthetic')"), tmp_path)
     executor = LocalSubprocessExecutor(
         _SyntheticFactory(command),
         _SyntheticValidator(),
@@ -268,7 +269,7 @@ def test_synthetic_stop_abandons_running_process_without_settlement(tmp_path: Pa
         "time.sleep(10)"
     )
     command = NodeCommand(
-        ("python", "-c", script),
+        (sys.executable, "-c", script),
         tmp_path,
     )
     stop_event = Event()
@@ -324,7 +325,7 @@ def test_process_creation_valueerror_is_abandoned_without_fake_exit_or_checkpoin
     descriptor_path.write_text(json.dumps(_reservation_payload()), encoding="utf-8")
     observer = ControllerLedgerObserver(load_controller_reservation(descriptor_path), tmp_path)
     node = LRDagNode("reference", LRNodeKind.REFERENCE, ())
-    command = NodeCommand(("python", "-c", "\x00"), tmp_path)
+    command = NodeCommand((sys.executable, "-c", "\x00"), tmp_path)
     executor = LocalSubprocessExecutor(
         _SyntheticFactory(command),
         _SyntheticValidator(),
