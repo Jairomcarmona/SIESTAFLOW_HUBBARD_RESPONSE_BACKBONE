@@ -19,7 +19,8 @@ from dataclasses import dataclass
 from hashlib import sha256
 from os import environ
 from pathlib import Path
-from subprocess import PIPE, CompletedProcess, run
+from subprocess import PIPE, CompletedProcess, Popen, TimeoutExpired
+from threading import Event
 from typing import Protocol
 
 from .dag_contract import NodeState
@@ -69,6 +70,26 @@ class OutputValidator(Protocol):
     def validate(
         self, node: LRDagNode, command: NodeCommand, completed: CompletedProcess[str]
     ) -> NodeReceipt: ...
+
+
+class ControllerObserver(Protocol):
+    """Optional controller ledger callbacks around an inner native launch."""
+
+    def launch_intent(self, node_id: str, checkpoint_identity: str, argv: tuple[str, ...]) -> str: ...
+
+    def launch_started(self, node_id: str, pid: int) -> None: ...
+
+    def launch_finished(self, node_id: str, exit_code: int) -> None: ...
+
+    def launch_abandoned(self, node_id: str, reason: str) -> None: ...
+
+
+class ControllerStopRequested(RuntimeError):
+    """A controller stop arrived while a native child was running."""
+
+
+class ControllerLaunchFailed(RuntimeError):
+    """An intent was durable but the native process could not be created."""
 
 
 def _failed_receipt(node: LRDagNode, completed: CompletedProcess[str]) -> NodeReceipt:
@@ -155,9 +176,13 @@ class LocalSubprocessExecutor:
         validator: OutputValidator,
         *,
         env: Mapping[str, str] | None = None,
+        observer: ControllerObserver | None = None,
+        checkpoint_identity: str | None = None,
+        stop_event: Event | None = None,
     ):
         self.factory, self.validator = factory, validator
         self.env = env
+        self.observer, self.checkpoint_identity, self.stop_event = observer, checkpoint_identity, stop_event
 
     def execute(self, node: LRDagNode) -> NodeReceipt:
         command = self.factory.command_for(node)
@@ -173,26 +198,75 @@ class LocalSubprocessExecutor:
         diagnostic_stdout: str | None = None
         diagnostic_stderr: str | None = None
         synthetic_oserror = False
+        abandoned = False
         try:
-            completed = run(
-                command.argv,
-                cwd=command.cwd,
-                stdin=stdin_handle,
-                stdout=stdout_handle if stdout_handle else (PIPE if partially_redirected else None),
-                stderr=stderr_handle if stderr_handle else (PIPE if partially_redirected else None),
-                capture_output=stdout_handle is None and stderr_handle is None,
-                text=True,
-                shell=False,
-                check=False,
-                env=self.env,
-            )
-        except OSError as exc:
-            synthetic_oserror = True
-            completed = CompletedProcess(command.argv, 127, "", str(exc))
+            if self.stop_event is not None and self.stop_event.is_set():
+                raise InterruptedError("controller stop requested before inner process launch")
+            if self.observer is not None and self.checkpoint_identity is not None:
+                self.observer.launch_intent(node.node_id, self.checkpoint_identity, command.argv)
+            try:
+                process = Popen(
+                    command.argv,
+                    cwd=command.cwd,
+                    stdin=stdin_handle,
+                    stdout=(
+                        stdout_handle
+                        if stdout_handle is not None
+                        else (PIPE if stderr_handle is None or partially_redirected else None)
+                    ),
+                    stderr=(
+                        stderr_handle
+                        if stderr_handle is not None
+                        else (PIPE if stdout_handle is None or partially_redirected else None)
+                    ),
+                    text=True,
+                    shell=False,
+                    env=self.env,
+                )
+            except (OSError, ValueError) as exc:
+                if self.observer is not None:
+                    self.observer.launch_abandoned(node.node_id, "LAUNCH_FAILED")
+                    raise ControllerLaunchFailed(f"native process creation failed: {exc}") from exc
+                if isinstance(exc, OSError):
+                    synthetic_oserror = True
+                    completed = CompletedProcess(command.argv, 127, "", str(exc))
+                else:
+                    raise
+            else:
+                if self.observer is not None:
+                    self.observer.launch_started(node.node_id, process.pid)
+                while True:
+                    try:
+                        stdout, stderr = process.communicate(
+                            timeout=0.2 if self.stop_event is not None else None
+                        )
+                        break
+                    except TimeoutExpired:
+                        if self.stop_event is None or not self.stop_event.is_set():
+                            continue
+                        abandoned = True
+                        process.terminate()
+                        stdout, stderr = process.communicate()
+                        if self.observer is not None:
+                            self.observer.launch_abandoned(node.node_id, "STOP_REQUESTED")
+                        break
+                completed = CompletedProcess(command.argv, process.returncode, stdout, stderr)
+                if not abandoned and self.observer is not None:
+                    self.observer.launch_finished(node.node_id, int(process.returncode or 0))
         finally:
             for handle in (stdin_handle, stdout_handle, stderr_handle):
                 if handle is not None:
                     handle.close()
+        if abandoned:
+            if completed.returncode != 0:
+                _write_failure_record(
+                    command,
+                    completed,
+                    synthetic_oserror=False,
+                    captured_stdout=completed.stdout,
+                    captured_stderr=completed.stderr,
+                )
+            raise ControllerStopRequested("controller stopped the active native launch cooperatively")
         if partially_redirected and not synthetic_oserror:
             diagnostic_stdout = completed.stdout if command.stdout_path is None else None
             diagnostic_stderr = completed.stderr if command.stderr_path is None else None
@@ -236,13 +310,27 @@ class SlurmAllocationExecutor:
         validator: OutputValidator,
         *,
         environment: Mapping[str, str] | None = None,
+        validation_environment: Mapping[str, str] | None = None,
+        observer: ControllerObserver | None = None,
+        checkpoint_identity: str | None = None,
+        stop_event: Event | None = None,
     ):
         profile.require_submission_evidence()
         actual_environment = dict(environ if environment is None else environment)
-        slurm = SlurmEnvironment.from_environ(actual_environment)
-        slurm.validate_profile(profile, hosts)
+        grant_environment = dict(
+            actual_environment if validation_environment is None else validation_environment
+        )
+        slurm = SlurmEnvironment.from_environ(grant_environment)
+        slurm.validate_profile(profile, hosts, allow_host_subset=observer is not None)
         self.profile, self.slurm, self.hosts = profile, slurm, tuple(hosts)
-        self._delegate = LocalSubprocessExecutor(factory, validator, env=actual_environment)
+        self._delegate = LocalSubprocessExecutor(
+            factory,
+            validator,
+            env=actual_environment,
+            observer=observer,
+            checkpoint_identity=checkpoint_identity,
+            stop_event=stop_event,
+        )
 
     def execute(self, node: LRDagNode) -> NodeReceipt:
         return self._delegate.execute(node)
