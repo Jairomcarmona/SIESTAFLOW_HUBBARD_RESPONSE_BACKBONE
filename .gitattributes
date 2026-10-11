@@ -23,5 +23,9 @@ tools/hooks/pre-commit text eol=lf
 
 # Preserve byte-identical native controller schemas and conformance fixtures.
 src/hubbardflow/api/schemas/*.schema -text
+# Existing API JSON schemas retain their canonical Git bytes on both systems.
+src/hubbardflow/api/schemas/analysis_result.v1.schema.json text eol=lf
+src/hubbardflow/api/schemas/api_result.v1.schema.json text eol=lf
+src/hubbardflow/api/schemas/worker_status.v1.schema.json text eol=lf
 tests/fixtures/controller-ledger-rules-cases.json -text
 tests/fixtures/controller-resume-rules/cases.json -text
