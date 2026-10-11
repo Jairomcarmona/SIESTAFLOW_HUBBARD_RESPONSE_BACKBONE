@@ -201,7 +201,7 @@ class LocalSubprocessExecutor:
         abandoned = False
         try:
             if self.stop_event is not None and self.stop_event.is_set():
-                raise InterruptedError("controller stop requested before inner process launch")
+                raise ControllerStopRequested("controller stop requested before inner process launch")
             if self.observer is not None and self.checkpoint_identity is not None:
                 self.observer.launch_intent(node.node_id, self.checkpoint_identity, command.argv)
             try:

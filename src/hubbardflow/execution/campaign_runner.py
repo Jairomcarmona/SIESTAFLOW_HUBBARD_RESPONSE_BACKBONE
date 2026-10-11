@@ -2509,12 +2509,6 @@ class CampaignRunner:
             return None
         from hubbardflow.api import check_resume
         from hubbardflow.api.controller_contracts import ControllerContractError, load_strict_json
-        from hubbardflow.api.controller_resume_baseline import (
-            create_resume_baseline,
-            load_resume_request,
-            write_resume_baseline,
-            write_resume_verdict,
-        )
         from hubbardflow.api.controller_resume import (
             DagNode,
             NodeEvidence,
@@ -2524,6 +2518,12 @@ class CampaignRunner:
             ResumeVerdict,
             evaluate_resume,
             recoverable_settlements,
+        )
+        from hubbardflow.api.controller_resume_baseline import (
+            create_resume_baseline,
+            load_resume_request,
+            write_resume_baseline,
+            write_resume_verdict,
         )
         from hubbardflow.api.controller_resume_ledger import parse_ledger_history
 
@@ -2788,6 +2788,14 @@ def run_campaign_worker(
 ) -> int:
     if fcntl is None:
         raise RuntimeError("campaign worker execution requires Linux/WSL fcntl locking")
+    if controller_observer is not None:
+        return _run_controller_campaign_worker(
+            manifest_path,
+            mode,
+            controller_observer,
+            controller_stop_event,
+            controller_stop_path,
+        )
     campaign = load_campaign_v2(manifest_path)
     control = Path(campaign["_campaign_root"]) / ".siestaflow"
     control.mkdir(parents=True, exist_ok=True)
@@ -2797,30 +2805,80 @@ def run_campaign_worker(
         except BlockingIOError:
             return 2
         heartbeat = _Heartbeat(control / "worker-state.json", campaign_id=campaign["campaign_id"])
-        if controller_observer is None:
-            (control / "stop-request.json").unlink(missing_ok=True)
+        (control / "stop-request.json").unlink(missing_ok=True)
+        heartbeat.start()
+        try:
+            runner = CampaignRunner(manifest_path)
+            runner.factory.state = heartbeat
+            return runner.advance(mode, heartbeat)
+        except Exception as exc:
+            _atomic_json(
+                control / "worker-error.json",
+                {
+                    "type": type(exc).__name__,
+                    "message": str(exc),
+                    "traceback": traceback.format_exc(),
+                    "epoch": time.time(),
+                },
+            )
+            heartbeat.finish("FAILED", error_type=type(exc).__name__, error=str(exc))
+        return 1
+
+
+def _run_controller_campaign_worker(
+    manifest_path: str | Path,
+    mode: str,
+    controller_observer: Any,
+    controller_stop_event: threading.Event | None,
+    controller_stop_path: Path | None,
+) -> int:
+    """Hold a stable root lock and reject B.3 rules 1–3 before campaign admission."""
+    from hubbardflow.api.controller_resume_baseline import write_resume_verdict
+    from hubbardflow.api.controller_resume_preflight import preflight_resume_rejection
+
+    manifest = Path(manifest_path).resolve()
+    run_root = controller_observer.state_dir_path.resolve(strict=True)
+    if manifest.parent != run_root:
+        raise ExecutionContractError("controller campaign root differs from paths.state_dir")
+    control = run_root / ".siestaflow"
+    control.mkdir(parents=True, exist_ok=True)
+    worker_lock_path = control / "worker.lock"
+    with worker_lock_path.open("a+b") as worker_lock:
+        try:
+            fcntl.flock(worker_lock.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            return 2
+
+        preflight = preflight_resume_rejection(controller_observer, manifest)
+        if preflight.verdict is not None:
+            write_resume_verdict(controller_observer.resume_verdict_path, preflight.verdict)
+            return 75
+
+        campaign = load_campaign_v2(manifest)
+        if Path(campaign["_campaign_root"]).resolve() != run_root:
+            raise ExecutionContractError("controller campaign root differs from paths.state_dir")
+        heartbeat = _Heartbeat(control / "worker-state.json", campaign_id=campaign["campaign_id"])
         heartbeat.start()
         try:
             runner = CampaignRunner(
-                manifest_path,
+                manifest,
                 controller_observer=controller_observer,
                 controller_stop_event=controller_stop_event,
                 controller_stop_path=controller_stop_path,
             )
             runner.factory.state = heartbeat
-            if controller_observer is not None:
-                attempt_number = int(controller_observer.to_mapping()["attempt_number"])
-                legacy_stop_path = control / "stop-request.json"
-                prior_stop_marker = _stop_marker_fingerprint(legacy_stop_path) if attempt_number > 1 else None
-                retry_result = runner.prepare_controller_attempt()
-                if retry_result == 75:
-                    heartbeat.finish("BLOCKED", reason="controller_resume_refused")
-                    return 75
-                if attempt_number > 1:
-                    _remove_unchanged_stop_marker(legacy_stop_path, prior_stop_marker)
-                    mode = "resume"
+            attempt_number = int(controller_observer.to_mapping()["attempt_number"])
+            legacy_stop_path = control / "stop-request.json"
+            prior_stop_marker = _stop_marker_fingerprint(legacy_stop_path) if attempt_number > 1 else None
+            retry_result = runner.prepare_controller_attempt()
+            if retry_result == 75:
+                heartbeat.finish("BLOCKED", reason="controller_resume_refused")
+                return 75
+            if attempt_number > 1:
+                _remove_unchanged_stop_marker(legacy_stop_path, prior_stop_marker)
+                mode = "resume"
             return runner.advance(mode, heartbeat)
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001 - preserve the worker's failure receipt for arbitrary runner errors.
             _atomic_json(
                 control / "worker-error.json",
                 {

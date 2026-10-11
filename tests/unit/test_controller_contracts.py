@@ -5,8 +5,10 @@ from __future__ import annotations
 import json
 import os
 import sys
+from io import TextIOWrapper
 from pathlib import Path
 from threading import Event, Timer
+from typing import Literal
 
 import pytest
 
@@ -296,6 +298,62 @@ def test_synthetic_stop_abandons_running_process_without_settlement(tmp_path: Pa
     assert [item["event"] for item in ledger] == ["LAUNCH_INTENT", "LAUNCH_STARTED", "LAUNCH_ABANDONED"]
     assert not (tmp_path / "failure.json").exists()
     assert marker.read_text(encoding="utf-8") == "term"
+
+
+def test_stop_before_launch_is_cooperative_without_intent_or_open_handles(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    descriptor_path = tmp_path / "reservation.json"
+    descriptor_path.write_text(json.dumps(_reservation_payload()), encoding="utf-8")
+    observer = ControllerLedgerObserver(load_controller_reservation(descriptor_path), tmp_path)
+    node = LRDagNode("reference", LRNodeKind.REFERENCE, ())
+    stdin_path = tmp_path / "input.fdf"
+    stdin_path.write_text("synthetic input", encoding="utf-8")
+    command = NodeCommand(
+        (sys.executable, "-c", "raise SystemExit(0)"),
+        tmp_path,
+        stdin_path=stdin_path,
+        stdout_path=tmp_path / "stdout.txt",
+        stderr_path=tmp_path / "stderr.txt",
+    )
+    stop_event = Event()
+    stop_event.set()
+    opened: list[TextIOWrapper] = []
+    original_open = Path.open
+
+    def capture_open(
+        path: Path,
+        mode: Literal["r", "w"] = "r",
+        *,
+        encoding: str | None = None,
+        newline: str | None = None,
+    ) -> TextIOWrapper:
+        handle = original_open(path, mode, encoding=encoding, newline=newline)
+        opened.append(handle)
+        return handle
+
+    from hubbardflow.execution import runtime_adapters
+
+    monkeypatch.setattr(Path, "open", capture_open)
+    monkeypatch.setattr(
+        runtime_adapters,
+        "Popen",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(AssertionError("stop forbids launch")),
+    )
+    executor = LocalSubprocessExecutor(
+        _SyntheticFactory(command),
+        _SyntheticValidator(),
+        observer=observer,
+        checkpoint_identity="adaptive:abc",
+        stop_event=stop_event,
+    )
+
+    with pytest.raises(ControllerStopRequested):
+        executor.execute(node)
+
+    assert opened and all(handle.closed for handle in opened)
+    assert not observer.ledger.path.exists()
+    assert not (tmp_path / "failure.json").exists()
 
 
 def test_process_creation_oserror_is_abandoned_without_fake_exit_or_checkpoint(tmp_path: Path) -> None:

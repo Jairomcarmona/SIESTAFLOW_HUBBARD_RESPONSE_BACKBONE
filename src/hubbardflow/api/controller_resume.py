@@ -104,6 +104,14 @@ class ResumeVerdict:
         }
 
 
+@dataclass(frozen=True)
+class ResumeEarlyDecision:
+    """B.3 rules 1–3 result, before checkpoint and native receipt inspection."""
+
+    reason: ResumeReason | None
+    blocking: tuple[str, ...]
+
+
 def validate_resume_verdict(value: dict[str, object]) -> None:
     """Validate emitted verdicts against the byte-identical native schema."""
     schema_path = Path(__file__).with_name("schemas") / "qraft-controller-resume-verdict.schema"
@@ -119,29 +127,12 @@ def evaluate_resume(evidence: ResumeEvidence) -> ResumeVerdict:
     """Apply ADR-017 B.3 in order using only native status and checkpoint facts."""
     native = evidence.check_resume
     decision = ResumeDecision.REFUSE
-    reason = ResumeReason.RESUME_EVIDENCE_INVALID
-    blocking: tuple[str, ...] = ()
+    early = classify_resume_rules_1_to_3(native)
+    reason = early.reason or ResumeReason.RESUME_EVIDENCE_INVALID
+    blocking = early.blocking
     continuation: ResumeContinuation | None = None
-    if native is not None:
-        if native.get("native_status") == "IDENTITY_MISMATCH" and native.get("assessment") == "FAIL":
-            raw_changed = native.get("changed")
-            changed = (
-                tuple(sorted(str(item) for item in raw_changed)) if isinstance(raw_changed, list) else ()
-            )
-            if not changed:
-                raise ControllerContractError(
-                    "ADR-017 B.3 identity-mismatch with empty changed list is unresolved; see DFT issue #59"
-                )
-            reason, blocking = ResumeReason.RESUME_INPUTS_CHANGED, changed
-        elif (
-            native.get("native_status") != "NOT_ESTABLISHED"
-            or native.get("assessment") != "NOT_ESTABLISHED"
-            or native.get("changed") != []
-            or native.get("reusable_response_ids") != []
-            or native.get("physical_equivalence") != "NOT_ESTABLISHED"
-        ):
-            reason = ResumeReason.RESUME_STATUS_UNRECOGNIZED
-        elif (
+    if early.reason is None:
+        if (
             not evidence.checkpoint_loaded
             or evidence.checkpoint_identity is None
             or (
@@ -168,6 +159,29 @@ def evaluate_resume(evidence: ResumeEvidence) -> ResumeVerdict:
     )
     validate_resume_verdict(verdict.to_mapping())
     return verdict
+
+
+def classify_resume_rules_1_to_3(native: dict[str, object] | None) -> ResumeEarlyDecision:
+    """Classify only native B.3 rules 1–3; neutral status grants no continuation."""
+    if native is None:
+        return ResumeEarlyDecision(ResumeReason.RESUME_EVIDENCE_INVALID, ())
+    if native.get("native_status") == "IDENTITY_MISMATCH" and native.get("assessment") == "FAIL":
+        raw_changed = native.get("changed")
+        changed = tuple(sorted(str(item) for item in raw_changed)) if isinstance(raw_changed, list) else ()
+        if not changed:
+            raise ControllerContractError(
+                "ADR-017 B.3 identity-mismatch with empty changed list is unresolved; see DFT issue #59"
+            )
+        return ResumeEarlyDecision(ResumeReason.RESUME_INPUTS_CHANGED, changed)
+    if (
+        native.get("native_status") != "NOT_ESTABLISHED"
+        or native.get("assessment") != "NOT_ESTABLISHED"
+        or native.get("changed") != []
+        or native.get("reusable_response_ids") != []
+        or native.get("physical_equivalence") != "NOT_ESTABLISHED"
+    ):
+        return ResumeEarlyDecision(ResumeReason.RESUME_STATUS_UNRECOGNIZED, ())
+    return ResumeEarlyDecision(None, ())
 
 
 def recoverable_settlements(evidence: ResumeEvidence) -> tuple[LedgerSettlement, ...]:

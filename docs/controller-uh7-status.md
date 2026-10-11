@@ -36,6 +36,28 @@ is not the full installed synthetic campaign acceptance in ADR B.5, nor a real
 SIESTA/Slurm qualification. Published-commit Windows/WSL evidence and CI results
 must still be recorded after rebuilding from a clean source snapshot.
 
+## Early retry admission correction
+
+B.3 rules1–3 now run under the native worker lock before loading the campaign
+or performing scientific admission. The original baseline must be a complete
+public check_resume request and preserve B.2's literal expected/observed
+equality; refreshing evidence cannot repair a truncated or inconsistent baseline.
+Early refusal writes the unchanged verdict with checkpoint_identity null and
+returns75. A neutral result still passes all native campaign, checkpoint and
+artifact validations. Missing retry manifests reach the same refusal path.
+
+Stop received before an inner launch is cooperative, emits no intent and closes
+already opened handles. Windows11/Python3.12.10: focused controller and architecture
+tests45PASS/2SKIP; Ruff global199files and strict mypy221files PASS. The native
+flock exclusion test requires POSIX. Source CI and the external installed-wheel
+consumer both include the new preflight suite; its public synthetic plan helpers
+are copied without running their unrelated golden tests. A source snapshot with
+this correction produced an isolated wheel consumer result of37PASS/2SKIP on
+Windows and39PASS on WSL (Python3.12.10, hashed locked dependencies, `-I`, no
+PYTHONPATH, installed module and schema-hash checks). Complete B.5 acceptance
+and CI for the published commit remain to be recorded. Schemas and scientific
+policies are unchanged; the exceptional #59 route remains explicit.
+
 ## Pending gates and acceptance
 
 - [DFT #59](https://github.com/Jairomcarmona/dftlab-suite/issues/59): B.3 rule 2

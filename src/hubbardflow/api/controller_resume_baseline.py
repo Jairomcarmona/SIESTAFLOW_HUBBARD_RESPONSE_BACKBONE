@@ -86,14 +86,23 @@ def load_resume_request(
     plan: ResolvedPerturbationPlan | None,
 ) -> ResumeRequest:
     """Refresh only observed evidence in the baseline request for public check_resume."""
+    if plan is None:
+        raise ControllerContractError("campaign lacks a frozen perturbation plan required for continuation")
+    return load_resume_request_raw(baseline_path, manifest_path, raw_campaign)
+
+
+def load_resume_request_raw(
+    baseline_path: Path,
+    manifest_path: Path,
+    raw_campaign: Mapping[str, object],
+) -> ResumeRequest:
+    """Build B.2 evidence from authored files before campaign semantic validation."""
     try:
         baseline = load_strict_json(baseline_path.read_text(encoding="utf-8"))
     except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
         raise ControllerContractError(f"resume baseline is unreadable: {exc}") from exc
     if not isinstance(baseline, dict) or baseline.get("responses") != []:
         raise ControllerContractError("resume baseline is absent, malformed, or contains responses")
-    if plan is None:
-        raise ControllerContractError("campaign lacks a frozen perturbation plan required for continuation")
     observed_plan = _resolved_plan_mapping(manifest_path.resolve().parent, raw_campaign)
     observed_policies = {"campaign": dict(raw_campaign)}
     baseline_files = baseline.get("files")

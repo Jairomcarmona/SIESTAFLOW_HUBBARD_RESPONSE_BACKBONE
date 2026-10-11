@@ -78,7 +78,7 @@ def main(argv: list[str] | None = None) -> int:
                 str(row.get("attempt_id", "")) != str(previous["attempt_id"]) for row in last_prior
             ):
                 raise ControllerContractError("last prior ledger does not match previous_attempt")
-        if campaign_path.resolve(strict=True).parent != observer.state_dir_path.resolve(strict=True):
+        if campaign_path.resolve().parent != observer.state_dir_path.resolve(strict=True):
             raise ControllerContractError("campaign root must be the complete paths.state_dir directory")
         stop_event = Event()
         previous_handler = signal.getsignal(signal.SIGTERM)

@@ -58,6 +58,13 @@ def main() -> None:
         for relative in (
             "tests/unit/test_controller_contracts.py",
             "tests/unit/test_controller_resume.py",
+            "tests/unit/test_controller_resume_preflight.py",
+            "tests/unit/test_perturbation_plan.py",
+            "tests/unit/test_coverage.py",
+            "tests/__init__.py",
+            "tests/unit/__init__.py",
+            "tools/__init__.py",
+            "tools/hubbardflow_plan_diagnose.py",
             "tests/fixtures/controller-resume-rules/cases.json",
         ):
             destination = target / relative
@@ -67,11 +74,11 @@ def main() -> None:
         probe.write_text(
             "import importlib.metadata,json,os,pathlib,subprocess,sys,sysconfig\n"
             "from hashlib import sha256\n"
-            "from hubbardflow.api import controller,controller_contracts,controller_ledger,controller_resume\n"
+            "from hubbardflow.api import controller,controller_contracts,controller_ledger,controller_resume,controller_resume_preflight\n"
             "from hubbardflow import api\n"
             "assert sys.flags.isolated\n"
             "checkout=pathlib.Path(sys.argv[1]).resolve()\n"
-            "for module in (controller,controller_contracts,controller_ledger,controller_resume):\n"
+            "for module in (controller,controller_contracts,controller_ledger,controller_resume,controller_resume_preflight):\n"
             "    path=pathlib.Path(module.__file__).resolve()\n"
             "    assert path.is_relative_to(pathlib.Path(sys.prefix).resolve()),path\n"
             "    assert not path.is_relative_to(checkout),path\n"
@@ -103,7 +110,19 @@ def main() -> None:
         )
         subprocess.run([str(python), "-I", str(probe), str(root)], cwd=target, env=environment, check=True)
         subprocess.run(
-            [str(python), "-I", "-m", "pytest", "-q", "tests/unit"], cwd=target, env=environment, check=True
+            [
+                str(python),
+                "-I",
+                "-m",
+                "pytest",
+                "-q",
+                "tests/unit/test_controller_contracts.py",
+                "tests/unit/test_controller_resume.py",
+                "tests/unit/test_controller_resume_preflight.py",
+            ],
+            cwd=target,
+            env=environment,
+            check=True,
         )
         vectors = json.loads((target / "tests/fixtures/controller-resume-rules/cases.json").read_bytes())
         print(
