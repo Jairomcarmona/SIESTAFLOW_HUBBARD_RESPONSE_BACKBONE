@@ -12,7 +12,7 @@ from types import SimpleNamespace
 import pytest
 
 from hubbardflow.api import ApiOperation, ApiResult, controller_resume_preflight
-from hubbardflow.api.controller_contracts import ControllerContractError, load_controller_reservation
+from hubbardflow.api.controller_contracts import load_controller_reservation
 from hubbardflow.api.controller_ledger import ControllerLedgerObserver
 from hubbardflow.api.controller_resume import ResumeReason
 from hubbardflow.api.controller_resume_baseline import create_resume_baseline, write_resume_baseline
@@ -240,28 +240,80 @@ def test_incomplete_or_extended_original_baseline_refuses_before_campaign_admiss
     assert verdict["check_resume"] is None
 
 
-def test_identity_mismatch_empty_changed_remains_an_explicit_issue_59_gate(
+@pytest.mark.skipif(os.name != "posix", reason="native flock exclusion requires POSIX")
+def test_identity_mismatch_empty_changed_refuses_before_checkpoint_or_launch(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     manifest, _raw, observer, _baseline = _prepared_retry(tmp_path)
+    from hubbardflow.execution import campaign_runner, generic_executor, runtime_adapters
+
+    fcntl = importlib.import_module("fcntl")
+    checkpoint = observer.state_dir_path / ".siestaflow" / "dag-checkpoint.json"
+    checkpoint.parent.mkdir(parents=True, exist_ok=True)
+    checkpoint.write_text("{ malformed checkpoint", encoding="utf-8")
+    native = {
+        "native_status": "IDENTITY_MISMATCH",
+        "assessment": "FAIL",
+        "changed": [],
+        "reusable_response_ids": ["native-response-remains-literal"],
+        "physical_equivalence": "NATIVE_VALUE_REMAINS_LITERAL",
+    }
+    check_resume_requests: list[object] = []
+
+    def identity_mismatch_result(_request: object) -> ApiResult:
+        check_resume_requests.append(_request)
+        payload = {key: value for key, value in native.items() if key not in {"native_status", "assessment"}}
+        return ApiResult(ApiOperation.CHECK_RESUME, "IDENTITY_MISMATCH", json.dumps(payload))
+
     monkeypatch.setattr(
         controller_resume_preflight,
         "check_resume",
-        lambda _request: ApiResult(
-            ApiOperation.CHECK_RESUME,
-            "IDENTITY_MISMATCH",
-            json.dumps(
-                {
-                    "changed": [],
-                    "reusable_response_ids": [],
-                    "physical_equivalence": "NOT_ESTABLISHED",
-                }
-            ),
-        ),
+        identity_mismatch_result,
     )
 
-    with pytest.raises(ControllerContractError, match="issue #59"):
-        preflight_resume_rejection(observer, manifest)
+    def admission_forbidden(_path: str | Path) -> dict[str, object]:
+        raise AssertionError("B.3 rule 1 must refuse before native campaign admission")
+
+    checkpoint_loads: list[Path] = []
+    process_creations: list[tuple[object, ...]] = []
+
+    def checkpoint_load_forbidden(self: object) -> dict[str, object]:
+        checkpoint_loads.append(checkpoint)
+        raise AssertionError("B.3 rule 1 must precede checkpoint loading")
+
+    def process_creation_forbidden(*args: object, **_kwargs: object) -> None:
+        process_creations.append(args)
+        raise AssertionError("B.3 rule 1 must not create a child process")
+
+    monkeypatch.setattr(campaign_runner, "load_campaign_v2", admission_forbidden)
+    monkeypatch.setattr(generic_executor.JsonDagCheckpoint, "load", checkpoint_load_forbidden)
+    monkeypatch.setattr(runtime_adapters, "Popen", process_creation_forbidden)
+    lock_path = observer.state_dir_path / ".siestaflow" / "worker.lock"
+    with lock_path.open("a+b") as held_lock:
+        fcntl.flock(held_lock.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        with monkeypatch.context() as patch:
+            patch.setattr(
+                controller_resume_preflight,
+                "preflight_resume_rejection",
+                lambda *_args: (_ for _ in ()).throw(
+                    AssertionError("the native worker lock must exclude preflight")
+                ),
+            )
+            assert campaign_runner.run_campaign_worker(manifest, "resume", controller_observer=observer) == 2
+    assert not observer.resume_verdict_path.exists()
+
+    assert campaign_runner.run_campaign_worker(manifest, "resume", controller_observer=observer) == 75
+    verdict = json.loads(observer.resume_verdict_path.read_text(encoding="utf-8"))
+    assert verdict["decision"] == "REFUSE"
+    assert verdict["reason"] == ResumeReason.RESUME_EVIDENCE_INVALID.value
+    assert verdict["check_resume"] == native
+    assert verdict["blocking"] == []
+    assert verdict["continuation"] is None
+    assert verdict["checkpoint_identity"] is None
+    assert len(check_resume_requests) == 2
+    assert checkpoint_loads == []
+    assert process_creations == []
+    assert not observer.inner_ledger_path.exists()
 
 
 @pytest.mark.parametrize("field", ["observed_plan", "observed_policies", "observed_sha256"])

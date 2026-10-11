@@ -3,9 +3,13 @@
 from __future__ import annotations
 
 import json
+from copy import deepcopy
 from pathlib import Path
 from typing import cast
 
+import pytest
+
+from hubbardflow.api.controller_contracts import ControllerContractError
 from hubbardflow.api.controller_resume import (
     DagNode,
     NodeEvidence,
@@ -14,6 +18,7 @@ from hubbardflow.api.controller_resume import (
     ResumeReason,
     evaluate_resume,
     recoverable_settlements,
+    validate_resume_verdict,
 )
 from hubbardflow.api.controller_resume_baseline import create_resume_baseline
 from hubbardflow.api.controller_resume_ledger import FinishedLaunch, LedgerSettlement
@@ -137,3 +142,57 @@ def test_derived_digest_warning_does_not_veto_native_revalidation() -> None:
 
     assert verdict.decision is ResumeDecision.CONTINUE
     assert verdict.reason is ResumeReason.TECHNICAL_CONTINUATION
+
+
+def test_identity_mismatch_without_changes_is_rule_one_with_literal_native_result() -> None:
+    native: dict[str, object] = {
+        "native_status": "IDENTITY_MISMATCH",
+        "assessment": "FAIL",
+        "changed": [],
+        "reusable_response_ids": ["native-response-id"],
+        "physical_equivalence": "NATIVE_RESULT_VALUE",
+    }
+    evidence = _evidence(native=native)
+
+    verdict = evaluate_resume(evidence)
+
+    assert verdict.to_mapping() == {
+        "contract": "qraft.controller-resume-verdict@1.0",
+        "task_id": "task-1",
+        "attempt_id": "attempt-2",
+        "previous_attempt_id": "attempt-1",
+        "checkpoint_identity": "checkpoint-1",
+        "decision": "REFUSE",
+        "reason": "RESUME_EVIDENCE_INVALID",
+        "check_resume": native,
+        "blocking": [],
+        "continuation": None,
+        "scientific_effect": "NONE",
+    }
+    assert recoverable_settlements(evidence) == ()
+
+
+@pytest.mark.parametrize("mutation", ["neutral", "changed", "blocking"])
+def test_resume_evidence_invalid_schema_allows_only_null_or_empty_changed_mismatch(mutation: str) -> None:
+    native: dict[str, object] = {
+        "native_status": "IDENTITY_MISMATCH",
+        "assessment": "FAIL",
+        "changed": [],
+        "reusable_response_ids": [],
+        "physical_equivalence": "NOT_ESTABLISHED",
+    }
+    mapping = evaluate_resume(_evidence(native=native)).to_mapping()
+    candidate = deepcopy(mapping)
+    if mutation == "neutral":
+        candidate["check_resume"] = {
+            **native,
+            "native_status": "NOT_ESTABLISHED",
+            "assessment": "NOT_ESTABLISHED",
+        }
+    elif mutation == "changed":
+        candidate["check_resume"] = {**native, "changed": ["input:file"]}
+    else:
+        candidate["blocking"] = ["invented-blocker"]
+
+    with pytest.raises(ControllerContractError):
+        validate_resume_verdict(candidate)

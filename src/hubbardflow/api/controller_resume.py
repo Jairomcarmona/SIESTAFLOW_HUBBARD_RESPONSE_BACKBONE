@@ -150,7 +150,11 @@ def evaluate_resume(evidence: ResumeEvidence) -> ResumeVerdict:
         evidence.task_id,
         evidence.attempt_id,
         evidence.previous_attempt_id,
-        evidence.checkpoint_identity,
+        (
+            None
+            if _identity_mismatch_without_changes(native) and not evidence.checkpoint_loaded
+            else evidence.checkpoint_identity
+        ),
         decision,
         reason,
         native,
@@ -165,13 +169,11 @@ def classify_resume_rules_1_to_3(native: dict[str, object] | None) -> ResumeEarl
     """Classify only native B.3 rules 1–3; neutral status grants no continuation."""
     if native is None:
         return ResumeEarlyDecision(ResumeReason.RESUME_EVIDENCE_INVALID, ())
+    if _identity_mismatch_without_changes(native):
+        return ResumeEarlyDecision(ResumeReason.RESUME_EVIDENCE_INVALID, ())
     if native.get("native_status") == "IDENTITY_MISMATCH" and native.get("assessment") == "FAIL":
         raw_changed = native.get("changed")
         changed = tuple(sorted(str(item) for item in raw_changed)) if isinstance(raw_changed, list) else ()
-        if not changed:
-            raise ControllerContractError(
-                "ADR-017 B.3 identity-mismatch with empty changed list is unresolved; see DFT issue #59"
-            )
         return ResumeEarlyDecision(ResumeReason.RESUME_INPUTS_CHANGED, changed)
     if (
         native.get("native_status") != "NOT_ESTABLISHED"
@@ -182,6 +184,14 @@ def classify_resume_rules_1_to_3(native: dict[str, object] | None) -> ResumeEarl
     ):
         return ResumeEarlyDecision(ResumeReason.RESUME_STATUS_UNRECOGNIZED, ())
     return ResumeEarlyDecision(None, ())
+
+
+def _identity_mismatch_without_changes(native: dict[str, object] | None) -> bool:
+    return (
+        native is not None
+        and native.get("native_status") == "IDENTITY_MISMATCH"
+        and native.get("changed") == []
+    )
 
 
 def recoverable_settlements(evidence: ResumeEvidence) -> tuple[LedgerSettlement, ...]:
