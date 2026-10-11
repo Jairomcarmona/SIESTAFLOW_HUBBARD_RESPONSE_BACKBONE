@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hubbardflow.invalid/schemas/analysis_result.v1.schema.json",
+  "description": "Native analysis payload inside API result. Open numerical status vocabulary, never physical PASS. Preserves V2/V3 payload and inverse proof tokens.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "quantity",
+    "units",
+    "numerical_status",
+    "physical_acceptance",
+    "primary",
+    "reasons"
+  ],
+  "properties": {
+    "schema_version": {
+      "enum": [
+        "siestaflow.lr_u_analysis.v2",
+        "siestaflow.lr_u_analysis.v3"
+      ]
+    },
+    "quantity": {
+      "const": "U_scalar_charge"
+    },
+    "units": {
+      "const": "eV"
+    },
+    "numerical_status": {
+      "type": "string",
+      "minLength": 1
+    },
+    "physical_acceptance": {
+      "const": "NOT_ESTABLISHED"
+    },
+    "primary": {
+      "type": "object"
+    },
+    "reasons": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "site_labels": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      }
+    }
+  },
+  "additionalProperties": true
+}

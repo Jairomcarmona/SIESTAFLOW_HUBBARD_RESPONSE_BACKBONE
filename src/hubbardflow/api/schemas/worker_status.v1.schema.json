@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hubbardflow.invalid/schemas/worker_status.v1.schema.json",
+  "description": "Read-only native worker-state snapshot. Execution status is an open vocabulary and cannot certify science. Preserves existing worker keys.",
+  "type": "object",
+  "required": [
+    "status"
+  ],
+  "properties": {
+    "status": {
+      "type": "string",
+      "minLength": 1
+    },
+    "campaign_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "active_node": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "completed_nodes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "heartbeat_epoch": {
+      "type": "number"
+    },
+    "started_epoch": {
+      "type": "number"
+    },
+    "finished_epoch": {
+      "type": "number"
+    }
+  },
+  "additionalProperties": true
+}

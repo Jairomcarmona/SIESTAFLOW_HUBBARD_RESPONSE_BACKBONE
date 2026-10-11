@@ -4,7 +4,7 @@ message: >-
   contributor roles, affiliations, ORCID identifiers, and license are
   PENDIENTE_AUTOR and must be completed before public release.
 title: HubbardFlow
-version: 0.1.2
+version: 0.1.3
 license: PENDIENTE_AUTOR
 authors:
   - family-names: PENDIENTE_AUTOR
