@@ -7,6 +7,11 @@ The expected payloads come directly from `resolve_perturbation_plan`,
 public facade did not generate them. Scientific domain sources remain byte
 identical to that commit. The existing synthetic planning helper uses
 explicit versioned policies from `tests/unit/test_perturbation_plan.py`.
+Only the qualified operations referenced by each synthetic class are injected
+(four for the review case, none for disabled reduction); their indices are
+remapped consistently. Other search diagnostics are irrelevant to these
+transport cases and omitted. The native frozen qualification/planner validates
+this declared input; no scientific source, policy or baseline is changed.
 
 The plan's Unicode planner ID distinguishes ensure_ascii=True from the
 observation hash's ensure_ascii=False profile. The scalar synthetic response
