@@ -1,0 +1,41 @@
+name: Public native API consumers
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  public-api:
+    name: Public API (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-2022]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e
+        with:
+          version: '0.11.14'
+          enable-cache: false
+      - name: Locked Python 3.12.10 / NumPy 1.26.4 / jsonschema 4.23.0
+        run: uv sync --locked --extra test --python 3.12.10
+      - name: Public facade and unchanged scientific regressions
+        run: >-
+          uv run --locked --extra test python -m pytest -q
+          tests/unit/test_public_api.py tests/unit/test_public_api_schemas.py
+          tests/unit/test_lr_analysis_v2.py tests/unit/test_matrix_lr.py
+          tests/unit/test_quantized_response.py tests/unit/test_u_certification.py
+          tests/unit/test_import_architecture.py
+      - name: Frozen scientific baseline
+        shell: bash
+        run: bash tools/check_v6_integrity.sh
+      - name: Build locked wheel
+        run: uv build --no-build-isolation --wheel
+      - name: Consumer without checkout or PYTHONPATH
+        run: uv run --locked --extra test python tools/qualify_public_api.py

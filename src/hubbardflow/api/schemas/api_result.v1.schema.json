@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hubbardflow.invalid/schemas/api_result.v1.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "api_version",
+    "operation",
+    "native_status",
+    "assessment",
+    "native_digest",
+    "payload"
+  ],
+  "properties": {
+    "schema": {
+      "const": "hubbardflow.api_result.v1"
+    },
+    "api_version": {
+      "const": "1.0.0"
+    },
+    "operation": {
+      "enum": [
+        "describe_capabilities",
+        "resolve_plan",
+        "validate_observation",
+        "evaluate_gate",
+        "analyze",
+        "check_resume",
+        "worker_status"
+      ]
+    },
+    "native_status": {
+      "type": "string",
+      "minLength": 1
+    },
+    "assessment": {
+      "enum": [
+        "NOT_ESTABLISHED",
+        "FAIL"
+      ]
+    },
+    "native_digest": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      ]
+    },
+    "payload": {
+      "type": "object"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "native_status": {
+            "enum": [
+              "FAIL",
+              "IDENTITY_MISMATCH"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "assessment": {
+            "const": "FAIL"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "assessment": {
+            "const": "NOT_ESTABLISHED"
+          }
+        }
+      }
+    }
+  ]
+}

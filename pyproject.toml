@@ -1,13 +1,14 @@
 [build-system]
-requires = ["setuptools"]
+requires = ["setuptools==80.9.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "hubbardflow"
-version = "0.1.2"
+version = "0.1.3"
 description = "HubbardFlow — Reproducible workflows for first-principles Hubbard parameter determination and certification."
+requires-python = ">=3.12,<3.13"
 dependencies = [
-    "numpy>=1.20.0,<2.0.0",
+    "numpy>=1.26.4,<2.0.0",
     "jsonschema>=4.0.0,<5.0.0"
 ]
 
@@ -18,9 +19,16 @@ hubbardflow = "hubbardflow.cli:main"
 test = [
     "pytest>=7.0.0",
     "hypothesis>=6.0.0",
-    "ruff>=0.4.0",
-    "mypy>=1.10.0"
+    "ruff==0.16.10",
+    "mypy==2.4.0",
+    "types-jsonschema>=4.26.0.20261006",
 ]
+
+[dependency-groups]
+dev = ["setuptools==80.9.0"]
+
+[tool.uv]
+constraint-dependencies = ["numpy==1.26.4", "jsonschema==4.23.0"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -766,3 +774,6 @@ py-modules = ["symmetry_reduction_proposal"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+"hubbardflow.api" = ["schemas/*.json"]
