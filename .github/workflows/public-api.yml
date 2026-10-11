@@ -34,6 +34,7 @@ jobs:
           tests/unit/test_import_architecture.py
           tests/unit/test_controller_contracts.py tests/unit/test_controller_resume.py
           tests/unit/test_controller_resume_preflight.py
+          tests/unit/test_controller_installed_campaign.py
       - name: Frozen scientific baseline
         shell: bash
         run: bash tools/check_v6_integrity.sh

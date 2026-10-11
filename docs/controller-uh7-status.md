@@ -54,9 +54,36 @@ consumer both include the new preflight suite; its public synthetic plan helpers
 are copied without running their unrelated golden tests. A source snapshot with
 this correction produced an isolated wheel consumer result of37PASS/2SKIP on
 Windows and39PASS on WSL (Python3.12.10, hashed locked dependencies, `-I`, no
-PYTHONPATH, installed module and schema-hash checks). Complete B.5 acceptance
-and CI for the published commit remain to be recorded. Schemas and scientific
+PYTHONPATH, installed module and schema-hash checks). Commit18d6163 subsequently
+passed all seven CI checks, including the complete Linux suite (1839 passed,
+20 skipped, 22 xfailed). Schemas and scientific
 policies are unchanged; the exceptional #59 route remains explicit.
+
+## Installed synthetic native campaigns
+
+The wheel qualifier additionally runs seven POSIX campaign cases through the
+installed console script and native initialization, runner, checkpoint and
+resume API. A synthetic reference produces a native validated receipt without
+running SIESTA or accepting scientific evidence. A neutral retry launches a
+pending node and does not relaunch reference. Changed valid plan, policy,
+pseudopotential and parent DM each return75, with no current intent and no
+increase in the executable launch counter. Cooperative SIGTERM during the
+next synthetic node records abandonment and does not settle that node.
+
+Recovery preserves the native checkpoint and finished trace, omitting only the
+final settlement row in a separate synthetic prior book. The next attempt
+records SETTLEMENT_RECOVERED before its pending launch. This models one crash
+window deterministically; it is not a process crash or a real SCF recovery.
+Synthetic children have a finite lifetime, and timeout cleanup targets only
+the test's own controller process. No process group or foreign PID is killed.
+
+The qualifier installs locked hashed dependencies and a wheel into an external
+temporary environment and runs these tests with `-I`, without PYTHONPATH or
+checkout imports. Windows exercises platform rejection and skips seven POSIX
+cases. The optional qualifier `--wheel` selects an explicit artifact; it adds
+no controller argument or contract field. ROOT clean-source Windows regressions
+and architecture:117 passed,9 skipped. Ruff and strict mypy pass; V6 is intact.
+Published-commit wheel results and fresh Windows/Linux CI remain to be recorded.
 
 ## Pending gates and acceptance
 
@@ -65,9 +92,9 @@ policies are unchanged; the exceptional #59 route remains explicit.
   That path raises an explicit design-gate error before producing a verdict;
   it is not claimed as a completed exit-75 contract. No placeholder, alternate
   reason or schema-validation bypass is introduced.
-- Complete installed synthetic campaigns through baseline, `check_resume`,
-  runner and exit 75, including changed plan, pseudo, parent DM and policy,
-  interruption and recovery. Pure vectors and adapter tests do not replace it.
+- Complete B.5 acceptance still waits for #59 and the published-commit installed
+  campaign results. Synthetic native campaign tests above do not prove real
+  SIESTA cancellation/recovery, containment ownership or scientific reuse.
 - QRAFT integration and [DFT #57](https://github.com/Jairomcarmona/dftlab-suite/issues/57)
   remain separate gates. Both engines must be completed, tested and fixed in
   the platform lock before HF-1 can be enabled and qualified on WSL.

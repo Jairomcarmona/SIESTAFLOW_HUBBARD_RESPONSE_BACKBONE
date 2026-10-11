@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import argparse
 import json
 import os
 import shutil
@@ -13,10 +14,19 @@ from pathlib import Path
 
 def main() -> None:
     root = Path(__file__).resolve().parents[1]
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--wheel", type=Path, help="use this wheel instead of the single artifact under dist/"
+    )
+    cli_args = parser.parse_args()
     uv = shutil.which("uv")
     if uv is None:
         raise SystemExit("uv 0.11.14 must be on PATH")
-    wheels = list((root / "dist").glob("hubbardflow-0.1.3-*.whl"))
+    wheels = (
+        [cli_args.wheel.resolve(strict=True)]
+        if cli_args.wheel is not None
+        else list((root / "dist").glob("hubbardflow-0.1.3-*.whl"))
+    )
     if len(wheels) != 1:
         raise SystemExit("expected exactly one built hubbardflow 0.1.3 wheel")
     environment = {key: value for key, value in os.environ.items() if key not in {"PYTHONPATH", "PYTHONHOME"}}
@@ -59,6 +69,8 @@ def main() -> None:
             "tests/unit/test_controller_contracts.py",
             "tests/unit/test_controller_resume.py",
             "tests/unit/test_controller_resume_preflight.py",
+            "tests/unit/test_controller_installed_campaign.py",
+            "tests/unit/controller_installed_campaign_support.py",
             "tests/unit/test_perturbation_plan.py",
             "tests/unit/test_coverage.py",
             "tests/__init__.py",
@@ -119,6 +131,7 @@ def main() -> None:
                 "tests/unit/test_controller_contracts.py",
                 "tests/unit/test_controller_resume.py",
                 "tests/unit/test_controller_resume_preflight.py",
+                "tests/unit/test_controller_installed_campaign.py",
             ],
             cwd=target,
             env=environment,
