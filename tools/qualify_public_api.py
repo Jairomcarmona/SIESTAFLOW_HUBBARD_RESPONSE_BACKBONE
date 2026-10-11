@@ -23,19 +23,44 @@ def main() -> None:
         target = Path(directory)
         requirements = target / "requirements.txt"
         subprocess.run(
-            [uv, "export", "--locked", "--no-dev", "--no-emit-project", "--format", "requirements-txt", "--quiet", "-o", str(requirements)],
-            cwd=root, env=env, check=True,
+            [
+                uv,
+                "export",
+                "--locked",
+                "--no-dev",
+                "--no-emit-project",
+                "--format",
+                "requirements-txt",
+                "--quiet",
+                "-o",
+                str(requirements),
+            ],
+            cwd=root,
+            env=env,
+            check=True,
         )
         venv = target / "env"
         subprocess.run([uv, "venv", "--python", sys.executable, str(venv)], cwd=target, env=env, check=True)
         python = venv / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
-        subprocess.run([uv, "pip", "install", "--python", str(python), "--require-hashes", "-r", str(requirements)], cwd=target, env=env, check=True)
-        subprocess.run([uv, "pip", "install", "--python", str(python), "--no-deps", str(wheels[0])], cwd=target, env=env, check=True)
+        subprocess.run(
+            [uv, "pip", "install", "--python", str(python), "--require-hashes", "-r", str(requirements)],
+            cwd=target,
+            env=env,
+            check=True,
+        )
+        subprocess.run(
+            [uv, "pip", "install", "--python", str(python), "--no-deps", str(wheels[0])],
+            cwd=target,
+            env=env,
+            check=True,
+        )
         script = target / "consumer.py"
         fixture = target / "native_consumer.json"
         shutil.copyfile(root / "tests/consumer/public_api_consumer.py", script)
         shutil.copyfile(root / "tests/fixtures/public_api_v1/native_consumer.json", fixture)
-        subprocess.run([str(python), "-I", str(script), str(fixture), str(root)], cwd=target, env=env, check=True)
+        subprocess.run(
+            [str(python), "-I", str(script), str(fixture), str(root)], cwd=target, env=env, check=True
+        )
 
 
 if __name__ == "__main__":
