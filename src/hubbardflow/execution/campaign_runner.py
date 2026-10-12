@@ -1,8 +1,10 @@
 """Fixed-grid v2 campaign dispatcher built on the admitted production runtime."""
+
 from __future__ import annotations
 
-from dataclasses import asdict, replace
+from dataclasses import asdict, dataclass, replace
 from hashlib import sha256
+
 try:
     import fcntl
 except ImportError:  # Windows clients may import analysis/report helpers only.
@@ -23,13 +25,20 @@ from typing import Any, Mapping
 
 from hubbardflow.domain.backend_compatibility import ScientificProfile
 from hubbardflow.domain.adaptive_alpha_control import (
-    AdaptiveAlphaPolicy, AdaptiveDecision, decide_round, initial_siesta_node_cost,
+    AdaptiveAlphaPolicy,
+    AdaptiveDecision,
+    decide_round,
+    initial_siesta_node_cost,
 )
 from hubbardflow.domain.lr_analysis_v2 import (
-    LRAnalysisPolicy, analyze_verified_lr, write_lr_analysis_v2,
+    LRAnalysisPolicy,
+    analyze_verified_lr,
+    write_lr_analysis_v2,
 )
 from hubbardflow.domain.response_grid_reproducibility import (
-    ValidatedResponseGridCalibration, _execution_attempt, response_grid_campaign_context_sha256,
+    ValidatedResponseGridCalibration,
+    _execution_attempt,
+    response_grid_campaign_context_sha256,
     validate_response_grid_calibration,
 )
 from hubbardflow.domain.lr_campaign_contract import LinearResponseBareCampaignContract
@@ -40,12 +49,21 @@ from hubbardflow.domain.projector_diagnostics import (
     SiteElectronReference,
     build_projector_diagnostics,
 )
-from hubbardflow.domain.reference_reproduction import ParentReproduction, ReferenceReproduction, ToleranceSource
+from hubbardflow.domain.reference_reproduction import (
+    ParentReproduction,
+    ReferenceReproduction,
+    ToleranceSource,
+)
 from hubbardflow.domain.state_gate_results import StateGateReason
 from hubbardflow.domain.symmetry_reduction import PerturbationSpec, ResponseMode
 from hubbardflow.execution.campaign_v2 import (
-    CampaignV2Error, load_campaign_v2, sha256_file, validate_lr_config,
-    validate_psml, validate_reference_fdf, verify_campaign_inventory,
+    CampaignV2Error,
+    load_campaign_v2,
+    sha256_file,
+    validate_lr_config,
+    validate_psml,
+    validate_reference_fdf,
+    verify_campaign_inventory,
 )
 from hubbardflow.execution.campaign_plan import campaign_inventory
 from hubbardflow.execution.campaign_shadow import CampaignShadow
@@ -85,11 +103,28 @@ from hubbardflow.execution.state_gate_step import (
 )
 from hubbardflow.siesta_backend.response_grid_semantics import extract_siesta_response_cell
 from hubbardflow.execution.generic_executor import (
-    ExecutionContractError, GenericDagExecutor, NodeReceipt, dag_digest,
+    ExecutionContractError,
+    GenericDagExecutor,
+    NodeReceipt,
+    dag_digest,
 )
 from hubbardflow.execution.lr_dag import (
-    LRDag, LRDagNode, LRNodeKind, build_adaptive_campaign_dag,
+    LRDag,
+    LRDagNode,
+    LRNodeKind,
+    build_adaptive_campaign_dag,
 )
+
+
+@dataclass(frozen=True)
+class ReuseInspection:
+    """Read-only result of applying the native checkpoint validators."""
+
+    retained: tuple[str, ...]
+    invalidated: tuple[str, ...]
+    warnings: tuple[str, ...]
+
+
 from hubbardflow.siesta_backend.backend_admission_plugin import admit_siesta542_from_campaign_contract
 from hubbardflow.siesta_backend.command_factory import SiestaCampaignLayout
 from hubbardflow.siesta_backend.event_parser import parse_hubbard_population_events
@@ -100,7 +135,8 @@ from hubbardflow.siesta_backend.output_validator import SiestaArtifactSpec
 from hubbardflow.siesta_backend.parser_models import HubbardPopulationEvent
 from hubbardflow.siesta_backend.production_runtime import build_admitted_siesta542_runtime
 from hubbardflow.siesta_backend.reference_magnetic_evidence import (
-    parse_final_collinear_mulliken_sz, reference_moments_from_fdf_and_output,
+    parse_final_collinear_mulliken_sz,
+    reference_moments_from_fdf_and_output,
 )
 from hubbardflow.siesta_backend.siesta542_bare_profile import Siesta542PotentialShiftHamiltonianProfile
 from hubbardflow.siesta_backend.siesta542_screened_selection import select_converged_screened_event
@@ -132,7 +168,11 @@ def _validate_resume_config(
         tuple(sorted({Path(p).parent for p in config["pseudopotentials"].values()}, key=str)),
     )
     return validate_lr_config(
-        config, fdf_species, projector_sites, atom_count, inventory=inventory,
+        config,
+        fdf_species,
+        projector_sites,
+        atom_count,
+        inventory=inventory,
     )
 
 
@@ -154,7 +194,9 @@ def _alpha_token(value: float) -> str:
     return ("p" if value > 0 else "m") + f"{abs(value):.12g}".replace(".", "p")
 
 
-def _build_dag(sites: list[dict[str, Any]], alpha_grid: list[float]) -> tuple[LRDag, dict[str, PerturbationSpec]]:
+def _build_dag(
+    sites: list[dict[str, Any]], alpha_grid: list[float]
+) -> tuple[LRDag, dict[str, PerturbationSpec]]:
     reference = LRDagNode("reference", LRNodeKind.REFERENCE, ())
     responses: list[LRDagNode] = []
     specs: dict[str, PerturbationSpec] = {}
@@ -163,9 +205,13 @@ def _build_dag(sites: list[dict[str, Any]], alpha_grid: list[float]) -> tuple[LR
             for mode in (ResponseMode.BARE, ResponseMode.SCREENED):
                 run_id = f"lr_s{site_index:03d}_{_alpha_token(alpha)}_{mode.value.lower()}"
                 spec = PerturbationSpec(
-                    run_id=run_id, orbit_id=str(site.get("orbit_id", site["site_id"])),
-                    site_index=site_index, site_id=site["site_id"], mode=mode,
-                    alpha_ev=float(alpha), purpose="explicit_fixed_grid",
+                    run_id=run_id,
+                    orbit_id=str(site.get("orbit_id", site["site_id"])),
+                    site_index=site_index,
+                    site_id=site["site_id"],
+                    mode=mode,
+                    alpha_ev=float(alpha),
+                    purpose="explicit_fixed_grid",
                 )
                 node_id = f"response:{run_id}"
                 specs[node_id] = spec
@@ -182,8 +228,12 @@ class _Heartbeat:
     def __init__(self, path: Path, *, campaign_id: str):
         self.path = path
         self.state: dict[str, Any] = {
-            "campaign_id": campaign_id, "status": "RUNNING", "heartbeat_interval_seconds": HEARTBEAT_SECONDS,
-            "started_epoch": time.time(), "completed_nodes": [], "active_node": None,
+            "campaign_id": campaign_id,
+            "status": "RUNNING",
+            "heartbeat_interval_seconds": HEARTBEAT_SECONDS,
+            "started_epoch": time.time(),
+            "completed_nodes": [],
+            "active_node": None,
         }
         self.lock = threading.Lock()
         self.write_lock = threading.Lock()
@@ -240,7 +290,9 @@ class _AttemptingFactory:
         level_id = node.scf_level_id or "base"
         reference_dm = self.reference_dms.get(level_id)
         self.factory.layout = replace(
-            self.base_layout, run_root=attempt_root, reference_dm=reference_dm,
+            self.base_layout,
+            run_root=attempt_root,
+            reference_dm=reference_dm,
         )
         self.state.update(active_attempt_root=str(attempt_root), active_node=node.node_id)
 
@@ -264,14 +316,23 @@ class CampaignRunner:
         """Current output precision requirement for occupation extraction."""
         return self._minimum_occupation_decimal_places
 
-    def __init__(self, manifest_path: str | Path):
+    def __init__(
+        self,
+        manifest_path: str | Path,
+        *,
+        controller_observer: Any | None = None,
+        controller_stop_event: threading.Event | None = None,
+        controller_stop_path: Path | None = None,
+    ):
         self.manifest_path = Path(manifest_path).resolve()
+        self.controller_observer = controller_observer
+        self.controller_stop_event = controller_stop_event
+        self.controller_stop_path = controller_stop_path
         self.campaign = load_campaign_v2(manifest_path)
         input_hash_warnings = verify_campaign_inventory(self.campaign)
         self.root = Path(self.campaign["_campaign_root"])
         self._input_sha256_by_path = {
-            str(item["path"]): str(item.get("sha256"))
-            for item in self.campaign["input_files"]
+            str(item["path"]): str(item.get("sha256")) for item in self.campaign["input_files"]
         }
         self.control = self.root / ".siestaflow"
         self.control.mkdir(parents=True, exist_ok=True)
@@ -280,13 +341,25 @@ class CampaignRunner:
         self.runs = self.results / "runs"
         self.runs.mkdir(parents=True, exist_ok=True)
         self.profile: ExecutionProfile = self.campaign["_profile"]
+        if controller_observer is not None:
+            launcher = replace(
+                self.profile.runtime.launcher,
+                command=controller_observer.launcher_command,
+                kind=controller_observer.launcher_kind,
+                processes_per_node=controller_observer.ranks,
+            )
+            runtime = replace(self.profile.runtime, launcher=launcher)
+            allocation = replace(
+                self.profile.allocation,
+                nodes=1,
+                total_cpus=controller_observer.ranks * controller_observer.cpus_per_rank,
+            )
+            self.profile = replace(self.profile, runtime=runtime, allocation=allocation)
         self.profile.require_submission_evidence()
         if self.profile.target == "local_wsl" and self.profile.wsl is None:
             raise CampaignV2Error("campaign runner requires WSL execution settings")
         requested_ranks = self.profile.runtime.launcher.processes_per_node
-        visible_cpus = (
-            len(os.sched_getaffinity(0)) if hasattr(os, "sched_getaffinity") else os.cpu_count()
-        )
+        visible_cpus = len(os.sched_getaffinity(0)) if hasattr(os, "sched_getaffinity") else os.cpu_count()
         if self.profile.target == "local_wsl" and visible_cpus is not None and requested_ranks > visible_cpus:
             raise CampaignV2Error(
                 f"profile requests {requested_ranks} MPI ranks, but this runtime exposes only {visible_cpus} CPUs"
@@ -296,19 +369,32 @@ class CampaignRunner:
         # validated and use the allocation adapter below.
         lock_root = Path(self.profile.wsl.workspace_root) if self.profile.wsl else self.root
         self.resource_lock_path = lock_root / ".siestaflow" / "single-siesta.lock"
-        self.environment = {**os.environ, **self.profile.runtime.environment}
+        self.grant_environment = dict(os.environ)
+        self.environment = {**self.grant_environment, **self.profile.runtime.environment}
+        if controller_observer is not None:
+            self.environment.update(controller_observer.inner_environment)
 
         self.config = json.loads((self.root / self.campaign["lr_config_file"]).read_text(encoding="utf-8"))
         fdf_path = self.root / self.campaign["reference_fdf"]
         fdf_text = fdf_path.read_text(encoding="utf-8")
-        functional, fdf_species, projector_sites = validate_reference_fdf(fdf_text, self.config.get("functional"))
-        atoms_match = __import__("re").search(r"^\s*NumberOfAtoms\s+(\d+)\s*$", fdf_text, __import__("re").IGNORECASE | __import__("re").MULTILINE)
+        functional, fdf_species, projector_sites = validate_reference_fdf(
+            fdf_text, self.config.get("functional")
+        )
+        atoms_match = __import__("re").search(
+            r"^\s*NumberOfAtoms\s+(\d+)\s*$",
+            fdf_text,
+            __import__("re").IGNORECASE | __import__("re").MULTILINE,
+        )
         if atoms_match is None:
             raise CampaignV2Error("reference FDF lacks NumberOfAtoms")
         self.atom_count = int(atoms_match.group(1))
         self.perturbation_plan = self.campaign["_perturbation_plan"]
         self.config = _validate_resume_config(
-            self.config, fdf_path, fdf_species, projector_sites, self.atom_count,
+            self.config,
+            fdf_path,
+            fdf_species,
+            projector_sites,
+            self.atom_count,
             self.perturbation_plan,
         )
         if functional != self.campaign["functional"] or self.config["functional"] != functional:
@@ -330,7 +416,9 @@ class CampaignRunner:
                 {**by_label[subspace.species_label], "index": i}
                 for i, subspace in enumerate(self.perturbation_plan.inventory.subspaces)
             ]
-            self.shadow = CampaignShadow(self.perturbation_plan, self.control, self.campaign["input_identity"])
+            self.shadow = CampaignShadow(
+                self.perturbation_plan, self.control, self.campaign["input_identity"]
+            )
         self.alpha_grid = [float(value) for value in self.campaign["alpha_grid_ev"]]
         if any(abs(value - float(f"{value:+.4f}")) > 1.0e-12 for value in self.alpha_grid):
             raise CampaignV2Error(
@@ -348,12 +436,18 @@ class CampaignRunner:
             self.adaptive_policy_digest = _digest(self.adaptive_policy.to_mapping())
             self.adaptive_state = self._load_or_initialize_adaptive_state()
             self._build_adaptive_graph()
-            checkpoint_identity = f"adaptive:{_digest({
-                "input_identity": self.campaign["input_identity"],
-                "policy_digest": self.adaptive_policy_digest,
-            })}"
+            checkpoint_identity = f"adaptive:{
+                _digest(
+                    {
+                        'input_identity': self.campaign['input_identity'],
+                        'policy_digest': self.adaptive_policy_digest,
+                    }
+                )
+            }"
             self.executor = GenericDagExecutor(
-                self.dag, self.checkpoint_path, checkpoint_identity=checkpoint_identity,
+                self.dag,
+                self.checkpoint_path,
+                checkpoint_identity=checkpoint_identity,
             )
             self.checkpoint_identity = checkpoint_identity
         else:
@@ -372,24 +466,43 @@ class CampaignRunner:
             self._save_records()
         self.reference_fdf = fdf_path
         self.reference_dm_name = self.config["reference_dm_name"]
-        static_artifacts = {f"{label}.psml": Path(path) for label, path in self.config["pseudopotentials"].items()}
+        static_artifacts = {
+            f"{label}.psml": Path(path) for label, path in self.config["pseudopotentials"].items()
+        }
         for destination, path in self.config["static_artifacts"].items():
             if destination in static_artifacts:
                 raise CampaignV2Error(f"static artifact collides with pseudopotential filename {destination}")
             static_artifacts[destination] = Path(path)
         self.layout = SiestaCampaignLayout(
-            reference_fdf=self.reference_fdf, run_root=self.runs / "attempts" / "initial",
-            reference_dm=None, reference_dm_name=self.reference_dm_name, static_artifacts=static_artifacts,
+            reference_fdf=self.reference_fdf,
+            run_root=self.runs / "attempts" / "initial",
+            reference_dm=None,
+            reference_dm_name=self.reference_dm_name,
+            static_artifacts=static_artifacts,
             scf_level_overrides=(
-                {str(self.adaptive_policy.scf_probe_level["level_id"]): self.adaptive_policy.scf_probe_level["fdf_overrides"]}
-                if self.adaptive_policy is not None and self.adaptive_policy.scf_probe_level is not None else {}
+                {
+                    str(
+                        self.adaptive_policy.scf_probe_level["level_id"]
+                    ): self.adaptive_policy.scf_probe_level["fdf_overrides"]
+                }
+                if self.adaptive_policy is not None and self.adaptive_policy.scf_probe_level is not None
+                else {}
             ),
         )
-        self.hosts = self._slurm_hosts() if self.profile.target == "slurm" else ("localhost",)
+        self.hosts = (
+            controller_observer.reserved_hosts
+            if controller_observer is not None
+            else self._slurm_hosts()
+            if self.profile.target == "slurm"
+            else ("localhost",)
+        )
         self.admitted = build_admitted_siesta542_runtime(
-            campaign_root=self.root, contract=self.contract,
-            executable_path=self.profile.runtime.siesta_executable, profile=self.profile,
-            hosts=self.hosts, layout=self.layout,
+            campaign_root=self.root,
+            contract=self.contract,
+            executable_path=self.profile.runtime.siesta_executable,
+            profile=self.profile,
+            hosts=self.hosts,
+            layout=self.layout,
         )
         self.factory = _AttemptingFactory(
             self.admitted.factory,
@@ -404,12 +517,16 @@ class CampaignRunner:
             metadata = self.admitted.admission.registry_record.profile.metadata
             build_receipt = metadata.get("occupation_build_receipt")
             canonical_receipt = (
-                json.dumps(_plain_json_value(build_receipt), sort_keys=True, separators=(",", ":"), ensure_ascii=True)
-                if isinstance(build_receipt, Mapping) else None
+                json.dumps(
+                    _plain_json_value(build_receipt), sort_keys=True, separators=(",", ":"), ensure_ascii=True
+                )
+                if isinstance(build_receipt, Mapping)
+                else None
             )
             receipt_digest = (
                 sha256(canonical_receipt.encode("utf-8")).hexdigest()
-                if canonical_receipt is not None else None
+                if canonical_receipt is not None
+                else None
             )
             receipt_matches = (
                 isinstance(build_receipt, Mapping)
@@ -417,7 +534,8 @@ class CampaignRunner:
                 and build_receipt.get("occupation_output_format") == "extended-f20.12"
                 and build_receipt.get("occupation_decimal_places") == 12
                 and build_receipt.get("source_patch_sha256") == _F20_12_PATCH_SHA256
-                and build_receipt.get("executable_sha256") == self.admitted.admission.observed.executable_sha256
+                and build_receipt.get("executable_sha256")
+                == self.admitted.admission.observed.executable_sha256
                 and isinstance(build_receipt.get("build_id"), str)
                 and bool(build_receipt.get("build_id", "").strip())
                 and isinstance(build_receipt.get("build_process"), Mapping)
@@ -441,10 +559,15 @@ class CampaignRunner:
     def _slurm_hosts(self) -> tuple[str, ...]:
         """Resolve hosts in the already granted allocation; never submit jobs."""
         from hubbardflow.execution.slurm_environment import SlurmEnvironment
+
         slurm = SlurmEnvironment.from_environ(self.environment)
         completed = subprocess_run(
             ["scontrol", "show", "hostnames", slurm.nodelist],
-            check=False, capture_output=True, text=True, shell=False, env=self.environment,
+            check=False,
+            capture_output=True,
+            text=True,
+            shell=False,
+            env=self.environment,
         )
         if completed.returncode != 0:
             raise CampaignV2Error("cannot resolve hosts in the granted Slurm allocation")
@@ -466,28 +589,44 @@ class CampaignRunner:
             except (OSError, json.JSONDecodeError) as exc:
                 raise ExecutionContractError(f"adaptive alpha state is unreadable: {exc}") from exc
             if not isinstance(state, dict) or state.get("identity") != identity:
-                raise ExecutionContractError("adaptive alpha state belongs to a different input or frozen policy")
+                raise ExecutionContractError(
+                    "adaptive alpha state belongs to a different input or frozen policy"
+                )
             if state.get("policy") != self.adaptive_policy.to_mapping():
                 raise ExecutionContractError("adaptive alpha policy changed after its first durable decision")
             return state
         initial_cost = initial_siesta_node_cost(len(self.sites), len(self.adaptive_policy.seed_grid_ev))
         if initial_cost > self.adaptive_policy.total_siesta_node_budget:
-            raise CampaignV2Error("adaptive alpha budget cannot cover the shared reference and initial seed grid")
+            raise CampaignV2Error(
+                "adaptive alpha budget cannot cover the shared reference and initial seed grid"
+            )
         first_round = {
-            "round_index": 0, "direction": "initial",
+            "round_index": 0,
+            "direction": "initial",
             "alpha_grid_ev": list(self.adaptive_policy.seed_grid_ev),
             "active_window_eV": self.adaptive_policy.analysis_for_round(0)["active_window_eV"],
             "fit_policy": dict(self.adaptive_policy.analysis_for_round(0)),
-            "scf_level_id": "base", "status": "PENDING",
+            "scf_level_id": "base",
+            "status": "PENDING",
         }
         state = {
-            "schema": "siestaflow.adaptive_alpha_state.v1", "identity": identity,
-            "policy": self.adaptive_policy.to_mapping(), "rounds": [first_round],
-            "decisions": [], "reserved_nodes": {}, "stable_comparisons": 0,
-            "probed_site_ids": [], "probe_plan": None, "scf_reruns": [],
-            "candidate_status": "PENDING", "campaign_status": "RUNNING",
-            "budget": {"total_siesta_node_budget": self.adaptive_policy.total_siesta_node_budget,
-                       "reserved_nodes": 0, "remaining_nodes": self.adaptive_policy.total_siesta_node_budget},
+            "schema": "siestaflow.adaptive_alpha_state.v1",
+            "identity": identity,
+            "policy": self.adaptive_policy.to_mapping(),
+            "rounds": [first_round],
+            "decisions": [],
+            "reserved_nodes": {},
+            "stable_comparisons": 0,
+            "probed_site_ids": [],
+            "probe_plan": None,
+            "scf_reruns": [],
+            "candidate_status": "PENDING",
+            "campaign_status": "RUNNING",
+            "budget": {
+                "total_siesta_node_budget": self.adaptive_policy.total_siesta_node_budget,
+                "reserved_nodes": 0,
+                "remaining_nodes": self.adaptive_policy.total_siesta_node_budget,
+            },
         }
         _atomic_json(self.adaptive_state_path, state)
         return state
@@ -508,17 +647,21 @@ class CampaignRunner:
     def _build_adaptive_graph(self) -> None:
         assert self.adaptive_state is not None and self.adaptive_policy_digest is not None
         self.dag, self.specs, _metadata = build_adaptive_campaign_dag(
-            self.sites, self.adaptive_state["rounds"],
+            self.sites,
+            self.adaptive_state["rounds"],
             probe_plan=self.adaptive_state.get("probe_plan"),
             scf_reruns=self.adaptive_state.get("scf_reruns", ()),
-            campaign_id=self.campaign["campaign_id"], policy_digest=self.adaptive_policy_digest,
+            campaign_id=self.campaign["campaign_id"],
+            policy_digest=self.adaptive_policy_digest,
         )
 
     def _rebuild_adaptive_graph(self) -> None:
         self._build_adaptive_graph()
         assert self.checkpoint_identity is not None
         self.executor = GenericDagExecutor(
-            self.dag, self.checkpoint_path, checkpoint_identity=self.checkpoint_identity,
+            self.dag,
+            self.checkpoint_path,
+            checkpoint_identity=self.checkpoint_identity,
         )
 
     def _load_records(self) -> dict[str, Any]:
@@ -634,8 +777,10 @@ class CampaignRunner:
         if self.adaptive_state is None:
             return
         decision_nodes = [
-            node.node_id for node in self.dag.nodes
-            if node.node_id in invalid and node.kind is LRNodeKind.ALPHA_GATE
+            node.node_id
+            for node in self.dag.nodes
+            if node.node_id in invalid
+            and node.kind is LRNodeKind.ALPHA_GATE
             and node.node_id.startswith("adaptive:")
         ]
         if not decision_nodes:
@@ -656,13 +801,15 @@ class CampaignRunner:
             keep.append(decision)
         self.adaptive_state["decisions"] = keep
         self.adaptive_state["rounds"] = [
-            item for item in self.adaptive_state.get("rounds", [])
+            item
+            for item in self.adaptive_state.get("rounds", [])
             if int(item.get("round_index", -1)) <= round_index
         ]
         is_rerun = ":scf-rerun:" in invalid_gate
         is_after_probe = invalid_gate.endswith(":decision-after-probe")
         current = next(
-            (item for item in self.adaptive_state["rounds"] if int(item["round_index"]) == round_index), None,
+            (item for item in self.adaptive_state["rounds"] if int(item["round_index"]) == round_index),
+            None,
         )
         if current is not None:
             current.pop("decision", None)
@@ -672,9 +819,12 @@ class CampaignRunner:
                 current["status"] = "ANALYZED"
             elif is_after_probe:
                 prior_probe = next(
-                    (item for item in reversed(keep)
-                     if item.get("decision") == AdaptiveDecision.PROBE_SCF.value
-                     and self._node_round_index(str(item.get("node_id", ""))) == round_index),
+                    (
+                        item
+                        for item in reversed(keep)
+                        if item.get("decision") == AdaptiveDecision.PROBE_SCF.value
+                        and self._node_round_index(str(item.get("node_id", ""))) == round_index
+                    ),
                     None,
                 )
                 if prior_probe is not None:
@@ -687,15 +837,19 @@ class CampaignRunner:
                 current.pop("candidate_status", None)
                 current["status"] = "PENDING"
         self.adaptive_state["scf_reruns"] = [
-            item for item in self.adaptive_state.get("scf_reruns", [])
-            if int(item.get("round_index", -1)) < round_index or (is_rerun and int(item.get("round_index", -1)) == round_index)
+            item
+            for item in self.adaptive_state.get("scf_reruns", [])
+            if int(item.get("round_index", -1)) < round_index
+            or (is_rerun and int(item.get("round_index", -1)) == round_index)
         ]
         if not is_after_probe and not is_rerun:
             plan = self.adaptive_state.get("probe_plan")
             if isinstance(plan, Mapping) and int(plan.get("round_index", -1)) >= round_index:
                 self.adaptive_state["probe_plan"] = None
         self.adaptive_state["stable_comparisons"] = int(keep[-1].get("stable_comparisons", 0)) if keep else 0
-        self.adaptive_state["candidate_status"] = keep[-1].get("candidate_status", "PENDING") if keep else "PENDING"
+        self.adaptive_state["candidate_status"] = (
+            keep[-1].get("candidate_status", "PENDING") if keep else "PENDING"
+        )
         self.adaptive_state["campaign_status"] = "RUNNING"
         self.adaptive_state["rollback"] = {
             "invalidated_decision_node": invalid_gate,
@@ -705,9 +859,10 @@ class CampaignRunner:
         }
         self._persist_adaptive_state()
 
-    def _revalidate_reuse(self) -> None:
+    def _revalidate_reuse(self, *, dry_run: bool = False) -> ReuseInspection:
         receipts = self._checkpoint()
         invalid: set[str] = set()
+        warnings: set[str] = set()
         for node in self.dag.nodes:
             receipt = receipts.get(node.node_id)
             if receipt is None:
@@ -722,26 +877,41 @@ class CampaignRunner:
                     spec = SiestaArtifactSpec(**spec_payload)
                     raw_command = record["command"]
                     from hubbardflow.execution.runtime_adapters import NodeCommand
+
                     command = NodeCommand(
-                        tuple(raw_command["argv"]), Path(raw_command["cwd"]),
+                        tuple(raw_command["argv"]),
+                        Path(raw_command["cwd"]),
                         Path(raw_command["stdin_path"]) if raw_command.get("stdin_path") else None,
                         Path(raw_command["stdout_path"]) if raw_command.get("stdout_path") else None,
                         Path(raw_command["stderr_path"]) if raw_command.get("stderr_path") else None,
                     )
-                    self.admitted.factory.artifacts[node.node_id] = spec
-                    fresh = self.admitted.validator.validate(
-                        node, command, CompletedProcess(command.argv, 0, "", ""),
+                    validator = self.admitted.validator
+                    if dry_run:
+                        from copy import copy
+
+                        validator = copy(validator)
+                        validator.artifacts = {node.node_id: spec}
+                    else:
+                        self.admitted.factory.artifacts[node.node_id] = spec
+                    fresh = validator.validate(
+                        node,
+                        command,
+                        CompletedProcess(command.argv, 0, "", ""),
                     )
                     if fresh.state is not NodeState.VALIDATED:
                         invalid.add(node.node_id)
                         continue
                     if fresh.evidence_digest != receipt.evidence_digest:
-                        record.setdefault("traceability_warnings", []).append("NODE_EVIDENCE_DIGEST_MISMATCH")
+                        warnings.add(f"NODE_EVIDENCE_DIGEST_MISMATCH:{node.node_id}")
+                        if not dry_run:
+                            record.setdefault("traceability_warnings", []).append(
+                                "NODE_EVIDENCE_DIGEST_MISMATCH"
+                            )
                     if node.kind is LRNodeKind.REFERENCE:
                         dm = command.cwd / spec.dm
                         if not dm.is_file():
                             invalid.add(node.node_id)
-                        else:
+                        elif not dry_run:
                             self.factory.reference_completed(dm, node.scf_level_id or "base")
                 except Exception:
                     invalid.add(node.node_id)
@@ -750,15 +920,25 @@ class CampaignRunner:
                 if not evidence_path.is_file():
                     invalid.add(node.node_id)
                 else:
-                    warnings = record.setdefault("traceability_warnings", [])
+                    node_warnings: list[str] = []
                     if record.get("evidence_digest") != receipt.evidence_digest:
-                        warnings.append("NODE_EVIDENCE_DIGEST_MISMATCH")
+                        warnings.add(f"NODE_EVIDENCE_DIGEST_MISMATCH:{node.node_id}")
+                        node_warnings.append("NODE_EVIDENCE_DIGEST_MISMATCH")
                     if sha256_file(evidence_path) != record.get("evidence_sha256"):
-                        warnings.append("EVIDENCE_FILE_DIGEST_MISMATCH")
+                        warnings.add(f"EVIDENCE_FILE_DIGEST_MISMATCH:{node.node_id}")
+                        node_warnings.append("EVIDENCE_FILE_DIGEST_MISMATCH")
                     if record.get("evidence_sha256") != receipt.evidence_digest:
-                        warnings.append("RECEIPT_EVIDENCE_DIGEST_MISMATCH")
+                        warnings.add(f"RECEIPT_EVIDENCE_DIGEST_MISMATCH:{node.node_id}")
+                        node_warnings.append("RECEIPT_EVIDENCE_DIGEST_MISMATCH")
+                    if not dry_run:
+                        record.setdefault("traceability_warnings", []).extend(node_warnings)
         if invalid:
             invalid = self._descendants(invalid)
+        if dry_run:
+            return ReuseInspection(
+                tuple(sorted(set(receipts) - invalid)), tuple(sorted(invalid)), tuple(sorted(warnings))
+            )
+        if invalid:
             self._rollback_adaptive_after_invalidation(invalid)
             receipts = {node_id: receipt for node_id, receipt in receipts.items() if node_id not in invalid}
             for node_id in invalid:
@@ -783,6 +963,9 @@ class CampaignRunner:
             dm = Path(raw_command.get("cwd", ".")) / spec_payload.get("dm", self.reference_dm_name)
             if dm.is_file():
                 self.factory.reference_completed(dm, reference_node.scf_level_id or "base")
+        return ReuseInspection(
+            tuple(sorted(set(receipts) - invalid)), tuple(sorted(invalid)), tuple(sorted(warnings))
+        )
 
     def _archive_unvalidated_attempts(self, node_ids: set[str]) -> None:
         runs_directory = getattr(self, "runs", None)
@@ -793,9 +976,22 @@ class CampaignRunner:
         runs_directory = getattr(self, "runs", None)
         self.store.archive_orphaned_attempts(self.control, receipts, runs_directory=runs_directory)
 
-    def _record_receipt(self, node: LRDagNode, receipt: NodeReceipt, extra: Mapping[str, Any] | None = None) -> None:
+    def _record_receipt(
+        self, node: LRDagNode, receipt: NodeReceipt, extra: Mapping[str, Any] | None = None
+    ) -> None:
         self.store.records = self.records
         self.store.record_receipt(self._identity(), node, receipt, extra)
+
+    def _settle_controller_receipt(self, node: LRDagNode, receipt: NodeReceipt) -> None:
+        observer = getattr(self, "controller_observer", None)
+        current = self._checkpoint().get(node.node_id)
+        if (
+            observer is not None
+            and current is not None
+            and current.state is receipt.state
+            and current.evidence_digest == receipt.evidence_digest
+        ):
+            observer.node_settled(node.node_id, receipt.state.value, receipt.evidence_digest)
 
     def _command_record(self, node: LRDagNode, command: Any, receipt: NodeReceipt) -> dict[str, Any]:
         spec = self.admitted.factory.artifacts[node.node_id]
@@ -808,7 +1004,8 @@ class CampaignRunner:
             "adaptive_round": self._node_round_index(node.node_id),
             "artifact_spec": asdict(spec),
             "command": {
-                "argv": list(command.argv), "cwd": str(command.cwd),
+                "argv": list(command.argv),
+                "cwd": str(command.cwd),
                 "stdin_path": str(command.stdin_path) if command.stdin_path else None,
                 "stdout_path": str(command.stdout_path) if command.stdout_path else None,
                 "stderr_path": str(command.stderr_path) if command.stderr_path else None,
@@ -847,14 +1044,20 @@ class CampaignRunner:
             scf_tolerance,
             self.config.get("parent_reproduction_factor"),
             self.config.get("tol_Fermi_eV"),
-            None if self.config.get("tol_Fermi_eV") is None
+            None
+            if self.config.get("tol_Fermi_eV") is None
             else ToleranceSource(self.config.get("tol_Fermi_eV_source", "config")),
         )
 
     def _execute_siesta(self, node: LRDagNode, heartbeat: _Heartbeat) -> NodeReceipt:
-        from hubbardflow.execution.runtime_adapters import LocalSubprocessExecutor, SlurmAllocationExecutor
+        from hubbardflow.execution.runtime_adapters import (
+            ControllerStopRequested,
+            LocalSubprocessExecutor,
+            SlurmAllocationExecutor,
+        )
 
         command_holder: dict[str, Any] = {}
+        observer = getattr(self, "controller_observer", None)
         base_factory = self.factory
 
         class CapturingFactory:
@@ -866,16 +1069,45 @@ class CampaignRunner:
 
         factory = CapturingFactory()
         if self.profile.target == "slurm":
-            adapter = SlurmAllocationExecutor(
-                self.profile, self.hosts, factory, self.admitted.validator, environment=self.environment,
-            )
+            if observer is None:
+                adapter = SlurmAllocationExecutor(
+                    self.profile, self.hosts, factory, self.admitted.validator, environment=self.environment
+                )
+            else:
+                adapter = SlurmAllocationExecutor(
+                    self.profile,
+                    self.hosts,
+                    factory,
+                    self.admitted.validator,
+                    environment=self.environment,
+                    validation_environment=getattr(self, "grant_environment", os.environ),
+                    observer=observer,
+                    checkpoint_identity=self.executor.checkpoint.campaign_digest,
+                    stop_event=getattr(self, "controller_stop_event", None),
+                )
         else:
-            adapter = LocalSubprocessExecutor(factory, self.admitted.validator, env=self.environment)
+            if observer is None:
+                adapter = LocalSubprocessExecutor(factory, self.admitted.validator, env=self.environment)
+            else:
+                adapter = LocalSubprocessExecutor(
+                    factory,
+                    self.admitted.validator,
+                    env=self.environment,
+                    observer=observer,
+                    checkpoint_identity=self.executor.checkpoint.campaign_digest,
+                    stop_event=getattr(self, "controller_stop_event", None),
+                )
         if fcntl is None:
             raise ExecutionContractError("SIESTA resource locking requires Linux/WSL fcntl")
         self.resource_lock_path.parent.mkdir(parents=True, exist_ok=True)
         try:
-            heartbeat.update(current_node_state=("RUNNING_IN_GRANTED_SLURM_ALLOCATION" if self.profile.target == "slurm" else "WAITING_FOR_LOCAL_SIESTA_SLOT"))
+            heartbeat.update(
+                current_node_state=(
+                    "RUNNING_IN_GRANTED_SLURM_ALLOCATION"
+                    if self.profile.target == "slurm"
+                    else "WAITING_FOR_LOCAL_SIESTA_SLOT"
+                )
+            )
             with self.resource_lock_path.open("a+b") as resource_lock:
                 fcntl.flock(resource_lock.fileno(), fcntl.LOCK_EX)
                 try:
@@ -883,14 +1115,24 @@ class CampaignRunner:
                     receipt = adapter.execute(node)
                 finally:
                     fcntl.flock(resource_lock.fileno(), fcntl.LOCK_UN)
+        except ControllerStopRequested:
+            raise
         except Exception as exc:
+            from hubbardflow.execution.runtime_adapters import ControllerLaunchFailed
+
+            if isinstance(exc, ControllerLaunchFailed):
+                raise
             digest = _digest({"node": node.node_id, "error": f"{type(exc).__name__}: {exc}"})
             receipt = NodeReceipt(node.node_id, NodeState.FAILED_OUTPUT_VALIDATION, digest)
-            self._record_receipt(node, receipt, {"kind": "siesta_failure", "reason": f"{type(exc).__name__}: {exc}"})
+            self._record_receipt(
+                node, receipt, {"kind": "siesta_failure", "reason": f"{type(exc).__name__}: {exc}"}
+            )
             return receipt
         command = command_holder.get("command")
         if command is None:
-            self._record_receipt(node, receipt, {"kind": "execution_failure", "reason": "no materialized command"})
+            self._record_receipt(
+                node, receipt, {"kind": "execution_failure", "reason": "no materialized command"}
+            )
             return receipt
         record = self._command_record(node, command, receipt)
         if receipt.state is NodeState.FAILED_EXECUTION:
@@ -904,8 +1146,14 @@ class CampaignRunner:
         ):
             dm_path = command.cwd / record["artifact_spec"]["dm"]
             if not dm_path.is_file():
-                failed = NodeReceipt(node.node_id, NodeState.FAILED_OUTPUT_VALIDATION, _digest("reference DM missing after validation"))
-                self._record_receipt(node, failed, {"kind": "siesta_failure", "reason": "reference DM missing"})
+                failed = NodeReceipt(
+                    node.node_id,
+                    NodeState.FAILED_OUTPUT_VALIDATION,
+                    _digest("reference DM missing after validation"),
+                )
+                self._record_receipt(
+                    node, failed, {"kind": "siesta_failure", "reason": "reference DM missing"}
+                )
                 return failed
             if self.shadow is not None:
                 reproduction = self._reference_reproduction_evidence(dm_path, Path(command.stdout_path))
@@ -943,7 +1191,9 @@ class CampaignRunner:
         _atomic_json(evidence_path, payload)
         digest = sha256_file(evidence_path)
         receipt = NodeReceipt(node.node_id, NodeState.VALIDATED, digest)
-        self._record_receipt(node, receipt, {"kind": "gate", "evidence_path": str(evidence_path), "evidence_sha256": digest})
+        self._record_receipt(
+            node, receipt, {"kind": "gate", "evidence_path": str(evidence_path), "evidence_sha256": digest}
+        )
         return receipt
 
     def _read_response_vector(self, node: LRDagNode) -> tuple[list[float], list[float]]:
@@ -963,20 +1213,29 @@ class CampaignRunner:
             event = select_converged_screened_event(output_text)
         vector = self._event_occupations(output_text, event, self.sites, fdf_text=fdf_text)
         precision = read_printed_occupation_precision(
-            output_text, event, minimum_decimal_places=self._minimum_occupation_decimal_places,
+            output_text,
+            event,
+            minimum_decimal_places=self._minimum_occupation_decimal_places,
             fdf_text=fdf_text,
         )
         widths = [float(precision[int(site["atom_index"])].half_width) for site in self.sites]
         return vector, widths
 
     def _matching_response_node(
-        self, site_index: int, alpha: float, mode: ResponseMode, scf_level_id: str,
+        self,
+        site_index: int,
+        alpha: float,
+        mode: ResponseMode,
+        scf_level_id: str,
     ) -> LRDagNode | None:
         for node_id, spec in self.specs.items():
             node = next(item for item in self.dag.nodes if item.node_id == node_id)
-            if ((node.scf_level_id or "base") == scf_level_id
-                    and spec.site_index == site_index and spec.mode is mode
-                    and abs(float(spec.alpha_ev) - alpha) <= 1e-14):
+            if (
+                (node.scf_level_id or "base") == scf_level_id
+                and spec.site_index == site_index
+                and spec.mode is mode
+                and abs(float(spec.alpha_ev) - alpha) <= 1e-14
+            ):
                 return node
         return None
 
@@ -1003,7 +1262,8 @@ class CampaignRunner:
         return result
 
     def _scf_probe_evidence(
-        self, signal_vectors: Mapping[str, Mapping[str, Any]],
+        self,
+        signal_vectors: Mapping[str, Mapping[str, Any]],
     ) -> dict[str, Any] | None:
         if self.adaptive_state is None:
             return None
@@ -1053,7 +1313,8 @@ class CampaignRunner:
                 except (OSError, ValueError, KeyError, TypeError):
                     continue
                 branch_consistent = bool(
-                    mode is ResponseMode.BARE and reference_receipt is not None
+                    mode is ResponseMode.BARE
+                    and reference_receipt is not None
                     and reference_receipt.state is NodeState.VALIDATED
                 )
                 branch_evidence = "shared_validated_strict_reference_dm" if branch_consistent else None
@@ -1063,10 +1324,12 @@ class CampaignRunner:
                         for response_node in (plus, minus):
                             response_record = self.records[response_node.node_id]
                             output_text = Path(response_record["command"]["stdout_path"]).read_text(
-                                encoding="utf-8", errors="replace",
+                                encoding="utf-8",
+                                errors="replace",
                             )
                             fdf_text = Path(response_record["command"]["stdin_path"]).read_text(
-                                encoding="utf-8", errors="replace",
+                                encoding="utf-8",
+                                errors="replace",
                             )
                             moments, _ = reference_moments_from_fdf_and_output(fdf_text, output_text)
                             differences.append(float(abs(moments - reference_moments).max()))
@@ -1090,20 +1353,28 @@ class CampaignRunner:
         reserved = self.adaptive_state.get("reserved_nodes", {})
         grid = [float(value) for value in plan.get("rerun_alpha_grid_ev", plan.get("alpha_grid_ev", []))]
         if not grid:
-            current = next(item for item in self.adaptive_state["rounds"] if int(item["round_index"]) == int(plan["round_index"]))
+            current = next(
+                item
+                for item in self.adaptive_state["rounds"]
+                if int(item["round_index"]) == int(plan["round_index"])
+            )
             grid = [float(value) for value in current["alpha_grid_ev"]]
         pre_reserved = sum(
-            node.node_id in reserved and (
+            node.node_id in reserved
+            and (
                 (node.kind is LRNodeKind.REFERENCE and (node.scf_level_id or "base") == level_id)
-                or (node.kind is LRNodeKind.PERTURBATION
+                or (
+                    node.kind is LRNodeKind.PERTURBATION
                     and (node.scf_level_id or "base") == level_id
                     and node.perturbation is not None
-                    and any(abs(float(node.perturbation.alpha_ev) - alpha) <= 1e-14 for alpha in grid))
+                    and any(abs(float(node.perturbation.alpha_ev) - alpha) <= 1e-14 for alpha in grid)
+                )
             )
             for node in self.dag.nodes
         )
         return {
-            "validated": expected.issubset(by_mode_column), "by_mode_column": by_mode_column,
+            "validated": expected.issubset(by_mode_column),
+            "by_mode_column": by_mode_column,
             "pre_reserved_rerun_node_count": pre_reserved,
             "quantity": "empirical_scf_sensitivity_not_error_bound",
         }
@@ -1142,13 +1413,25 @@ class CampaignRunner:
         result = dict(analysis)
         rounds = []
         for item in self.adaptive_state["rounds"]:
-            rounds.append({
-                key: item.get(key) for key in (
-                    "round_index", "direction", "alpha_grid_ev", "active_window_eV",
-                    "fit_policy", "scf_level_id", "effective_scf_level_id",
-                    "candidate_status", "analysis_path", "scf_rerun_analysis_path", "status",
-                ) if key in item
-            })
+            rounds.append(
+                {
+                    key: item.get(key)
+                    for key in (
+                        "round_index",
+                        "direction",
+                        "alpha_grid_ev",
+                        "active_window_eV",
+                        "fit_policy",
+                        "scf_level_id",
+                        "effective_scf_level_id",
+                        "candidate_status",
+                        "analysis_path",
+                        "scf_rerun_analysis_path",
+                        "status",
+                    )
+                    if key in item
+                }
+            )
         result["campaign_status"] = decision["decision"]
         result["candidate_status"] = analysis.get("numerical_status", "NO_NUMERICAL_U")
         result["alpha_rounds"] = rounds
@@ -1206,17 +1489,23 @@ class CampaignRunner:
         round_index = self._node_round_index(node.node_id)
         if round_index is None:
             raise ExecutionContractError(f"adaptive decision gate has no round key: {node.node_id}")
-        round_state = next(item for item in self.adaptive_state["rounds"] if int(item["round_index"]) == round_index)
+        round_state = next(
+            item for item in self.adaptive_state["rounds"] if int(item["round_index"]) == round_index
+        )
         analysis_rel = (
-            round_state.get("scf_rerun_analysis_path") if is_rerun
-            else round_state.get("analysis_path")
+            round_state.get("scf_rerun_analysis_path") if is_rerun else round_state.get("analysis_path")
         )
         if not analysis_rel:
-            raise ExecutionContractError(f"analysis evidence was not persisted before decision gate {node.node_id}")
+            raise ExecutionContractError(
+                f"analysis evidence was not persisted before decision gate {node.node_id}"
+            )
         analysis = self._analysis_metrics(analysis_rel)
         prior_decision = next(
-            (item for item in reversed(self.adaptive_state.get("decisions", []))
-             if isinstance(item, Mapping) and item.get("node_id") == node.node_id),
+            (
+                item
+                for item in reversed(self.adaptive_state.get("decisions", []))
+                if isinstance(item, Mapping) and item.get("node_id") == node.node_id
+            ),
             None,
         )
         if isinstance(prior_decision, Mapping):
@@ -1231,12 +1520,19 @@ class CampaignRunner:
                 self._adaptive_final_artifacts(analysis, decision)
             digest = sha256_file(evidence_path)
             receipt = NodeReceipt(node.node_id, NodeState.VALIDATED, digest)
-            self._record_receipt(node, receipt, {
-                "kind": "adaptive_decision", "decision": decision.get("decision"),
-                "evidence_path": str(evidence_path), "evidence_sha256": digest,
-            })
+            self._record_receipt(
+                node,
+                receipt,
+                {
+                    "kind": "adaptive_decision",
+                    "decision": decision.get("decision"),
+                    "evidence_path": str(evidence_path),
+                    "evidence_sha256": digest,
+                },
+            )
             if decision.get("decision") in {
-                AdaptiveDecision.REFINE.value, AdaptiveDecision.PROBE_SCF.value,
+                AdaptiveDecision.REFINE.value,
+                AdaptiveDecision.PROBE_SCF.value,
                 AdaptiveDecision.IMPROVE_SCF_FIRST.value,
             }:
                 self._rebuild_adaptive_graph()
@@ -1249,21 +1545,34 @@ class CampaignRunner:
         previous_signature: dict[str, Any] | None = None
         if round_index > 0:
             previous_round = self.adaptive_state["rounds"][round_index - 1]
-            previous_path = previous_round.get("effective_analysis_path") or previous_round.get("scf_rerun_analysis_path") or previous_round.get("analysis_path")
+            previous_path = (
+                previous_round.get("effective_analysis_path")
+                or previous_round.get("scf_rerun_analysis_path")
+                or previous_round.get("analysis_path")
+            )
             if previous_path:
                 previous_analysis = self._analysis_metrics(previous_path)
                 previous_fit = dict(previous_round.get("fit_policy", {}))
-                previous_level = str(previous_round.get("effective_scf_level_id", previous_round.get("scf_level_id", "base")))
+                previous_level = str(
+                    previous_round.get("effective_scf_level_id", previous_round.get("scf_level_id", "base"))
+                )
                 previous_signature = self._fit_signature(previous_fit, previous_level)
         current_u = self._analysis_u(analysis)
         previous_u = None if previous_analysis is None else self._analysis_u(previous_analysis)
         primary = analysis.get("primary", {})
-        matrix_usable = isinstance(primary, Mapping) and primary.get("matrix_status") == "FULL_RANK" and current_u is not None
+        matrix_usable = (
+            isinstance(primary, Mapping)
+            and primary.get("matrix_status") == "FULL_RANK"
+            and current_u is not None
+        )
         diagnostics = analysis.get("scf_and_magnetic_diagnostics", {})
-        branch_consistent = diagnostics.get("state_continuity_confirmed") if isinstance(diagnostics, Mapping) else None
+        branch_consistent = (
+            diagnostics.get("state_continuity_confirmed") if isinstance(diagnostics, Mapping) else None
+        )
         sensitivity = (analysis.get("sensitivity_summary") or {}).get("max_abs_u_difference_eV")
         numeric_window_values = [
-            float(value) for value in (analysis.get("window_sensitivity_eV") or {}).values()
+            float(value)
+            for value in (analysis.get("window_sensitivity_eV") or {}).values()
             if isinstance(value, (int, float)) and not isinstance(value, bool)
         ]
         truncation_metric = max(numeric_window_values) if numeric_window_values else None
@@ -1273,50 +1582,67 @@ class CampaignRunner:
             probe_evidence = {"validated": False, "by_mode_column": {}}
         previous_sensitivity = None
         if previous_analysis is not None:
-            previous_sensitivity = (previous_analysis.get("sensitivity_summary") or {}).get("max_abs_u_difference_eV")
+            previous_sensitivity = (previous_analysis.get("sensitivity_summary") or {}).get(
+                "max_abs_u_difference_eV"
+            )
         result = decide_round(
             self.adaptive_policy,
             round_index=round_index,
             current_grid_ev=round_state["alpha_grid_ev"],
             completed_node_count=len(self.adaptive_state.get("reserved_nodes", {})),
-            site_count=len(self.sites), candidate_u_by_site_ev=current_u,
+            site_count=len(self.sites),
+            candidate_u_by_site_ev=current_u,
             previous_u_by_site_ev=previous_u,
             stable_comparisons=int(self.adaptive_state.get("stable_comparisons", 0)),
-            matrix_usable=bool(matrix_usable), branch_consistent=branch_consistent,
-            scf_converged=bool(diagnostics.get("scf_validated")) if isinstance(diagnostics, Mapping) else False,
+            matrix_usable=bool(matrix_usable),
+            branch_consistent=branch_consistent,
+            scf_converged=bool(diagnostics.get("scf_validated"))
+            if isinstance(diagnostics, Mapping)
+            else False,
             truncation_metric_ev=truncation_metric,
             sensitivity_metric_ev=float(sensitivity) if isinstance(sensitivity, (int, float)) else None,
-            previous_sensitivity_metric_ev=float(previous_sensitivity) if isinstance(previous_sensitivity, (int, float)) else None,
+            previous_sensitivity_metric_ev=float(previous_sensitivity)
+            if isinstance(previous_sensitivity, (int, float))
+            else None,
             signal_vectors_by_mode_column=signal_vectors or None,
-            current_fit_signature=current_signature, previous_fit_signature=previous_signature,
+            current_fit_signature=current_signature,
+            previous_fit_signature=previous_signature,
             scf_probe=probe_evidence,
         )
         if is_after_probe and result["decision"] == AdaptiveDecision.PROBE_SCF.value:
             result = {
-                **result, "decision": AdaptiveDecision.STOP_LIMIT_SENSITIVE.value,
+                **result,
+                "decision": AdaptiveDecision.STOP_LIMIT_SENSITIVE.value,
                 "reason": "probe_already_scheduled_but_required_vectors_missing",
             }
         if is_rerun and result["decision"] == AdaptiveDecision.IMPROVE_SCF_FIRST.value:
             result = {
-                **result, "decision": AdaptiveDecision.STOP_LIMIT_SENSITIVE.value,
+                **result,
+                "decision": AdaptiveDecision.STOP_LIMIT_SENSITIVE.value,
                 "reason": "strict_scf_level_already_used_for_consistent_rerun",
             }
-        result.update({
-            "node_id": node.node_id, "policy_digest": self.adaptive_policy_digest,
-            "fit_signature": current_signature,
-            "candidate_status": analysis.get("numerical_status", "NO_NUMERICAL_U"),
-            "candidate_U_by_site_eV": current_u,
-            "truncation_metric_eV": truncation_metric,
-            "truncation_metric_basis": (
-                "range_of_eligible_linear_fit_windows; excludes resolution_limited_two_point_central_differences; "
-                "empirical_estimator_diagnostic_not_an_error_bound"
-            ),
-            "sensitivity_metric_eV": sensitivity,
-            "budget_reserved_nodes": len(self.adaptive_state.get("reserved_nodes", {})),
-        })
+        result.update(
+            {
+                "node_id": node.node_id,
+                "policy_digest": self.adaptive_policy_digest,
+                "fit_signature": current_signature,
+                "candidate_status": analysis.get("numerical_status", "NO_NUMERICAL_U"),
+                "candidate_U_by_site_eV": current_u,
+                "truncation_metric_eV": truncation_metric,
+                "truncation_metric_basis": (
+                    "range_of_eligible_linear_fit_windows; excludes resolution_limited_two_point_central_differences; "
+                    "empirical_estimator_diagnostic_not_an_error_bound"
+                ),
+                "sensitivity_metric_eV": sensitivity,
+                "budget_reserved_nodes": len(self.adaptive_state.get("reserved_nodes", {})),
+            }
+        )
         decision_index = next(
-            (index for index, item in enumerate(self.adaptive_state["decisions"])
-             if isinstance(item, Mapping) and item.get("node_id") == node.node_id),
+            (
+                index
+                for index, item in enumerate(self.adaptive_state["decisions"])
+                if isinstance(item, Mapping) and item.get("node_id") == node.node_id
+            ),
             None,
         )
         if decision_index is None:
@@ -1337,7 +1663,9 @@ class CampaignRunner:
             else:
                 ids = set(result.get("affected_site_ids", []))
                 probe_ids = set(result.get("probe_site_ids", ids))
-                site_indices = [index for index, site in enumerate(self.sites) if site["site_id"] in probe_ids]
+                site_indices = [
+                    index for index, site in enumerate(self.sites) if site["site_id"] in probe_ids
+                ]
                 old_probe = self.adaptive_state.get("probe_plan")
                 if old_probe is not None:
                     result["decision"] = AdaptiveDecision.STOP_LIMIT_SENSITIVE.value
@@ -1349,7 +1677,8 @@ class CampaignRunner:
                     decision_type = result["decision"]
                 else:
                     self.adaptive_state["probe_plan"] = {
-                        "round_index": round_index, "site_indices": site_indices,
+                        "round_index": round_index,
+                        "site_indices": site_indices,
                         "trigger_site_ids": sorted(ids),
                         "probe_site_ids": [str(self.sites[index]["site_id"]) for index in site_indices],
                         "scope": result.get("probe_scope", "weak_sites"),
@@ -1368,14 +1697,19 @@ class CampaignRunner:
                 result["decision"] = AdaptiveDecision.STOP_LIMIT_SENSITIVE.value
                 result["reason"] = "strict_scf_rerun_level_not_configured"
                 decision_type = result["decision"]
-            elif not any(int(item["round_index"]) == round_index for item in self.adaptive_state.get("scf_reruns", [])):
-                self.adaptive_state["scf_reruns"].append({
-                    "round_index": round_index, "alpha_grid_ev": list(round_state["alpha_grid_ev"]),
-                    "scf_level_id": str(strict["level_id"]),
-                    "fit_policy": dict(round_state["fit_policy"]),
-                    "active_window_eV": round_state["active_window_eV"],
-                    "status": "PENDING",
-                })
+            elif not any(
+                int(item["round_index"]) == round_index for item in self.adaptive_state.get("scf_reruns", [])
+            ):
+                self.adaptive_state["scf_reruns"].append(
+                    {
+                        "round_index": round_index,
+                        "alpha_grid_ev": list(round_state["alpha_grid_ev"]),
+                        "scf_level_id": str(strict["level_id"]),
+                        "fit_policy": dict(round_state["fit_policy"]),
+                        "active_window_eV": round_state["active_window_eV"],
+                        "status": "PENDING",
+                    }
+                )
                 round_state["status"] = "STRICT_SCF_RERUN_SCHEDULED"
         if decision_type == AdaptiveDecision.REFINE.value:
             additions = [float(value) for value in result.get("add_alpha_ev", [])]
@@ -1384,7 +1718,8 @@ class CampaignRunner:
             new_grid = sorted({float(value) for value in (*round_state["alpha_grid_ev"], *additions)})
             next_fit = dict(self.adaptive_policy.analysis_for_round(new_index, direction))
             next_round = {
-                "round_index": new_index, "direction": direction,
+                "round_index": new_index,
+                "direction": direction,
                 "alpha_grid_ev": new_grid,
                 "active_window_eV": next_fit["active_window_eV"],
                 "fit_policy": next_fit,
@@ -1396,8 +1731,13 @@ class CampaignRunner:
                 None,
             )
             if existing_round is not None:
-                if existing_round.get("direction") != direction or existing_round.get("alpha_grid_ev") != new_grid:
-                    raise ExecutionContractError("persisted refinement decision conflicts with an existing round")
+                if (
+                    existing_round.get("direction") != direction
+                    or existing_round.get("alpha_grid_ev") != new_grid
+                ):
+                    raise ExecutionContractError(
+                        "persisted refinement decision conflicts with an existing round"
+                    )
             else:
                 self.adaptive_state["rounds"].append(next_round)
             round_state["status"] = "REFINED"
@@ -1420,40 +1760,73 @@ class CampaignRunner:
             self._adaptive_final_artifacts(analysis, result)
         digest = sha256_file(evidence_path)
         receipt = NodeReceipt(node.node_id, NodeState.VALIDATED, digest)
-        self._record_receipt(node, receipt, {
-            "kind": "adaptive_decision", "decision": decision_type,
-            "evidence_path": str(evidence_path), "evidence_sha256": digest,
-        })
-        if decision_type in {AdaptiveDecision.REFINE.value, AdaptiveDecision.PROBE_SCF.value,
-                             AdaptiveDecision.IMPROVE_SCF_FIRST.value}:
+        self._record_receipt(
+            node,
+            receipt,
+            {
+                "kind": "adaptive_decision",
+                "decision": decision_type,
+                "evidence_path": str(evidence_path),
+                "evidence_sha256": digest,
+            },
+        )
+        if decision_type in {
+            AdaptiveDecision.REFINE.value,
+            AdaptiveDecision.PROBE_SCF.value,
+            AdaptiveDecision.IMPROVE_SCF_FIRST.value,
+        }:
             self._rebuild_adaptive_graph()
         return receipt
 
-    def _no_numerical_result(self, reason: str, *, magnetic_diagnostics: Mapping[str, Any] | None = None) -> dict[str, Any]:
+    def _no_numerical_result(
+        self, reason: str, *, magnetic_diagnostics: Mapping[str, Any] | None = None
+    ) -> dict[str, Any]:
         site_index_map = [
-            {"index": index, "site_id": str(site["site_id"]),
-             "atom_index": site.get("atom_index"), "orbit_id": site.get("orbit_id")}
+            {
+                "index": index,
+                "site_id": str(site["site_id"]),
+                "atom_index": site.get("atom_index"),
+                "orbit_id": site.get("orbit_id"),
+            }
             for index, site in enumerate(self.sites)
         ]
         return {
             "schema_version": "siestaflow.lr_u_analysis.v3",
             "occupation_source": "siesta_occupations_total",
             "campaign": {
-                "campaign_id": self.campaign["campaign_id"], "name": self.campaign.get("name"),
-                "material": self.campaign.get("material"), "functional": self.campaign["functional"],
+                "campaign_id": self.campaign["campaign_id"],
+                "name": self.campaign.get("name"),
+                "material": self.campaign.get("material"),
+                "functional": self.campaign["functional"],
                 "xc_profile": self.campaign["_xc_profile"],
-                "sites": self.sites, "observables": self.campaign.get("observables", []),
-                "fixed_grid": True, "automatic_alpha_refinement": False,
+                "sites": self.sites,
+                "observables": self.campaign.get("observables", []),
+                "fixed_grid": True,
+                "automatic_alpha_refinement": False,
             },
-            "quantity": "U_scalar_charge", "units": "eV",
-            "site_labels": list(range(len(self.sites))), "alpha_grid_eV": self.alpha_grid,
+            "quantity": "U_scalar_charge",
+            "units": "eV",
+            "site_labels": list(range(len(self.sites))),
+            "alpha_grid_eV": self.alpha_grid,
             "estimator_policy": self.config.get("analysis_policy", {}),
             "selected_estimator": None,
-            "primary": {"method": None, "degree": None, "U_by_site_eV": None, "U_matrix_eV": None, "matrix_status": "NO_NUMERICAL_U"},
-            "same_grid_linear": None, "window_results": [], "window_sensitivity_eV": None,
-            "model_sensitivity_eV": None, "printing_rounding_bound_eV": None,
+            "primary": {
+                "method": None,
+                "degree": None,
+                "U_by_site_eV": None,
+                "U_matrix_eV": None,
+                "matrix_status": "NO_NUMERICAL_U",
+            },
+            "same_grid_linear": None,
+            "window_results": [],
+            "window_sensitivity_eV": None,
+            "model_sensitivity_eV": None,
+            "printing_rounding_bound_eV": None,
             "printing_rounding_bound_reason": "analysis inputs unavailable or invalid",
-            "scf_and_magnetic_diagnostics": {"scf_validated": None, "magnetic": dict(magnetic_diagnostics or {})},
+            "scf_and_magnetic_diagnostics": {
+                "scf_validated": None,
+                "magnetic": dict(magnetic_diagnostics or {}),
+            },
             "response_observation_dataset": {
                 "schema_version": "siestaflow.lr_u_verified_dataset.v2",
                 "occupation_source": "siesta_occupations_total",
@@ -1466,9 +1839,14 @@ class CampaignRunner:
                 "reference_source": None,
                 "rows": [],
             },
-            "numerical_status": "NO_NUMERICAL_U", "physical_acceptance": "NOT_ESTABLISHED",
-            "dag_action": "RECORDED_ONLY", "reasons": ["NO_NUMERICAL_U", reason],
-            "provenance": {"input_identity": self.campaign["input_identity"], "campaign_inputs": self._analysis_input_provenance()},
+            "numerical_status": "NO_NUMERICAL_U",
+            "physical_acceptance": "NOT_ESTABLISHED",
+            "dag_action": "RECORDED_ONLY",
+            "reasons": ["NO_NUMERICAL_U", reason],
+            "provenance": {
+                "input_identity": self.campaign["input_identity"],
+                "campaign_inputs": self._analysis_input_provenance(),
+            },
         }
 
     def _projector_diagnostics_mapping(
@@ -1507,15 +1885,21 @@ class CampaignRunner:
             electron_reference = None
             if isinstance(raw_reference, Mapping):
                 electron_reference = SiteElectronReference.from_mapping(raw_reference)
-            inputs.append(ProjectorDiagnosticInput(
-                site_id=site_id,
-                reference_occupation_e=occupation_by_label.get(str(label)),
-                u_ev=u_value if isinstance(u_value, (int, float)) and not isinstance(u_value, bool) else None,
-                chi0_diagonal_per_ev=(
-                    chi0_value if isinstance(chi0_value, (int, float)) and not isinstance(chi0_value, bool) else None
-                ),
-                electron_reference=electron_reference,
-            ))
+            inputs.append(
+                ProjectorDiagnosticInput(
+                    site_id=site_id,
+                    reference_occupation_e=occupation_by_label.get(str(label)),
+                    u_ev=u_value
+                    if isinstance(u_value, (int, float)) and not isinstance(u_value, bool)
+                    else None,
+                    chi0_diagonal_per_ev=(
+                        chi0_value
+                        if isinstance(chi0_value, (int, float)) and not isinstance(chi0_value, bool)
+                        else None
+                    ),
+                    electron_reference=electron_reference,
+                )
+            )
         return build_projector_diagnostics(inputs, projector_generation_method=2).to_mapping()
 
     def _event_occupations(
@@ -1527,16 +1911,23 @@ class CampaignRunner:
         fdf_text: str | None = None,
     ) -> list[float]:
         return self.observations.event_occupations(
-            output_content, event, sites,
+            output_content,
+            event,
+            sites,
             minimum_decimal_places=self._minimum_occupation_decimal_places,
             fdf_text=fdf_text,
         )
 
     def _event_trace_half_widths(
-        self, output_content: str, event: HubbardPopulationEvent, sites: list[dict[str, Any]],
+        self,
+        output_content: str,
+        event: HubbardPopulationEvent,
+        sites: list[dict[str, Any]],
     ) -> list[float] | None:
         return self.observations.event_trace_half_widths(
-            output_content, event, sites,
+            output_content,
+            event,
+            sites,
             minimum_decimal_places=self._minimum_occupation_decimal_places,
         )
 
@@ -1546,11 +1937,16 @@ class CampaignRunner:
 
     def _projector_fingerprint(self, site_id: str, fdf_text: str) -> str:
         return self.observations.projector_fingerprint(
-            site_id, fdf_text, root=self.root, config=self.config,
+            site_id,
+            fdf_text,
+            root=self.root,
+            config=self.config,
             input_sha256_by_path=self._input_sha256_by_path,
         )
+
     def _analysis_input_provenance(self) -> dict[str, Any]:
         """Expose the campaign's declared inputs and runtime identity in the report."""
+
         def input_record(path: str | Path) -> dict[str, Any]:
             relative = _campaign_relative_path(self.root, path)
             return {
@@ -1569,8 +1965,7 @@ class CampaignRunner:
             path = self.root / self.campaign[field]
             declared_files[label] = input_record(path)
         pseudopotentials = {
-            str(label): input_record(path)
-            for label, path in sorted(self.config["pseudopotentials"].items())
+            str(label): input_record(path) for label, path in sorted(self.config["pseudopotentials"].items())
         }
         version_path = Path(str(self.config["version_text_source"]))
         version_record = input_record(version_path)
@@ -1650,7 +2045,8 @@ class CampaignRunner:
             reason = f"{type(exc).__name__}: {exc}"
             return {
                 "validation_status": (
-                    "UNVERIFIED_MEASUREMENT_VALUES" if "UNVERIFIED_MEASUREMENT_VALUES" in str(exc)
+                    "UNVERIFIED_MEASUREMENT_VALUES"
+                    if "UNVERIFIED_MEASUREMENT_VALUES" in str(exc)
                     else "INVALID_RESPONSE_GRID_CALIBRATION"
                 ),
                 "reason": reason,
@@ -1660,11 +2056,17 @@ class CampaignRunner:
         return self.observations.reference_node(self.dag, scf_level_id)
 
     def _verified_observations(
-        self, *, alpha_grid: list[float] | None = None, scf_level_id: str = "base",
+        self,
+        *,
+        alpha_grid: list[float] | None = None,
+        scf_level_id: str = "base",
         site_indices: tuple[int, ...] | None = None,
     ) -> tuple[
-        list[ResponseObservation], dict[float, str] | None, dict[str, Any],
-        dict[tuple[int, float, str], list[float]], list[float] | None,
+        list[ResponseObservation],
+        dict[float, str] | None,
+        dict[str, Any],
+        dict[tuple[int, float, str], list[float]],
+        list[float] | None,
     ]:
         return self.observations.verified_observations(
             root=self.root,
@@ -1685,7 +2087,10 @@ class CampaignRunner:
         )
 
     def _response_observation_dataset(
-        self, observations: list[ResponseObservation], *, scf_level_id: str = "base",
+        self,
+        observations: list[ResponseObservation],
+        *,
+        scf_level_id: str = "base",
         trace_half_widths_electron: Mapping[tuple[int, float, str], list[float]] | None = None,
         reference_trace_half_widths_electron: list[float] | None = None,
         occupation_source: str = "matrix_trace_total",
@@ -1703,8 +2108,13 @@ class CampaignRunner:
             reference_trace_half_widths_electron=reference_trace_half_widths_electron,
             occupation_source=occupation_source,
         )
+
     def _analysis_execution_identity(
-        self, dataset: Mapping[str, Any], *, scf_level_id: str, alpha_grid: list[float],
+        self,
+        dataset: Mapping[str, Any],
+        *,
+        scf_level_id: str,
+        alpha_grid: list[float],
     ) -> dict[str, Any]:
         """Return attempt IDs bound to the exact verified dataset used for analysis."""
         root = self.root.resolve(strict=True)
@@ -1720,6 +2130,7 @@ class CampaignRunner:
             if not isinstance(node_id, str) or not node_id:
                 raise ValueError(f"{label} dataset source lacks node identity")
             from hubbardflow.domain.hash_traceability import digest_warning
+
             warning = digest_warning(digest, None, f"{label}.evidence_digest")
             if warning is not None:
                 traceability_warnings.append(f"{warning.reason.value}:{warning.field}")
@@ -1727,9 +2138,13 @@ class CampaignRunner:
                 raise ValueError(f"{label} dataset mode differs from the selected analysis grid")
             record = self.records.get(node_id)
             receipt = receipts.get(node_id)
-            if (not isinstance(record, Mapping) or record.get("state") != NodeState.VALIDATED.value
-                    or record.get("kind") != "siesta" or receipt is None
-                    or receipt.state is not NodeState.VALIDATED):
+            if (
+                not isinstance(record, Mapping)
+                or record.get("state") != NodeState.VALIDATED.value
+                or record.get("kind") != "siesta"
+                or receipt is None
+                or receipt.state is not NodeState.VALIDATED
+            ):
                 raise ValueError(f"{label} source is not bound to the validated campaign node receipt")
             if record.get("evidence_digest") != digest or receipt.evidence_digest != digest:
                 traceability_warnings.append(f"NODE_EVIDENCE_DIGEST_MISMATCH:{node_id}")
@@ -1757,8 +2172,10 @@ class CampaignRunner:
                 cwd = Path(str(command.get("cwd", ""))).resolve(strict=True)
                 attempt_id, attempt_root = _execution_attempt(root, cwd)
                 expected_path = (
-                    Path(str(command.get("stdin_path", ""))) if key == "fdf"
-                    else Path(str(command.get("stdout_path", ""))) if key == "output"
+                    Path(str(command.get("stdin_path", "")))
+                    if key == "fdf"
+                    else Path(str(command.get("stdout_path", "")))
+                    if key == "output"
                     else cwd / str(spec.get("dm", ""))
                 ).resolve(strict=True)
                 if resolved != expected_path:
@@ -1785,7 +2202,9 @@ class CampaignRunner:
             raise ValueError("verified response dataset has no rows")
         expected_coordinates = {
             (int(site["index"]), float(alpha), mode)
-            for site in self.sites for alpha in alpha_grid for mode in ("BARE", "SCREENED")
+            for site in self.sites
+            for alpha in alpha_grid
+            for mode in ("BARE", "SCREENED")
         }
         observed_coordinates: set[tuple[int, float, str]] = set()
         for row in rows:
@@ -1810,13 +2229,15 @@ class CampaignRunner:
     @staticmethod
     def _node_round_index(node_id: str) -> int | None:
         import re
+
         match = re.search(r"(?:round:|scf-rerun:)(\d+)", node_id)
         if match is None:
             match = re.search(r":r(\d+):", node_id)
         return None if match is None else int(match.group(1))
 
     def _adaptive_analysis_context(
-        self, node: LRDagNode,
+        self,
+        node: LRDagNode,
     ) -> tuple[dict[str, Any], dict[str, Any], int, str, bool]:
         if self.adaptive_state is None:
             raise ExecutionContractError("adaptive analysis context requested for fixed-grid campaign")
@@ -1824,13 +2245,18 @@ class CampaignRunner:
         if round_index is None:
             raise ExecutionContractError(f"adaptive analysis node has no round key: {node.node_id}")
         round_state = next(
-            (item for item in self.adaptive_state["rounds"] if int(item["round_index"]) == round_index), None,
+            (item for item in self.adaptive_state["rounds"] if int(item["round_index"]) == round_index),
+            None,
         )
         is_rerun = ":scf-rerun:" in node.node_id
         if is_rerun:
             rerun = next(
-                (item for item in self.adaptive_state.get("scf_reruns", [])
-                 if int(item["round_index"]) == round_index), None,
+                (
+                    item
+                    for item in self.adaptive_state.get("scf_reruns", [])
+                    if int(item["round_index"]) == round_index
+                ),
+                None,
             )
             if rerun is None or round_state is None:
                 raise ExecutionContractError(f"SCF rerun state for round {round_index} is missing")
@@ -1844,8 +2270,11 @@ class CampaignRunner:
         report_path = self.results / "HUBBARDFLOW.out"
         if adaptive:
             round_state, fit_state, round_index, level_id, is_rerun = self._adaptive_analysis_context(node)
-            evidence_path = data_directory(self.results) / "alpha_rounds" / f"round-{round_index:02d}" / (
-                "scf-rerun-analysis.v3.json" if is_rerun else "analysis.v3.json"
+            evidence_path = (
+                data_directory(self.results)
+                / "alpha_rounds"
+                / f"round-{round_index:02d}"
+                / ("scf-rerun-analysis.v3.json" if is_rerun else "analysis.v3.json")
             )
             fit = fit_state.get("fit_policy", fit_state.get("analysis_policy", {}))
             round_policy = replace(
@@ -1871,34 +2300,56 @@ class CampaignRunner:
         observations: list[ResponseObservation] = []
         try:
             if getattr(self, "shadow", None) is not None:
-                observations, states, magnetic, trace_half_widths_electron, reference_trace_half_widths_electron, verified_dataset = self.shadow.analysis_data(self)
+                (
+                    observations,
+                    states,
+                    magnetic,
+                    trace_half_widths_electron,
+                    reference_trace_half_widths_electron,
+                    verified_dataset,
+                ) = self.shadow.analysis_data(self)
             else:
-                observations, states, magnetic, trace_half_widths_electron, reference_trace_half_widths_electron = self._verified_observations(
-                    alpha_grid=alpha_grid, scf_level_id=level_id,
+                (
+                    observations,
+                    states,
+                    magnetic,
+                    trace_half_widths_electron,
+                    reference_trace_half_widths_electron,
+                ) = self._verified_observations(
+                    alpha_grid=alpha_grid,
+                    scf_level_id=level_id,
                 )
                 verified_dataset = self._response_observation_dataset(
-                    observations, scf_level_id=level_id,
+                    observations,
+                    scf_level_id=level_id,
                     trace_half_widths_electron=trace_half_widths_electron,
                     reference_trace_half_widths_electron=reference_trace_half_widths_electron,
                     occupation_source="siesta_occupations_total",
                 )
             execution_identity = (
                 self._analysis_execution_identity(
-                    verified_dataset, scf_level_id=level_id, alpha_grid=alpha_grid,
+                    verified_dataset,
+                    scf_level_id=level_id,
+                    alpha_grid=alpha_grid,
                 )
                 if isinstance(self.response_grid_calibration, ValidatedResponseGridCalibration)
                 else {}
             )
             analysis = analyze_verified_lr(
-                observations, round_policy,
+                observations,
+                round_policy,
                 campaign={
-                    "campaign_id": self.campaign["campaign_id"], "name": self.campaign.get("name"),
+                    "campaign_id": self.campaign["campaign_id"],
+                    "name": self.campaign.get("name"),
                     "reference_dm_sha256": verified_dataset["reference_source"]["dm_sha256"],
                     **execution_identity,
-                    "material": self.campaign.get("material"), "functional": self.campaign["functional"],
+                    "material": self.campaign.get("material"),
+                    "functional": self.campaign["functional"],
                     "xc_profile": self.campaign["_xc_profile"],
-                    "sites": self.sites, "observables": self.campaign.get("observables", []),
-                    "fixed_grid": not adaptive, "automatic_alpha_refinement": adaptive,
+                    "sites": self.sites,
+                    "observables": self.campaign.get("observables", []),
+                    "fixed_grid": not adaptive,
+                    "automatic_alpha_refinement": adaptive,
                 },
                 magnetic_state_labels=states,
                 scf_validated=True,
@@ -1910,7 +2361,8 @@ class CampaignRunner:
             analysis["dag_action"] = "ADAPTIVE_ROUND_ANALYSIS" if adaptive else "RECORDED_ONLY"
             if not adaptive:
                 analysis["alpha_diagnostic"] = {
-                    "grid_mode": "fixed_grid", "automatic_refinement": False,
+                    "grid_mode": "fixed_grid",
+                    "automatic_refinement": False,
                     "decision": "SENSITIVITY_REPORTED_BY_ANALYSIS",
                 }
             analysis["scf_and_magnetic_diagnostics"]["magnetic_branch_evidence"] = magnetic
@@ -1939,9 +2391,12 @@ class CampaignRunner:
             }
             if adaptive:
                 analysis["adaptive_round"] = {
-                    "round_index": round_index, "direction": round_state.get("direction"),
-                    "scf_level_id": level_id, "active_window_eV": active_window,
-                    "fit_policy": dict(fit), "is_scf_consistent_rerun": is_rerun,
+                    "round_index": round_index,
+                    "direction": round_state.get("direction"),
+                    "scf_level_id": level_id,
+                    "active_window_eV": active_window,
+                    "fit_policy": dict(fit),
+                    "is_scf_consistent_rerun": is_rerun,
                     "alpha_grid_eV": alpha_grid,
                     "full_grid_is_diagnostic_only": True,
                 }
@@ -1995,9 +2450,7 @@ class CampaignRunner:
             write_state_gate_file(state_gate_path, state_gate)
             report_state_gate = json.loads(state_gate_path.read_text(encoding="utf-8"))
         except Exception:  # noqa: BLE001 - I.5 persistence must not fail the U analysis.
-            report_state_gate = failed_state_gate_mapping(
-                self.sites, StateGateReason.INVALID_STATE_EVIDENCE
-            )
+            report_state_gate = failed_state_gate_mapping(self.sites, StateGateReason.INVALID_STATE_EVIDENCE)
         runtime_admission = getattr(self.admitted, "admission", None)
         runtime_observed = getattr(runtime_admission, "observed", None)
         runtime_factory = getattr(self.admitted, "factory", None)
@@ -2035,15 +2488,161 @@ class CampaignRunner:
                 round_state["effective_scf_level_id"] = level_id
             round_state["status"] = "ANALYZED"
             self._persist_adaptive_state()
-        self._record_receipt(node, receipt, {
-            "kind": "analysis", "evidence_path": str(evidence_path),
-            "evidence_sha256": digest, "report_path": str(report_path),
-            "report_sha256": canonical_report_digest,
-            "numerical_status": analysis.get("numerical_status"),
-        })
+        self._record_receipt(
+            node,
+            receipt,
+            {
+                "kind": "analysis",
+                "evidence_path": str(evidence_path),
+                "evidence_sha256": digest,
+                "report_path": str(report_path),
+                "report_sha256": canonical_report_digest,
+                "numerical_status": analysis.get("numerical_status"),
+            },
+        )
         return receipt
 
+    def prepare_controller_attempt(self) -> int | None:
+        """Persist the initial resume baseline or fail closed on retry evidence."""
+        observer = self.controller_observer
+        if observer is None:
+            return None
+        from hubbardflow.api import check_resume
+        from hubbardflow.api.controller_contracts import ControllerContractError, load_strict_json
+        from hubbardflow.api.controller_resume import (
+            DagNode,
+            NodeEvidence,
+            ResumeDecision,
+            ResumeEvidence,
+            ResumeReason,
+            ResumeVerdict,
+            evaluate_resume,
+            recoverable_settlements,
+        )
+        from hubbardflow.api.controller_resume_baseline import (
+            create_resume_baseline,
+            load_resume_request,
+            write_resume_baseline,
+            write_resume_verdict,
+        )
+        from hubbardflow.api.controller_resume_ledger import parse_ledger_history
+
+        try:
+            raw_value = load_strict_json(self.manifest_path.read_text(encoding="utf-8"))
+            if not isinstance(raw_value, dict):
+                raise ControllerContractError("campaign manifest must be an object")
+            baseline_path = observer.state_dir_path / "resume-baseline.json"
+            if int(observer.to_mapping()["attempt_number"]) == 1:
+                baseline = create_resume_baseline(
+                    self.manifest_path, raw_value, self.campaign["_perturbation_plan"]
+                )
+                if baseline is not None:
+                    write_resume_baseline(baseline_path, baseline)
+                return None
+
+            descriptor = observer.to_mapping()
+            previous = descriptor["previous_attempt"]
+            previous_id = str(previous["attempt_id"]) if isinstance(previous, dict) else ""
+            native_result = None
+            compact_result: dict[str, object] | None = None
+            try:
+                request = load_resume_request(
+                    baseline_path, self.manifest_path, raw_value, self.campaign["_perturbation_plan"]
+                )
+                native_result = check_resume(request.to_mapping())
+                native_payload = json.loads(native_result.payload_json)
+                compact_result = {
+                    "native_status": native_result.native_status,
+                    "assessment": native_result.assessment.value,
+                    **{
+                        key: native_payload[key]
+                        for key in ("changed", "reusable_response_ids", "physical_equivalence")
+                    },
+                }
+            except (ValueError, OSError, KeyError, TypeError, AttributeError):
+                compact_result = None
+
+            checkpoint_loaded = False
+            checkpoint_identity: str | None = None
+            receipt_rows: list[NodeEvidence] = []
+            receipts: dict[str, NodeReceipt] = {}
+            try:
+                checkpoint_path = self.executor.checkpoint.path
+                if checkpoint_path.is_file():
+                    receipts = self.executor.checkpoint.load()
+                    checkpoint_loaded = True
+                    checkpoint_identity = self.executor.checkpoint.campaign_digest
+            except (OSError, ValueError, TypeError, KeyError):
+                checkpoint_loaded = False
+            inspection = self._revalidate_reuse(dry_run=True) if checkpoint_loaded else None
+            invalidated = set(inspection.invalidated) if inspection is not None else set()
+            warnings = set(inspection.warnings) if inspection is not None else set()
+            dag_rows = tuple(
+                DagNode(node.node_id, node.kind.value, tuple(node.dependencies)) for node in self.dag.nodes
+            )
+            for node in self.dag.nodes:
+                receipt = receipts.get(node.node_id)
+                if receipt is None:
+                    continue
+                status = "INVALID" if node.node_id in invalidated else "RETAINED"
+                if status != "INVALID" and f"NODE_EVIDENCE_DIGEST_MISMATCH:{node.node_id}" in warnings:
+                    status = "DIGEST_WARNING"
+                receipt_rows.append(
+                    NodeEvidence(
+                        node.node_id, node.kind.value, receipt.state.value, receipt.evidence_digest, status
+                    )
+                )
+
+            dag_ids = {node.node_id for node in self.dag.nodes}
+            ledger_history = parse_ledger_history(observer.history_entries, observer.task_id, dag_ids)
+
+            evidence = ResumeEvidence(
+                observer.task_id,
+                observer.attempt_id,
+                previous_id,
+                compact_result,
+                checkpoint_loaded,
+                checkpoint_identity,
+                ledger_history.checkpoint_identity,
+                ledger_history.settlements,
+                ledger_history.finished_unsettled,
+                tuple(receipt_rows),
+                dag_rows,
+                ledger_history.errors,
+                ledger_history.node_ids,
+                tuple(sorted(warnings)),
+            )
+            if not previous_id:
+                verdict = ResumeVerdict(
+                    observer.task_id,
+                    observer.attempt_id,
+                    "missing-previous-attempt",
+                    checkpoint_identity,
+                    ResumeDecision.REFUSE,
+                    ResumeReason.RESUME_EVIDENCE_INVALID,
+                    None,
+                    (),
+                    None,
+                )
+            if checkpoint_identity is not None:
+                observer.set_checkpoint_identity(checkpoint_identity)
+            if previous_id:
+                for recovery in recoverable_settlements(evidence):
+                    observer.settlement_recovered(
+                        recovery.node_id,
+                        recovery.state,
+                        recovery.evidence_digest,
+                        recovery.source_attempt_id,
+                    )
+                verdict = evaluate_resume(evidence)
+            write_resume_verdict(observer.resume_verdict_path, verdict)
+            return 0 if verdict.decision is ResumeDecision.CONTINUE else 75
+        except (ControllerContractError, OSError, ValueError, TypeError, KeyError) as exc:
+            raise ExecutionContractError(f"controller retry evidence failed closed: {exc}") from exc
+
     def advance(self, mode: str, heartbeat: _Heartbeat) -> int:
+        from hubbardflow.execution.runtime_adapters import ControllerStopRequested
+
         if mode not in {"run", "resume", "reference"}:
             raise ExecutionContractError(f"unsupported worker mode: {mode}")
         if mode == "reference" and self.checkpoint_path.exists() and self._checkpoint():
@@ -2060,23 +2659,38 @@ class CampaignRunner:
             ready = self.executor.runnable()
             if not ready:
                 receipts = self._checkpoint()
-                if all(node.node_id in receipts and receipts[node.node_id].state is NodeState.VALIDATED for node in self.dag.nodes):
+                if all(
+                    node.node_id in receipts and receipts[node.node_id].state is NodeState.VALIDATED
+                    for node in self.dag.nodes
+                ):
                     heartbeat.finish("COMPLETED", completed_nodes=sorted(receipts))
                     return 0
                 blocked = [node.node_id for node in self.dag.nodes if node.node_id not in receipts]
                 raise ExecutionContractError(f"no runnable node; unresolved DAG nodes: {blocked[:8]}")
-            if (self.control / "stop-request.json").exists():
-                heartbeat.finish("STOPPED", stop_reason="safe_stop_requested", completed_nodes=sorted(self._checkpoint()))
+            controller_stop_path: Path | None = getattr(self, "controller_stop_path", None)
+            controller_stop_event: threading.Event | None = getattr(self, "controller_stop_event", None)
+            controller_observer: Any | None = getattr(self, "controller_observer", None)
+            if (
+                (self.control / "stop-request.json").exists()
+                or (controller_stop_path is not None and controller_stop_path.exists())
+                or (controller_stop_event is not None and controller_stop_event.is_set())
+                or (controller_observer is not None and controller_observer.should_stop_launching())
+            ):
+                heartbeat.finish(
+                    "STOPPED", stop_reason="safe_stop_requested", completed_nodes=sorted(self._checkpoint())
+                )
                 return 0
             node = ready[0]
             if not self._reserve_adaptive_node(node):
                 self._stop_for_unreserved_node(node)
                 heartbeat.finish(
-                    "COMPLETED", stop_reason="unplanned_node_exceeds_remaining_budget",
+                    "COMPLETED",
+                    stop_reason="unplanned_node_exceeds_remaining_budget",
                     campaign_status=AdaptiveDecision.STOP_LIMIT_SENSITIVE.value,
                 )
                 return 0
             heartbeat.update(active_node=node.node_id, current_node_state="RUNNING")
+            receipt: NodeReceipt | None = None
             try:
                 if node.kind in {LRNodeKind.REFERENCE, LRNodeKind.PERTURBATION}:
                     receipt = self._execute_siesta(node, heartbeat)
@@ -2088,11 +2702,20 @@ class CampaignRunner:
                     receipt = self._execute_analysis(node)
                 else:  # pragma: no cover - closed enum guard
                     raise ExecutionContractError(f"unsupported DAG node kind {node.kind.value}")
+            except ControllerStopRequested:
+                if getattr(self, "controller_observer", None) is None:
+                    raise
+                heartbeat.finish(
+                    "STOPPED", stop_reason="safe_stop_requested", completed_nodes=sorted(self._checkpoint())
+                )
+                return 0
             except Exception as exc:
                 from hubbardflow.execution.campaign_shadow import ShadowRejected
 
                 if not isinstance(exc, ShadowRejected) or self.shadow is None:
                     raise
+                if receipt is not None:
+                    self._settle_controller_receipt(node, receipt)
                 self.shadow.persist_rejection(self, exc.outcomes)
                 heartbeat.finish(
                     "FAILED",
@@ -2106,7 +2729,9 @@ class CampaignRunner:
                 )
                 return 1
             completed = sorted(self._checkpoint())
-            heartbeat.update(active_node=None, current_node_state=receipt.state.value, completed_nodes=completed)
+            heartbeat.update(
+                active_node=None, current_node_state=receipt.state.value, completed_nodes=completed
+            )
             if mode == "reference":
                 if node.node_id != "reference":
                     raise ExecutionContractError("reference mode can execute only the reference node")
@@ -2142,15 +2767,35 @@ class CampaignRunner:
                     for name in ("returncode", "returncode_meaning")
                     if name in failure_record
                 }
+                self._settle_controller_receipt(node, receipt)
                 heartbeat.finish(
-                    "FAILED", failed_node=node.node_id, failure_state=receipt.state.value, **failure_details,
+                    "FAILED",
+                    failed_node=node.node_id,
+                    failure_state=receipt.state.value,
+                    **failure_details,
                 )
                 return 1
+            self._settle_controller_receipt(node, receipt)
 
 
-def run_campaign_worker(manifest_path: str | Path, mode: str) -> int:
+def run_campaign_worker(
+    manifest_path: str | Path,
+    mode: str,
+    *,
+    controller_observer: Any | None = None,
+    controller_stop_event: threading.Event | None = None,
+    controller_stop_path: Path | None = None,
+) -> int:
     if fcntl is None:
         raise RuntimeError("campaign worker execution requires Linux/WSL fcntl locking")
+    if controller_observer is not None:
+        return _run_controller_campaign_worker(
+            manifest_path,
+            mode,
+            controller_observer,
+            controller_stop_event,
+            controller_stop_path,
+        )
     campaign = load_campaign_v2(manifest_path)
     control = Path(campaign["_campaign_root"]) / ".siestaflow"
     control.mkdir(parents=True, exist_ok=True)
@@ -2167,12 +2812,102 @@ def run_campaign_worker(manifest_path: str | Path, mode: str) -> int:
             runner.factory.state = heartbeat
             return runner.advance(mode, heartbeat)
         except Exception as exc:
-            _atomic_json(control / "worker-error.json", {
-                "type": type(exc).__name__, "message": str(exc), "traceback": traceback.format_exc(),
-                "epoch": time.time(),
-            })
+            _atomic_json(
+                control / "worker-error.json",
+                {
+                    "type": type(exc).__name__,
+                    "message": str(exc),
+                    "traceback": traceback.format_exc(),
+                    "epoch": time.time(),
+                },
+            )
             heartbeat.finish("FAILED", error_type=type(exc).__name__, error=str(exc))
         return 1
+
+
+def _run_controller_campaign_worker(
+    manifest_path: str | Path,
+    mode: str,
+    controller_observer: Any,
+    controller_stop_event: threading.Event | None,
+    controller_stop_path: Path | None,
+) -> int:
+    """Hold a stable root lock and reject B.3 rules 1–3 before campaign admission."""
+    from hubbardflow.api.controller_resume_baseline import write_resume_verdict
+    from hubbardflow.api.controller_resume_preflight import preflight_resume_rejection
+
+    manifest = Path(manifest_path).resolve()
+    run_root = controller_observer.state_dir_path.resolve(strict=True)
+    if manifest.parent != run_root:
+        raise ExecutionContractError("controller campaign root differs from paths.state_dir")
+    control = run_root / ".siestaflow"
+    control.mkdir(parents=True, exist_ok=True)
+    worker_lock_path = control / "worker.lock"
+    with worker_lock_path.open("a+b") as worker_lock:
+        try:
+            fcntl.flock(worker_lock.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            return 2
+
+        preflight = preflight_resume_rejection(controller_observer, manifest)
+        if preflight.verdict is not None:
+            write_resume_verdict(controller_observer.resume_verdict_path, preflight.verdict)
+            return 75
+
+        campaign = load_campaign_v2(manifest)
+        if Path(campaign["_campaign_root"]).resolve() != run_root:
+            raise ExecutionContractError("controller campaign root differs from paths.state_dir")
+        heartbeat = _Heartbeat(control / "worker-state.json", campaign_id=campaign["campaign_id"])
+        heartbeat.start()
+        try:
+            runner = CampaignRunner(
+                manifest,
+                controller_observer=controller_observer,
+                controller_stop_event=controller_stop_event,
+                controller_stop_path=controller_stop_path,
+            )
+            runner.factory.state = heartbeat
+            attempt_number = int(controller_observer.to_mapping()["attempt_number"])
+            legacy_stop_path = control / "stop-request.json"
+            prior_stop_marker = _stop_marker_fingerprint(legacy_stop_path) if attempt_number > 1 else None
+            retry_result = runner.prepare_controller_attempt()
+            if retry_result == 75:
+                heartbeat.finish("BLOCKED", reason="controller_resume_refused")
+                return 75
+            if attempt_number > 1:
+                _remove_unchanged_stop_marker(legacy_stop_path, prior_stop_marker)
+                mode = "resume"
+            return runner.advance(mode, heartbeat)
+        except Exception as exc:  # noqa: BLE001 - preserve the worker's failure receipt for arbitrary runner errors.
+            _atomic_json(
+                control / "worker-error.json",
+                {
+                    "type": type(exc).__name__,
+                    "message": str(exc),
+                    "traceback": traceback.format_exc(),
+                    "epoch": time.time(),
+                },
+            )
+            heartbeat.finish("FAILED", error_type=type(exc).__name__, error=str(exc))
+        return 1
+
+
+def _stop_marker_fingerprint(path: Path) -> tuple[int, int, int, bytes] | None:
+    """Capture an existing legacy stop request without claiming future requests."""
+    try:
+        stat = path.stat()
+        return stat.st_ino, stat.st_mtime_ns, stat.st_size, path.read_bytes()
+    except FileNotFoundError:
+        return None
+
+
+def _remove_unchanged_stop_marker(path: Path, fingerprint: tuple[int, int, int, bytes] | None) -> None:
+    """Clear only the same stale marker that predated an accepted retry."""
+    if fingerprint is None:
+        return
+    current = _stop_marker_fingerprint(path)
+    if current == fingerprint:
+        path.unlink(missing_ok=True)
 
 
 def campaign_status(manifest_path: str | Path) -> dict[str, Any]:
@@ -2189,7 +2924,10 @@ def request_campaign_stop(manifest_path: str | Path) -> dict[str, Any]:
     campaign = load_campaign_v2(manifest_path)
     control = Path(campaign["_campaign_root"]) / ".siestaflow"
     control.mkdir(parents=True, exist_ok=True)
-    _atomic_json(control / "stop-request.json", {"campaign_id": campaign["campaign_id"], "requested_epoch": time.time()})
+    _atomic_json(
+        control / "stop-request.json",
+        {"campaign_id": campaign["campaign_id"], "requested_epoch": time.time()},
+    )
     return {"campaign_id": campaign["campaign_id"], "stop_requested": True}
 
 
@@ -2257,4 +2995,10 @@ def render_campaign_report(manifest_path: str | Path) -> str:
     )
 
 
-__all__ = ["CampaignRunner", "campaign_status", "render_campaign_report", "request_campaign_stop", "run_campaign_worker"]
+__all__ = [
+    "CampaignRunner",
+    "campaign_status",
+    "render_campaign_report",
+    "request_campaign_stop",
+    "run_campaign_worker",
+]

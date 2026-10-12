@@ -32,6 +32,9 @@ jobs:
           tests/unit/test_lr_analysis_v2.py tests/unit/test_matrix_lr.py
           tests/unit/test_quantized_response.py tests/unit/test_u_certification.py
           tests/unit/test_import_architecture.py
+          tests/unit/test_controller_contracts.py tests/unit/test_controller_resume.py
+          tests/unit/test_controller_resume_preflight.py
+          tests/unit/test_controller_installed_campaign.py
       - name: Frozen scientific baseline
         shell: bash
         run: bash tools/check_v6_integrity.sh
@@ -39,3 +42,5 @@ jobs:
         run: uv build --no-build-isolation --wheel
       - name: Consumer without checkout or PYTHONPATH
         run: uv run --locked --extra test python tools/qualify_public_api.py
+      - name: Installed controller contracts and synthetic lifecycle
+        run: uv run --locked --extra test python tools/qualify_controller.py

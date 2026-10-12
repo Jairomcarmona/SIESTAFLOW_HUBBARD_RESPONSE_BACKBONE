@@ -9,11 +9,13 @@ description = "HubbardFlow — Reproducible workflows for first-principles Hubba
 requires-python = ">=3.12,<3.13"
 dependencies = [
     "numpy>=1.26.4,<2.0.0",
-    "jsonschema>=4.0.0,<5.0.0"
+    "jsonschema>=4.0.0,<5.0.0",
+    "referencing>=0.28.4,<0.38.0"
 ]
 
 [project.scripts]
 hubbardflow = "hubbardflow.cli:main"
+hubbardflow-controller = "hubbardflow.api.controller:main"
 
 [project.optional-dependencies]
 test = [
@@ -776,4 +778,4 @@ py-modules = ["symmetry_reduction_proposal"]
 where = ["src"]
 
 [tool.setuptools.package-data]
-"hubbardflow.api" = ["schemas/*.json"]
+"hubbardflow.api" = ["schemas/*.json", "schemas/*.schema"]

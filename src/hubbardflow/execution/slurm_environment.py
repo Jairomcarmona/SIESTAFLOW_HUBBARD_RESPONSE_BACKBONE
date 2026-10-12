@@ -1,8 +1,9 @@
 """Validation of a granted Slurm allocation, without site-specific discovery."""
+
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Mapping, Sequence
 
 from .execution_profile import ExecutionProfile, ProfileValidationError
 
@@ -18,20 +19,43 @@ class SlurmEnvironment:
     nodelist: str
 
     @classmethod
-    def from_environ(cls, environ: Mapping[str, str]) -> "SlurmEnvironment":
-        required = ("SLURM_JOB_ID", "SLURM_SUBMIT_DIR", "SLURM_JOB_END_TIME", "SLURM_NNODES", "SLURM_NTASKS", "SLURM_CPUS_PER_TASK", "SLURM_JOB_NODELIST")
+    def from_environ(cls, environ: Mapping[str, str]) -> SlurmEnvironment:
+        required = (
+            "SLURM_JOB_ID",
+            "SLURM_SUBMIT_DIR",
+            "SLURM_JOB_END_TIME",
+            "SLURM_NNODES",
+            "SLURM_NTASKS",
+            "SLURM_CPUS_PER_TASK",
+            "SLURM_JOB_NODELIST",
+        )
         missing = [key for key in required if not environ.get(key)]
         if missing:
             raise ProfileValidationError("missing Slurm environment: " + ", ".join(missing))
         try:
-            return cls(environ["SLURM_JOB_ID"], environ["SLURM_SUBMIT_DIR"], environ["SLURM_JOB_END_TIME"], int(environ["SLURM_NNODES"]), int(environ["SLURM_NTASKS"]), int(environ["SLURM_CPUS_PER_TASK"]), environ["SLURM_JOB_NODELIST"])
+            return cls(
+                environ["SLURM_JOB_ID"],
+                environ["SLURM_SUBMIT_DIR"],
+                environ["SLURM_JOB_END_TIME"],
+                int(environ["SLURM_NNODES"]),
+                int(environ["SLURM_NTASKS"]),
+                int(environ["SLURM_CPUS_PER_TASK"]),
+                environ["SLURM_JOB_NODELIST"],
+            )
         except ValueError as exc:
             raise ProfileValidationError("invalid integer in Slurm environment") from exc
 
-    def validate_profile(self, profile: ExecutionProfile, hosts: Sequence[str]) -> None:
-        if self.nodes < profile.allocation.nodes:
+    def validate_profile(
+        self,
+        profile: ExecutionProfile,
+        hosts: Sequence[str],
+        *,
+        allow_host_subset: bool = False,
+    ) -> None:
+        if not allow_host_subset and self.nodes < profile.allocation.nodes:
             raise ProfileValidationError("granted allocation has fewer nodes than profile")
         if self.ntasks * self.cpus_per_task < profile.allocation.total_cpus:
             raise ProfileValidationError("granted allocation has fewer CPUs than profile")
-        if len(hosts) != self.nodes or len(set(hosts)) != self.nodes:
+        expected_hosts = profile.allocation.nodes if allow_host_subset else self.nodes
+        if len(hosts) != expected_hosts or len(set(hosts)) != expected_hosts:
             raise ProfileValidationError("host resolution does not match granted node count")

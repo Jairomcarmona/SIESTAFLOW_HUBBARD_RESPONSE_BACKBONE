@@ -1,8 +1,16 @@
+from pathlib import Path
+
 from hubbardflow.domain.matrix_lr import ResponseObservation
 from hubbardflow.domain.scientific_profile import V6_PBE_REFERENCE_PROFILE
-from hubbardflow.execution.campaign_runner import CampaignRunner, _build_dag, _build_verified_dataset
-from hubbardflow.execution.lr_dag import LRNodeKind
 from hubbardflow.domain.symmetry_reduction import ResponseMode
+from hubbardflow.execution.campaign_runner import (
+    CampaignRunner,
+    _build_dag,
+    _build_verified_dataset,
+    _remove_unchanged_stop_marker,
+    _stop_marker_fingerprint,
+)
+from hubbardflow.execution.lr_dag import LRNodeKind
 
 
 def test_fixed_grid_dag_is_explicit_and_alpha_diagnostic_does_not_veto_analysis():
@@ -30,18 +38,40 @@ def test_fixed_grid_dag_is_explicit_and_alpha_diagnostic_does_not_veto_analysis(
     # grid always reaches matrix analysis, which decides what can be reported.
     runner = object.__new__(CampaignRunner)
     runner.campaign = {
-        "campaign_id": "synthetic", "name": "fixed-grid", "material": "fixture",
-        "input_identity": "a" * 64, "_xc_profile": V6_PBE_REFERENCE_PROFILE.to_mapping(),
+        "campaign_id": "synthetic",
+        "name": "fixed-grid",
+        "material": "fixture",
+        "input_identity": "a" * 64,
+        "_xc_profile": V6_PBE_REFERENCE_PROFILE.to_mapping(),
     }
     runner.sites = sites
     runner.alpha_grid = alphas
     runner.config = {"analysis_policy": {"estimator": "auto"}}
     runner.campaign["functional"] = "PBE"
-    runner._analysis_input_provenance = lambda: {}
+    runner._analysis_input_provenance = dict
     result = runner._no_numerical_result("synthetic_no_linear_window")
     assert result["numerical_status"] == "NO_NUMERICAL_U"
     assert result["primary"]["U_matrix_eV"] is None
     assert result["reasons"][-1] == "synthetic_no_linear_window"
+
+
+def test_retry_clears_only_the_legacy_stop_marker_that_preceded_validation(tmp_path: Path) -> None:
+    marker = tmp_path / "stop-request.json"
+    marker.write_text('{"requested_epoch":1}', encoding="utf-8")
+    prior = _stop_marker_fingerprint(marker)
+    _remove_unchanged_stop_marker(marker, prior)
+    assert not marker.exists()
+
+    prior = _stop_marker_fingerprint(marker)
+    marker.write_text('{"requested_epoch":2}', encoding="utf-8")
+    _remove_unchanged_stop_marker(marker, prior)
+    assert marker.read_text(encoding="utf-8") == '{"requested_epoch":2}'
+
+    marker.unlink()
+    absent = _stop_marker_fingerprint(marker)
+    marker.write_text('{"requested_epoch":3}', encoding="utf-8")
+    _remove_unchanged_stop_marker(marker, absent)
+    assert marker.read_text(encoding="utf-8") == '{"requested_epoch":3}'
 
 
 def test_verified_observation_dataset_persists_site_mapping_occupations_and_sources():
@@ -54,8 +84,20 @@ def test_verified_observation_dataset_persists_site_mapping_occupations_and_sour
         occupations_screened=[5.2, 4.2],
     )
     reference_source = {"node_id": "reference", "out_path": "reference.out", "evidence_digest": "a" * 64}
-    bare_source = {"node_id": "bare", "mode": "BARE", "fdf_path": "bare.fdf", "out_path": "bare.out", "evidence_digest": "b" * 64}
-    screened_source = {"node_id": "screened", "mode": "SCREENED", "fdf_path": "screened.fdf", "out_path": "screened.out", "evidence_digest": "c" * 64}
+    bare_source = {
+        "node_id": "bare",
+        "mode": "BARE",
+        "fdf_path": "bare.fdf",
+        "out_path": "bare.out",
+        "evidence_digest": "b" * 64,
+    }
+    screened_source = {
+        "node_id": "screened",
+        "mode": "SCREENED",
+        "fdf_path": "screened.fdf",
+        "out_path": "screened.out",
+        "evidence_digest": "c" * 64,
+    }
 
     dataset = _build_verified_dataset(
         [observation],
@@ -74,10 +116,14 @@ def test_verified_observation_dataset_persists_site_mapping_occupations_and_sour
     row = dataset["rows"][0]
     assert row["perturbed_site_id"] == "NiB"
     assert row["observed_sites"][1]["occupations_electron"] == {
-        "reference": 4.0, "bare": 4.1, "screened": 4.2,
+        "reference": 4.0,
+        "bare": 4.1,
+        "screened": 4.2,
     }
     assert row["observed_sites"][1]["matrix_trace_half_widths_electron"] == {
-        "reference": 0.00005, "bare": 0.00005, "screened": 0.00005,
+        "reference": 0.00005,
+        "bare": 0.00005,
+        "screened": 0.00005,
     }
     assert row["sources"]["bare"]["evidence_digest"] == "b" * 64
     assert row["sources"]["screened"]["out_path"] == "screened.out"
@@ -184,3 +230,47 @@ def test_reference_worker_mode_preserves_failed_reference_status(tmp_path):
     assert runner.advance("reference", heartbeat) == 1
     assert heartbeat.finished["status"] == "FAILED"
     assert heartbeat.finished["failed_node"] == "reference"
+
+
+def test_controller_stop_during_active_node_preserves_completed_checkpoint(tmp_path):
+    from types import SimpleNamespace
+
+    from hubbardflow.execution.lr_dag import LRDagNode
+    from hubbardflow.execution.runtime_adapters import ControllerStopRequested
+
+    reference_node = LRDagNode("reference", LRNodeKind.REFERENCE, ())
+    completed = {"earlier-node": object()}
+
+    class Heartbeat:
+        def __init__(self):
+            self.finished = None
+
+        def update(self, **changes):
+            pass
+
+        def finish(self, status, **changes):
+            self.finished = {"status": status, **changes}
+
+    runner = object.__new__(CampaignRunner)
+    runner.checkpoint_path = tmp_path / "checkpoint.json"
+    runner.executor = SimpleNamespace(runnable=lambda: [reference_node])
+    runner.control = tmp_path
+    runner.controller_observer = SimpleNamespace(should_stop_launching=lambda: False)
+    runner.controller_stop_path = None
+    runner.controller_stop_event = None
+    runner.dag = SimpleNamespace(nodes=())
+    runner._checkpoint = lambda: completed
+    runner._reserve_adaptive_node = lambda _: True
+
+    def stop(_node, _heartbeat):
+        raise ControllerStopRequested("synthetic stop")
+
+    runner._execute_siesta = stop
+    heartbeat = Heartbeat()
+
+    assert runner.advance("run", heartbeat) == 0
+    assert heartbeat.finished == {
+        "status": "STOPPED",
+        "stop_reason": "safe_stop_requested",
+        "completed_nodes": ["earlier-node"],
+    }
