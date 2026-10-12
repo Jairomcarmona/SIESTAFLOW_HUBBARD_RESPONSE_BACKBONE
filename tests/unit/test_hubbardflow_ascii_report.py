@@ -16,6 +16,7 @@ ROOT = Path(__file__).resolve().parents[2]
 ANALYSIS_FIXTURE = ROOT / "tests" / "fixtures" / "replay_nio_p5" / "replay_analysis.v3.json"
 STATE_GATE_FIXTURE = ROOT / "tests" / "fixtures" / "replay_nio_p5" / "replay_i5_state_gate.json"
 REFERENCE_FDF = ROOT / "tests" / "fixtures" / "real_nio_p5_rerun" / "inputs" / "reference.fdf"
+PROJECTOR_CURVE = ROOT / "tests" / "fixtures" / "projector_curve_m1.json"
 
 
 def _assert_report_shape(report: str) -> None:
@@ -83,6 +84,12 @@ def test_report_is_ascii_fixed_width_and_has_all_numbered_sections() -> None:
     assert "CHI RAW (e/eV)" in report
     assert "NOT_ASSESSED" in report
     assert "Pointwise state gate" in report
+    projector_curve = json.loads(PROJECTOR_CURVE.read_text(encoding="utf-8"))
+    points = {float(row["projector"]["value"]): float(row["u_ev"]) for row in projector_curve["points"]}
+    delta_u_ev = abs(points[0.85] - points[0.90])
+    projector_section = report.split("[03] PROJECTOR", 1)[1].split("[04] PROTOCOL", 1)[0]
+    assert f"M1 changed by {delta_u_ev:.4f} eV" in projector_section
+    assert "tests/fixtures/projector_curve_m1.json" in projector_section
 
 
 def test_inventory_paths_wrap_only_at_slashes_and_keep_node_fields_together() -> None:

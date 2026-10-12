@@ -13,8 +13,10 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from hubbardflow.domain.symmetry_reduction import PerturbationSpec, ResponseMode
+
 from .backend_admission import BackendAdmission
 from .backend_admission_plugin import _is_campaign_contract_admission
+from .projector_consistency import ProjectorConsistencyError, compare_projector_definitions
 from .siesta542_bare_profile import Siesta542PotentialShiftHamiltonianProfile
 
 
@@ -101,7 +103,8 @@ def materialize_response_fdf(
             raise ResponseMaterializationError("BARE materialization requires campaign-contract admission")
         if admission.scientific_profile.key != (bare_profile.profile_id, bare_profile.profile_version):
             raise ResponseMaterializationError("BARE profile differs from the admitted scientific profile")
-    content = Path(reference_fdf).read_text(encoding="utf-8")
+    reference_content = Path(reference_fdf).read_text(encoding="utf-8")
+    content = reference_content
     _require_scalar(content, "DFTU.ProjectorGenerationMethod", {"2"})
     _require_scalar(content, "DFTU.PotentialShift", {"true", "t"})
     content = _rewrite_projector_shifts(content, spec.site_id, spec.alpha_ev)
@@ -130,6 +133,12 @@ def materialize_response_fdf(
     if spec.mode is ResponseMode.BARE:
         assert bare_profile is not None
         content = bare_profile.materialize(content)
+    try:
+        projector_check = compare_projector_definitions(reference_content, content)
+    except ProjectorConsistencyError as exc:
+        raise ResponseMaterializationError(f"projector admission could not be verified: {exc}") from exc
+    if not projector_check.compatible:
+        raise ResponseMaterializationError(f"projector admission failed: {projector_check.describe()}")
     return MaterializedResponse(spec.run_id, spec.site_id, spec.mode, spec.alpha_ev, content)
 
 

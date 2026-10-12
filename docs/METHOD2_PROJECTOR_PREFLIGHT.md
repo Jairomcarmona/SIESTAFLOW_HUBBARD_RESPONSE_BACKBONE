@@ -63,3 +63,16 @@ and proposes only a short human-review sensitivity window. A radius is never
 chosen because it yields a preferred U value. Full LR validation still requires
 converged screened calculations, linearity, full-rank response matrices, and
 an explicit sensitivity assessment.
+
+## Translation-shadow campaign support
+
+The symmetry planner and `symmetry_materializer.py` currently require
+`DFTU.ProjectorGenerationMethod 2`. Method 1 is not supported for translation-
+shadow campaigns. The current restriction is unchanged.
+
+Before a response command is created, HubbardFlow compares its effective
+projector method and each `DFTU.Proj` shell's `n`, `l`, `rc`, and `omega` with
+the reference. For automatic `rc=0`, the effective `DFTU.CutoffNorm` is also
+compared. If generated radii are available for both inputs, the backend
+comparison can include those values. A mismatch fails response materialization
+with a field-specific reason code; hashes do not participate in this check.
